@@ -285,7 +285,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count سرور',
-      one: '1 سرور',
+      one: '$count سرور',
     );
     return '$_temp0';
   }
@@ -525,7 +525,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count مورد',
-      one: '1 مورد',
+      one: '$count مورد',
     );
     return '$_temp0';
   }
@@ -548,7 +548,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count مورد در استفاده',
-      one: '1 مورد در استفاده',
+      one: '$count مورد در استفاده',
     );
     return '$_temp0. در اتصال بعدی اعمال می‌شود.';
   }
@@ -593,7 +593,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count نام',
-      one: '1 نام',
+      one: '$count نام',
     );
     return '$_temp0';
   }
@@ -604,7 +604,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count نشانی یا محدوده',
-      one: '1 نشانی یا محدوده',
+      one: '$count نشانی یا محدوده',
     );
     return '$_temp0';
   }
@@ -615,7 +615,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count خط نادیده گرفته می‌شود:',
-      one: '1 خط نادیده گرفته می‌شود:',
+      one: '$count خط نادیده گرفته می‌شود:',
     );
     return '$_temp0';
   }
@@ -684,7 +684,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count مورد در حال استفاده',
-      one: '1 مورد در حال استفاده',
+      one: '$count مورد در حال استفاده',
     );
     return '$_temp0';
   }
@@ -709,7 +709,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: 'فقط $count برنامه‌ی انتخاب‌شده از VPN استفاده می‌کنند',
-      one: 'فقط 1 برنامه‌ی انتخاب‌شده از VPN استفاده می‌کند',
+      one: 'فقط $count برنامه‌ی انتخاب‌شده از VPN استفاده می‌کند',
     );
     return '$_temp0';
   }
@@ -720,7 +720,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count برنامه بدون VPN هستند',
-      one: '1 برنامه بدون VPN است',
+      one: '$count برنامه بدون VPN است',
     );
     return '$_temp0';
   }
@@ -789,7 +789,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: 'فقط $count برنامه از VPN استفاده می‌کنند.',
-      one: 'فقط 1 برنامه از VPN استفاده می‌کند.',
+      one: 'فقط $count برنامه از VPN استفاده می‌کند.',
     );
     return '$_temp0';
   }
@@ -800,7 +800,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count برنامه مستقیم وصل می‌شوند.',
-      one: '1 برنامه مستقیم وصل می‌شود.',
+      one: '$count برنامه مستقیم وصل می‌شود.',
     );
     return '$_temp0';
   }
@@ -873,7 +873,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count پروفایل',
-      one: '1 پروفایل',
+      one: '$count پروفایل',
     );
     return '$name: $_temp0';
   }
@@ -906,7 +906,7 @@ class AppLocalizationsFa extends AppLocalizations {
       days,
       locale: localeName,
       other: '$days روز دیگر منقضی می‌شود',
-      one: '1 روز دیگر منقضی می‌شود',
+      one: '$days روز دیگر منقضی می‌شود',
     );
     return '$_temp0';
   }
@@ -979,7 +979,7 @@ class AppLocalizationsFa extends AppLocalizations {
       added,
       locale: localeName,
       other: '$added پروفایل وارد شد',
-      one: '1 پروفایل وارد شد',
+      one: '$added پروفایل وارد شد',
     );
     String _temp1 = intl.Intl.pluralLogic(
       dupes,
@@ -1092,7 +1092,7 @@ class AppLocalizationsFa extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count پروفایل',
-      one: '1 پروفایل',
+      one: '$count پروفایل',
     );
     return 'اشتراک به‌روز شد: $_temp0';
   }

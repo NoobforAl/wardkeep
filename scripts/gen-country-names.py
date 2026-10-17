@@ -15,7 +15,7 @@ import sys
 from babel import Locale
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LANGUAGES = ["fa", "ru", "zh", "ar"]
+LANGUAGES = ["fa", "ru", "zh", "ar", "es", "fr", "pt", "tr", "hi", "ur", "id", "vi"]
 
 
 def codes():

@@ -27,6 +27,14 @@ const supportedLanguages = <(String code, String name)>[
   ('ru', 'Русский'),
   ('zh', '中文'),
   ('ar', 'العربية'),
+  ('es', 'Español'),
+  ('hi', 'हिन्दी'),
+  ('fr', 'Français'),
+  ('pt', 'Português'),
+  ('ur', 'اردو'),
+  ('id', 'Bahasa Indonesia'),
+  ('tr', 'Türkçe'),
+  ('vi', 'Tiếng Việt'),
 ];
 
 /// Words a failure the way the core described it, in the user's language.

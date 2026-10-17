@@ -11,7 +11,7 @@ import 'package:omnitun/l10n/l10n.dart';
 import 'package:omnitun/state/countries.dart';
 import 'package:omnitun/state/country_names.dart';
 
-const _languages = ['en', 'fa', 'ru', 'zh', 'ar'];
+const _languages = ['en', 'fa', 'ru', 'zh', 'ar', 'es', 'hi', 'fr', 'pt', 'ur', 'id', 'tr', 'vi'];
 
 Future<AppLocalizations> _load(String code) => AppLocalizations.delegate.load(Locale(code));
 
@@ -141,7 +141,7 @@ void main() {
       expect(names['DE'], isNot('Germany'), reason: lang);
       expect(names.values.every((n) => n.isNotEmpty), isTrue, reason: lang);
     }
-    expect(countryNamesByLanguage.keys, unorderedEquals(['fa', 'ru', 'zh', 'ar']));
+    expect(countryNamesByLanguage.keys, unorderedEquals(['fa', 'ru', 'zh', 'ar', 'es', 'fr', 'pt', 'tr', 'hi', 'ur', 'id', 'vi']));
   });
 
   testWidgets('a country is named in the language of the app', (tester) async {
@@ -161,7 +161,7 @@ void main() {
         ),
       );
     }
-    expect(seen, {'en': 'Germany', 'fa': 'آلمان', 'ru': 'Германия', 'zh': '德国', 'ar': 'ألمانيا'});
+    expect(seen, {'en': 'Germany', 'fa': 'آلمان', 'ru': 'Германия', 'zh': '德国', 'ar': 'ألمانيا', 'es': 'Alemania', 'fr': 'Allemagne', 'pt': 'Alemanha', 'tr': 'Almanya', 'hi': 'जर्मनी', 'ur': 'جرمنی', 'id': 'Jerman', 'vi': 'Đức'});
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('fa'),

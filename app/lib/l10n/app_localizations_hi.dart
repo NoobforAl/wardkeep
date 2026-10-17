@@ -1,0 +1,1638 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Hindi (`hi`).
+class AppLocalizationsHi extends AppLocalizations {
+  AppLocalizationsHi([String locale = 'hi']) : super(locale);
+
+  @override
+  String get appName => 'Wardkeep';
+
+  @override
+  String get actionSave => 'सहेजें';
+
+  @override
+  String get actionCancel => 'रद्द करें';
+
+  @override
+  String get actionDelete => 'हटाएँ';
+
+  @override
+  String get actionEdit => 'संपादित करें';
+
+  @override
+  String get actionReset => 'रीसेट करें';
+
+  @override
+  String get actionSkip => 'छोड़ें';
+
+  @override
+  String get actionNext => 'आगे';
+
+  @override
+  String get actionImport => 'इम्पोर्ट करें';
+
+  @override
+  String get actionDownload => 'डाउनलोड करें';
+
+  @override
+  String get actionCopyAll => 'सब कॉपी करें';
+
+  @override
+  String get actionClear => 'साफ़ करें';
+
+  @override
+  String get tooltipMore => 'और';
+
+  @override
+  String get tooltipShow => 'दिखाएँ';
+
+  @override
+  String get tooltipHide => 'छिपाएँ';
+
+  @override
+  String get searchHint => 'खोजें';
+
+  @override
+  String get tooltipLogs => 'लॉग';
+
+  @override
+  String get tooltipSettings => 'सेटिंग्स';
+
+  @override
+  String get statusConnected => 'कनेक्टेड';
+
+  @override
+  String get statusConnecting => 'कनेक्ट हो रहा है…';
+
+  @override
+  String get statusDisconnecting => 'डिस्कनेक्ट हो रहा है…';
+
+  @override
+  String get statusError => 'कनेक्शन विफल रहा';
+
+  @override
+  String get statusNoInternet => 'इंटरनेट कनेक्शन नहीं है';
+
+  @override
+  String get statusDisconnected => 'कनेक्ट नहीं है';
+
+  @override
+  String get stagePermission => 'VPN अनुमति की प्रतीक्षा';
+
+  @override
+  String get stageNetworkCheck => 'इंटरनेट कनेक्शन जाँचा जा रहा है';
+
+  @override
+  String get stagePrepare => 'कॉन्फ़िगरेशन तैयार हो रहा है';
+
+  @override
+  String get stageEngineStart => 'इंजन शुरू हो रहा है';
+
+  @override
+  String get stageTunnelUp => 'टनल खुल रही है';
+
+  @override
+  String get stageHandshake => 'सर्वर से संपर्क हो रहा है';
+
+  @override
+  String get stageConnected => 'कनेक्टेड';
+
+  @override
+  String get buttonConnect => 'कनेक्ट करें';
+
+  @override
+  String get buttonDisconnect => 'डिस्कनेक्ट करें';
+
+  @override
+  String get buttonCancel => 'रद्द करें';
+
+  @override
+  String get locationLabel => 'स्थान';
+
+  @override
+  String get noServers => 'कोई सर्वर नहीं';
+
+  @override
+  String get noServersHint => 'शुरू करने के लिए एक जोड़ें';
+
+  @override
+  String get automatic => 'स्वचालित';
+
+  @override
+  String get automaticHint => 'सबसे तेज़ सर्वर, विफल होने पर बदलता है';
+
+  @override
+  String get anyServerInCountry => 'इस देश का कोई भी सर्वर';
+
+  @override
+  String get torNetwork => 'Tor नेटवर्क';
+
+  @override
+  String get emptyTitle => 'अभी कोई प्रोफ़ाइल नहीं';
+
+  @override
+  String get emptyHint => 'कॉन्फ़िग, लिंक या सब्सक्रिप्शन इम्पोर्ट करें।';
+
+  @override
+  String get importConfig => 'कॉन्फ़िग इम्पोर्ट करें';
+
+  @override
+  String failoverToast(String to, String from) {
+    return '$to पर स्विच किया गया — $from ने जवाब देना बंद कर दिया';
+  }
+
+  @override
+  String get unknownLocation => 'अज्ञात स्थान';
+
+  @override
+  String errorFailed(String stage, String reason) {
+    return '$stage विफल: $reason';
+  }
+
+  @override
+  String get errTimeout => 'सर्वर ने समय पर जवाब नहीं दिया';
+
+  @override
+  String get errRefused => 'सर्वर ने कनेक्शन अस्वीकार कर दिया';
+
+  @override
+  String get errReset => 'नेटवर्क ने कनेक्शन रीसेट कर दिया';
+
+  @override
+  String get errNoRoute => 'इस नेटवर्क से सर्वर तक पहुँचा नहीं जा सकता';
+
+  @override
+  String get errNetworkUnreachable => 'नेटवर्क उपलब्ध नहीं है';
+
+  @override
+  String get errDns => 'सर्वर का नाम हल नहीं हो सका';
+
+  @override
+  String get errTls => 'सर्वर का सुरक्षा प्रमाणपत्र अस्वीकार कर दिया गया';
+
+  @override
+  String get errAuth => 'यूज़रनेम या पासवर्ड अस्वीकार कर दिया गया';
+
+  @override
+  String get errClosed => 'सर्वर ने कनेक्शन बंद कर दिया';
+
+  @override
+  String get errCertDate =>
+      'सर्वर का प्रमाणपत्र समाप्त हो चुका है या अभी मान्य नहीं हुआ है (इस फ़ोन की तारीख़ और समय भी जाँचें)';
+
+  @override
+  String get errCertUntrusted =>
+      'सर्वर का प्रमाणपत्र किसी भरोसेमंद अथॉरिटी द्वारा हस्ताक्षरित नहीं है';
+
+  @override
+  String get errCertName =>
+      'सर्वर का प्रमाणपत्र उस नाम के लिए नहीं है जिससे आप कनेक्ट कर रहे हैं';
+
+  @override
+  String get errTlsKeys =>
+      'साझा कुंजी (tls-auth या tls-crypt) सर्वर की कुंजी से मेल नहीं खाती';
+
+  @override
+  String get errReality =>
+      'सर्वर ने Reality हैंडशेक अस्वीकार कर दिया (पब्लिक की, शॉर्ट ID और सर्वर नाम जाँचें)';
+
+  @override
+  String get errNoHandshake =>
+      'सर्वर ने हैंडशेक का जवाब नहीं दिया (कुंजियाँ, एंडपॉइंट जाँचें और देखें कि उसका UDP पोर्ट खुला है)';
+
+  @override
+  String get errUdpBlocked =>
+      'सर्वर ने UDP पर जवाब नहीं दिया; यह नेटवर्क उसे रोक सकता है, TCP आधारित सर्वर आज़माएँ';
+
+  @override
+  String get errPortInUse =>
+      'लोकल पोर्ट पहले से किसी दूसरे ऐप में उपयोग हो रहा है';
+
+  @override
+  String get errTorTimeout =>
+      'Tor समय पर कनेक्ट नहीं हो सका। यह नेटवर्क Tor को रोक सकता है; ब्रिज (Snowflake या obfs4) उपयोग करें';
+
+  @override
+  String get errTorBridgeTimeout =>
+      'Tor समय पर कनेक्ट नहीं हो सका। ब्रिज बंद या अत्यधिक व्यस्त हो सकता है; दूसरे प्रकार का ब्रिज (Snowflake या obfs4) आज़माएँ';
+
+  @override
+  String get errTorBadBridge =>
+      'Tor ब्रिज लाइन मान्य नहीं है (इसमें ट्रांसपोर्ट, पता और फ़िंगरप्रिंट चाहिए)';
+
+  @override
+  String get errTorMissing => 'इस बिल्ड में Tor क्लाइंट शामिल नहीं है';
+
+  @override
+  String get errPermission => 'VPN की अनुमति नहीं दी गई';
+
+  @override
+  String get errCoreLost => 'कोर सेवा से कनेक्शन टूट गया';
+
+  @override
+  String get selectLocation => 'स्थान चुनें';
+
+  @override
+  String get testSpeedTooltip => 'सभी सर्वरों की गति जाँचें';
+
+  @override
+  String get addServersTooltip => 'सर्वर जोड़ें';
+
+  @override
+  String get menuImport => 'कॉन्फ़िग, लिंक या QR इम्पोर्ट करें';
+
+  @override
+  String get menuNewServer => 'हाथ से सर्वर जोड़ें';
+
+  @override
+  String get menuSubscription => 'सब्सक्रिप्शन जोड़ें';
+
+  @override
+  String get menuManage => 'सर्वर और सब्सक्रिप्शन प्रबंधित करें';
+
+  @override
+  String get menuSetDefault => 'डिफ़ॉल्ट बनाएँ';
+
+  @override
+  String get badgeDefault => 'डिफ़ॉल्ट';
+
+  @override
+  String get menuDeleteAll => 'सभी सर्वर हटाएँ';
+
+  @override
+  String get deleteAllTitle => 'सभी सर्वर हटाएँ?';
+
+  @override
+  String get deleteAllBody =>
+      'आपके जोड़े हुए सभी सर्वर और सब्सक्रिप्शन हटा दिए जाएँगे। बिल्ट-इन Tor कनेक्शन बना रहेगा और ऐप उसी पर लौट आएगा।';
+
+  @override
+  String get menuRestoreTor => 'Tor डिफ़ॉल्ट बहाल करें';
+
+  @override
+  String get deletedAllToast => 'सभी सर्वर हटा दिए गए';
+
+  @override
+  String defaultSetToast(String name) {
+    return '$name अब डिफ़ॉल्ट है';
+  }
+
+  @override
+  String serversCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count सर्वर',
+      one: '$count सर्वर',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get otherGroup => 'अन्य';
+
+  @override
+  String get torGroup => 'Tor';
+
+  @override
+  String get noServersYet => 'अभी कोई सर्वर नहीं';
+
+  @override
+  String get importHintShort =>
+      'कॉन्फ़िग फ़ाइल, लिंक या सब्सक्रिप्शन इम्पोर्ट करें।';
+
+  @override
+  String get showServers => 'सर्वर दिखाएँ';
+
+  @override
+  String get hideServers => 'सर्वर छिपाएँ';
+
+  @override
+  String get menuEditServer => 'संपादित करें';
+
+  @override
+  String get menuBridgeSettings => 'ब्रिज सेटिंग्स';
+
+  @override
+  String get menuShare => 'लिंक या QR साझा करें';
+
+  @override
+  String get menuSetCountry => 'देश चुनें';
+
+  @override
+  String get menuCredentials => 'यूज़रनेम और पासवर्ड';
+
+  @override
+  String needsSignIn(String address) {
+    return '$address — साइन-इन ज़रूरी है';
+  }
+
+  @override
+  String get countryOfServer => 'इस सर्वर का देश';
+
+  @override
+  String get guessFromName => 'नाम से पता लगाएँ';
+
+  @override
+  String get latencyNotTested => 'जाँचा नहीं गया';
+
+  @override
+  String get latencyUnreachable => 'पहुँच से बाहर';
+
+  @override
+  String get latencyTimeout => 'टाइमआउट';
+
+  @override
+  String latencyMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get unknownCountry => 'अज्ञात देश';
+
+  @override
+  String get addServerTitle => 'सर्वर जोड़ें';
+
+  @override
+  String get addServerIntro =>
+      'प्रोटोकॉल चुनें। लिंक या QR तेज़ है: इम्पोर्ट का उपयोग करें।';
+
+  @override
+  String newServerTitle(String label) {
+    return 'नया $label सर्वर';
+  }
+
+  @override
+  String get editServerTitle => 'सर्वर संपादित करें';
+
+  @override
+  String get torBridgesTitle => 'Tor ब्रिज';
+
+  @override
+  String get subscriptionEditNote =>
+      'यह सर्वर एक सब्सक्रिप्शन से आता है: रिफ़्रेश होने पर आपके बदलाव बदल दिए जाएँगे।';
+
+  @override
+  String get moreOptions => 'और विकल्प';
+
+  @override
+  String get countryRow => 'देश';
+
+  @override
+  String get countryAuto => 'नाम और पते से पता लगाया गया';
+
+  @override
+  String get alreadyInList => 'यह सर्वर पहले से सूची में है';
+
+  @override
+  String get choiceDefault => 'डिफ़ॉल्ट';
+
+  @override
+  String get torBridgesNone => 'कोई नहीं (सीधा, या नीचे दी गई लाइनें)';
+
+  @override
+  String get torBridgesSnowflake => 'Snowflake';
+
+  @override
+  String get torBridgesObfs4 => 'obfs4 (बिल्ट-इन ब्रिज)';
+
+  @override
+  String get listHelper => 'मानों को अल्पविराम से अलग करें';
+
+  @override
+  String get fillPaste => 'पेस्ट करें';
+
+  @override
+  String get fillFile => 'फ़ाइल';
+
+  @override
+  String get fillScanQr => 'QR स्कैन करें';
+
+  @override
+  String get openTextFile => 'टेक्स्ट फ़ाइल खोलें';
+
+  @override
+  String couldNotReadFile(String error) {
+    return 'फ़ाइल पढ़ी नहीं जा सकी: $error';
+  }
+
+  @override
+  String fieldRequired(String label) {
+    return '$label *';
+  }
+
+  @override
+  String formNoEditor(String protocol) {
+    return '$protocol के लिए कोई एडिटर नहीं';
+  }
+
+  @override
+  String get shareScanHint => 'Wardkeep से स्कैन करें, या लिंक कॉपी करें।';
+
+  @override
+  String get shareCopy => 'लिंक कॉपी करें';
+
+  @override
+  String get shareCopied => 'लिंक कॉपी हो गया';
+
+  @override
+  String get shareWarning =>
+      'इसमें सर्वर का पासवर्ड या कुंजी है। सावधानी से साझा करें।';
+
+  @override
+  String shareFailed(String reason) {
+    return 'इस सर्वर को लिंक के रूप में साझा नहीं किया जा सकता: $reason';
+  }
+
+  @override
+  String get shareTooLong => 'QR कोड के लिए बहुत लंबा: लिंक कॉपी करें';
+
+  @override
+  String get obTitle1 => 'निजी और सरल';
+
+  @override
+  String get obText1 =>
+      'VPN, प्रॉक्सी और Tor के लिए एक शांत स्क्रीन। जगह चुनें, कनेक्ट दबाएँ।';
+
+  @override
+  String get obTitle2 => 'अपने सर्वर जोड़ें';
+
+  @override
+  String get obText2 =>
+      'लिंक, QR कोड, कॉन्फ़िग फ़ाइल या सब्सक्रिप्शन इम्पोर्ट करें। या हाथ से सर्वर जोड़ें।';
+
+  @override
+  String get obTitle3Android => 'Android एक बार पूछेगा';
+
+  @override
+  String get obText3Android =>
+      'Android VPN कनेक्शन की अनुमति माँगेगा। सुरक्षित रहने के लिए स्वीकार करें।';
+
+  @override
+  String get obTitle3Desktop => 'जब आप चाहें, तैयार';
+
+  @override
+  String get obText3Desktop =>
+      'प्रॉक्सी मोड में शुरू होता है, किसी विशेष अधिकार की ज़रूरत नहीं। सारा ट्रैफ़िक कैप्चर करने के लिए सेटिंग्स में VPN मोड चालू करें।';
+
+  @override
+  String get obAddFirst => 'मेरा पहला सर्वर जोड़ें';
+
+  @override
+  String get bypassTitle => 'बायपास सूचियाँ';
+
+  @override
+  String get bypassAddTooltip => 'सूची जोड़ें';
+
+  @override
+  String get bypassFromClipboard => 'क्लिपबोर्ड से पेस्ट करें';
+
+  @override
+  String get bypassFromFile => '.txt फ़ाइल खोलें';
+
+  @override
+  String get bypassFromUrl => 'लिंक से डाउनलोड करें';
+
+  @override
+  String get bypassType => 'खुद लिखें';
+
+  @override
+  String get bypassClipboardEmpty => 'क्लिपबोर्ड खाली है';
+
+  @override
+  String get bypassPickFile => 'बायपास सूची खोलें (.txt)';
+
+  @override
+  String bypassDownloadFailed(String error) {
+    return 'सूची डाउनलोड नहीं हो सकी: $error';
+  }
+
+  @override
+  String get bypassIntro =>
+      'वे साइटें और पते जो VPN को छोड़ देते हैं। हर पंक्ति में एक: example.com, full:www.example.com, keyword:bank, regexp:…, 203.0.113.7 या 10.0.0.0/8। # से शुरू होने वाली पंक्तियाँ अनदेखी की जाती हैं।';
+
+  @override
+  String get bypassNoLists => 'अभी कोई सूची नहीं।';
+
+  @override
+  String get bypassTypeList => 'सूची लिखें';
+
+  @override
+  String entriesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count प्रविष्टियाँ',
+      one: '$count प्रविष्टि',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bypassOnlyTitle => 'केवल सूचीबद्ध VPN उपयोग करें';
+
+  @override
+  String get bypassOnlyOn => 'बाकी सब सीधे जाता है।';
+
+  @override
+  String get bypassOnlyOff => 'सूचीबद्ध सीधे जाते हैं; बाकी VPN से जाते हैं।';
+
+  @override
+  String get bypassNothing => 'कोई सूची चालू नहीं है।';
+
+  @override
+  String bypassInUse(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count प्रविष्टियाँ उपयोग में',
+      one: '$count प्रविष्टि उपयोग में',
+    );
+    return '$_temp0। अगले कनेक्ट पर लागू होगा।';
+  }
+
+  @override
+  String get bypassHttpLink => 'http(s) लिंक दर्ज करें';
+
+  @override
+  String bypassServerAnswered(int code) {
+    return 'सर्वर ने $code जवाब दिया';
+  }
+
+  @override
+  String get bypassTooLarge => 'सूची 5 MB से बड़ी है';
+
+  @override
+  String get bypassDownloadTitle => 'सूची डाउनलोड करें';
+
+  @override
+  String get bypassNewList => 'नई सूची';
+
+  @override
+  String get bypassEditList => 'सूची संपादित करें';
+
+  @override
+  String get bypassName => 'नाम';
+
+  @override
+  String get bypassEntriesLabel => 'प्रविष्टियाँ, हर पंक्ति में एक';
+
+  @override
+  String get bypassNoUsable => 'अभी कोई उपयोगी प्रविष्टि नहीं।';
+
+  @override
+  String bypassSummary(String entries, String names, String ranges) {
+    return '$entries · $names, $ranges।';
+  }
+
+  @override
+  String bypassNames(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count नाम',
+      one: '$count नाम',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bypassRanges(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count पते या रेंज',
+      one: '$count पता या रेंज',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bypassIgnored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count पंक्तियाँ अनदेखी की जाएँगी:',
+      one: '$count पंक्ति अनदेखी की जाएगी:',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bypassMoreIssues(int count) {
+    return '… और $count और';
+  }
+
+  @override
+  String get bypassReconnect => 'नई सूची उपयोग करने के लिए फिर से कनेक्ट करें';
+
+  @override
+  String get bypassDefaultName => 'मेरी सूची';
+
+  @override
+  String get bypassPastedName => 'पेस्ट की गई सूची';
+
+  @override
+  String get settingsTitle => 'सेटिंग्स';
+
+  @override
+  String get settingsServers => 'सर्वर';
+
+  @override
+  String get manageServers => 'सर्वर प्रबंधित करें';
+
+  @override
+  String get manageServersHint => 'सर्वर और सब्सक्रिप्शन';
+
+  @override
+  String get settingsConnection => 'कनेक्शन';
+
+  @override
+  String get vpnMode => 'VPN मोड (सारा ट्रैफ़िक)';
+
+  @override
+  String get vpnModeHint => 'बंद: केवल प्रॉक्सी, VPN अनुमति नहीं';
+
+  @override
+  String get systemProxy => 'सिस्टम प्रॉक्सी सेट करें';
+
+  @override
+  String get systemProxyHint => 'कनेक्ट रहने के दौरान सिस्टम प्रॉक्सी सेट करें';
+
+  @override
+  String get autoSwitch => 'विफलता पर ऑटो-स्विच';
+
+  @override
+  String get autoSwitchHint => 'एक विफल हो तो अगला सर्वर आज़माएँ';
+
+  @override
+  String get bypassLan => 'लोकल नेटवर्क बायपास करें';
+
+  @override
+  String get bypassLanHint =>
+      'लोकल डिवाइस तक सीधे पहुँचें (192.168.x.x, 10.x.x.x)';
+
+  @override
+  String get bypassListsHint => 'वेबसाइटें और पते जो VPN को छोड़ देते हैं';
+
+  @override
+  String bypassListsInUse(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count प्रविष्टियाँ उपयोग में',
+      one: '$count प्रविष्टि उपयोग में',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get alwaysOnTitle => 'हमेशा चालू VPN और किल स्विच';
+
+  @override
+  String get alwaysOnHint =>
+      'बूट पर फिर से कनेक्ट करें और लीक रोकें। Android की VPN सेटिंग्स में सेट करें।';
+
+  @override
+  String get openVpnSettingsFallback =>
+      'सेटिंग्स → नेटवर्क → VPN → Wardkeep के पास गियर आइकन';
+
+  @override
+  String get splitTunneling => 'स्प्लिट टनलिंग';
+
+  @override
+  String splitSummaryOnly(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'केवल चुने गए $count ऐप VPN उपयोग करते हैं',
+      one: 'केवल चुने गए $count ऐप VPN उपयोग करते हैं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String splitSummaryBypass(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ऐप VPN को बायपास करते हैं',
+      one: '$count ऐप VPN को बायपास करता है',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get splitSummaryOff => 'सभी ऐप VPN उपयोग करते हैं';
+
+  @override
+  String get remoteDns => 'रिमोट DNS';
+
+  @override
+  String get remoteDnsHelp =>
+      'टनल के ज़रिए उपयोग होने वाला DNS, जैसे https://1.1.1.1/dns-query या tls://1.1.1.1';
+
+  @override
+  String get settingsApp => 'ऐप';
+
+  @override
+  String get appearance => 'रूप-रंग';
+
+  @override
+  String get themeDark => 'डार्क';
+
+  @override
+  String get themeLight => 'लाइट';
+
+  @override
+  String get themeSystem => 'सिस्टम के अनुसार';
+
+  @override
+  String get language => 'भाषा';
+
+  @override
+  String get languageSystem => 'सिस्टम डिफ़ॉल्ट';
+
+  @override
+  String get stopOnClose => 'ऐप बंद होने पर VPN रोकें';
+
+  @override
+  String aboutLine(String engine) {
+    return 'MIT लाइसेंस · इंजन: $engine';
+  }
+
+  @override
+  String get splitTitle => 'स्प्लिट टनलिंग';
+
+  @override
+  String get splitAll => 'सभी ऐप';
+
+  @override
+  String get splitOnlySelected => 'केवल चुने हुए';
+
+  @override
+  String get splitBypassSelected => 'चुने हुए बायपास करें';
+
+  @override
+  String get splitHelpOffMode => 'हर ऐप VPN उपयोग करता है।';
+
+  @override
+  String get splitHelpOnlyNone => 'कोई ऐप नहीं चुना: सभी VPN उपयोग करते हैं।';
+
+  @override
+  String splitHelpOnly(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'केवल $count ऐप VPN उपयोग करते हैं।',
+      one: 'केवल $count ऐप VPN उपयोग करता है।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String splitHelpBypass(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ऐप सीधे जाते हैं।',
+      one: '$count ऐप सीधे जाता है।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchApps => 'ऐप खोजें';
+
+  @override
+  String get showSystemApps => 'सिस्टम ऐप दिखाएँ';
+
+  @override
+  String couldNotListApps(String error) {
+    return 'ऐप की सूची नहीं बन सकी: $error';
+  }
+
+  @override
+  String get scanTitle => 'QR कोड स्कैन करें';
+
+  @override
+  String get scanTorch => 'टॉर्च';
+
+  @override
+  String scanCameraUnavailable(String code) {
+    return 'कैमरा उपलब्ध नहीं: $code';
+  }
+
+  @override
+  String get scanPoint => 'कैमरे को कॉन्फ़िग QR कोड की ओर रखें';
+
+  @override
+  String get credTitle => 'साइन इन करें';
+
+  @override
+  String credNeeds(String name) {
+    return '$name को यूज़रनेम और पासवर्ड चाहिए।';
+  }
+
+  @override
+  String get credUsername => 'यूज़रनेम';
+
+  @override
+  String get credPassword => 'पासवर्ड';
+
+  @override
+  String get logsEmpty => 'अभी कोई लॉग प्रविष्टि नहीं।';
+
+  @override
+  String get profilesTitle => 'सर्वर प्रबंधित करें';
+
+  @override
+  String get addSubscriptionTooltip => 'सब्सक्रिप्शन जोड़ें';
+
+  @override
+  String get testLatencyTooltip => 'लेटेंसी जाँचें';
+
+  @override
+  String get profilesEmptyHint =>
+      'कोई प्रोफ़ाइल नहीं। जोड़ने के लिए इम्पोर्ट दबाएँ।';
+
+  @override
+  String get profilesDragHint =>
+      'क्रम बदलने के लिए दबाकर खींचें। फ़ेलओवर इसी क्रम में चलता है।';
+
+  @override
+  String get myProfiles => 'मेरी प्रोफ़ाइलें';
+
+  @override
+  String subRefreshed(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count प्रोफ़ाइलें',
+      one: '$count प्रोफ़ाइल',
+    );
+    return '$name: $_temp0';
+  }
+
+  @override
+  String get refreshTooltip => 'रिफ़्रेश करें';
+
+  @override
+  String get subDeleteWithProfiles => 'सब्सक्रिप्शन और उसकी प्रोफ़ाइलें हटाएँ';
+
+  @override
+  String subUsageOf(String used, String total) {
+    return '$total में से $used';
+  }
+
+  @override
+  String subUsed(String used) {
+    return '$used उपयोग हुआ';
+  }
+
+  @override
+  String get subExpired => 'समाप्त हो गया';
+
+  @override
+  String get subExpiresToday => 'आज समाप्त होगा';
+
+  @override
+  String subExpiresIn(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन में समाप्त होगा',
+      one: '$days दिन में समाप्त होगा',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subUpdated(String ago) {
+    return '$ago अपडेट हुआ';
+  }
+
+  @override
+  String get agoJustNow => 'अभी-अभी';
+
+  @override
+  String agoMinutes(int count) {
+    return '$count मिनट पहले';
+  }
+
+  @override
+  String agoHours(int count) {
+    return '$count घंटे पहले';
+  }
+
+  @override
+  String agoDays(int count) {
+    return '$count दिन पहले';
+  }
+
+  @override
+  String subRefreshFailed(String error) {
+    return 'पिछला रिफ़्रेश विफल रहा: $error';
+  }
+
+  @override
+  String get importTitle => 'कॉन्फ़िग इम्पोर्ट करें';
+
+  @override
+  String get importDescription =>
+      'लिंक, कॉन्फ़िग या सब्सक्रिप्शन पेस्ट करें — या फ़ाइल खोलें या QR कोड स्कैन करें।';
+
+  @override
+  String get importScanQr => 'QR स्कैन करें';
+
+  @override
+  String get importOpenFile => 'फ़ाइल खोलें';
+
+  @override
+  String get importPaste => 'पेस्ट करें';
+
+  @override
+  String get importSubscription => 'सब्सक्रिप्शन';
+
+  @override
+  String get importTor => 'Tor';
+
+  @override
+  String get importAddTor => 'Tor जोड़ें';
+
+  @override
+  String get importTorDirect => 'Tor (सीधा)';
+
+  @override
+  String get importTorSnowflake => 'Tor + Snowflake ब्रिज';
+
+  @override
+  String get importTorObfs4 => 'Tor + obfs4 ब्रिज';
+
+  @override
+  String importedProfiles(int added, int dupes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added प्रोफ़ाइलें इम्पोर्ट हुईं',
+      one: '$added प्रोफ़ाइल इम्पोर्ट हुई',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      dupes,
+      locale: localeName,
+      other: ', $dupes पहले से मौजूद',
+      zero: '',
+    );
+    return '$_temp0$_temp1';
+  }
+
+  @override
+  String importNothing(String reason) {
+    return 'कुछ इम्पोर्ट नहीं हुआ: $reason';
+  }
+
+  @override
+  String importPartial(int added, int failed) {
+    return '$added इम्पोर्ट हुए, $failed विफल';
+  }
+
+  @override
+  String get subAddTitle => 'सब्सक्रिप्शन जोड़ें';
+
+  @override
+  String get subEditTitle => 'सब्सक्रिप्शन संपादित करें';
+
+  @override
+  String get subUrlLabel => 'सब्सक्रिप्शन URL';
+
+  @override
+  String get subUrlHint =>
+      'https://provider.example/sub/… या nordvpn://<token>';
+
+  @override
+  String get subNameLabel => 'नाम (वैकल्पिक)';
+
+  @override
+  String get subNameHelp => 'डिफ़ॉल्ट रूप से प्रोवाइडर का शीर्षक या होस्ट नाम';
+
+  @override
+  String get subAuthLabel => 'प्रमाणीकरण';
+
+  @override
+  String get authNone => 'कोई नहीं';
+
+  @override
+  String get authBasic => 'यूज़रनेम और पासवर्ड (Basic)';
+
+  @override
+  String get authBearer => 'Bearer टोकन';
+
+  @override
+  String get authHeader => 'कस्टम हेडर';
+
+  @override
+  String get authQuery => 'URL में टोकन';
+
+  @override
+  String get subUsername => 'यूज़रनेम';
+
+  @override
+  String get subPassword => 'पासवर्ड';
+
+  @override
+  String get subHeaderName => 'हेडर का नाम';
+
+  @override
+  String get subHeaderValue => 'हेडर का मान';
+
+  @override
+  String get subParamName => 'पैरामीटर का नाम';
+
+  @override
+  String get subToken => 'टोकन';
+
+  @override
+  String get subDownloadLabel => 'डाउनलोड';
+
+  @override
+  String get subDownloadHelp => 'प्रोवाइडर ब्लॉक है? VPN फिर भी इसे ला सकता है';
+
+  @override
+  String get subViaDirect => 'सीधे';
+
+  @override
+  String get subViaAuto => 'सीधे, या ब्लॉक होने पर VPN से';
+
+  @override
+  String get subViaTunnel => 'हमेशा VPN से (पहले कनेक्ट करें)';
+
+  @override
+  String get subErrUrl =>
+      'http(s) सब्सक्रिप्शन URL दर्ज करें (या nordvpn://<access token>)';
+
+  @override
+  String get subErrHeader => 'हेडर का नाम दर्ज करें';
+
+  @override
+  String get subErrToken => 'टोकन दर्ज करें';
+
+  @override
+  String get subAddAndDownload => 'जोड़ें और डाउनलोड करें';
+
+  @override
+  String get subSaveAndRefresh => 'सहेजें और रिफ़्रेश करें';
+
+  @override
+  String subUpdatedToast(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count प्रोफ़ाइलें',
+      one: '$count प्रोफ़ाइल',
+    );
+    return 'सब्सक्रिप्शन अपडेट हुआ: $_temp0';
+  }
+
+  @override
+  String get flName => 'नाम';
+
+  @override
+  String get flServer => 'सर्वर';
+
+  @override
+  String get flPort => 'पोर्ट';
+
+  @override
+  String get flPassword => 'पासवर्ड';
+
+  @override
+  String get flUsername => 'यूज़रनेम';
+
+  @override
+  String get flUuid => 'UUID';
+
+  @override
+  String get flSecurity => 'सुरक्षा';
+
+  @override
+  String get flFlow => 'Flow';
+
+  @override
+  String get flCipher => 'सिफ़र';
+
+  @override
+  String get flEncryption => 'एन्क्रिप्शन';
+
+  @override
+  String get flAlterId => 'Alter id';
+
+  @override
+  String get flTlsServerName => 'TLS सर्वर नाम (SNI)';
+
+  @override
+  String get flTlsFingerprint => 'TLS फ़िंगरप्रिंट';
+
+  @override
+  String get flAlpn => 'ALPN';
+
+  @override
+  String get flSkipCertCheck => 'प्रमाणपत्र जाँच छोड़ें';
+
+  @override
+  String get flPinnedCert => 'पिन किया हुआ प्रमाणपत्र (PEM)';
+
+  @override
+  String get flRealityPublicKey => 'Reality पब्लिक की';
+
+  @override
+  String get flRealityShortId => 'Reality शॉर्ट ID';
+
+  @override
+  String get flTransport => 'ट्रांसपोर्ट';
+
+  @override
+  String get flHostHeader => 'होस्ट हेडर';
+
+  @override
+  String get flPath => 'पाथ';
+
+  @override
+  String get flGrpcService => 'gRPC सेवा का नाम';
+
+  @override
+  String get flPlugin => 'प्लगइन';
+
+  @override
+  String get flPluginOptions => 'प्लगइन विकल्प';
+
+  @override
+  String get flObfuscation => 'ऑब्फ़स्केशन';
+
+  @override
+  String get flObfsPassword => 'ऑब्फ़स्केशन पासवर्ड';
+
+  @override
+  String get flUploadMbps => 'अपलोड (Mbps)';
+
+  @override
+  String get flDownloadMbps => 'डाउनलोड (Mbps)';
+
+  @override
+  String get flCongestion => 'कंजेशन कंट्रोल';
+
+  @override
+  String get flUdpRelay => 'UDP रिले मोड';
+
+  @override
+  String get flUseQuic => 'HTTP/3 (QUIC) उपयोग करें';
+
+  @override
+  String get flTunnelAddress => 'आपका टनल पता';
+
+  @override
+  String get flRoutedNetworks => 'रूट किए गए नेटवर्क';
+
+  @override
+  String get flDnsServers => 'DNS सर्वर';
+
+  @override
+  String get flMtu => 'MTU';
+
+  @override
+  String get flKeepalive => 'Keepalive (सेकंड)';
+
+  @override
+  String get flPrivateKey => 'प्राइवेट की';
+
+  @override
+  String get flServerPublicKey => 'सर्वर पब्लिक की';
+
+  @override
+  String get flPresharedKey => 'प्री-शेयर्ड की';
+
+  @override
+  String get flReservedBytes => 'रिज़र्व्ड बाइट्स';
+
+  @override
+  String get flAuthentication => 'प्रमाणीकरण';
+
+  @override
+  String get flAuthDigest => 'Auth डाइजेस्ट';
+
+  @override
+  String get flCaCert => 'CA प्रमाणपत्र (PEM)';
+
+  @override
+  String get flClientCert => 'क्लाइंट प्रमाणपत्र (PEM)';
+
+  @override
+  String get flClientKey => 'क्लाइंट की (PEM)';
+
+  @override
+  String get flControlWrap => 'कंट्रोल चैनल सुरक्षा';
+
+  @override
+  String get flControlWrapKey => 'कंट्रोल चैनल की';
+
+  @override
+  String get flKeyDirection => 'की की दिशा';
+
+  @override
+  String get flRemoteCertType => 'रिमोट प्रमाणपत्र प्रकार';
+
+  @override
+  String get flVerifyServerName => 'सर्वर नाम सत्यापित करें';
+
+  @override
+  String get flYourIdentity => 'आपकी पहचान';
+
+  @override
+  String get flServerIdentity => 'सर्वर की पहचान';
+
+  @override
+  String get flServerCertTrust => 'भरोसेमंद सर्वर प्रमाणपत्र (PEM)';
+
+  @override
+  String get flUseSystemIke => 'फ़ोन का अपना IKEv2 क्लाइंट उपयोग करें';
+
+  @override
+  String get flUseTcp => 'TCP उपयोग करें';
+
+  @override
+  String get flHostKeys => 'होस्ट की';
+
+  @override
+  String get flPrivateKeyPem => 'प्राइवेट की (PEM)';
+
+  @override
+  String get flKeyPassphrase => 'की पासफ़्रेज़';
+
+  @override
+  String get flBridges => 'ब्रिज';
+
+  @override
+  String get flBridgeLines => 'ब्रिज लाइनें';
+
+  @override
+  String get flJc => 'Jc (जंक पैकेट संख्या)';
+
+  @override
+  String get flSignaturePacket => 'I1 (सिग्नेचर पैकेट)';
+
+  @override
+  String get hpAuthorizedKeys =>
+      'authorized_keys प्रारूप; खाली होने पर कोई भी की स्वीकार';
+
+  @override
+  String get hpIkeTcp =>
+      'UDP रोकने वाले नेटवर्क के लिए IKE और ESP को TCP पर चलाएँ';
+
+  @override
+  String get hpDefaultsToServer => 'डिफ़ॉल्ट रूप से सर्वर का पता';
+
+  @override
+  String get hpTorBridges =>
+      'खाली होने पर Tor सीधे कनेक्ट होता है, या नीचे की ब्रिज लाइनें उपयोग करता है';
+
+  @override
+  String get hpExampleAddress => 'उदाहरण: 10.8.0.2/32';
+
+  @override
+  String get hpExamplePlugin => 'उदाहरण: shadow-tls या v2ray-plugin';
+
+  @override
+  String get hpHostOrIp => 'होस्ट नाम या IP पता';
+
+  @override
+  String get hpNeededReality => 'सुरक्षा reality होने पर ज़रूरी';
+
+  @override
+  String get hpOnlySelfSigned =>
+      'केवल उन सर्वरों के लिए जिनका सेल्फ़-साइन्ड प्रमाणपत्र आप पिन नहीं कर सकते';
+
+  @override
+  String get hpSafeSstp =>
+      'SSTP के लिए सुरक्षित: पासवर्ड एक्सचेंज सर्वर को प्रमाणित करता है';
+
+  @override
+  String get hpHysteriaObfs =>
+      'Hysteria 2 के लिए salamander; Hysteria 1 के लिए ऑब्फ़स्केशन पासवर्ड';
+
+  @override
+  String get hpTrustCert =>
+      'सिस्टम की अथॉरिटी के बजाय इस प्रमाणपत्र पर भरोसा करें';
+
+  @override
+  String get hpWhichBrowser => 'किस ब्राउज़र के TLS हैंडशेक की नकल करनी है';
+
+  @override
+  String get hpWarpReserved =>
+      'तीन संख्याएँ, जैसा WARP कॉन्फ़िगरेशन में दी जाती हैं';
+
+  @override
+  String get hpOneBridgePerLine =>
+      'हर पंक्ति में एक ब्रिज, torrc की तरह लेकिन \"Bridge \" के बिना';
+
+  @override
+  String get exitTitle => 'एग्ज़िट पता और देश दिखाएँ';
+
+  @override
+  String get exitHint =>
+      'api.country.is से आपका IP और देश पूछें, कनेक्ट न होने पर भी।';
+
+  @override
+  String exitIpLabel(String ip) {
+    return 'IP $ip';
+  }
+
+  @override
+  String connectedTo(String place) {
+    return '$place से कनेक्टेड';
+  }
+
+  @override
+  String get noticesTitle => 'ओपन-सोर्स लाइसेंस';
+
+  @override
+  String get noticesIntro =>
+      'Wardkeep MIT लाइसेंस के तहत है। इसमें नीचे दिया गया सॉफ़्टवेयर शामिल है, हर एक अपने लाइसेंस के तहत।';
+
+  @override
+  String noticesMore(int count) {
+    return '+$count और';
+  }
+
+  @override
+  String noticesPackages(int count) {
+    return '$count पैकेज';
+  }
+
+  @override
+  String get noticesLoadFailed => 'लाइसेंस सूची पढ़ी नहीं जा सकी।';
+
+  @override
+  String formRequired(String label) {
+    return '$label ज़रूरी है';
+  }
+
+  @override
+  String formNotNumber(String label) {
+    return '$label पूर्ण संख्या होनी चाहिए';
+  }
+
+  @override
+  String formNotBool(String label) {
+    return '$label चालू या बंद होना चाहिए';
+  }
+
+  @override
+  String formBadChoice(String label, String value, String choices) {
+    return '$label: $value, $choices में से नहीं है';
+  }
+
+  @override
+  String get formRealityOnlyVless => 'Reality केवल VLESS के लिए उपलब्ध है';
+
+  @override
+  String formUnknownSecurity(String value) {
+    return 'अज्ञात सुरक्षा: $value';
+  }
+
+  @override
+  String get formReservedBytes =>
+      'रिज़र्व्ड बाइट्स 0 से 255 तक की संख्याएँ होनी चाहिए';
+
+  @override
+  String get formRealityKeyRequired =>
+      'सुरक्षा Reality होने पर Reality पब्लिक की ज़रूरी है';
+
+  @override
+  String get importUnsupported =>
+      'यह सर्वर लिंक, सब्सक्रिप्शन या कॉन्फ़िग नहीं है जिसे Wardkeep पढ़ सके';
+
+  @override
+  String importUnsupportedScheme(String scheme) {
+    return '$scheme:// से शुरू होने वाले लिंक समर्थित नहीं हैं';
+  }
+
+  @override
+  String get importXrayServer =>
+      'यह Xray सर्वर कॉन्फ़िग है। इसे सर्वर पर इम्पोर्ट करें (omnitun-server import xray), क्लाइंट प्रोफ़ाइल के रूप में नहीं';
+
+  @override
+  String get subAuthFailed =>
+      'सब्सक्रिप्शन ने साइन-इन अस्वीकार कर दिया। यूज़रनेम, पासवर्ड या टोकन जाँचें';
+
+  @override
+  String subHttp(String status) {
+    return 'सब्सक्रिप्शन सर्वर ने HTTP $status जवाब दिया';
+  }
+
+  @override
+  String get subTooLarge => 'सब्सक्रिप्शन 10 MB से बड़ा है';
+
+  @override
+  String get subBadUrl => 'यह मान्य सब्सक्रिप्शन पता नहीं है';
+
+  @override
+  String get bypassIssueEmptyExpression => 'खाली एक्सप्रेशन';
+
+  @override
+  String get bypassIssueBadExpression => 'मान्य एक्सप्रेशन नहीं';
+
+  @override
+  String get bypassIssueBadName => 'मान्य नाम नहीं';
+
+  @override
+  String get bypassIssueGeo =>
+      'geo सूचियाँ समर्थित नहीं हैं; डोमेन या रेंज लिखें';
+
+  @override
+  String get bypassIssueBadEntry => 'डोमेन, पता या रेंज नहीं';
+
+  @override
+  String bypassIssueTooMany(int limit) {
+    return '$limit से अधिक प्रविष्टियाँ: बाकी अनदेखी की जाएँगी';
+  }
+
+  @override
+  String get torStarting => 'Tor शुरू हो रहा है';
+
+  @override
+  String torBootstrap(int percent) {
+    return 'Tor से कनेक्ट हो रहा है $percent%';
+  }
+
+  @override
+  String get torCircuit => 'Tor सर्किट बन रहा है';
+
+  @override
+  String torRetry(int attempt, int attempts) {
+    return 'Tor फिर से आज़माया जा रहा है ($attempt/$attempts)';
+  }
+
+  @override
+  String get importNoServer => 'इस टेक्स्ट में कोई मान्य सर्वर नहीं मिला';
+
+  @override
+  String get ipdbTitle => 'ऑफ़लाइन देश डेटाबेस';
+
+  @override
+  String get ipdbIntro =>
+      'एक बार डेटाबेस डाउनलोड करें, और Wardkeep किसी वेबसाइट से पूछे बिना खुद सर्वर या पते का देश पता कर लेगा।';
+
+  @override
+  String ipdbSizeNote(String size) {
+    return 'लगभग $size · मुफ़्त डेटा (पब्लिक डोमेन)';
+  }
+
+  @override
+  String get ipdbDownload => 'डाउनलोड करें';
+
+  @override
+  String get ipdbContinue => 'जारी रखें';
+
+  @override
+  String get ipdbPause => 'रोकें';
+
+  @override
+  String get ipdbUpdate => 'अपडेट करें';
+
+  @override
+  String get ipdbDelete => 'हटाएँ';
+
+  @override
+  String get ipdbDeleteTitle => 'डेटाबेस हटाएँ?';
+
+  @override
+  String get ipdbUse => 'डेटाबेस उपयोग करें';
+
+  @override
+  String get ipdbStepV4 => 'IPv4';
+
+  @override
+  String get ipdbStepV6 => 'IPv6';
+
+  @override
+  String get ipdbStepPrepare => 'तैयारी';
+
+  @override
+  String get ipdbPreparing => 'तैयार हो रहा है…';
+
+  @override
+  String get ipdbReady => 'तैयार';
+
+  @override
+  String ipdbStoppedAt(int percent) {
+    return '$percent% पर रुका। जारी रखें दबाने पर वहीं से शुरू होगा।';
+  }
+
+  @override
+  String ipdbFailed(String reason) {
+    return 'डाउनलोड विफल: $reason';
+  }
+
+  @override
+  String ipdbReadyLine(String ranges, String size) {
+    return '$ranges रेंज · $size';
+  }
+
+  @override
+  String ipdbVersion(String version, String date) {
+    return 'संस्करण $version · $date';
+  }
+
+  @override
+  String ipdbLeft(String time) {
+    return '$time बाकी';
+  }
+
+  @override
+  String get ipdbSource =>
+      'डेटा: क्षेत्रीय इंटरनेट रजिस्ट्री और ASN घोषणाएँ (CC0), ip-location-db प्रोजेक्ट से।';
+
+  @override
+  String get ipdbSubNone => 'वेबसाइट से पूछे बिना देश पता करें';
+
+  @override
+  String ipdbSubReady(String size) {
+    return 'चालू · $size';
+  }
+
+  @override
+  String ipdbSubOff(String size) {
+    return 'बंद · $size';
+  }
+
+  @override
+  String ipdbSubDownloading(int percent) {
+    return 'डाउनलोड हो रहा है $percent%';
+  }
+
+  @override
+  String ipdbSubStopped(int percent) {
+    return '$percent% पर रुका';
+  }
+
+  @override
+  String get ipdbErrNetwork => 'डेटा सर्वरों से कनेक्शन नहीं है';
+
+  @override
+  String get ipdbErrMirrors => 'डेटा सर्वरों ने सही फ़ाइल नहीं भेजी';
+
+  @override
+  String get bypassCountriesTitle => 'देश';
+
+  @override
+  String get bypassCountriesNone => 'कोई देश नहीं चुना';
+
+  @override
+  String bypassCountriesMore(String names, int count) {
+    return '$names +$count';
+  }
+
+  @override
+  String get bypassCountriesIntro =>
+      'चुने गए देशों का ट्रैफ़िक VPN को छोड़कर सीधे इंटरनेट पर जाता है। उनकी एड्रेस रेंज ऑफ़लाइन देश डेटाबेस से आती हैं।';
+
+  @override
+  String get bypassCountriesGetDb => 'देश डेटाबेस प्राप्त करें';
+
+  @override
+  String get bypassCountriesSearch => 'देश खोजें';
+
+  @override
+  String get windowMinimize => 'छोटा करें';
+
+  @override
+  String get windowMaximize => 'बड़ा करें';
+
+  @override
+  String get windowRestore => 'पहले जैसा करें';
+
+  @override
+  String get windowClose => 'बंद करें';
+
+  @override
+  String get globeRecenter => 'पृथ्वी को केंद्र में लाएँ';
+
+  @override
+  String get bypassCountriesZoneIntro =>
+      'आप जिस भी देश पर टिक करते हैं, उसकी एड्रेस रेंज डाउनलोड होती है (कुछ किलोबाइट)। पूरा ऑफ़लाइन डेटाबेस अधिक सटीक है और उसे डाउनलोड नहीं करना पड़ता।';
+
+  @override
+  String get bypassCountriesDownloading => 'डाउनलोड हो रहा है…';
+
+  @override
+  String get bypassCountriesFailed =>
+      'डाउनलोड नहीं हो सका। फिर कोशिश करने के लिए टैप करें।';
+
+  @override
+  String get bypassCountriesYourServer =>
+      'आपका चुना हुआ सर्वर यहाँ है: उसका ट्रैफ़िक भी VPN को छोड़ देगा।';
+}

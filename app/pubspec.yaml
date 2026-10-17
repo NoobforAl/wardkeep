@@ -77,7 +77,7 @@ flutter:
     - assets/fonts/OFL-vazirmatn.txt
 
   # Open fonts (SIL OFL 1.1, texts in assets/fonts/OFL-*.txt), cut to the scripts the app uses:
-  # Inter for all text (Latin, Cyrillic), Vazirmatn for Persian and Arabic.
+  # Inter for all text (Latin with Vietnamese, Cyrillic), Vazirmatn for Persian, Arabic and Urdu. Hindi and Chinese use the system's own fonts.
   fonts:
     - family: Inter
       fonts:

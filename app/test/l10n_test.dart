@@ -14,8 +14,8 @@ import 'package:omnitun/main.dart';
 import 'package:omnitun/state/providers.dart';
 import 'package:omnitun/state/store.dart';
 
-const _languages = ['en', 'fa', 'ru', 'zh', 'ar'];
-const _rtl = {'fa', 'ar'};
+const _languages = ['en', 'fa', 'ru', 'zh', 'ar', 'es', 'hi', 'fr', 'pt', 'ur', 'id', 'tr', 'vi'];
+const _rtl = {'fa', 'ar', 'ur'};
 
 Future<AppLocalizations> _load(String code) => AppLocalizations.delegate.load(Locale(code));
 
@@ -82,6 +82,26 @@ void main() {
     expect(zh.serversCount(3), '3 台服务器');
     final fa = await _load('fa');
     expect(fa.importedProfiles(2, 1), contains('2'));
+  });
+
+  test('plural messages work in every language, with the count in the text', () async {
+    for (final code in _languages) {
+      final l = await _load(code);
+      for (final n in [0, 1, 2, 5, 11, 21, 100]) {
+        if (code == 'ar' && n < 3) continue; // Arabic says none, one and two in words
+        expect(l.serversCount(n), contains('$n'), reason: '$code $n');
+      }
+      expect(l.importedProfiles(5, 0), contains('5'), reason: code);
+      expect(l.importedProfiles(1, 3), contains('3'), reason: code);
+    }
+    // French counts 0 and 1 as singular, Spanish and Portuguese say "1 servidor" and "2 servidores".
+    expect((await _load('fr')).serversCount(0), isNot(contains('serveurs')));
+    expect((await _load('fr')).serversCount(2), contains('serveurs'));
+    expect((await _load('es')).serversCount(1), contains('servidor'));
+    expect((await _load('es')).serversCount(1), isNot(contains('servidores')));
+    expect((await _load('es')).serversCount(2), contains('servidores'));
+    expect((await _load('pt')).serversCount(1), isNot(contains('servidores')));
+    expect((await _load('pt')).serversCount(2), contains('servidores'));
   });
 
   test('failures are worded from their code in every language', () async {
