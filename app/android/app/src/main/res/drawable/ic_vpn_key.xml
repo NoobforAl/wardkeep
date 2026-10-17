@@ -3,7 +3,11 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- A shield with a keyhole cut out (even-odd): the same mark as the launcher icon. -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12V5l-9,-4z" />
+        android:fillType="evenOdd"
+        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12V5l-9,-4z
+M12,8.2a2,2 0 1,0 0.001,0z
+M11.1,12.2h1.8l0.7,3.8h-3.2z" />
 </vector>
