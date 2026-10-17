@@ -11,6 +11,7 @@ import '../../engine/engine.dart';
 import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
+import '../insets.dart';
 
 /// Lists of domains, addresses and ranges that go around the VPN (or, in
 /// "only these" mode, the only ones that use it).
@@ -101,7 +102,7 @@ class BypassScreen extends ConsumerWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: ListView(
-            padding: const EdgeInsets.only(bottom: 32),
+            padding: withBottomInset(context, const EdgeInsets.only(bottom: 32)),
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -314,7 +315,7 @@ class _BypassEditScreenState extends ConsumerState<BypassEditScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: withBottomInset(context, const EdgeInsets.all(16)),
             children: [
               TextField(
                 controller: _name,

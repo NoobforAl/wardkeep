@@ -14,6 +14,7 @@ import 'profile_editor_screen.dart';
 import 'qr_scan_screen.dart';
 import 'share_screen.dart';
 import 'subscription_screen.dart';
+import '../insets.dart';
 import '../widgets/credentials_dialog.dart';
 
 class ProfilesScreen extends ConsumerWidget {
@@ -411,10 +412,19 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
+    // The sheet rises with the keyboard; the form scrolls and the Import button stays
+    // pinned under it, so neither the keyboard nor the system bar can cover it.
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SafeArea(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -477,10 +487,16 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
               decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'vless://…'),
             ),
             if (_message != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_message!)),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(onPressed: _busy ? null : _import, child: Text(context.l10n.actionImport)),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(onPressed: _busy ? null : _import, child: Text(context.l10n.actionImport)),
+              ),
             ),
           ],
         ),

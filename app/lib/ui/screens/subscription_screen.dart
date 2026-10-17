@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/subscriptions.dart';
+import '../insets.dart';
 
 /// Adds a subscription (or edits one when [existing] is given).
 class SubscriptionScreen extends ConsumerStatefulWidget {
@@ -114,7 +115,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final secret = _showSecret ? null : '•';
     return Scaffold(
       appBar: AppBar(title: Text(widget.existing == null ? l.subAddTitle : l.subEditTitle)),
-      body: ListView(
+      // The button is part of the body, not a Scaffold footer: the body shrinks above the
+      // keyboard, a footer would stay behind it.
+      body: Column(children: [
+        Expanded(
+          child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
@@ -139,6 +144,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           const SizedBox(height: 20),
           DropdownButtonFormField<String>(
             initialValue: _authType,
+            isExpanded: true,
             decoration: InputDecoration(labelText: l.subAuthLabel, border: const OutlineInputBorder()),
             items: [
               for (final e in _authTypes(l).entries) DropdownMenuItem(value: e.key, child: Text(e.value)),
@@ -218,16 +224,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               padding: const EdgeInsets.only(top: 16),
               child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
+        ],
+          ),
+        ),
+        PinnedAction(
+          child: FilledButton.icon(
             onPressed: _busy ? null : _save,
             icon: _busy
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.cloud_download_outlined),
             label: Text(widget.existing == null ? l.subAddAndDownload : l.subSaveAndRefresh),
           ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 }

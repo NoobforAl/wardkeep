@@ -7,6 +7,7 @@ import '../../engine/engine.dart';
 import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
+import '../insets.dart';
 
 /// A server's share link as text and as a QR code, for another device.
 class ShareScreen extends ConsumerStatefulWidget {
@@ -49,7 +50,7 @@ class _ShareScreenState extends ConsumerState<ShareScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: ListView(
-                padding: const EdgeInsets.all(20),
+                padding: withBottomInset(context, const EdgeInsets.all(20)),
                 children: [
                   Center(
                     child: Container(

@@ -8,6 +8,7 @@ import '../../l10n/errors.dart';
 import '../../l10n/form_text.dart';
 import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
+import '../insets.dart';
 import '../widgets/country_flag.dart';
 import 'location_screen.dart';
 import 'qr_scan_screen.dart';
@@ -181,7 +182,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+          padding: withBottomInset(context, const EdgeInsets.fromLTRB(16, 4, 16, 32)),
           children: [
             if (_saveError != null)
               Container(

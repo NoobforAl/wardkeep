@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
 import '../../state/ipdb_state.dart';
+import '../insets.dart';
 import 'bypass_screen.dart';
 import 'ipdb_screen.dart';
 import 'logs_screen.dart';
@@ -30,7 +31,7 @@ class SettingsScreen extends ConsumerWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: ListView(
-            padding: const EdgeInsets.only(bottom: 32),
+            padding: withBottomInset(context, const EdgeInsets.only(bottom: 32)),
             children: [
               _Header(l.settingsServers),
               _Group([
