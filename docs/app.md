@@ -4,7 +4,7 @@ One calm screen: an Earth that shows where you are and where you exit, the state
 
 ## Look
 
-A dark-fantasy look in cold, muted blues (a light "stone" theme is in Settings). Behind the home screen is a dotted Earth: when you connect it turns to the exit country and marks it with a glow; it moves only for that turn. Fonts are open (SIL OFL, texts in the app's assets): Cinzel for headings, Inter for text, Vazirmatn for Persian and Arabic. The land outlines are Natural Earth (public domain). `scripts/gen-icon.py`, `gen-fonts.py` and `gen-globe.py` rebuild the icon, the fonts and the globe data.
+A dark-fantasy look in cold, muted blues (a light "stone" theme is in Settings). Behind the home screen is a dotted Earth: when you connect it turns to the exit country and marks it with a glow; it moves only for that turn. Fonts are open (SIL OFL, texts in the app's assets): Inter for all text, Vazirmatn for Persian and Arabic. The land outlines are Natural Earth (public domain). `scripts/gen-icon.py`, `gen-fonts.py` and `gen-globe.py` rebuild the icon, the fonts and the globe data.
 
 ## Opening files and links with Omnitun
 

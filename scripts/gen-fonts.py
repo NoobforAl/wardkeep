@@ -1,4 +1,4 @@
-"""Cuts static, subsetted weights out of the variable OFL fonts (Cinzel, Inter, Vazirmatn)."""
+"""Cuts static, subsetted weights out of the variable OFL fonts (Inter, Vazirmatn)."""
 import os
 import shutil
 import sys
@@ -18,7 +18,6 @@ ARABIC = (list(range(0x600, 0x700)) + list(range(0x750, 0x780)) + list(range(0xF
           + list(range(0x30, 0x3A)))
 
 JOBS = [
-    ("Cinzel", {"wght": [500, 700]}, LATIN, {}),
     ("Inter", {"wght": [400, 500, 600, 700]}, LATIN + CYRILLIC, {"opsz": 14}),
     ("Vazirmatn", {"wght": [400, 500, 600, 700]}, ARABIC, {}),
 ]
@@ -45,5 +44,5 @@ for family, axes, unicodes, pinned in JOBS:
         os.remove(tmp)
         print(dest, os.path.getsize(dest) // 1024, "KB")
 
-for fam in ("cinzel", "inter", "vazirmatn"):
+for fam in ("inter", "vazirmatn"):
     shutil.copy(os.path.join(SRC, f"OFL-{fam}.txt"), os.path.join(OUT, f"OFL-{fam}.txt"))

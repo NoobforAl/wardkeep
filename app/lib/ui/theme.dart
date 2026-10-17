@@ -22,9 +22,8 @@ const _inkPanel = Color(0xFF0F1622);
 const _inkHigh = Color(0xFF16202F);
 const _inkHighest = Color(0xFF1F2D42);
 
-/// Engraved capitals (Cinzel, SIL OFL) for headings; Inter for text; Vazirmatn for
-/// Persian and Arabic, which the other two do not cover.
-const headingFont = 'Cinzel';
+/// One plain family for everything: Inter (SIL OFL), with Vazirmatn for Persian and
+/// Arabic, which Inter does not cover.
 const bodyFont = 'Inter';
 const fallbackFonts = ['Inter', 'Vazirmatn'];
 
@@ -89,20 +88,10 @@ ThemeData buildTheme(Brightness brightness) {
     fontFamilyFallback: fallbackFonts,
   );
   final text = base.textTheme.copyWith(
-    headlineSmall: base.textTheme.headlineSmall?.copyWith(
-      fontFamily: headingFont,
-      fontFamilyFallback: fallbackFonts,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.4,
-    ),
-    titleLarge: base.textTheme.titleLarge?.copyWith(
-      fontFamily: headingFont,
-      fontFamilyFallback: fallbackFonts,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.6,
-    ),
+    headlineSmall: base.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+    titleLarge: base.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
     titleMedium: base.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-    titleSmall: base.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.6),
+    titleSmall: base.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
   );
 
   return base.copyWith(
