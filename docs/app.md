@@ -4,7 +4,7 @@ One calm screen: an Earth that shows where you are and where you exit, the state
 
 ## Look
 
-A dark-fantasy look in cold, muted blues (a light "stone" theme is in Settings). Behind the home screen is a dotted Earth: when you connect it turns to the exit country and marks it with a glow; it moves only for that turn. Fonts are open (SIL OFL, texts in the app's assets): Inter for all text, Vazirmatn for Persian and Arabic. The land outlines are Natural Earth (public domain). `scripts/gen-icon.py`, `gen-fonts.py` and `gen-globe.py` rebuild the icon, the fonts and the globe data.
+A dark-fantasy look in cold, muted blues (a light "stone" theme is in Settings). Behind the home screen is a dotted Earth: when you connect it turns to the exit country and marks it with a glow. Turn it with one finger (or the mouse), zoom with two fingers (or the wheel); a round button brings it back. While you are connected a thin line follows the path to the exit with dots streaming along it, more of them when there is more traffic; it stops when your phone asks for less motion (Android: *Remove animations*), which also saves battery. Fonts are open (SIL OFL, texts in the app's assets): Inter for all text, Vazirmatn for Persian and Arabic. The land outlines are Natural Earth (public domain). `scripts/gen-icon.py`, `gen-fonts.py` and `gen-globe.py` rebuild the icon, the fonts and the globe data.
 
 ## Opening files and links with Wardkeep
 
@@ -13,6 +13,10 @@ Tap a share link (`vless://…`, `trojan://…`, `ss://…`, `hy2://…`, …) a
 ## Offline country database (optional)
 
 Settings → **Offline country database**. Not installed by default. Download it once (about 23 MB, free data) and Wardkeep gives servers a country from their addresses without asking any website, and gives a country to an address a lookup found. The download carries on where it stopped after an error, a pause or a closed app, and every file is checked (size and SHA-256) before it is used. Switch it off or delete it at any time. Data: regional internet registries and ASN announcements (CC0), from the ip-location-db project.
+
+## On Windows
+
+The app draws its own title bar (minimize, maximize, close) in its colours and opens at a size that fits your monitor (about 88 % of its height); drag any edge or corner to resize, and it remembers the size and place. If you start it again while it is running, the first window comes forward (and takes the link or file you opened) instead of a second copy starting. Closing the window ends the app and its core; there is no tray icon yet.
 
 ## First start
 
@@ -67,7 +71,7 @@ Add a list by typing, pasting, opening a `.txt` file or downloading a link. The 
 
 **Battery and speed.** The app tidies a list before using it: a name under another listed domain, a name containing a listed keyword, and nested or neighbouring address ranges are merged, so the matcher stays small. Traffic to listed addresses is decided first and never inspected; names are only recognised (from the first packet of a connection) when your list has names in it. Listed address ranges are kept out of the VPN's routes (the largest first, up to a limit of a few hundred routes; the rest are still bypassed, one step later). In "only the listed" mode with only addresses, nothing else enters the VPN at all.
 
-**Whole countries.** At the top of the same screen, **Countries** lets you tick countries whose addresses go straight to the internet, around the VPN (and, with *Only the listed destinations use the VPN*, the only ones that use it). The address ranges come from the **offline country database** (Settings → *Offline country database*, a one-time download of about 23 MB, public registry data): without it the screen says so and offers to get it. A country is a list of ranges that the app counts for you (Iran about 4 000 blocks, Germany about 83 000, the United States about 209 000), merged with your own lists; the ranges are a snapshot, so *Update* the database now and then. The tunnel to your server is not affected by this (the app's own connection to the server never goes through the tunnel), but anything you send to a ticked country skips the VPN, including the country your server is in.
+**Whole countries.** At the top of the same screen, **Countries** lets you tick countries whose addresses go straight to the internet, around the VPN (and, with *Only the listed destinations use the VPN*, the only ones that use it). The address ranges come from the **offline country database** (Settings → *Offline country database*, a one-time download of about 23 MB, public registry data): without it, the screen still lists every country: ticking one downloads just that country's list (a few KB, from IPdeny, or from ipverse if that is blocked), and the screen offers the full database too. If the country you tick is the one your selected server is in, the screen says so. A country is a list of ranges that the app counts for you (Iran about 4 000 blocks, Germany about 83 000, the United States about 209 000), merged with your own lists; the ranges are a snapshot, so *Update* the database now and then. The tunnel to your server is not affected by this (the app's own connection to the server never goes through the tunnel), but anything you send to a ticked country skips the VPN, including the country your server is in.
 
 ## Settings worth knowing
 
@@ -77,7 +81,7 @@ Add a list by typing, pasting, opening a `.txt` file or downloading a link. The 
 * **Always-on VPN and kill switch** (Android): opens the system's VPN settings. Turn on "Always-on VPN" (Android reconnects at boot and after the app was stopped, using the last connection) and, if you want, "Block connections without VPN" (no traffic while the VPN is down). Connect once from the app first.
 * **Split tunneling** (Android): choose which apps use the VPN, or which bypass it.
 * **Remote DNS**: the resolver used through the tunnel (`https://…`, `tls://…`, `tcp://…` or an IP).
-* **Language**: English, فارسی, Русский, 中文, العربية (the layout mirrors for Persian and Arabic). **Appearance**: dark, light or the system's.
+* **Language**: English, فارسی, Русский, 中文, العربية, Español, हिन्दी, Français, Português, اردو, Bahasa Indonesia, Türkçe, Tiếng Việt (the layout mirrors for Persian, Arabic and Urdu). Translations other than English were not checked by native speakers: tell us what reads wrong. **Appearance**: dark, light or the system's.
 
 ## What the messages mean
 
