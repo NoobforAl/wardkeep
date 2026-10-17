@@ -1,0 +1,175 @@
+name: Windows and server
+
+# The Windows app and the Linux server, built on GitHub's machines.
+#
+#   a tag (0.1.0, v0.1.0, 0.2.0-rc1)  →  build both and add them to the GitHub Release of that tag
+#                                         (the Android workflow makes the release; whichever workflow
+#                                         finishes first creates it, the other one adds to it)
+#   anything else (push, pull request) →  build both and keep them as run artifacts, to see that they build
+#
+# The Windows app is a ZIP of the Flutter app with the core (omnitun-svc.exe) next to it: unzip and run.
+# It is NOT signed: Windows SmartScreen will warn on the first start. An installer with a code-signing
+# certificate (a paid certificate, kept in a repository secret) is the next step; see PLAN.md, Phase 3.
+# The server is two static Linux binaries (amd64, arm64) with SHA256SUMS, from scripts/build-server-release.sh.
+#
+# Third-party actions are pinned to full commit SHAs, like in android.yml.
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+*"
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows-app:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write # to add the files to a release
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version
+        id: version
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            $ver = $env:GITHUB_REF_NAME -replace '^v', ''
+          } else {
+            $ver = 'dev-' + $env:GITHUB_SHA.Substring(0, 7)
+          }
+          $core = ($ver -split '-')[0]
+          $parts = $core -split '\.'
+          if ($core -match '^\d+\.\d+\.\d+$') {
+            $num = [int]$parts[0] * 10000 + [int]$parts[1] * 100 + [int]$parts[2]
+          } else {
+            $core = '0.0.0'; $num = 1
+          }
+          "name=$ver" >> $env:GITHUB_OUTPUT
+          "core=$core" >> $env:GITHUB_OUTPUT
+          "number=$num" >> $env:GITHUB_OUTPUT
+          "pre=$($ver.Contains('-').ToString().ToLower())" >> $env:GITHUB_OUTPUT
+          "version $ver (name $core, build number $num)"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: "3.47.7"
+          channel: stable
+
+      - name: Core (omnitun-svc.exe)
+        run: |
+          New-Item -ItemType Directory -Force dist/app | Out-Null
+          ./scripts/go.ps1 build -trimpath -o dist/app/omnitun-svc.exe ./cmd/omnitun-svc
+
+      - name: Test the app
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      - name: App
+        working-directory: app
+        run: flutter build windows --release --build-name ${{ steps.version.outputs.core }} --build-number ${{ steps.version.outputs.number }}
+
+      - name: Put the app and the core together, zip, checksums
+        env:
+          VER: ${{ steps.version.outputs.name }}
+        run: |
+          Copy-Item -Recurse -Force app/build/windows/x64/runner/Release/* dist/app/
+          $zip = "dist/omnitun-$env:VER-windows-x64.zip"
+          Compress-Archive -Path dist/app/* -DestinationPath $zip -Force
+          (Get-FileHash $zip -Algorithm SHA256) | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $zip -Leaf)" } | Set-Content dist/SHA256SUMS-windows.txt
+          Get-Content dist/SHA256SUMS-windows.txt
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wardkeep-windows
+          path: |
+            dist/omnitun-*-windows-x64.zip
+            dist/SHA256SUMS-windows.txt
+
+      - name: Add to the release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VER: ${{ steps.version.outputs.name }}
+          PRE: ${{ steps.version.outputs.pre }}
+        run: |
+          $files = @("dist/omnitun-$env:VER-windows-x64.zip", "dist/SHA256SUMS-windows.txt")
+          $flags = @('--title', "Wardkeep $env:VER", '--generate-notes', '--verify-tag')
+          if ($env:PRE -eq 'true') { $flags += '--prerelease' }
+          gh release create $env:TAG @flags @files
+          if ($LASTEXITCODE -ne 0) {
+            # the Android workflow made the release first: add to it
+            Start-Sleep -Seconds 15
+            gh release upload $env:TAG @files --clobber
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
+
+  server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then VER="${GITHUB_REF_NAME#v}"; else VER="dev-${GITHUB_SHA:0:7}"; fi
+          echo "name=$VER" >> "$GITHUB_OUTPUT"
+          if [[ "$VER" == *-* && "$GITHUB_REF" == refs/tags/* ]]; then echo "pre=true" >> "$GITHUB_OUTPUT"; else echo "pre=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Static Linux binaries (amd64, arm64)
+        run: scripts/build-server-release.sh "${{ steps.version.outputs.name }}"
+
+      - name: Check they are static ELF files
+        run: |
+          for f in dist/omnitun-server-linux-*; do file "$f"; done
+          file dist/omnitun-server-linux-amd64 | grep -q "statically linked"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wardkeep-server-linux
+          path: dist/
+
+      - name: Add to the release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VER: ${{ steps.version.outputs.name }}
+          PRE: ${{ steps.version.outputs.pre }}
+        run: |
+          cp dist/SHA256SUMS dist/SHA256SUMS-server.txt
+          FILES=(dist/omnitun-server-linux-amd64 dist/omnitun-server-linux-arm64 dist/SHA256SUMS-server.txt)
+          FLAGS=(--title "Wardkeep $VER" --generate-notes --verify-tag)
+          if [ "$PRE" = "true" ]; then FLAGS+=(--prerelease); fi
+          if ! gh release create "$TAG" "${FLAGS[@]}" "${FILES[@]}"; then
+            sleep 15
+            gh release upload "$TAG" "${FILES[@]}" --clobber
+          fi
