@@ -475,10 +475,21 @@ class HomeLocation extends Notifier<ExitInfo?> {
   static const _key = 'home_country';
   int _generation = 0;
 
+  /// What the lookup service answered last, before the database had its say.
+  ExitInfo? _raw;
+
   @override
   ExitInfo? build() {
     ref.listen(connectionProvider.select((s) => s.status), (prev, next) {
       if (next == ConnStatus.disconnected && prev != next) _lookup(const Duration(milliseconds: 1500));
+    });
+    // The database loads from disk while the first lookup is already under way: an answer that came without
+    // it (a service may place an address in the wrong country) is corrected as soon as it is there.
+    ref.listen(ipDbActiveProvider, (prev, next) {
+      final raw = _raw;
+      if (next == null || raw == null || identical(prev, next)) return;
+      if (!const {ConnStatus.disconnected, ConnStatus.error}.contains(ref.read(connectionProvider).status)) return;
+      _show(withDbCountry(raw, next));
     });
     ref.listen(settingsProvider.select((s) => s.showExit), (prev, next) {
       if (next && !prev!) _lookup();
@@ -498,13 +509,18 @@ class HomeLocation extends Notifier<ExitInfo?> {
         const {ConnStatus.disconnected, ConnStatus.error}.contains(ref.read(connectionProvider).status);
     if (!idle()) return;
     try {
-      final info = withDbCountry(await ref.read(directLookupProvider)(), ref.read(ipDbActiveProvider));
+      final raw = await ref.read(directLookupProvider)();
       if (!idle()) return; // connected meanwhile: that answer would describe the VPN, not the device
-      state = info;
-      if (info.country != null) ref.read(storeProvider).write(_key, info.country);
+      _raw = raw;
+      _show(withDbCountry(raw, ref.read(ipDbActiveProvider)));
     } catch (_) {
       // Offline or blocked: keep what is known.
     }
+  }
+
+  void _show(ExitInfo info) {
+    state = info;
+    if (info.country != null) ref.read(storeProvider).write(_key, info.country);
   }
 }
 
