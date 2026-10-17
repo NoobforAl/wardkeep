@@ -68,7 +68,7 @@ func Init(s *Store, opts InitOptions) (*State, error) {
 		return nil, fmt.Errorf("public host (IP or domain) is required")
 	}
 	if opts.Name == "" {
-		opts.Name = "Omnitun"
+		opts.Name = "Wardkeep"
 	}
 	if opts.RealityHandshake == "" {
 		opts.RealityHandshake = "www.microsoft.com:443"

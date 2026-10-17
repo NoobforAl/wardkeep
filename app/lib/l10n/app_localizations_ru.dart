@@ -10,7 +10,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appName => 'Omnitun';
+  String get appName => 'Wardkeep';
 
   @override
   String get actionSave => 'Сохранить';
@@ -433,7 +433,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get shareScanHint => 'Отсканируйте в Omnitun или скопируйте ссылку.';
+  String get shareScanHint => 'Отсканируйте в Wardkeep или скопируйте ссылку.';
 
   @override
   String get shareCopy => 'Копировать ссылку';
@@ -711,11 +711,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get alwaysOnHint =>
-      'Подключаться при загрузке и блокировать трафик, если VPN упал. Включите в настройках VPN Android (шестерёнка у Omnitun).';
+      'Подключаться при загрузке и блокировать трафик, если VPN упал. Включите в настройках VPN Android (шестерёнка у Wardkeep).';
 
   @override
   String get openVpnSettingsFallback =>
-      'Настройки → Сеть → VPN → шестерёнка у Omnitun';
+      'Настройки → Сеть → VPN → шестерёнка у Wardkeep';
 
   @override
   String get splitTunneling => 'Раздельное туннелирование';
@@ -1394,7 +1394,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noticesIntro =>
-      'Omnitun распространяется по лицензии MIT. В него входит ПО ниже, каждое под своей лицензией.';
+      'Wardkeep распространяется по лицензии MIT. В него входит ПО ниже, каждое под своей лицензией.';
 
   @override
   String noticesMore(int count) {
@@ -1447,7 +1447,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importUnsupported =>
-      'Это не ссылка на сервер, не подписка и не конфигурация, которую Omnitun может прочитать';
+      'Это не ссылка на сервер, не подписка и не конфигурация, которую Wardkeep может прочитать';
 
   @override
   String importUnsupportedScheme(String scheme) {
@@ -1519,7 +1519,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get ipdbIntro =>
-      'Скачайте базу один раз, и Omnitun сам определит страну сервера или адреса, не обращаясь к сайтам.';
+      'Скачайте базу один раз, и Wardkeep сам определит страну сервера или адреса, не обращаясь к сайтам.';
 
   @override
   String ipdbSizeNote(String size) {

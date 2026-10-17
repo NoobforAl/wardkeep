@@ -10,7 +10,7 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appName => 'Omnitun';
+  String get appName => 'Wardkeep';
 
   @override
   String get actionSave => 'حفظ';
@@ -432,7 +432,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get shareScanHint => 'امسحه بـ Omnitun أو انسخ الرابط.';
+  String get shareScanHint => 'امسحه بـ Wardkeep أو انسخ الرابط.';
 
   @override
   String get shareCopy => 'نسخ الرابط';
@@ -719,11 +719,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get alwaysOnHint =>
-      'إعادة الاتصال عند التشغيل وحظر الحركة إذا انقطع VPN. فعّله من إعدادات VPN في أندرويد (الترس بجوار Omnitun).';
+      'إعادة الاتصال عند التشغيل وحظر الحركة إذا انقطع VPN. فعّله من إعدادات VPN في أندرويد (الترس بجوار Wardkeep).';
 
   @override
   String get openVpnSettingsFallback =>
-      'الإعدادات ← الشبكة ← VPN ← الترس بجوار Omnitun';
+      'الإعدادات ← الشبكة ← VPN ← الترس بجوار Wardkeep';
 
   @override
   String get splitTunneling => 'النفق المقسَّم';
@@ -1408,7 +1408,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noticesIntro =>
-      'يُوزَّع Omnitun بترخيص MIT. ويتضمن البرامج التالية، كلٌّ بترخيصه الخاص.';
+      'يُوزَّع Wardkeep بترخيص MIT. ويتضمن البرامج التالية، كلٌّ بترخيصه الخاص.';
 
   @override
   String noticesMore(int count) {
@@ -1461,7 +1461,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get importUnsupported =>
-      'هذا ليس رابط خادم أو اشتراكًا أو إعدادًا يستطيع Omnitun‎ قراءته';
+      'هذا ليس رابط خادم أو اشتراكًا أو إعدادًا يستطيع Wardkeep‎ قراءته';
 
   @override
   String importUnsupportedScheme(String scheme) {
@@ -1532,7 +1532,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ipdbIntro =>
-      'نزّل قاعدة البيانات مرة واحدة، وسيعرف Omnitun بلد الخادم أو العنوان بنفسه دون سؤال أي موقع.';
+      'نزّل قاعدة البيانات مرة واحدة، وسيعرف Wardkeep بلد الخادم أو العنوان بنفسه دون سؤال أي موقع.';
 
   @override
   String ipdbSizeNote(String size) {

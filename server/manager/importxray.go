@@ -7,7 +7,7 @@ import (
 	"github.com/NoobforAl/omnitun/server/v2ray"
 )
 
-// ImportXrayOptions controls moving an Xray/V2Ray server to Omnitun.
+// ImportXrayOptions controls moving an Xray/V2Ray server to Wardkeep.
 type ImportXrayOptions struct {
 	// Host is the public IP or domain; needed when no server exists yet.
 	Host string `json:"host,omitempty"`

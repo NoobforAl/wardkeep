@@ -83,7 +83,7 @@ func ImportSingBoxJSON(text string) (*Result, error) {
 	var doc struct {
 		Outbounds []json.RawMessage `json:"outbounds"`
 		Endpoints []json.RawMessage `json:"endpoints"`
-		// ExtraLinks carries what sing-box cannot express (SSTP, IKEv2): Omnitun
+		// ExtraLinks carries what sing-box cannot express (SSTP, IKEv2): Wardkeep
 		// servers list those profiles as share links next to the outbounds.
 		ExtraLinks []string `json:"extra_links"`
 	}
@@ -246,7 +246,7 @@ func sbToProfile(o sbOutbound) (*profile.Profile, error) {
 	return p, nil
 }
 
-// sbOpenVPN is sing-box's openvpn-client endpoint (the fields Omnitun maps).
+// sbOpenVPN is sing-box's openvpn-client endpoint (the fields Wardkeep maps).
 type sbOpenVPN struct {
 	Tag        string `json:"tag"`
 	Server     string `json:"server"`

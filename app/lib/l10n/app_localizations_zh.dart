@@ -10,7 +10,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appName => 'Omnitun';
+  String get appName => 'Wardkeep';
 
   @override
   String get actionSave => '保存';
@@ -418,7 +418,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get shareScanHint => '用 Omnitun 扫描，或复制链接。';
+  String get shareScanHint => '用 Wardkeep 扫描，或复制链接。';
 
   @override
   String get shareCopy => '复制链接';
@@ -670,10 +670,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get alwaysOnHint =>
-      '开机重连，VPN 断开时阻止流量。请在 Android VPN 设置中开启（Omnitun 旁的齿轮）。';
+      '开机重连，VPN 断开时阻止流量。请在 Android VPN 设置中开启（Wardkeep 旁的齿轮）。';
 
   @override
-  String get openVpnSettingsFallback => '设置 → 网络 → VPN → Omnitun 旁的齿轮';
+  String get openVpnSettingsFallback => '设置 → 网络 → VPN → Wardkeep 旁的齿轮';
 
   @override
   String get splitTunneling => '分应用隧道';
@@ -1312,7 +1312,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noticesTitle => '开源许可';
 
   @override
-  String get noticesIntro => 'Omnitun 采用 MIT 许可。它包含下列软件，各自适用其自己的许可。';
+  String get noticesIntro => 'Wardkeep 采用 MIT 许可。它包含下列软件，各自适用其自己的许可。';
 
   @override
   String noticesMore(int count) {
@@ -1362,7 +1362,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get formRealityKeyRequired => '安全方式为 Reality 时必须填写 Reality 公钥';
 
   @override
-  String get importUnsupported => '这不是 Omnitun 能读取的服务器链接、订阅或配置';
+  String get importUnsupported => '这不是 Wardkeep 能读取的服务器链接、订阅或配置';
 
   @override
   String importUnsupportedScheme(String scheme) {
@@ -1430,7 +1430,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ipdbTitle => '离线国家数据库';
 
   @override
-  String get ipdbIntro => '下载一次数据库，Omnitun 就能自己判断服务器或地址所在的国家，无需询问网站。';
+  String get ipdbIntro => '下载一次数据库，Wardkeep 就能自己判断服务器或地址所在的国家，无需询问网站。';
 
   @override
   String ipdbSizeNote(String size) {

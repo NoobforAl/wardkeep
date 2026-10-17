@@ -1,4 +1,4 @@
-"""Omnitun app icon v6: the shield of Oscar of Astora in Dark Souls 1 — a kite-shaped shield with a thin
+"""Wardkeep app icon v6: the shield of Oscar of Astora in Dark Souls 1 — a kite-shaped shield with a thin
 worn silver rim, a deep navy field and ornate gold relief: a small crest in a laurel wreath, two leafy
 branches rising from the point, filigree in the corners. Everything is drawn here as masks and lit from
 a height map (bevel, scratches, wear), on a dark night-blue ground.

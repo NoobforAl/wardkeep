@@ -10,7 +10,7 @@ class AppLocalizationsFa extends AppLocalizations {
   AppLocalizationsFa([String locale = 'fa']) : super(locale);
 
   @override
-  String get appName => 'Omnitun';
+  String get appName => 'Wardkeep';
 
   @override
   String get actionSave => 'ذخیره';
@@ -428,7 +428,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get shareScanHint => 'با Omnitun اسکن کنید یا لینک را کپی کنید.';
+  String get shareScanHint => 'با Wardkeep اسکن کنید یا لینک را کپی کنید.';
 
   @override
   String get shareCopy => 'کپی لینک';
@@ -694,11 +694,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get alwaysOnHint =>
-      'اتصال دوباره هنگام راه‌اندازی و مسدود کردن ترافیک در صورت قطع VPN. در تنظیمات VPN اندروید (چرخ‌دنده کنار Omnitun) روشن کنید.';
+      'اتصال دوباره هنگام راه‌اندازی و مسدود کردن ترافیک در صورت قطع VPN. در تنظیمات VPN اندروید (چرخ‌دنده کنار Wardkeep) روشن کنید.';
 
   @override
   String get openVpnSettingsFallback =>
-      'تنظیمات ← شبکه ← VPN ← چرخ‌دنده کنار Omnitun';
+      'تنظیمات ← شبکه ← VPN ← چرخ‌دنده کنار Wardkeep';
 
   @override
   String get splitTunneling => 'تونل تفکیکی';
@@ -1361,7 +1361,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get noticesIntro =>
-      'Omnitun با مجوز MIT منتشر شده است. نرم‌افزارهای زیر هر کدام با مجوز خودشان در آن به کار رفته‌اند.';
+      'Wardkeep با مجوز MIT منتشر شده است. نرم‌افزارهای زیر هر کدام با مجوز خودشان در آن به کار رفته‌اند.';
 
   @override
   String noticesMore(int count) {
@@ -1414,7 +1414,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get importUnsupported =>
-      'این پیوند سرور، اشتراک یا پیکربندی‌ای نیست که Omnitun‎ بتواند بخواند';
+      'این پیوند سرور، اشتراک یا پیکربندی‌ای نیست که Wardkeep‎ بتواند بخواند';
 
   @override
   String importUnsupportedScheme(String scheme) {
@@ -1485,7 +1485,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get ipdbIntro =>
-      'یک بار پایگاه‌داده را دانلود کنید تا Omnitun کشورِ سرور یا نشانی را خودش و بدون پرسیدن از وب‌سایت پیدا کند.';
+      'یک بار پایگاه‌داده را دانلود کنید تا Wardkeep کشورِ سرور یا نشانی را خودش و بدون پرسیدن از وب‌سایت پیدا کند.';
 
   @override
   String ipdbSizeNote(String size) {

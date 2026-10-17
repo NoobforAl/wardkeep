@@ -360,7 +360,7 @@ func (o openvpn) Inbounds(env Env, port int, accts []Account) Config {
 }
 
 // File is the user's single-file OpenVPN client config with the credentials
-// inline (OpenVPN 2.6+ and Omnitun).
+// inline (OpenVPN 2.6+ and Wardkeep).
 func (o openvpn) File(env Env, port int, u Account) (string, string, error) {
 	// The credentials are written as two lines of the config file.
 	if err := safeField("user name", u.Name, unsafeInLines); err != nil {

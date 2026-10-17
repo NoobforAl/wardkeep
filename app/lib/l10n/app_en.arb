@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appName": "Omnitun",
+  "appName": "Wardkeep",
   "actionSave": "Save",
   "actionCancel": "Cancel",
   "actionDelete": "Delete",
@@ -203,7 +203,7 @@
       }
     }
   },
-  "shareScanHint": "Scan with Omnitun, or copy the link.",
+  "shareScanHint": "Scan with Wardkeep, or copy the link.",
   "shareCopy": "Copy link",
   "shareCopied": "Link copied",
   "shareWarning": "Contains the server's password or key. Share with care.",
@@ -353,7 +353,7 @@
   },
   "alwaysOnTitle": "Always-on VPN and kill switch",
   "alwaysOnHint": "Reconnect at boot and block leaks. Set in Android's VPN settings.",
-  "openVpnSettingsFallback": "Settings → Network → VPN → gear next to Omnitun",
+  "openVpnSettingsFallback": "Settings → Network → VPN → gear next to Wardkeep",
   "splitTunneling": "Split tunneling",
   "splitSummaryOnly": "{count, plural, =1{Only 1 selected app uses the VPN} other{Only {count} selected apps use the VPN}}",
   "@splitSummaryOnly": {
@@ -708,7 +708,7 @@
     }
   },
   "noticesTitle": "Open-source licenses",
-  "noticesIntro": "Omnitun is MIT licensed. It includes the software below, each under its own license.",
+  "noticesIntro": "Wardkeep is MIT licensed. It includes the software below, each under its own license.",
   "noticesMore": "+{count} more",
   "noticesPackages": "{count} packages",
   "noticesLoadFailed": "The license list could not be read.",
@@ -775,7 +775,7 @@
   },
   "formReservedBytes": "Reserved bytes must be numbers from 0 to 255",
   "formRealityKeyRequired": "The Reality public key is required when Security is Reality",
-  "importUnsupported": "This is not a server link, subscription or config that Omnitun can read",
+  "importUnsupported": "This is not a server link, subscription or config that Wardkeep can read",
   "importUnsupportedScheme": "Links that start with {scheme}:// are not supported",
   "@importUnsupportedScheme": {
     "placeholders": {
@@ -832,7 +832,7 @@
   },
   "importNoServer": "No valid server was found in this text",
   "ipdbTitle": "Offline country database",
-  "ipdbIntro": "Download a database once, and Omnitun finds the country of a server or an address by itself, without asking a website.",
+  "ipdbIntro": "Download a database once, and Wardkeep finds the country of a server or an address by itself, without asking a website.",
   "ipdbSizeNote": "About {size} · free data (public domain)",
   "@ipdbSizeNote": {
     "placeholders": {

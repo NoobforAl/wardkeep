@@ -67,8 +67,8 @@ func New(o Options) http.Handler {
 	if version == "" {
 		version = "1.0.0"
 	}
-	cfg := huma.DefaultConfig("Omnitun Server API", version)
-	cfg.Info.Description = "Manage an Omnitun server: protocols, users and share links. " +
+	cfg := huma.DefaultConfig("Wardkeep Server API", version)
+	cfg.Info.Description = "Manage an Wardkeep server: protocols, users and share links. " +
 		"Send the token printed by `omnitun-server api token` as `Authorization: Bearer <token>`."
 	cfg.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
 		"bearer": {Type: "http", Scheme: "bearer"},

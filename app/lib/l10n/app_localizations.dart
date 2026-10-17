@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Omnitun'**
+  /// **'Wardkeep'**
   String get appName;
 
   /// No description provided for @actionSave.
@@ -869,7 +869,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareScanHint.
   ///
   /// In en, this message translates to:
-  /// **'Scan with Omnitun, or copy the link.'**
+  /// **'Scan with Wardkeep, or copy the link.'**
   String get shareScanHint;
 
   /// No description provided for @shareCopy.
@@ -1271,7 +1271,7 @@ abstract class AppLocalizations {
   /// No description provided for @openVpnSettingsFallback.
   ///
   /// In en, this message translates to:
-  /// **'Settings → Network → VPN → gear next to Omnitun'**
+  /// **'Settings → Network → VPN → gear next to Wardkeep'**
   String get openVpnSettingsFallback;
 
   /// No description provided for @splitTunneling.
@@ -2363,7 +2363,7 @@ abstract class AppLocalizations {
   /// No description provided for @noticesIntro.
   ///
   /// In en, this message translates to:
-  /// **'Omnitun is MIT licensed. It includes the software below, each under its own license.'**
+  /// **'Wardkeep is MIT licensed. It includes the software below, each under its own license.'**
   String get noticesIntro;
 
   /// No description provided for @noticesMore.
@@ -2435,7 +2435,7 @@ abstract class AppLocalizations {
   /// No description provided for @importUnsupported.
   ///
   /// In en, this message translates to:
-  /// **'This is not a server link, subscription or config that Omnitun can read'**
+  /// **'This is not a server link, subscription or config that Wardkeep can read'**
   String get importUnsupported;
 
   /// No description provided for @importUnsupportedScheme.
@@ -2549,7 +2549,7 @@ abstract class AppLocalizations {
   /// No description provided for @ipdbIntro.
   ///
   /// In en, this message translates to:
-  /// **'Download a database once, and Omnitun finds the country of a server or an address by itself, without asking a website.'**
+  /// **'Download a database once, and Wardkeep finds the country of a server or an address by itself, without asking a website.'**
   String get ipdbIntro;
 
   /// No description provided for @ipdbSizeNote.

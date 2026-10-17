@@ -1,4 +1,4 @@
-// Package tor runs Tor for Omnitun: the Arti client (the Rust `omnitun-tor`
+// Package tor runs Tor for Wardkeep: the Arti client (the Rust `omnitun-tor`
 // binary from tor/) behind a local SOCKS5 port, plus bridge pluggable
 // transports run in-process in Go (obfs4, WebTunnel, Snowflake, meek).
 package tor

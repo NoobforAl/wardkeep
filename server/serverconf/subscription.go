@@ -25,7 +25,7 @@ func wantsSingBox(r *http.Request) bool {
 		return false
 	}
 	ua := strings.ToLower(r.UserAgent())
-	return strings.Contains(ua, "omnitun") || strings.Contains(ua, "sing-box") || strings.Contains(ua, "sfa") || strings.Contains(ua, "sfi")
+	return strings.Contains(ua, "wardkeep") || strings.Contains(ua, "omnitun") || strings.Contains(ua, "sing-box") || strings.Contains(ua, "sfa") || strings.Contains(ua, "sfi")
 }
 
 // SingBoxSubscription is the user's profiles as a sing-box config (outbounds
@@ -61,7 +61,7 @@ func SingBoxSubscription(st *store.State, s *store.Store, u *store.User) ([]byte
 	}
 	doc := map[string]any{"outbounds": outbounds, "endpoints": endpoints}
 	if len(extraLinks) > 0 {
-		doc["extra_links"] = extraLinks // read by Omnitun's importer
+		doc["extra_links"] = extraLinks // read by Wardkeep's importer
 	}
 	return json.MarshalIndent(doc, "", "  ")
 }
@@ -136,7 +136,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 		w.Header().Set("Profile-Update-Interval", "12")
 		w.Header().Set("Profile-Title", "base64:"+base64.StdEncoding.EncodeToString([]byte(st.Server.Name)))
 		w.Header().Set("Cache-Control", "no-store")
-		// Omnitun (and other sing-box clients) get a sing-box config, which can
+		// Wardkeep (and other sing-box clients) get a sing-box config, which can
 		// also carry OpenVPN; everyone else gets the usual base64 link list.
 		if wantsSingBox(r) {
 			body, err := SingBoxSubscription(st, s, user)

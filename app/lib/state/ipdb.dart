@@ -56,7 +56,7 @@ class IpCountryDb {
   /// Reads a database file; throws [FormatException] when it is not one (or is cut short).
   static IpCountryDb fromBytes(Uint8List bytes) {
     if (bytes.length < 16 || [for (var i = 0; i < 4; i++) bytes[i]].toString() != _magic.toString() || bytes[4] != 1) {
-      throw const FormatException('not an Omnitun IP database');
+      throw const FormatException('not an Wardkeep IP database');
     }
     final head = ByteData.sublistView(bytes);
     final n4 = head.getUint32(8, Endian.little), n6 = head.getUint32(12, Endian.little);

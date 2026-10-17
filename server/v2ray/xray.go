@@ -1,5 +1,5 @@
 // Package v2ray reads an existing Xray/V2Ray *server* config so its users and
-// its VLESS+Reality identity can be moved to an Omnitun server. Keeping the
+// its VLESS+Reality identity can be moved to an Wardkeep server. Keeping the
 // Reality key, short ID and the users' UUIDs means the links the users
 // already have keep working.
 package v2ray
@@ -73,7 +73,7 @@ var (
 	safePassword = regexp.MustCompile(`^[A-Za-z0-9._~+=/:@!*,-]{1,128}$`)
 )
 
-// userName makes a valid, unique Omnitun user name from an email (or a fallback).
+// userName makes a valid, unique Wardkeep user name from an email (or a fallback).
 func userName(email, fallback string, taken map[string]bool) string {
 	name := email
 	if i := strings.IndexByte(name, '@'); i > 0 {
@@ -157,7 +157,7 @@ func ParseServer(text string) (*Config, error) {
 				}
 			}
 			if strings.ToLower(in.Protocol) == "vmess" {
-				cfg.Notes = append(cfg.Notes, "VMess inbound: users imported, but Omnitun does not serve VMess (use VLESS+Reality)")
+				cfg.Notes = append(cfg.Notes, "VMess inbound: users imported, but Wardkeep does not serve VMess (use VLESS+Reality)")
 			}
 			if in.Protocol == "vless" && in.Stream.Security == "reality" && cfg.Reality == nil {
 				r := in.Stream.Reality
@@ -193,7 +193,7 @@ func ParseServer(text string) (*Config, error) {
 				}
 			}
 		case "shadowsocks":
-			cfg.Notes = append(cfg.Notes, "Shadowsocks inbound skipped: Omnitun issues its own Shadowsocks-2022 keys per user")
+			cfg.Notes = append(cfg.Notes, "Shadowsocks inbound skipped: Wardkeep issues its own Shadowsocks-2022 keys per user")
 		case "":
 		default:
 			cfg.Notes = append(cfg.Notes, fmt.Sprintf("inbound %q (%s) is not carried over", in.Tag, in.Protocol))

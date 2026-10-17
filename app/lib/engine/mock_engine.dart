@@ -112,7 +112,7 @@ class MockEngine implements VpnEngine {
 
   @override
   Future<SubscriptionResult> fetchSubscription(Map<String, dynamic> request) async =>
-      throw StateError('Subscriptions need the Omnitun core (not available in preview mode)');
+      throw StateError('Subscriptions need the Wardkeep core (not available in preview mode)');
 
   @override
   Future<int> testLatency(ProfileInfo profile) async {

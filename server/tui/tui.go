@@ -577,7 +577,7 @@ func (m *model) View() string {
 		return titleStyle.Render("New user") + "\n\n" + m.form.View()
 	}
 	var b strings.Builder
-	b.WriteString(titleStyle.Render("Omnitun server") + dimStyle.Render(fmt.Sprintf("  %s · %s · %s", m.info.Name, m.info.PublicHost, m.mgr.Store.Dir)) + "\n")
+	b.WriteString(titleStyle.Render("Wardkeep server") + dimStyle.Render(fmt.Sprintf("  %s · %s · %s", m.info.Name, m.info.PublicHost, m.mgr.Store.Dir)) + "\n")
 	if m.view != viewUser {
 		for i, t := range tabs {
 			style := tabStyle

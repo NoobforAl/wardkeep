@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Omnitun';
+  String get appName => 'Wardkeep';
 
   @override
   String get actionSave => 'Save';
@@ -430,7 +430,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get shareScanHint => 'Scan with Omnitun, or copy the link.';
+  String get shareScanHint => 'Scan with Wardkeep, or copy the link.';
 
   @override
   String get shareCopy => 'Copy link';
@@ -698,7 +698,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openVpnSettingsFallback =>
-      'Settings → Network → VPN → gear next to Omnitun';
+      'Settings → Network → VPN → gear next to Wardkeep';
 
   @override
   String get splitTunneling => 'Split tunneling';
@@ -1361,7 +1361,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noticesIntro =>
-      'Omnitun is MIT licensed. It includes the software below, each under its own license.';
+      'Wardkeep is MIT licensed. It includes the software below, each under its own license.';
 
   @override
   String noticesMore(int count) {
@@ -1414,7 +1414,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importUnsupported =>
-      'This is not a server link, subscription or config that Omnitun can read';
+      'This is not a server link, subscription or config that Wardkeep can read';
 
   @override
   String importUnsupportedScheme(String scheme) {
@@ -1485,7 +1485,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ipdbIntro =>
-      'Download a database once, and Omnitun finds the country of a server or an address by itself, without asking a website.';
+      'Download a database once, and Wardkeep finds the country of a server or an address by itself, without asking a website.';
 
   @override
   String ipdbSizeNote(String size) {

@@ -85,7 +85,7 @@ Protocols: ` + strings.Join(protocols.Keys(), ", ") + `.`,
 	}
 	f := cmd.Flags()
 	f.StringVar(&opts.PublicHost, "host", "", "public IP or domain clients connect to (omit in a terminal for the wizard)")
-	f.StringVar(&opts.Name, "name", "Omnitun", "server name shown in clients")
+	f.StringVar(&opts.Name, "name", "Wardkeep", "server name shown in clients")
 	f.StringVar(&opts.RealityHandshake, "reality-site", "www.microsoft.com:443", "site VLESS+Reality and ShadowTLS imitate")
 	f.IntVar(&opts.SubPort, "sub-port", 2096, "subscription endpoint port")
 	f.StringSliceVar(&enabled, "protocols", nil, "protocols to enable, comma separated (default: all)")
@@ -134,7 +134,7 @@ func runWizard(start manager.InitOptions) (*wizardResult, error) {
 		host = detectPublicIP()
 	}
 	if name == "" {
-		name = "Omnitun"
+		name = "Wardkeep"
 	}
 	if site == "" {
 		site = "www.microsoft.com:443"
@@ -152,7 +152,7 @@ func runWizard(start manager.InitOptions) (*wizardResult, error) {
 
 	first := huh.NewForm(
 		huh.NewGroup(
-			huh.NewNote().Title("Omnitun server setup").
+			huh.NewNote().Title("Wardkeep server setup").
 				Description("A few questions; every answer can be changed later with the CLI, the TUI or the web API."),
 			huh.NewInput().Title("Public address").Description("The IP or domain your users connect to").Value(&host).
 				Validate(func(s string) error {

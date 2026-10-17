@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Links and config files that other apps (or the operating system) hand to Omnitun:
+/// Links and config files that other apps (or the operating system) hand to Wardkeep:
 ///  - Android: a `vless://…` link tapped anywhere, "Open with" / "Share" on a `.ovpn`, `.conf`,
 ///    `.json`, `.yaml` or `.txt` file or on some text (see the intent filters in AndroidManifest.xml);
 ///  - Windows, Linux and macOS: the file or link is the first command-line argument when the system

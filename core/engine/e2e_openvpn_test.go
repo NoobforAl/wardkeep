@@ -49,7 +49,7 @@ func newTestPKI(t *testing.T) testPKI {
 	}
 	caKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	caTmpl := &x509.Certificate{
-		SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "Omnitun Test CA"},
+		SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "Wardkeep Test CA"},
 		NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(24 * time.Hour),
 		IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 	}

@@ -17,7 +17,7 @@ if [[ ! -f "$PROPS" ]]; then
   PASS="$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 24)"
   "$KEYTOOL" -genkeypair -keystore app/android/omnitun-release.jks -alias omnitun \
     -keyalg RSA -keysize 4096 -validity 10000 -storepass "$PASS" -keypass "$PASS" \
-    -dname "CN=Omnitun, O=Omnitun" >/dev/null
+    -dname "CN=Wardkeep, O=Wardkeep" >/dev/null
   printf 'storeFile=omnitun-release.jks\nstorePassword=%s\nkeyAlias=omnitun\nkeyPassword=%s\n' "$PASS" "$PASS" > "$PROPS"
   echo "Created release keystore app/android/omnitun-release.jks — back it up together with $PROPS."
 fi

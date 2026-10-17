@@ -181,7 +181,7 @@ func File(st *store.State, u *store.User, key string) (name, content string, err
 }
 
 // OVPN returns a user's OpenVPN client config (proto is store.OpenVPNUDP or
-// store.OpenVPNTCP), credentials inline (OpenVPN 2.6+, Omnitun).
+// store.OpenVPNTCP), credentials inline (OpenVPN 2.6+, Wardkeep).
 func OVPN(st *store.State, u *store.User, proto string) (string, error) {
 	if !store.IsOpenVPN(proto) {
 		return "", fmt.Errorf("unknown OpenVPN protocol %q", proto)

@@ -24,7 +24,7 @@ Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   final store = await AppStore.open();
   await _setUpWindow(store);
-  // On a computer, opening a link or config file with Omnitun starts it with that as an argument.
+  // On a computer, opening a link or config file with Wardkeep starts it with that as an argument.
   final startup = await IncomingShare.fromArguments(args);
   runApp(ProviderScope(
     overrides: [storeProvider.overrideWithValue(store), startupSharesProvider.overrideWithValue(startup)],
@@ -48,7 +48,7 @@ Future<void> _setUpWindow(AppStore store) async {
       const WindowOptions(
         titleBarStyle: TitleBarStyle.hidden,
         windowButtonVisibility: false,
-        title: 'Omnitun',
+        title: 'Wardkeep',
         minimumSize: minWindowSize,
       ),
       () async {
@@ -172,7 +172,7 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
     final language = ref.watch(settingsProvider.select((s) => s.language));
     return MaterialApp(
       navigatorKey: _navigator,
-      title: 'Omnitun',
+      title: 'Wardkeep',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),

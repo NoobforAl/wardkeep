@@ -1,4 +1,4 @@
-// Package manager is the one place that knows how to administer an Omnitun
+// Package manager is the one place that knows how to administer an Wardkeep
 // server: initialise it, switch protocols, manage users, produce share links.
 // The CLI, the TUI and the web API are thin front ends over it, so they all
 // behave the same and return the same data (the types here are JSON-ready).

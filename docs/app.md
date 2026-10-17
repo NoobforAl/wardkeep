@@ -1,4 +1,4 @@
-# Omnitun app
+# Wardkeep app
 
 One calm screen: an Earth that shows where you are and where you exit, the state in words, and one button.
 
@@ -6,13 +6,13 @@ One calm screen: an Earth that shows where you are and where you exit, the state
 
 A dark-fantasy look in cold, muted blues (a light "stone" theme is in Settings). Behind the home screen is a dotted Earth: when you connect it turns to the exit country and marks it with a glow; it moves only for that turn. Fonts are open (SIL OFL, texts in the app's assets): Inter for all text, Vazirmatn for Persian and Arabic. The land outlines are Natural Earth (public domain). `scripts/gen-icon.py`, `gen-fonts.py` and `gen-globe.py` rebuild the icon, the fonts and the globe data.
 
-## Opening files and links with Omnitun
+## Opening files and links with Wardkeep
 
-Tap a share link (`vless://…`, `trojan://…`, `ss://…`, `hy2://…`, …) anywhere on the phone, or open or share a VPN config file (OpenVPN `.ovpn`, WireGuard `.conf`, Clash/sing-box `.json` or `.yaml`, a `.txt` of links) with Omnitun, and it imports the servers at once ("Imported 2 profiles"). A subscription link (`https://…`) opens the subscription form instead. On Windows, Linux and macOS the system starts Omnitun with the file or link, once the file types are registered (`app/windows/packaging`, `app/linux/packaging`); on iPhone and Mac the declarations are in the project but the receiving code is not written yet.
+Tap a share link (`vless://…`, `trojan://…`, `ss://…`, `hy2://…`, …) anywhere on the phone, or open or share a VPN config file (OpenVPN `.ovpn`, WireGuard `.conf`, Clash/sing-box `.json` or `.yaml`, a `.txt` of links) with Wardkeep, and it imports the servers at once ("Imported 2 profiles"). A subscription link (`https://…`) opens the subscription form instead. On Windows, Linux and macOS the system starts Wardkeep with the file or link, once the file types are registered (`app/windows/packaging`, `app/linux/packaging`); on iPhone and Mac the declarations are in the project but the receiving code is not written yet.
 
 ## Offline country database (optional)
 
-Settings → **Offline country database**. Not installed by default. Download it once (about 23 MB, free data) and Omnitun gives servers a country from their addresses without asking any website, and gives a country to an address a lookup found. The download carries on where it stopped after an error, a pause or a closed app, and every file is checked (size and SHA-256) before it is used. Switch it off or delete it at any time. Data: regional internet registries and ASN announcements (CC0), from the ip-location-db project.
+Settings → **Offline country database**. Not installed by default. Download it once (about 23 MB, free data) and Wardkeep gives servers a country from their addresses without asking any website, and gives a country to an address a lookup found. The download carries on where it stopped after an error, a pause or a closed app, and every file is checked (size and SHA-256) before it is used. Switch it off or delete it at any time. Data: regional internet registries and ASN announcements (CC0), from the ip-location-db project.
 
 ## First start
 

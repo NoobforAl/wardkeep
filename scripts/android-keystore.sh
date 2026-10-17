@@ -31,7 +31,7 @@ PASS="$(head -c 96 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32)"
 # PKCS12 keystores use one password for the store and the key.
 "$KEYTOOL" -genkeypair -keystore "$KS" -storetype PKCS12 -alias omnitun \
   -keyalg RSA -keysize 4096 -validity 10000 -storepass "$PASS" -keypass "$PASS" \
-  -dname "CN=Omnitun, O=Omnitun" >/dev/null
+  -dname "CN=Wardkeep, O=Wardkeep" >/dev/null
 
 umask 077
 {

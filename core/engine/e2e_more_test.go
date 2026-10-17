@@ -212,7 +212,7 @@ func TestSSHRejectsWrongHostKey(t *testing.T) {
 	}
 }
 
-// Profiles exported as sing-box JSON (the server's Omnitun subscription) import back unchanged.
+// Profiles exported as sing-box JSON (the server's Wardkeep subscription) import back unchanged.
 func TestNewProtocolsJSONRoundTrip(t *testing.T) {
 	links := []string{
 		"hysteria://h.example.com:443?auth=pw&peer=h.example.com&upmbps=20&downmbps=80&obfsParam=ob#hy1",

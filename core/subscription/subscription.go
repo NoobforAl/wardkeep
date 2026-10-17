@@ -24,7 +24,7 @@ import (
 
 // DefaultUserAgent asks panels for the plain share-link list most of them
 // serve to v2rayN-compatible clients.
-const DefaultUserAgent = "Omnitun/0.1 v2rayN/7.0"
+const DefaultUserAgent = "Wardkeep/0.1 v2rayN/7.0"
 
 const maxBody = 10 << 20
 

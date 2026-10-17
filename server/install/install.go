@@ -86,7 +86,7 @@ func (o *Options) defaults() {
 // `omnitun-server service` prints.
 func Unit(binary, dataDir, user string, hostServers bool) string {
 	var b strings.Builder
-	b.WriteString("[Unit]\nDescription=Omnitun VPN server\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\n")
+	b.WriteString("[Unit]\nDescription=Wardkeep VPN server\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\n")
 	fmt.Fprintf(&b, "ExecStart=%s --data %s run\n", binary, dataDir)
 	if user != "" {
 		fmt.Fprintf(&b, "User=%s\nGroup=%s\n", user, user)

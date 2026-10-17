@@ -10,7 +10,7 @@
 
     <application
         android:allowBackup="false"
-        android:label="Omnitun"
+        android:label="Wardkeep"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
@@ -35,7 +35,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Share links (vless://, trojan://, …) open Omnitun, which imports them. -->
+            <!-- Share links (vless://, trojan://, …) open Wardkeep, which imports them. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

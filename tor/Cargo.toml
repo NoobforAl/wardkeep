@@ -3,7 +3,7 @@ name = "omnitun-tor"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-description = "Tor client (Arti) for Omnitun: a local SOCKS5 port the Go core routes Tor profiles into"
+description = "Tor client (Arti) for Wardkeep: a local SOCKS5 port the Go core routes Tor profiles into"
 
 [lib]
 crate-type = ["rlib"]

@@ -1,4 +1,4 @@
-// Package protocols is the one place that knows each VPN protocol Omnitun
+// Package protocols is the one place that knows each VPN protocol Wardkeep
 // serves and connects to. A protocol is defined once and gives:
 //
 //   - Spec: name, transport, default port and options, for forms, tables,

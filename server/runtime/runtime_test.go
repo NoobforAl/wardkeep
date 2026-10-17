@@ -124,7 +124,7 @@ func lanIPv4(t *testing.T) string {
 }
 
 // Every profile the server hands out (the sing-box subscription, which also
-// carries OpenVPN) must work with the Omnitun client engine against the server.
+// carries OpenVPN) must work with the Wardkeep client engine against the server.
 func TestGeneratedProfilesConnect(t *testing.T) {
 	s, _ := setup(t)
 	st, err := s.Load()
@@ -213,9 +213,9 @@ func TestSubscriptionEndpoint(t *testing.T) {
 		t.Fatalf("import: %v, %d profiles", err, len(res.Profiles))
 	}
 
-	// The Omnitun client gets a sing-box config including both OpenVPN variants.
+	// The Wardkeep client gets a sing-box config including both OpenVPN variants.
 	req, _ := http.NewRequest(http.MethodGet, subURL, nil)
-	req.Header.Set("User-Agent", "Omnitun/0.1 v2rayN/7.0")
+	req.Header.Set("User-Agent", "Wardkeep/0.1 v2rayN/7.0")
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -236,7 +236,7 @@ func TestSubscriptionEndpoint(t *testing.T) {
 		t.Fatalf("openvpn profiles with credentials: %d", ovpns)
 	}
 
-	// The .ovpn download works in any OpenVPN client (and in Omnitun).
+	// The .ovpn download works in any OpenVPN client (and in Wardkeep).
 	resp, err = http.Get(serverconf.OVPNURL(st, u, store.OpenVPNTCP))
 	if err != nil {
 		t.Fatal(err)

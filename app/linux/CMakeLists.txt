@@ -127,6 +127,6 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     COMPONENT Runtime)
 endif()
 
-# Tells the desktop which files and links Omnitun can open (see packaging/omnitun.desktop).
+# Tells the desktop which files and links Wardkeep can open (see packaging/omnitun.desktop).
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/packaging/omnitun.desktop"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications" COMPONENT Runtime)
