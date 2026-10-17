@@ -279,13 +279,13 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   }
 
   @override
-  void didUpdateWidget(EarthBackdrop old) {
-    super.didUpdateWidget(old);
+  void didUpdateWidget(EarthBackdrop oldWidget) {
+    super.didUpdateWidget(oldWidget);
     // The parent rebuilds on every speed and clock tick. The camera travels only when a
     // place changes; deciding that from the computed target would not do, because its
     // longitude is worked out from where the globe is right now and so differs on every
     // rebuild in the middle of a flight (the globe restarted its flight again and again).
-    if (old.home != widget.home || old.exit != widget.exit) {
+    if (oldWidget.home != widget.home || oldWidget.exit != widget.exit) {
       // Start from what is on screen now (the user's turn included), so a change in
       // mid-flight does not jump; from here on the turn is part of the flight.
       final now = _shown();
@@ -294,7 +294,7 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
       _from = now;
       _to = _target(now.lon);
       _fly.forward(from: 0);
-    } else if (old.homeColor != widget.homeColor || old.exitColor != widget.exitColor) {
+    } else if (oldWidget.homeColor != widget.homeColor || oldWidget.exitColor != widget.exitColor) {
       // Only a colour changed (the exit turns from "connecting" to "connected"): no new flight.
       _from = _from.withColors(widget.homeColor, widget.exitColor);
       _to = _to.withColors(widget.homeColor, widget.exitColor);

@@ -14,7 +14,6 @@ import 'profile_editor_screen.dart';
 import 'qr_scan_screen.dart';
 import 'share_screen.dart';
 import 'subscription_screen.dart';
-import '../insets.dart';
 import '../widgets/credentials_dialog.dart';
 
 class ProfilesScreen extends ConsumerWidget {
