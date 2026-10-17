@@ -265,6 +265,9 @@ func (s *Server) removeClient(c *client) {
 			s.cfg.Logf("no UI connected for %s, stopping tunnel", s.cfg.Grace)
 			s.engine.Stop()
 		}
+		if idle {
+			s.ksStop() // the UI is gone: a kill switch kept after an internal stop ends with it
+		}
 	})
 }
 

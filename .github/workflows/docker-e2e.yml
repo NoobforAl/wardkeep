@@ -5,36 +5,15 @@ name: Docker end-to-end
 # and NAT in a container, connects real clients from other containers (one user at a time, then three users at
 # once, then IPv6), and checks the tunnel, the server's NAT and the per-user traffic accounting.
 #
-# It takes about 15 minutes, so it runs when the server or the code it uses changes, and on request.
+# It takes about 25 minutes and has never run on GitHub (the runner's kernel may lack /dev/ppp or the xfrm
+# modules that SSTP and IKEv2 need), so it runs on request only (Actions -> Docker end-to-end -> Run workflow).
+# Once it has passed there, turn the push and pull_request triggers back on.
 #
 # Every action is pinned to a full commit SHA. The job only reads the repository and holds no secret; it runs
 # code from the repository and its dependencies, so the token cannot write anything. The containers it starts
 # are privileged (SSTP's pppd needs /dev/ppp) and live only as long as the job's machine does.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "server/**"
-      - "core/**"
-      - "cmd/omnitun-server/**"
-      - "third_party/**"
-      - "tools/dockertest/**"
-      - "go.mod"
-      - "go.sum"
-      - "Makefile"
-      - ".github/workflows/docker-e2e.yml"
-  pull_request:
-    paths:
-      - "server/**"
-      - "core/**"
-      - "cmd/omnitun-server/**"
-      - "third_party/**"
-      - "tools/dockertest/**"
-      - "go.mod"
-      - "go.sum"
-      - "Makefile"
-      - ".github/workflows/docker-e2e.yml"
   workflow_dispatch:
 
 concurrency:

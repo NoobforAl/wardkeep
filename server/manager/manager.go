@@ -151,6 +151,10 @@ func (m *Manager) Init(o InitOptions) (*ServerInfo, error) {
 	if _, err := store.ParseAWGVersion(o.AmneziaWGVersion); err != nil {
 		return nil, invalid("%v", err)
 	}
+	if slices.Contains(o.Enabled, store.DNSCryptKey) {
+		// It needs an address to listen on, which a new server does not have yet.
+		return nil, invalid("%v (init the server without dnscrypt, then set the address and run: proto enable dnscrypt)", store.ErrDNSCryptListen)
+	}
 	probe := &store.State{Server: store.Server{Protocols: map[string]*store.Proto{}}}
 	for _, key := range append(append([]string{}, o.Enabled...), mapKeys(o.Ports)...) {
 		if !slices.Contains(store.AllProtocols, key) {
@@ -358,6 +362,11 @@ func (m *Manager) SetProtocol(key string, patch ProtocolPatch) (*ProtocolInfo, e
 			st.Server.AmneziaWG.Params = params
 		}
 		if patch.Enabled != nil {
+			if *patch.Enabled && key == store.DNSCryptKey {
+				if _, err := store.ParseDNSCryptListen(st.Server.DNSCrypt.Listen); err != nil {
+					return invalid("%v", store.ErrDNSCryptListen)
+				}
+			}
 			p.Enabled = *patch.Enabled
 		}
 		if patch.Port != nil {

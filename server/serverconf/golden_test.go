@@ -69,6 +69,8 @@ func TestGoldenOutput(t *testing.T) {
 	// Paths of the temp dir differ per run.
 	raw = []byte(replaceAll(string(raw), filepath.ToSlash(s.Dir), "$DIR"))
 	raw = []byte(replaceAll(string(raw), jsonEscape(s.Dir), "$DIR"))
+	// Windows joins paths with a backslash (written \ in JSON): the golden file has the Linux form.
+	raw = []byte(replaceAll(string(raw), "$DIR\\\\", "$DIR/"))
 	golden := filepath.Join("testdata", "golden.json")
 	if os.Getenv("UPDATE_GOLDEN") != "" {
 		if err := os.WriteFile(golden, raw, 0o644); err != nil {

@@ -224,7 +224,7 @@ class BypassReport {
   );
 }
 
-/// One connection stage (see PLAN.md 3.3 #6). [percent] runs 0-100.
+/// One connection stage. [percent] runs 0-100.
 class ConnectProgress {
   const ConnectProgress(this.stage, this.percent, {this.profile, this.detail, this.detailCode, this.detailN = 0, this.detailM = 0});
 

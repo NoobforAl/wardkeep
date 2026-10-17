@@ -39,6 +39,11 @@ func TestCLIDNSCryptResolver(t *testing.T) {
 		t.Fatal("dnscrypt is not in the protocol list")
 	}
 
+	// A new server cannot be made with it on: there is no address to listen on yet.
+	if _, err := run(t, tempDir(t), "init", "--host", "203.0.113.8", "--protocols", "dnscrypt"); exitCode(err) != 2 {
+		t.Fatalf("init --protocols dnscrypt: %v", err)
+	}
+
 	// Off: no stamp, and the message says what to do.
 	if _, err := run(t, dir, "link", "--stamp"); err == nil || exitCode(err) != 2 || !strings.Contains(err.Error(), "proto enable dnscrypt") {
 		t.Fatalf("link --stamp while off: %v", err)
@@ -47,6 +52,21 @@ func TestCLIDNSCryptResolver(t *testing.T) {
 		t.Fatalf("firewall while off: %v\n%s", err, out)
 	}
 
+	// It cannot be switched on without an address to listen on, and never on every interface.
+	if _, err := run(t, dir, "proto", "enable", "dnscrypt"); exitCode(err) != 2 || !strings.Contains(err.Error(), "dnscrypt listen") {
+		t.Fatalf("enable without a listen address: %v", err)
+	}
+	for _, wildcard := range []string{"0.0.0.0", "::", "nonsense"} {
+		if _, err := run(t, dir, "dnscrypt", "listen", wildcard); exitCode(err) != 2 {
+			t.Fatalf("listen %s: %v", wildcard, err)
+		}
+	}
+	if _, err := run(t, dir, "dnscrypt", "allow", "0.0.0.0/0"); exitCode(err) != 2 {
+		t.Fatalf("allow of every address: %v", err)
+	}
+	if _, err := run(t, dir, "dnscrypt", "listen", "10.30.0.1"); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := run(t, dir, "proto", "enable", "dnscrypt"); err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +89,7 @@ func TestCLIDNSCryptResolver(t *testing.T) {
 	if err != nil {
 		t.Fatalf("link --stamp printed %q: %v", stampText, err)
 	}
-	if st.Addr != "203.0.113.7:5443" || st.Port != 5443 {
+	if st.Addr != "10.30.0.1:5443" || st.Port != 5443 {
 		t.Errorf("stamp address %q", st.Addr)
 	}
 	if !strings.HasPrefix(st.ProviderName, "2.dnscrypt-cert.") {
@@ -109,7 +129,16 @@ func TestCLIDNSCryptResolver(t *testing.T) {
 		t.Errorf("after rotate-key: %+v (was %+v)", st2, st)
 	}
 
-	// The upstream resolver: an IP, with or without a port, or nothing for the host's own.
+	// The upstream resolver: public 1.1.1.1 unless set; an IP (with or without a port) or "system".
+	if out, _ = run(t, dir, "--json", "dnscrypt", "status"); strings.Contains(out, `"upstream"`) {
+		t.Errorf("the default upstream is not empty (the host's resolver must not be the default): %s", out)
+	}
+	if _, err := run(t, dir, "dnscrypt", "allow", "203.0.113.0/24", "198.51.100.7"); err != nil {
+		t.Fatal(err)
+	}
+	if out, _ = run(t, dir, "--json", "dnscrypt", "status"); !strings.Contains(out, "203.0.113.0/24") || !strings.Contains(out, "198.51.100.7/32") {
+		t.Errorf("status after allow: %s", out)
+	}
 	if _, err := run(t, dir, "dnscrypt", "upstream", "9.9.9.9"); err != nil {
 		t.Fatal(err)
 	}
@@ -118,6 +147,9 @@ func TestCLIDNSCryptResolver(t *testing.T) {
 	}
 	if out, _ = run(t, dir, "--json", "dnscrypt", "status"); !strings.Contains(out, `"upstream": "9.9.9.9"`) {
 		t.Errorf("status after upstream:\n%s", out)
+	}
+	if _, err := run(t, dir, "dnscrypt", "upstream", "system"); err != nil {
+		t.Fatal(err)
 	}
 	if _, err := run(t, dir, "dnscrypt", "upstream"); err != nil {
 		t.Fatal(err)

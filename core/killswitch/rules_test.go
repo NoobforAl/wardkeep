@@ -185,6 +185,44 @@ func TestDHCPAndNDPPorts(t *testing.T) {
 	}
 }
 
+// A permit on the DHCP ports alone would be a way out for any program: the
+// outgoing rules must name where the messages may go.
+func TestOutgoingDHCPIsLimitedToTheLink(t *testing.T) {
+	rules, _ := Build(Options{}) // no LAN rule, no servers: only the DHCP permits are left
+	d4 := find(rules, IPv4, Outbound, "DHCP")[0]
+	got4 := condValues(t, d4, RemoteAddress)
+	if len(got4) != 1 || got4[0] != netip.MustParsePrefix("255.255.255.255/32") {
+		t.Errorf("IPv4 DHCP may go to %v, want the broadcast address only", got4)
+	}
+	d6 := find(rules, IPv6, Outbound, "DHCPv6")[0]
+	got6 := condValues(t, d6, RemoteAddress)
+	for _, want := range []string{"ff02::1:2/128", "ff05::1:3/128", "fe80::/10"} {
+		if !slices.Contains(got6, any(netip.MustParsePrefix(want))) {
+			t.Errorf("DHCPv6 lacks %s: %v", want, got6)
+		}
+	}
+	// Nothing that routes beyond the link, and in particular nothing public.
+	for _, v := range append(got4, got6...) {
+		p := v.(netip.Prefix)
+		for _, pub := range []string{"1.1.1.1", "8.8.8.8", "2606:4700:4700::1111"} {
+			if p.Contains(netip.MustParseAddr(pub)) {
+				t.Errorf("%v contains the public address %s", p, pub)
+			}
+		}
+		if p.Bits() == 0 {
+			t.Errorf("%v is everything", p)
+		}
+	}
+	// Replies come from a server nobody knows in advance: no address condition.
+	for _, r := range []Rule{find(rules, IPv4, Inbound, "DHCP")[0], find(rules, IPv6, Inbound, "DHCPv6")[0]} {
+		for _, c := range r.Conditions {
+			if c.Field == RemoteAddress {
+				t.Errorf("%q: incoming replies cannot be limited by address", r.Name)
+			}
+		}
+	}
+}
+
 func TestExtraRangesAreSplitAndMasked(t *testing.T) {
 	o := baseOptions()
 	for i := range 600 {

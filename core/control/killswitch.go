@@ -20,13 +20,21 @@ import (
 //     and, with kill_switch_early, the block is raised at once;
 //   - connected: the block is raised (or re-raised) with the tunnel adapter
 //     permitted;
-//   - an error after having been connected (the tunnel dropped, a failover is
-//     under way): the block stays, that is the point of it;
-//   - an error before the first connection, or a stop: the block is lifted.
+//   - an error or a stop reported by the engine after having been connected (the
+//     tunnel dropped, a failover or restart tears it down): the block stays,
+//     that is the point of it;
+//   - an error or a stop before the first connection: the block is lifted;
+//   - the user's stop (the "stop" request, the lease running out, shutting the
+//     server down): ksStop lifts it, whatever the engine reported.
 //
 // If the block cannot be raised, the tunnel is stopped and the error shown:
 // a VPN that says "kill switch" and has none is worse than no VPN.
 type ksState struct {
+	// op serialises every change of the rules: a generation is checked and its
+	// rules installed under one hold of it, and so are stop and lift. A late
+	// arming therefore never runs after a stop, and a stop never lands between
+	// the check and the install. Lock order: op, then mu.
+	op      sync.Mutex
 	mu      sync.Mutex
 	gen     uint64 // changes with every start and stop; stale goroutines see it
 	active  bool
@@ -88,13 +96,15 @@ func (s *Server) ksPrepare(p StartParams, opts *singbox.Options) error {
 		opts.TunName = singbox.WindowsTunName
 	}
 
+	s.ks.op.Lock()
+	defer s.ks.op.Unlock()
 	s.ks.mu.Lock()
 	s.ks.gen++
 	s.ks.active, s.ks.running, s.ks.base = true, false, base
 	s.ks.mu.Unlock()
 	if p.KillSwitchEarly {
 		if err := s.cfg.KillSwitch.Arm(base, ""); err != nil {
-			s.ksStop()
+			s.ksStopLocked()
 			return fail("%v", err)
 		}
 		s.cfg.Logf("kill switch: blocking until the tunnel is up")
@@ -121,39 +131,57 @@ func (s *Server) ksOnState(st engine.State) {
 		running := s.ks.running
 		s.ks.mu.Unlock()
 		if !running {
-			s.ksLift(gen)
+			go s.ksLift(gen)
 		}
 	case engine.StatusStopped:
+		// The engine stops itself too (a restart, a failover): after the
+		// tunnel has been up that must not open the network. The user's stop
+		// comes through ksStop. Before the first connection nothing is worth
+		// blocking for.
+		running := s.ks.running
 		s.ks.mu.Unlock()
-		s.ksLift(gen)
+		if !running {
+			go s.ksLift(gen)
+		}
 	default:
 		s.ks.mu.Unlock()
 	}
 }
 
-// ksRaise blocks everything but the tunnel, now that the tunnel exists.
+// ksRaise blocks everything but the tunnel, now that the tunnel exists. A
+// generation that has been stopped or replaced meanwhile installs nothing and,
+// above all, removes nothing: the rules belong to whoever holds the lock.
 func (s *Server) ksRaise(gen uint64, base killswitch.Options) {
-	err := s.cfg.KillSwitch.Arm(base, singbox.WindowsTunName)
+	s.ks.op.Lock()
 	s.ks.mu.Lock()
 	stale := s.ks.gen != gen || !s.ks.active
 	s.ks.mu.Unlock()
 	if stale {
-		// Stopped while arming: do not leave the block behind.
-		s.cfg.KillSwitch.Disarm()
+		s.ks.op.Unlock()
 		return
 	}
+	err := s.cfg.KillSwitch.Arm(base, singbox.WindowsTunName)
 	if err == nil {
+		s.ks.op.Unlock()
 		s.cfg.Logf("kill switch: only the tunnel (and the VPN servers) can reach the network")
 		return
 	}
+	s.ksLiftLocked(gen)
+	s.ks.op.Unlock()
 	s.cfg.Logf("kill switch: cannot raise the block, stopping the tunnel: %v", err)
-	s.ksLift(gen)
 	s.engine.Stop()
 	s.engine.FailAt(engine.StageTunnelUp, fmt.Errorf("kill switch: %w", err))
 }
 
 // ksLift removes the block, unless a newer start has taken over.
 func (s *Server) ksLift(gen uint64) {
+	s.ks.op.Lock()
+	defer s.ks.op.Unlock()
+	s.ksLiftLocked(gen)
+}
+
+// ksLiftLocked is ksLift with s.ks.op held.
+func (s *Server) ksLiftLocked(gen uint64) {
 	s.ks.mu.Lock()
 	if s.ks.gen != gen {
 		s.ks.mu.Unlock()
@@ -167,11 +195,18 @@ func (s *Server) ksLift(gen uint64) {
 	}
 }
 
-// ksStop removes the block whatever start it belongs to.
+// ksStop removes the block whatever start it belongs to: the user's stop.
 func (s *Server) ksStop() {
 	if s.cfg.KillSwitch == nil {
 		return
 	}
+	s.ks.op.Lock()
+	defer s.ks.op.Unlock()
+	s.ksStopLocked()
+}
+
+// ksStopLocked is ksStop with s.ks.op held.
+func (s *Server) ksStopLocked() {
 	s.ks.mu.Lock()
 	s.ks.active, s.ks.running = false, false
 	s.ks.gen++

@@ -206,6 +206,14 @@ func (o *Options) Validate() error {
 }
 
 var (
+	// Where an outgoing DHCP message may go.
+	dhcp4Servers = []netip.Prefix{netip.MustParsePrefix("255.255.255.255/32")}
+	dhcp6Servers = []netip.Prefix{
+		netip.MustParsePrefix("ff02::1:2/128"), // All_DHCP_Relay_Agents_and_Servers
+		netip.MustParsePrefix("ff05::1:3/128"), // All_DHCP_Servers (site)
+		netip.MustParsePrefix("fe80::/10"),     // a server on the link
+	}
+
 	lan4 = []netip.Prefix{
 		netip.MustParsePrefix("10.0.0.0/8"),
 		netip.MustParsePrefix("172.16.0.0/12"),
@@ -268,18 +276,40 @@ func buildFor(o Options, fam Family, dir Direction) []Rule {
 	}
 
 	// Address assignment and neighbour discovery must keep working or the
-	// network adapter itself loses its address.
+	// network adapter itself loses its address. A permit on the DHCP ports alone
+	// would let any program send anything to anywhere from port 68 (or 546), so
+	// outgoing requests are limited to where a DHCP client really sends them:
+	// the broadcast address, and for IPv6 the DHCP multicast groups and
+	// link-local servers. Both are confined to the local link by the network
+	// itself, so they are no way out. Renewing with a unicast message to a
+	// server beyond that (the T1 renewal) is covered by the local-network rule
+	// when AllowLAN is on; without it the client falls back to the broadcast
+	// rebinding at 87.5 % of the lease. Restricting the rule to the DHCP client
+	// service would need its svchost application identifier, which is shared by
+	// many services and not stable, so it is not done. Incoming replies carry
+	// the server's address, which is not known in advance; an incoming packet
+	// to port 68 / 546 from port 67 / 547 sends nothing out.
 	switch fam {
 	case IPv4:
-		rules = append(rules, mk("DHCP", Permit, weightProtocols,
-			Condition{Field: Protocol, Values: []any{ProtoUDP}},
-			Condition{Field: LocalPort, Values: []any{uint16(68)}},
-			Condition{Field: RemotePort, Values: []any{uint16(67)}}))
+		conds := []Condition{
+			{Field: Protocol, Values: []any{ProtoUDP}},
+			{Field: LocalPort, Values: []any{uint16(68)}},
+			{Field: RemotePort, Values: []any{uint16(67)}},
+		}
+		if dir == Outbound {
+			conds = append(conds, Condition{Field: RemoteAddress, Values: prefixValues(dhcp4Servers)})
+		}
+		rules = append(rules, mk("DHCP", Permit, weightProtocols, conds...))
 	case IPv6:
-		rules = append(rules, mk("DHCPv6", Permit, weightProtocols,
-			Condition{Field: Protocol, Values: []any{ProtoUDP}},
-			Condition{Field: LocalPort, Values: []any{uint16(546)}},
-			Condition{Field: RemotePort, Values: []any{uint16(547)}}))
+		conds := []Condition{
+			{Field: Protocol, Values: []any{ProtoUDP}},
+			{Field: LocalPort, Values: []any{uint16(546)}},
+			{Field: RemotePort, Values: []any{uint16(547)}},
+		}
+		if dir == Outbound {
+			conds = append(conds, Condition{Field: RemoteAddress, Values: prefixValues(dhcp6Servers)})
+		}
+		rules = append(rules, mk("DHCPv6", Permit, weightProtocols, conds...))
 		// Router/neighbour solicitation and advertisement, redirect (RFC 4861).
 		rules = append(rules, mk("neighbour discovery", Permit, weightProtocols,
 			Condition{Field: Protocol, Values: []any{ProtoICMPv6}},

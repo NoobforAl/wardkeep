@@ -14,14 +14,14 @@ import (
 
 func dnsCryptEnv(srv store.Server) protocols.DNSCrypt {
 	d := srv.DNSCrypt
-	return protocols.DNSCrypt{ProviderName: d.ProviderName, PublicKey: d.PublicKey, PrivateKey: d.PrivateKey, Upstream: d.Upstream}
+	return protocols.DNSCrypt{ProviderName: d.ProviderName, PublicKey: d.PublicKey, PrivateKey: d.PrivateKey, Upstream: d.Upstream, Listen: d.Listen, Allow: d.Allow}
 }
 
 // ErrDNSCryptOff is returned when the resolver is not enabled.
 var ErrDNSCryptOff = errors.New("the DNSCrypt resolver is off (enable it with: proto enable dnscrypt)")
 
 // DNSCryptStamp is the DNS stamp ("sdns://...") of the server's DNSCrypt
-// resolver: its public address, the port, the provider name and public key.
+// resolver: the address it listens on, the port, the provider name and public key.
 // Clients (Wardkeep's DNS screen, dnscrypt-proxy, ...) are given this string.
 // The resolver keeps no logs and blocks nothing on purpose; it validates DNSSEC
 // only as far as its upstream does, so that property is not claimed.
@@ -35,12 +35,13 @@ func DNSCryptStamp(st *store.State) (string, error) {
 		return "", err
 	}
 	pub, _ := hex.DecodeString(d.PublicKey)
-	host := st.Server.PublicHost
-	if host == "" {
-		return "", errors.New("the server has no public address yet")
+	// The stamp names the address the resolver listens on (a VPN tunnel address),
+	// which is where the VPN's users reach it from inside the tunnel.
+	listen, err := store.ParseDNSCryptListen(d.Listen)
+	if err != nil {
+		return "", store.ErrDNSCryptListen
 	}
-	// An IPv6 address needs its brackets; a name is allowed but a stamp with an IP is more robust.
-	addr := net.JoinHostPort(host, strconv.Itoa(p.Port))
+	addr := net.JoinHostPort(listen.String(), strconv.Itoa(p.Port))
 	stamp := dnscrypt.Stamp{
 		Kind: dnscrypt.KindDNSCrypt, Props: dnscrypt.PropNoLog | dnscrypt.PropNoFilter,
 		Addr: addr, PublicKey: pub, ProviderName: d.ProviderName,

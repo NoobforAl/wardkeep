@@ -5,10 +5,8 @@ package winsvc
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"golang.org/x/sys/windows"
@@ -31,6 +29,9 @@ type InstallOptions struct {
 	// directory. Only for development: a SYSTEM service must not run a
 	// program that a normal user can replace.
 	NoCopy bool
+	// UnsafeSource installs from a folder that non-administrators can write
+	// to. Development only: they could replace what the service runs as SYSTEM.
+	UnsafeSource bool
 }
 
 // Status of the service.
@@ -115,6 +116,20 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 	if exe, err = filepath.Abs(exe); err != nil {
 		return err
 	}
+	// Decide what is copied, and check where it comes from, before anything on
+	// the machine is changed.
+	var plan installPlan
+	if !o.NoCopy {
+		if plan, err = planInstall(exe); err != nil {
+			return err
+		}
+		if err := checkPlanSafe(plan); err != nil {
+			if !o.UnsafeSource {
+				return err
+			}
+			logf("WARNING (--unsafe-source): %v", err)
+		}
+	}
 
 	// Who may use the service.
 	cfg, err := LoadConfig(l.Config)
@@ -165,7 +180,7 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 
 	target := exe
 	if !o.NoCopy {
-		if target, err = copyProgram(exe, l.InstallDir, logf); err != nil {
+		if target, err = copyProgram(plan, l.InstallDir, logf); err != nil {
 			return err
 		}
 	} else {
@@ -215,61 +230,6 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 }
 
 func quoted(p string) string { return `"` + p + `"` }
-
-// copyProgram copies the program, the libraries next to it (libcronet.dll for
-// NaiveProxy) and the Tor client into dir.
-func copyProgram(exe, dir string, logf func(string, ...any)) (string, error) {
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", err
-	}
-	src := filepath.Dir(exe)
-	dst := filepath.Join(dir, ExeName)
-	files := map[string]string{exe: dst}
-	entries, _ := os.ReadDir(src)
-	for _, e := range entries {
-		n := strings.ToLower(e.Name())
-		if e.IsDir() || filepath.Join(src, e.Name()) == exe {
-			continue
-		}
-		if strings.HasSuffix(n, ".dll") || (strings.HasPrefix(n, "omnitun-tor") && strings.HasSuffix(n, ".exe")) {
-			files[filepath.Join(src, e.Name())] = filepath.Join(dir, e.Name())
-		}
-	}
-	for from, to := range files {
-		if strings.EqualFold(from, to) {
-			continue
-		}
-		logf("copying %s to %s", filepath.Base(from), dir)
-		if err := copyFile(from, to); err != nil {
-			return "", err
-		}
-	}
-	return dst, nil
-}
-
-func copyFile(from, to string) error {
-	in, err := os.Open(from)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-	tmp := to + ".new"
-	out, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o755)
-	if err != nil {
-		return err
-	}
-	if _, err := io.Copy(out, in); err != nil {
-		out.Close()
-		os.Remove(tmp)
-		return err
-	}
-	if err := out.Close(); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	os.Remove(to)
-	return os.Rename(tmp, to)
-}
 
 func stopAndWait(s *mgr.Service, timeout time.Duration) error {
 	st, err := s.Query()

@@ -40,3 +40,4 @@ cache.db
 .env
 .env.*
 app/android/old-key/
+testVpn.txt

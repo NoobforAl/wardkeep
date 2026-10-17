@@ -28,6 +28,10 @@
   The omnitun-svc.exe to install. Default: ..\bin\omnitun-svc.exe next to this script's folder.
   Build it first:  go build -tags "with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_acme,badlinkname,tfogo_checklinkname0" -ldflags=-checklinkname=0 -o bin\omnitun-svc.exe .\cmd\omnitun-svc
 
+.PARAMETER UnsafeSource
+  Pass --unsafe-source to install: needed when the exe is in a folder normal users can write to (bin\ of the
+  repository). Without it, copy the exe to an admin-only folder (e.g. under Program Files) and use -Exe.
+
 .PARAMETER User
   Account allowed to use the service (default: the account running this script).
 
@@ -42,7 +46,8 @@ param(
   [switch]$SkipTun,
   [switch]$CrashTest,
   [switch]$KillSwitchTest,
-  [switch]$KeepInstalled
+  [switch]$KeepInstalled,
+  [switch]$UnsafeSource
 )
 
 $ErrorActionPreference = 'Stop'
@@ -140,6 +145,9 @@ try {
   Step "1. Install"
   $args1 = @('install')
   if ($User) { $args1 += @('--user', $User) }
+  # install refuses a program folder that normal users can write to (they could swap what runs as SYSTEM).
+  # A build in bin\ is such a folder: -UnsafeSource passes --unsafe-source for this test only.
+  if ($UnsafeSource) { $args1 += '--unsafe-source' }
   $rc = Svc $args1
   Check ($rc -eq 0) "install exited with $rc"
   $installed = $true

@@ -134,9 +134,9 @@
         "listen_port": 8443,
         "tag": "trojan",
         "tls": {
-          "certificate_path": "$DIR\\tls.crt",
+          "certificate_path": "$DIR/tls.crt",
           "enabled": true,
-          "key_path": "$DIR\\tls.key"
+          "key_path": "$DIR/tls.key"
         },
         "type": "trojan",
         "users": [
@@ -154,9 +154,9 @@
           "alpn": [
             "h3"
           ],
-          "certificate_path": "$DIR\\tls.crt",
+          "certificate_path": "$DIR/tls.crt",
           "enabled": true,
-          "key_path": "$DIR\\tls.key"
+          "key_path": "$DIR/tls.key"
         },
         "type": "hysteria2",
         "users": [
@@ -175,9 +175,9 @@
           "alpn": [
             "h3"
           ],
-          "certificate_path": "$DIR\\tls.crt",
+          "certificate_path": "$DIR/tls.crt",
           "enabled": true,
-          "key_path": "$DIR\\tls.key"
+          "key_path": "$DIR/tls.key"
         },
         "type": "tuic",
         "users": [
@@ -193,9 +193,9 @@
         "listen_port": 8445,
         "tag": "anytls",
         "tls": {
-          "certificate_path": "$DIR\\tls.crt",
+          "certificate_path": "$DIR/tls.crt",
           "enabled": true,
-          "key_path": "$DIR\\tls.key"
+          "key_path": "$DIR/tls.key"
         },
         "type": "anytls",
         "users": [
@@ -241,9 +241,9 @@
         "network": "tcp",
         "tag": "naive",
         "tls": {
-          "certificate_path": "$DIR\\tls.crt",
+          "certificate_path": "$DIR/tls.crt",
           "enabled": true,
-          "key_path": "$DIR\\tls.key"
+          "key_path": "$DIR/tls.key"
         },
         "type": "naive",
         "users": [

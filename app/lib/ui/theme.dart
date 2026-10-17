@@ -225,7 +225,7 @@ String statusLabel(AppLocalizations l, ConnStatus status) {
   };
 }
 
-/// Human label for a connection stage reported by the core (PLAN.md 3.3 #6).
+/// Human label for a connection stage reported by the core.
 String stageLabel(AppLocalizations l, String stage) {
   return switch (stage) {
     'permission' => l.stagePermission,

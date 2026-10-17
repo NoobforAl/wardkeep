@@ -117,8 +117,10 @@ func startDNSCryptHarness(t *testing.T, rotate time.Duration) *dnsCryptHarness {
 	port := freePort(t)
 	logs := &logCollector{}
 	srv, err := Start("dnscrypt", Config{
-		Env:  protocols.Env{DNSCrypt: protocols.DNSCrypt{ProviderName: id.ProviderName, PublicKey: id.PublicKey, PrivateKey: id.PrivateKey, Upstream: id.Upstream}},
-		Port: port, DNSListen: "127.0.0.1", DNSRotateEvery: rotate, Logf: logs.logf,
+		Env: protocols.Env{DNSCrypt: protocols.DNSCrypt{
+			ProviderName: id.ProviderName, PublicKey: id.PublicKey, PrivateKey: id.PrivateKey, Upstream: id.Upstream, Listen: "127.0.0.1",
+		}},
+		Port: port, DNSRotateEvery: rotate, Logf: logs.logf,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -242,7 +244,7 @@ func TestDNSCryptResolverFreesItsPort(t *testing.T) {
 }
 
 func TestDNSCryptResolverNeedsItsKey(t *testing.T) {
-	if _, err := Start("dnscrypt", Config{Port: freePort(t), DNSListen: "127.0.0.1"}); err == nil {
+	if _, err := Start("dnscrypt", Config{Port: freePort(t), Env: protocols.Env{DNSCrypt: protocols.DNSCrypt{Listen: "127.0.0.1"}}}); err == nil {
 		t.Fatal("started without a key")
 	}
 }
@@ -265,5 +267,155 @@ func TestRateLimiterLimitsOneAddressNotAnother(t *testing.T) {
 	time.Sleep(250 * time.Millisecond) // 2.5 tokens
 	if !l.allow(a) {
 		t.Error("the bucket did not refill")
+	}
+}
+
+// There is no default listen address and the wildcard is refused: the resolver
+// cannot come up open on the public interface.
+func TestDNSCryptResolverNeverListensOnEveryInterface(t *testing.T) {
+	for _, listen := range []string{"", "0.0.0.0", "::", "224.0.0.1", "not-an-ip"} {
+		id, _ := store.NewDNSCrypt("x")
+		_, err := Start("dnscrypt", Config{
+			Port: freePort(t),
+			Env:  protocols.Env{DNSCrypt: protocols.DNSCrypt{ProviderName: id.ProviderName, PublicKey: id.PublicKey, PrivateKey: id.PrivateKey, Listen: listen}},
+		})
+		if err == nil {
+			t.Errorf("listen %q: the resolver started", listen)
+		} else if listen == "" && !strings.Contains(err.Error(), "dnscrypt listen") {
+			t.Errorf("the error does not say how to set the address: %v", err)
+		}
+	}
+	// A range that is every address is refused too.
+	id, _ := store.NewDNSCrypt("x")
+	_, err := Start("dnscrypt", Config{
+		Port: freePort(t),
+		Env: protocols.Env{DNSCrypt: protocols.DNSCrypt{ProviderName: id.ProviderName, PublicKey: id.PublicKey, PrivateKey: id.PrivateKey,
+			Listen: "127.0.0.1", Allow: []string{"0.0.0.0/0"}}},
+	})
+	if err == nil {
+		t.Error("an allow range of every address was accepted")
+	}
+}
+
+// The host's /etc/resolv.conf is not the default upstream.
+func TestDNSCryptDefaultUpstreamIsPublicNotTheHosts(t *testing.T) {
+	if got := upstreamResolver(""); got != "1.1.1.1:53" {
+		t.Errorf("default upstream = %q, want 1.1.1.1:53", got)
+	}
+	if got := upstreamResolver("9.9.9.9"); got != "9.9.9.9:53" {
+		t.Errorf("upstream 9.9.9.9 = %q", got)
+	}
+	if got := upstreamResolver("9.9.9.9:5353"); got != "9.9.9.9:5353" {
+		t.Errorf("upstream with port = %q", got)
+	}
+	// "system" is the only way to the host's resolver; without a resolv.conf it still ends at the public one.
+	if got := upstreamResolver(protocols.UpstreamSystem); got == "" {
+		t.Error("system upstream is empty")
+	}
+}
+
+func TestGateAllowsClientsAndDropsTheRest(t *testing.T) {
+	g := newGate(mustPrefixes("203.0.113.0/24"))
+	for _, ok := range []string{"127.0.0.1", "::1", "10.30.4.5", "10.31.0.9", "10.9.0.3", "10.10.10.7", "10.18.0.2", "fd30:0:0:1::5", "::ffff:10.30.0.2", "203.0.113.9"} {
+		if !g.permitted(netip.MustParseAddr(ok)) {
+			t.Errorf("%s was refused", ok)
+		}
+	}
+	for _, no := range []string{"8.8.8.8", "198.51.100.7", "10.32.0.1", "2606:4700::1111", "192.168.1.5", "203.0.114.1"} {
+		if g.permitted(netip.MustParseAddr(no)) {
+			t.Errorf("%s was allowed", no)
+		}
+	}
+}
+
+// Queries from a source that is not a client get no answer at all, over UDP,
+// TCP and for the certificate request alike; with the source allowed again the
+// same questions are answered.
+func TestDNSCryptResolverDropsSourcesThatAreNotClients(t *testing.T) {
+	h := startDNSCryptHarness(t, 0)
+	s := h.srv.(*dnsCryptServer)
+	setStatic := func(p []netip.Prefix) {
+		s.gate.mu.Lock()
+		s.gate.static = p
+		s.gate.own, s.gate.ownAt = nil, time.Now() // no "own addresses" either
+		s.gate.mu.Unlock()
+	}
+	setStatic(nil) // even loopback is now a stranger
+	addr := "127.0.0.1:" + strconv.Itoa(h.port)
+
+	// The certificate request, plain DNS over UDP and over TCP.
+	m := new(dns.Msg)
+	m.SetQuestion(dns.Fqdn(h.stamp.ProviderName), dns.TypeTXT)
+	for _, network := range []string{"udp", "tcp"} {
+		c := &dns.Client{Net: network, Timeout: 700 * time.Millisecond}
+		if r, _, err := c.Exchange(m, addr); err == nil {
+			t.Errorf("%s: a stranger got the certificate: %v", network, r.Answer)
+		}
+	}
+	f, err := dnscrypt.NewForwarder(dnscrypt.ForwarderConfig{Stamp: h.stamp.String(), Timeout: 700 * time.Millisecond})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	if err := f.Check(context.Background()); err == nil {
+		t.Error("a stranger fetched the certificate through the client")
+	}
+	if h.upstream.Load() != 0 {
+		t.Errorf("the upstream was asked %d times for a stranger", h.upstream.Load())
+	}
+
+	setStatic(mustPrefixes("127.0.0.0/8"))
+	f2 := askThrough(t, h.stamp.String(), "now-a-client.example.org")
+	if len(f2.Answer) != 1 {
+		t.Fatalf("a client was not answered: %v", f2)
+	}
+}
+
+// Certificate requests are limited much harder than queries.
+func TestDNSCryptResolverLimitsCertificateRequests(t *testing.T) {
+	h := startDNSCryptHarness(t, 0)
+	m := new(dns.Msg)
+	m.SetQuestion(dns.Fqdn(h.stamp.ProviderName), dns.TypeTXT)
+	raw, _ := m.Pack()
+	c, err := net.Dial("udp", "127.0.0.1:"+strconv.Itoa(h.port))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	for range 40 {
+		c.Write(raw)
+	}
+	answers := 0
+	buf := make([]byte, 4096)
+	for {
+		c.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+		if _, err := c.Read(buf); err != nil {
+			break
+		}
+		answers++
+	}
+	if answers == 0 || answers > dnsCertBurst+2 {
+		t.Errorf("%d answers to 40 certificate requests, want between 1 and about %d", answers, dnsCertBurst)
+	}
+}
+
+func TestDNSCryptResolverRefusesANY(t *testing.T) {
+	h := startDNSCryptHarness(t, 0)
+	f, err := dnscrypt.NewForwarder(dnscrypt.ForwarderConfig{Stamp: h.stamp.String(), Timeout: 2 * time.Second, CacheEntries: -1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	m := new(dns.Msg)
+	m.SetQuestion("any.example.org.", dns.TypeANY)
+	r, _, err := (&dns.Client{Net: "udp", Timeout: 5 * time.Second}).Exchange(m, f.Addr())
+	if err != nil || r.Rcode != dns.RcodeNotImplemented || len(r.Answer) != 0 {
+		t.Errorf("ANY: %v %v", err, r)
+	}
+	if h.upstream.Load() != 0 {
+		t.Error("the upstream was asked for ANY")
 	}
 }

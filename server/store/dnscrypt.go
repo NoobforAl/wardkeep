@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"net/netip"
 	"regexp"
 	"strings"
 )
@@ -23,8 +24,16 @@ type DNSCrypt struct {
 	PublicKey  string `json:"public_key"`
 	PrivateKey string `json:"private_key"`
 	// Upstream is the "ip:port" of the resolver the server asks. Empty: the
-	// host's own resolver (resolv.conf), or 1.1.1.1 if it names none.
+	// public resolver 1.1.1.1; "system": the host's own (resolv.conf), which
+	// may know internal names, so it is only used when the operator asks.
 	Upstream string `json:"upstream,omitempty"`
+	// Listen is the one address the resolver listens on: a VPN tunnel address
+	// (10.30.0.1) or loopback. There is no default and no wildcard, so the
+	// resolver cannot be open on the public interface by accident.
+	Listen string `json:"listen,omitempty"`
+	// Allow lists extra source ranges (CIDRs) that may query, on top of
+	// loopback, the server's own addresses and the VPN client ranges.
+	Allow []string `json:"allow,omitempty"`
 }
 
 // DNSCryptKey is the protocol key of the resolver.
@@ -88,7 +97,7 @@ func (st *State) ensureDNSCrypt() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	d.Upstream = st.Server.DNSCrypt.Upstream
+	d.Upstream, d.Listen, d.Allow = st.Server.DNSCrypt.Upstream, st.Server.DNSCrypt.Listen, st.Server.DNSCrypt.Allow
 	st.Server.DNSCrypt = d
 	return true, nil
 }
@@ -104,7 +113,47 @@ func (st *State) RotateDNSCryptKey() error {
 	if st.Server.DNSCrypt.ProviderName != "" {
 		d.ProviderName = st.Server.DNSCrypt.ProviderName
 	}
-	d.Upstream = st.Server.DNSCrypt.Upstream
+	d.Upstream, d.Listen, d.Allow = st.Server.DNSCrypt.Upstream, st.Server.DNSCrypt.Listen, st.Server.DNSCrypt.Allow
 	st.Server.DNSCrypt = d
 	return nil
+}
+
+// ErrDNSCryptListen is why the resolver cannot be switched on yet.
+var ErrDNSCryptListen = fmt.Errorf("the DNSCrypt resolver needs the address to listen on first: omnitun-server dnscrypt listen <ip> " +
+	"(a VPN tunnel address such as 10.30.0.1 for WireGuard users, or 127.0.0.1); it never listens on all interfaces")
+
+// ParseDNSCryptListen checks the listen address: one specific IP, not a wildcard.
+func ParseDNSCryptListen(s string) (netip.Addr, error) {
+	a, err := netip.ParseAddr(strings.TrimSpace(s))
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%q is not an IP address", s)
+	}
+	if a.IsUnspecified() || a.IsMulticast() {
+		return netip.Addr{}, fmt.Errorf("%s would listen on every interface; name one address (a VPN tunnel address or 127.0.0.1)", a)
+	}
+	return a, nil
+}
+
+// ParseDNSCryptAllow checks a list of source ranges ("203.0.113.0/24", or a bare IP).
+func ParseDNSCryptAllow(list []string) ([]netip.Prefix, error) {
+	var out []netip.Prefix
+	for _, s := range list {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			continue
+		}
+		if p, err := netip.ParsePrefix(s); err == nil {
+			if p.Bits() == 0 {
+				return nil, fmt.Errorf("%s is every address; name the ranges that may use the resolver", s)
+			}
+			out = append(out, p.Masked())
+			continue
+		}
+		a, err := netip.ParseAddr(s)
+		if err != nil {
+			return nil, fmt.Errorf("%q is not an IP address or a range like 203.0.113.0/24", s)
+		}
+		out = append(out, netip.PrefixFrom(a, a.BitLen()))
+	}
+	return out, nil
 }

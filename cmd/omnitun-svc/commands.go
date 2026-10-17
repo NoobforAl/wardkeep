@@ -30,7 +30,7 @@ var subcommands = map[string]func(args []string) int{
 
 func usage() {
 	fmt.Fprint(os.Stderr, `usage: omnitun-svc [flags]                    run the per-user daemon (what the app launches)
-       omnitun-svc install [--user NAME]... [--no-copy]
+       omnitun-svc install [--user NAME]... [--no-copy] [--unsafe-source]
        omnitun-svc uninstall [--purge]
        omnitun-svc start | stop | status
        omnitun-svc cleanup [--force]
@@ -57,11 +57,12 @@ func cmdInstall(args []string) int {
 	fs.Var(&users, "user", "account (name or SID) allowed to drive the VPN through the service; repeatable. Default: the user running this command")
 	exe := fs.String("exe", "", "program to install (default: this one)")
 	noCopy := fs.Bool("no-copy", false, "register the program where it is, without copying it to Program Files (development only)")
+	unsafeSource := fs.Bool("unsafe-source", false, "install even if non-administrators can write to the folder the program comes from (development only)")
 	if fs.Parse(args) != nil {
 		return 2
 	}
 	say("Installing the %s service", winsvc.ServiceName)
-	if err := winsvc.Install(winsvc.InstallOptions{Exe: *exe, Users: users, NoCopy: *noCopy}, say); err != nil {
+	if err := winsvc.Install(winsvc.InstallOptions{Exe: *exe, Users: users, NoCopy: *noCopy, UnsafeSource: *unsafeSource}, say); err != nil {
 		return fail(err)
 	}
 	say("Installed. Start it with: omnitun-svc start")

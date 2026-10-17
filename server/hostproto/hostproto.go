@@ -43,9 +43,6 @@ type Config struct {
 	Runner Runner
 	// Logf receives the servers' own error messages.
 	Logf func(format string, args ...any)
-	// DNSListen is the address the DNSCrypt resolver listens on (default: all
-	// interfaces); tests use 127.0.0.1.
-	DNSListen string
 	// DNSRotateEvery is how often the DNSCrypt resolver's short-term key and
 	// certificate are replaced (default 7 days).
 	DNSRotateEvery time.Duration

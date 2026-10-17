@@ -15,10 +15,20 @@ type DNSCrypt struct {
 	ProviderName string
 	// PublicKey and PrivateKey are hex: 32 and 64 bytes.
 	PublicKey, PrivateKey string
-	// Upstream is the resolver the server asks, "ip:port"; empty means the
-	// host's own (resolv.conf), and 1.1.1.1 if it names none.
+	// Upstream is the resolver the server asks, "ip:port"; empty means the public
+	// resolver 1.1.1.1, and UpstreamSystem the host's own (resolv.conf).
 	Upstream string
+	// Listen is the one address the resolver listens on (a VPN tunnel address or
+	// loopback). There is no default: an unset or wildcard address is refused, so
+	// the resolver is never open on the public interface by accident.
+	Listen string
+	// Allow lists extra source ranges (CIDRs) that may query, on top of loopback,
+	// the server's own addresses and the VPN client ranges.
+	Allow []string
 }
+
+// UpstreamSystem as DNSCrypt.Upstream makes the resolver ask the host's own resolver.
+const UpstreamSystem = "system"
 
 // ErrNoProfile is what Profile returns for a service that is not a way to connect.
 var ErrNoProfile = errors.New("this is a service for the VPN's users, not a way to connect")
@@ -32,7 +42,7 @@ type dnscryptService struct{ hostBase }
 func (dnscryptService) Spec() Spec {
 	return Spec{
 		Key: "dnscrypt", Name: "DNSCrypt resolver", Label: "DNSCrypt", Profile: "",
-		Description: "A DNS resolver for this server's users, encrypted and authenticated with DNSCrypt (the resolver's key is in its DNS stamp: `link --stamp`). Not a way to connect. Answers anyone who can reach the port, so keep the port closed to the public unless that is wanted. TCP and UDP.",
+		Description: "A DNS resolver for this server's users, encrypted and authenticated with DNSCrypt (the resolver's key is in its DNS stamp: `link --stamp`). Not a way to connect. Needs the address to listen on first (`dnscrypt listen <ip>`, a VPN tunnel address such as 10.30.0.1); answers only the VPN's clients, the server itself and ranges you allow, and asks a public resolver unless you choose another. TCP and UDP.",
 		Transport:   "tcp+udp", DefaultPort: 5443, Host: true, DefaultOff: true, Service: true,
 	}
 }

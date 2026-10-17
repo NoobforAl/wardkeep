@@ -41,7 +41,7 @@ omnitun-server init --host vpn.example.com --protocols vless-reality,trojan,hyst
 | SSTP | 8448/tcp | **Linux, root or `CAP_NET_ADMIN`**; off by default |
 | IKEv2/IPsec | 4500/udp (+ 500/udp, TCP 4500) | **Linux, root or `CAP_NET_ADMIN`**; off by default; the server proves itself with its certificate, users sign in with EAP-MSCHAPv2 |
 | AmneziaWG | 51821/udp | **Linux, root or `CAP_NET_ADMIN`**; off by default; random obfuscation parameters per server; AmneziaWG 2.0 by default, 1.x on request (see below) |
-| DNSCrypt resolver | 5443/tcp+udp | not a way to connect: a DNS resolver for your users; off by default; see *DNSCrypt resolver* below |
+| DNSCrypt resolver | 5443/tcp+udp | not a way to connect: a DNS resolver for the tunnel's users; off by default, needs `dnscrypt listen <tunnel address>` first; see *DNSCrypt resolver* below |
 
 ```sh
 omnitun-server proto list                  # ports, status, traffic this month
@@ -80,22 +80,25 @@ With it on, every user gets a second, unique-local address in **WireGuard** (`fd
 
 ### DNSCrypt resolver (optional)
 
-`dnscrypt` (5443, TCP and UDP) is not a way to connect: it is a DNS resolver for your users, encrypted and authenticated with [DNSCrypt](https://www.dnscrypt.org/), so the VPN's DNS is private and under your control. It is **off by default**.
+`dnscrypt` (5443, TCP and UDP) is not a way to connect: it is a DNS resolver for your users, encrypted and authenticated with [DNSCrypt](https://www.dnscrypt.org/), so the VPN's DNS is private and under your control. It is **off by default**, and it is **never open to the internet**: it does not start until you name the one address it listens on, it answers only the VPN's clients, and it asks a public resolver unless you choose otherwise.
 
 ```sh
-omnitun-server proto enable dnscrypt       # a running server picks the change up
-omnitun-server firewall                    # opens 5443 on TCP and UDP
+omnitun-server dnscrypt listen 10.30.0.1   # the server's side of the tunnel your users are in (see below)
+omnitun-server proto enable dnscrypt       # refused until a listen address is set; a running server picks the change up
 omnitun-server link --stamp                # the DNS stamp (sdns://...) to give to clients
-omnitun-server dnscrypt status             # key, provider name, upstream, stamp
-omnitun-server dnscrypt upstream 9.9.9.9   # the resolver it asks (default: the host's resolv.conf, else 1.1.1.1)
+omnitun-server dnscrypt status             # listen address, who may ask, key, upstream, stamp
+omnitun-server dnscrypt allow 203.0.113.0/24   # more source ranges that may ask (no argument clears them)
+omnitun-server dnscrypt upstream 9.9.9.9   # the resolver it asks (default 1.1.1.1; `system` = the host's resolv.conf)
 omnitun-server dnscrypt rotate-key         # a new long-term key: the stamp changes, give clients the new one
 ```
 
+* **Listen address.** One specific address, never `0.0.0.0` or `::` (refused, as is an unset address: `proto enable dnscrypt` and `init --protocols dnscrypt` say how to set it). Use the server's address inside the tunnel: 10.30.0.1 (WireGuard), 10.31.0.1 (AmneziaWG), 10.18.0.1 / 10.19.0.1 (OpenVPN UDP / TCP), or 127.0.0.1 for tests. That interface must exist when the server starts. The stamp names this address and the port, so it works from inside the tunnel. The `firewall` command opens the port for enabled protocols; if the listen address is a tunnel address that is harmless, since nothing outside can reach it. Do not point it at a public address unless you also want the cost of that.
+* **Who may ask.** Only these sources are answered; everything else is dropped without a reply, the certificate request included: loopback, the server's own addresses (users of proxy protocols such as Trojan reach it from there), the VPN client networks (10.30/16, 10.31/16, 10.9.0/24, 10.10.10/24, 10.18/16, 10.19/16 and their IPv6 counterparts) and ranges you add with `dnscrypt allow` (a range of every address is refused). Each source address is limited to about 60 queries a second (a burst of 120) and 2 certificate requests a second (a burst of 6); UDP answers are cut to 1232 bytes; `ANY` queries are refused.
+* **Upstream.** `1.1.1.1` by default, over UDP and then TCP. The host's `/etc/resolv.conf` is *not* used unless you say `dnscrypt upstream system`, because it often names a resolver that knows internal names.
 * **Keys.** `init` makes a long-term Ed25519 key; its public half is in the stamp, and clients refuse a resolver that cannot prove it holds it. The short-term key and the certificate it signs are made when the server starts and replaced every 7 days by the running server (a certificate is valid for 14 days; a client that held the old one takes the new one when its queries stop being answered). The stamp does not change with them.
-* **Stamp.** `link --stamp` (also `dnscrypt stamp`) prints it; it names the server's public address and the port. Paste it into Wardkeep's DNS screen (*Custom*), into `dnscrypt-proxy`, or any client that reads DNS stamps. It declares *no logs* and *no filtering* (the server does neither) and does not claim DNSSEC.
-* **Who can use it.** Anyone who can reach the port: the resolver has no accounts. Users reach it through the tunnel at the server's address, so you can keep the port closed to the public internet and still serve them: `firewall` opens it because the stamp is meant for use from anywhere, so close it by hand if you want the VPN's users only. One address can ask about 60 times a second (a burst of 120); more is dropped, which keeps an open port from being used for floods.
+* **Stamp.** `link --stamp` (also `dnscrypt stamp`) prints it. Paste it into Wardkeep's DNS screen (*Custom*), into `dnscrypt-proxy`, or any client that reads DNS stamps. It declares *no logs* and *no filtering* (the server does neither) and does not claim DNSSEC. A client reaches the address only through the tunnel, so give it to users who are connected (or whose app sends DNS through the VPN).
 * **It is not a VPN profile.** It never appears in a user's links or subscription.
-* **Host.** Linux or any system where the port can be bound; no root is needed above port 1023. Tested in Docker (`tools/dockertest/dnscrypt_leak.py` runs this resolver, a Shadowsocks server and a client in TUN mode, and checks that no lookup leaves the client's card).
+* **Host.** Linux or any system where the address can be bound; no root is needed above port 1023. Tested in Docker (`tools/dockertest/dnscrypt_leak.py` runs this resolver with the server's address allowed, a Shadowsocks server and a client in TUN mode, and checks that no lookup leaves the client's card). Not tried with the real WireGuard or OpenVPN tunnel addresses.
 
 ## Users, links and quotas
 

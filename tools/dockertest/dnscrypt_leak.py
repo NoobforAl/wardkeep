@@ -108,9 +108,15 @@ def start_world():
     sh("docker", "run", "-d", "--name", WEB, "--network", NET_B, "--ip", WEB_B, IMG_WEB)
 
     # The resolver: the server's own DNSCrypt resolver, alone on network B. Its upstream is
-    # Docker's DNS, which knows the web server's name.
+    # Docker's DNS, which knows the web server's name (chosen with `dnscrypt upstream system`; the default is 1.1.1.1).
     sh("docker", "run", "-d", "--name", RESOLVER, "--network", NET_B, "--ip", RESOLVER_B, "--cap-add", "NET_ADMIN", IMG, "sleep", "infinity")
-    dx(RESOLVER, "omnitun-server --data /data init --host %s --protocols dnscrypt" % RESOLVER_B)
+    # It must be told the one address to listen on and who may ask: here only the VPN server (a proxy
+    # protocol's users reach it from the server's own address). Its upstream is the host's own resolver,
+    # Docker's DNS, which knows the web server's name: that needs the explicit `upstream system`.
+    dx(RESOLVER, "omnitun-server --data /data init --host %s --protocols shadowsocks" % RESOLVER_B)
+    dx(RESOLVER, "omnitun-server --data /data dnscrypt listen %s && omnitun-server --data /data dnscrypt allow %s && "
+                 "omnitun-server --data /data dnscrypt upstream system && "
+                 "omnitun-server --data /data proto enable dnscrypt" % (RESOLVER_B, SERVER_B))
     sh("docker", "exec", "-d", RESOLVER, "sh", "-c", "omnitun-server --data /data run > /run.log 2>&1")
     log = wait_for(RESOLVER, "/run.log", "serving dnscrypt")
     print("resolver:", [l for l in log.splitlines() if "dnscrypt" in l][:2])

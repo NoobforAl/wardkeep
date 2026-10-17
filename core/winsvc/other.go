@@ -13,9 +13,10 @@ var ErrNeedsAdmin = errors.New("needs administrator rights")
 
 // InstallOptions say what to install.
 type InstallOptions struct {
-	Exe    string
-	Users  []string
-	NoCopy bool
+	Exe          string
+	Users        []string
+	NoCopy       bool
+	UnsafeSource bool
 }
 
 // Status of the service.

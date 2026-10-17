@@ -19,10 +19,15 @@ type ksBackend struct {
 	mu      sync.Mutex
 	applied [][]killswitch.Rule
 	removed int
-	failOn  int // fail the Nth Apply (1-based); 0 never
+	failOn  int    // fail the Nth Apply (1-based); 0 never
+	hold    func() // called inside Apply, once, to force an interleaving
 }
 
 func (b *ksBackend) Apply(r []killswitch.Rule) error {
+	if h := b.hold; h != nil {
+		b.hold = nil
+		h()
+	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.failOn == len(b.applied)+1 {
@@ -187,10 +192,22 @@ func TestKillSwitchLifecycle(t *testing.T) {
 	s.ksOnState(engine.State{Status: engine.StatusRunning})
 	waitFor(t, "re-arming", func() bool { a, _ := b.counts(); return a == 2 })
 
-	// The user disconnects.
+	// The engine stops itself (a restart, a failover): the block stays.
 	s.ksOnState(engine.State{Status: engine.StatusStopped})
-	if _, r := b.counts(); r != 1 {
-		t.Errorf("removed = %d, want 1", r)
+	time.Sleep(50 * time.Millisecond)
+	if _, r := b.counts(); r != 0 {
+		t.Fatalf("an internal stop must keep the block, removed = %d", r)
+	}
+	if !s.cfg.KillSwitch.Armed() {
+		t.Fatal("not armed after an internal stop")
+	}
+
+	// The user disconnects: the control "stop" request lifts it.
+	if _, err := s.Call("stop", nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, r := b.counts(); r != 1 || s.cfg.KillSwitch.Armed() {
+		t.Errorf("removed = %d, armed = %v after the user's stop", r, s.cfg.KillSwitch.Armed())
 	}
 	// Later states change nothing.
 	s.ksOnState(engine.State{Status: engine.StatusRunning})
@@ -198,6 +215,39 @@ func TestKillSwitchLifecycle(t *testing.T) {
 	if a, _ := b.counts(); a != 2 {
 		t.Error("a stopped kill switch must not re-arm by itself")
 	}
+}
+
+// The engine reports "stopped" without ever having been connected (a failed
+// start): nothing is worth blocking for.
+func TestKillSwitchStoppedBeforeConnectedLiftsTheBlock(t *testing.T) {
+	b := &ksBackend{}
+	s := ksServer(t, b)
+	p := ksParams("vpn.example")
+	p.KillSwitchEarly = true
+	if err := s.ksPrepare(p, &singbox.Options{Mode: singbox.ModeTUN}); err != nil {
+		t.Fatal(err)
+	}
+	s.ksOnState(engine.State{Status: engine.StatusStopped})
+	waitFor(t, "the block to be lifted", func() bool { _, r := b.counts(); return r == 1 })
+}
+
+// The lease running out is a user-side stop, also when the engine had already stopped itself.
+func TestKillSwitchLiftedWhenTheUIIsGone(t *testing.T) {
+	b := &ksBackend{}
+	s := ksServer(t, b)
+	if err := s.ksPrepare(ksParams("vpn.example"), &singbox.Options{Mode: singbox.ModeTUN}); err != nil {
+		t.Fatal(err)
+	}
+	s.ksOnState(engine.State{Status: engine.StatusRunning})
+	waitFor(t, "arming", func() bool { a, _ := b.counts(); return a == 1 })
+	s.ksOnState(engine.State{Status: engine.StatusStopped}) // internal
+	s.cfg.Grace = 10 * time.Millisecond
+	c := &client{conn: nil, send: make(chan any, 1), done: make(chan struct{})}
+	s.mu.Lock()
+	s.clients[c] = struct{}{}
+	s.mu.Unlock()
+	s.removeClient(c) // the last UI leaves
+	waitFor(t, "the block to be lifted", func() bool { _, r := b.counts(); return r == 1 })
 }
 
 func TestKillSwitchEarlyBlocksWhileConnecting(t *testing.T) {
@@ -213,9 +263,7 @@ func TestKillSwitchEarlyBlocksWhileConnecting(t *testing.T) {
 	}
 	// The first connection fails: the user is not locked out.
 	s.ksOnState(engine.State{Status: engine.StatusError, Error: "no route"})
-	if _, r := b.counts(); r != 1 {
-		t.Errorf("a failed first connection must lift the block, removed = %d", r)
-	}
+	waitFor(t, "a failed first connection to lift the block", func() bool { _, r := b.counts(); return r == 1 })
 }
 
 func TestKillSwitchStopWhileConnectingLiftsTheBlock(t *testing.T) {
@@ -261,19 +309,58 @@ func TestKillSwitchEarlyFailureRefusesTheStart(t *testing.T) {
 	}
 }
 
-// A slow arming that finishes after the user stopped must not leave a block behind.
-func TestKillSwitchStaleArmingIsUndone(t *testing.T) {
+// A stale arming (its generation was replaced) installs nothing and removes
+// nothing, in particular not what the newer generation installed.
+func TestKillSwitchStaleArmingTouchesNothing(t *testing.T) {
 	b := &ksBackend{}
 	s := ksServer(t, b)
 	if err := s.ksPrepare(ksParams("vpn.example"), &singbox.Options{Mode: singbox.ModeTUN}); err != nil {
 		t.Fatal(err)
 	}
 	s.ks.mu.Lock()
-	gen := s.ks.gen
+	oldGen, oldBase := s.ks.gen, s.ks.base
 	s.ks.mu.Unlock()
-	s.ksStop() // the user stops before the arming goroutine gets to run
-	s.ksRaise(gen, s.ks.base)
+	// A newer start raises its early block first.
+	p := ksParams("vpn.example")
+	p.KillSwitchEarly = true
+	if err := s.ksPrepare(p, &singbox.Options{Mode: singbox.ModeTUN}); err != nil {
+		t.Fatal(err)
+	}
+	s.ksRaise(oldGen, oldBase)
+	if a, r := b.counts(); a != 1 || r != 0 || !s.cfg.KillSwitch.Armed() {
+		t.Errorf("applied = %d, removed = %d, armed = %v: the stale arming must leave the newer rules alone", a, r, s.cfg.KillSwitch.Armed())
+	}
+}
+
+// A stop that arrives while the arming is inside the firewall call waits for
+// it and then removes what it installed (it is not missed, and the arming is not
+// left behind).
+func TestKillSwitchStopDuringArmingIsNotMissed(t *testing.T) {
+	b := &ksBackend{}
+	s := ksServer(t, b)
+	if err := s.ksPrepare(ksParams("vpn.example"), &singbox.Options{Mode: singbox.ModeTUN}); err != nil {
+		t.Fatal(err)
+	}
+	entered, release := make(chan struct{}), make(chan struct{})
+	b.hold = func() { close(entered); <-release }
+	s.ks.mu.Lock()
+	gen, base := s.ks.gen, s.ks.base
+	s.ks.mu.Unlock()
+
+	raised := make(chan struct{})
+	go func() { s.ksRaise(gen, base); close(raised) }()
+	<-entered // the arming is now inside Apply, holding the lock
+	stopped := make(chan struct{})
+	go func() { s.ksStop(); close(stopped) }()
+	select {
+	case <-stopped:
+		t.Fatal("the stop ran in the middle of the arming")
+	case <-time.After(100 * time.Millisecond):
+	}
+	close(release)
+	<-raised
+	<-stopped
 	if a, r := b.counts(); a != 1 || r != 1 || s.cfg.KillSwitch.Armed() {
-		t.Errorf("applied = %d, removed = %d, armed = %v: the late arming must be taken back", a, r, s.cfg.KillSwitch.Armed())
+		t.Errorf("applied = %d, removed = %d, armed = %v: the stop must win", a, r, s.cfg.KillSwitch.Armed())
 	}
 }
