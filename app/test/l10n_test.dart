@@ -263,6 +263,8 @@ void main() {
       'Jmax',
       'S1',
       'S2',
+      'S3',
+      'S4',
       'H1',
       'H2',
       'H3',
@@ -271,9 +273,6 @@ void main() {
       'I3',
       'I4',
       'I5',
-      'J2',
-      'J3',
-      'Itime',
     };
     final missing = <String>[];
     for (final f in forms) {

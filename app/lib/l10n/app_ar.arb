@@ -362,7 +362,6 @@
   "flBridgeLines": "أسطر الجسور",
   "flJc": "Jc (عدد الحزم العشوائية)",
   "flSignaturePacket": "I1 (حزمة التوقيع)",
-  "flControlledJunk": "J1 (حزم عشوائية متحكَّم بها)",
   "hpAuthorizedKeys": "بصيغة authorized_keys؛ الفارغ يقبل أي مفتاح",
   "hpIkeTcp": "نقل IKE وESP عبر TCP للشبكات التي تحجب UDP",
   "hpDefaultsToServer": "الافتراضي هو عنوان الخادم",

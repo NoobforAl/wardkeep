@@ -362,7 +362,6 @@
   "flBridgeLines": "خط‌های پل",
   "flJc": "Jc (تعداد بسته‌های زائد)",
   "flSignaturePacket": "I1 (بسته امضا)",
-  "flControlledJunk": "J1 (بسته زائد کنترل‌شده)",
   "hpAuthorizedKeys": "قالب authorized_keys؛ خالی یعنی هر کلیدی پذیرفته می‌شود",
   "hpIkeTcp": "IKE و ESP را روی TCP عبور می‌دهد، برای شبکه‌هایی که UDP را مسدود می‌کنند",
   "hpDefaultsToServer": "به‌طور پیش‌فرض نشانی سرور",

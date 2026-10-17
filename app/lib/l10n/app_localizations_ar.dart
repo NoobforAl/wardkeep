@@ -1335,9 +1335,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flSignaturePacket => 'I1 (حزمة التوقيع)';
 
   @override
-  String get flControlledJunk => 'J1 (حزم عشوائية متحكَّم بها)';
-
-  @override
   String get hpAuthorizedKeys => 'بصيغة authorized_keys؛ الفارغ يقبل أي مفتاح';
 
   @override

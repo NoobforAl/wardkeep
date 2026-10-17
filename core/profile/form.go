@@ -553,12 +553,11 @@ func wireguardFields(amneziaToo bool) []Field {
 	if amneziaToo {
 		fs = append(fs,
 			amnezia("amnezia.jc", "Jc (junk packet count)"), amnezia("amnezia.jmin", "Jmin"), amnezia("amnezia.jmax", "Jmax"),
-			amnezia("amnezia.s1", "S1"), amnezia("amnezia.s2", "S2"),
+			amnezia("amnezia.s1", "S1"), amnezia("amnezia.s2", "S2"), amnezia("amnezia.s3", "S3"), amnezia("amnezia.s4", "S4"),
+			// AmneziaWG 2.0 writes the headers as ranges, "100-200".
 			amnezia("amnezia.h1", "H1"), amnezia("amnezia.h2", "H2"), amnezia("amnezia.h3", "H3"), amnezia("amnezia.h4", "H4"),
 			amnezia("amnezia.i1", "I1 (signature packet)"), amnezia("amnezia.i2", "I2"), amnezia("amnezia.i3", "I3"),
 			amnezia("amnezia.i4", "I4"), amnezia("amnezia.i5", "I5"),
-			amnezia("amnezia.j1", "J1 (controlled junk)"), amnezia("amnezia.j2", "J2"), amnezia("amnezia.j3", "J3"),
-			amnezia("amnezia.itime", "Itime"),
 		)
 	}
 	return fs

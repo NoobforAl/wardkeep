@@ -362,7 +362,6 @@
   "flBridgeLines": "Строки мостов",
   "flJc": "Jc (число мусорных пакетов)",
   "flSignaturePacket": "I1 (пакет-подпись)",
-  "flControlledJunk": "J1 (управляемый мусор)",
   "hpAuthorizedKeys": "Формат authorized_keys; пусто — принимается любой ключ",
   "hpIkeTcp": "Передавать IKE и ESP по TCP для сетей, блокирующих UDP",
   "hpDefaultsToServer": "По умолчанию — адрес сервера",

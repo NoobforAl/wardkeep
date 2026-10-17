@@ -68,7 +68,6 @@ String formLabel(AppLocalizations l, String english) {
     'Bridge lines' => l.flBridgeLines,
     'Jc (junk packet count)' => l.flJc,
     'I1 (signature packet)' => l.flSignaturePacket,
-    'J1 (controlled junk)' => l.flControlledJunk,
     _ => english,
   };
 }

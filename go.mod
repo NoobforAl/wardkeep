@@ -3,7 +3,7 @@ module github.com/NoobforAl/omnitun
 go 1.27.0
 
 require (
-	github.com/amnezia-vpn/amneziawg-go v1.0.4
+	github.com/amnezia-vpn/amneziawg-go v0.2.20-0.20260724121833-457d920a1a7d
 	github.com/charmbracelet/bubbles v1.0.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/huh v1.0.0

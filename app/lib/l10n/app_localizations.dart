@@ -2234,12 +2234,6 @@ abstract class AppLocalizations {
   /// **'I1 (signature packet)'**
   String get flSignaturePacket;
 
-  /// No description provided for @flControlledJunk.
-  ///
-  /// In en, this message translates to:
-  /// **'J1 (controlled junk)'**
-  String get flControlledJunk;
-
   /// No description provided for @hpAuthorizedKeys.
   ///
   /// In en, this message translates to:

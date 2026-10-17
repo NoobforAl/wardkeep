@@ -1283,9 +1283,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flSignaturePacket => 'I1 (signature packet)';
 
   @override
-  String get flControlledJunk => 'J1 (controlled junk)';
-
-  @override
   String get hpAuthorizedKeys =>
       'authorized_keys format; empty accepts any key';
 

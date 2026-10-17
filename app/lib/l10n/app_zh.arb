@@ -362,7 +362,6 @@
   "flBridgeLines": "网桥行",
   "flJc": "Jc（垃圾包数量）",
   "flSignaturePacket": "I1（签名包）",
-  "flControlledJunk": "J1（受控垃圾包）",
   "hpAuthorizedKeys": "authorized_keys 格式；留空则接受任何密钥",
   "hpIkeTcp": "通过 TCP 承载 IKE 和 ESP，适用于屏蔽 UDP 的网络",
   "hpDefaultsToServer": "默认使用服务器地址",

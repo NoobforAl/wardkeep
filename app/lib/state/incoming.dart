@@ -9,7 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///  - Android: a `vless://…` link tapped anywhere, "Open with" / "Share" on a `.ovpn`, `.conf`,
 ///    `.json`, `.yaml` or `.txt` file or on some text (see the intent filters in AndroidManifest.xml);
 ///  - Windows, Linux and macOS: the file or link is the first command-line argument when the system
-///    starts the app for it.
+///    starts the app for it; on Windows, if the app is already open, that second start hands the
+///    argument to the open copy and ends.
 /// Everything arrives as text for the importer, which already knows every format.
 class IncomingShare {
   static const _channel = MethodChannel('omnitun/incoming');
@@ -24,6 +25,16 @@ class IncomingShare {
     for (final text in startup) {
       any = true;
       await deliver(text);
+    }
+    if (Platform.isWindows) {
+      // A second start of the app hands its command line to this copy (see windows/runner/main.cpp).
+      _channel.setMethodCallHandler((call) async {
+        if (call.method != 'arguments') return;
+        for (final text in await fromArguments([for (final a in call.arguments as List) a as String])) {
+          await deliver(text);
+        }
+      });
+      return any;
     }
     if (!Platform.isAndroid) return any;
     _channel.setMethodCallHandler((call) async {

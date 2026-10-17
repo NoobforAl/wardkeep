@@ -22,13 +22,26 @@ import (
 	"github.com/NoobforAl/omnitun/core/profile"
 )
 
-// deviceKeys are the AmneziaWG 1.x device parameters amneziawg-go accepts, in UAPI order.
-var deviceKeys = []string{"jc", "jmin", "jmax", "s1", "s2", "h1", "h2", "h3", "h4", "itime"}
+// deviceKeys are the AmneziaWG device parameters amneziawg-go accepts, in UAPI
+// order: junk packets before the handshake (jc, jmin, jmax), random prefixes on
+// the handshake's two packets (s1, s2), on the cookie packet (s3) and on data
+// packets (s4), and the four message-type headers (h1-h4), which in AmneziaWG
+// 2.0 are ranges ("100-200") a random value is drawn from for every packet.
+var deviceKeys = []string{"jc", "jmin", "jmax", "s1", "s2", "s3", "s4", "h1", "h2", "h3", "h4"}
 
-// chainKeys are AmneziaWG 1.5's signature packets (i1-i5, sent before the
-// handshake to look like another protocol) and controlled junk (j1-j3). Their
-// values are tag chains such as "<b 0xc0ff><r 16><t>", passed on verbatim.
-var chainKeys = []string{"i1", "i2", "i3", "i4", "i5", "j1", "j2", "j3"}
+// headerKeys are the deviceKeys that may be a range.
+var headerKeys = []string{"h1", "h2", "h3", "h4"}
+
+// chainKeys are the signature packets (i1-i5), sent before the handshake to
+// look like another protocol. Their values are tag chains such as
+// "<b 0xc0ff><r 16><t>", passed on verbatim.
+var chainKeys = []string{"i1", "i2", "i3", "i4", "i5"}
+
+// retiredKeys are names of AmneziaWG 1.5 that version 2.0 no longer has: the
+// time between signature packets (itime) and the "controlled junk" chains
+// (j1-j3). Files and links made for 1.5 may still carry them; they are
+// left out of the device configuration instead of making the connection fail.
+var retiredKeys = []string{"itime", "j1", "j2", "j3"}
 
 // ErrUnsupported is returned for parameters this AmneziaWG version can't apply.
 var ErrUnsupported = errors.New("unsupported AmneziaWG parameter")
@@ -57,15 +70,11 @@ func UAPI(p *profile.Profile, endpoint netip.AddrPort) (string, error) {
 	}
 	var b strings.Builder
 	fmt.Fprintf(&b, "private_key=%s\n", priv)
+	if err := CheckParams(wg.Amnezia); err != nil {
+		return "", err
+	}
 	for _, k := range deviceKeys {
 		if v, ok := wg.Amnezia[k]; ok {
-			if _, err := strconv.ParseUint(strings.TrimSpace(v), 10, 32); err != nil {
-				// AmneziaWG 2.0 writes headers as ranges ("h1=100-200").
-				if strings.Contains(v, "-") {
-					return "", fmt.Errorf("%w %s=%q (AmneziaWG 2.0 header ranges)", ErrUnsupported, k, v)
-				}
-				return "", fmt.Errorf("invalid %s=%q", k, v)
-			}
 			fmt.Fprintf(&b, "%s=%s\n", k, strings.TrimSpace(v))
 		}
 	}
@@ -75,11 +84,6 @@ func UAPI(p *profile.Profile, endpoint netip.AddrPort) (string, error) {
 				return "", fmt.Errorf("invalid %s: line break", k)
 			}
 			fmt.Fprintf(&b, "%s=%s\n", k, strings.TrimSpace(v))
-		}
-	}
-	for k := range wg.Amnezia {
-		if !isDeviceKey(k) && !slices.Contains(chainKeys, k) {
-			return "", fmt.Errorf("%w %q (AmneziaWG 2.0 options are not supported yet)", ErrUnsupported, k)
 		}
 	}
 	b.WriteString("replace_peers=true\n")
@@ -109,6 +113,119 @@ func UAPI(p *profile.Profile, endpoint netip.AddrPort) (string, error) {
 }
 
 func isDeviceKey(k string) bool { return slices.Contains(deviceKeys, k) }
+
+// uintRange reads "n" or "lo-hi" (decimal, lo <= hi).
+func uintRange(v string) (lo, hi uint64, err error) {
+	a, b, isRange := strings.Cut(strings.TrimSpace(v), "-")
+	if lo, err = strconv.ParseUint(strings.TrimSpace(a), 10, 32); err != nil {
+		return 0, 0, errors.New("not a number or a range such as 100-200")
+	}
+	hi = lo
+	if isRange {
+		if hi, err = strconv.ParseUint(strings.TrimSpace(b), 10, 32); err != nil {
+			return 0, 0, errors.New("not a number or a range such as 100-200")
+		}
+		if hi < lo {
+			return 0, 0, errors.New("the range ends before it starts")
+		}
+	}
+	return lo, hi, nil
+}
+
+// CheckParams validates AmneziaWG's parameters (the keys of a profile's
+// Amnezia map) before they reach the device, so a mistake is reported in words
+// instead of as a device error. It knows AmneziaWG 1.x (plain numbers), 1.5
+// (signature packets) and 2.0 (s3, s4 and header ranges); a header that is a
+// number is a range of one.
+func CheckParams(params map[string]string) error {
+	for k, v := range params {
+		switch {
+		case slices.Contains(chainKeys, k):
+			if strings.ContainsAny(v, "\r\n") {
+				return fmt.Errorf("invalid %s: line break", k)
+			}
+		case slices.Contains(retiredKeys, k):
+			// ignored, see retiredKeys
+		case slices.Contains(headerKeys, k):
+			if _, _, err := uintRange(v); err != nil {
+				return fmt.Errorf("invalid %s=%q: %w", k, v, err)
+			}
+		case isDeviceKey(k):
+			if _, err := strconv.ParseUint(strings.TrimSpace(v), 10, 16); err != nil {
+				return fmt.Errorf("invalid %s=%q: not a number from 0 to 65535", k, v)
+			}
+		default:
+			return fmt.Errorf("%w %q", ErrUnsupported, k)
+		}
+	}
+	if err := checkJunk(params); err != nil {
+		return err
+	}
+	// The four headers name four kinds of packet: a value shared by two of them could not be told apart.
+	type span struct {
+		key    string
+		lo, hi uint64
+	}
+	var spans []span
+	for _, k := range headerKeys {
+		if v, ok := params[k]; ok {
+			lo, hi, _ := uintRange(v)
+			spans = append(spans, span{k, lo, hi})
+		}
+	}
+	for i := range spans {
+		for j := i + 1; j < len(spans); j++ {
+			if spans[i].lo <= spans[j].hi && spans[j].lo <= spans[i].hi {
+				return fmt.Errorf("%s and %s overlap: the four headers must not share a value", spans[i].key, spans[j].key)
+			}
+		}
+	}
+	if v1, ok1 := params["s1"]; ok1 {
+		if v2, ok2 := params["s2"]; ok2 {
+			a, _ := strconv.ParseUint(strings.TrimSpace(v1), 10, 16)
+			c, _ := strconv.ParseUint(strings.TrimSpace(v2), 10, 16)
+			if a+56 == c {
+				return errors.New("s1 + 56 must not equal s2: the handshake's two packets would have the same length")
+			}
+		}
+	}
+	return nil
+}
+
+// checkJunk wants jmin <= jmax when both are given.
+func checkJunk(params map[string]string) error {
+	lo, hasLo := params["jmin"]
+	hi, hasHi := params["jmax"]
+	if hasLo && hasHi {
+		a, _ := strconv.ParseUint(strings.TrimSpace(lo), 10, 16)
+		b, _ := strconv.ParseUint(strings.TrimSpace(hi), 10, 16)
+		if a > b {
+			return errors.New("jmin must not be larger than jmax")
+		}
+	}
+	return nil
+}
+
+// Generation names the AmneziaWG version a profile's parameters need: "2.0"
+// (s3, s4 or a header range), "1.5" (signature packets), else "1.x".
+func Generation(params map[string]string) string {
+	for _, k := range []string{"s3", "s4"} {
+		if _, ok := params[k]; ok {
+			return "2.0"
+		}
+	}
+	for _, k := range headerKeys {
+		if v, ok := params[k]; ok && strings.Contains(v, "-") {
+			return "2.0"
+		}
+	}
+	for _, k := range chainKeys {
+		if v, ok := params[k]; ok && strings.TrimSpace(v) != "" {
+			return "1.5"
+		}
+	}
+	return "1.x"
+}
 
 // ResolveEndpoint returns the peer address; host names are resolved with the
 // system resolver (before the tunnel exists).

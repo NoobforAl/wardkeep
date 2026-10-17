@@ -1245,9 +1245,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flSignaturePacket => 'I1（签名包）';
 
   @override
-  String get flControlledJunk => 'J1（受控垃圾包）';
-
-  @override
   String get hpAuthorizedKeys => 'authorized_keys 格式；留空则接受任何密钥';
 
   @override

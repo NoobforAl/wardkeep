@@ -1317,9 +1317,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get flSignaturePacket => 'I1 (пакет-подпись)';
 
   @override
-  String get flControlledJunk => 'J1 (управляемый мусор)';
-
-  @override
   String get hpAuthorizedKeys =>
       'Формат authorized_keys; пусто — принимается любой ключ';
 

@@ -12,6 +12,7 @@ import (
 	"github.com/amnezia-vpn/amneziawg-go/device"
 	"github.com/amnezia-vpn/amneziawg-go/tun"
 
+	"github.com/NoobforAl/omnitun/core/awg"
 	"github.com/NoobforAl/omnitun/core/protocols"
 )
 
@@ -20,8 +21,14 @@ const (
 	awgMTU       = 1380
 )
 
-// awgParamKeys are the obfuscation parameters, in the order UAPI wants them.
-var awgParamKeys = []string{"jc", "jmin", "jmax", "s1", "s2", "h1", "h2", "h3", "h4"}
+// awgParamKeys are the obfuscation parameters every AmneziaWG server has, in the
+// order UAPI wants them; awgOptionalKeys are the AmneziaWG 2.0 additions (random
+// prefixes on cookie and data packets), used when the server's parameters have
+// them. In 2.0 the headers h1-h4 may be ranges such as "100-200".
+var (
+	awgParamKeys    = []string{"jc", "jmin", "jmax", "s1", "s2", "h1", "h2", "h3", "h4"}
+	awgOptionalKeys = []string{"s3", "s4"}
+)
 
 // openTUN creates the kernel TUN device; tests replace it.
 var openTUN = func(name string, mtu int) (tun.Device, error) { return tun.CreateTUN(name, mtu) }
@@ -107,14 +114,17 @@ func awgUAPI(cfg Config) (string, map[string]string, error) {
 	var b strings.Builder
 	fmt.Fprintf(&b, "private_key=%s\nlisten_port=%d\n", priv, cfg.Port)
 	for _, k := range awgParamKeys {
-		v, ok := a.Params[k]
-		if !ok {
+		if _, ok := a.Params[k]; !ok {
 			return "", nil, fmt.Errorf("amneziawg: parameter %s is missing", k)
 		}
-		if _, err := strconv.ParseUint(v, 10, 32); err != nil {
-			return "", nil, fmt.Errorf("amneziawg: invalid %s=%q", k, v)
+	}
+	if err := awg.CheckParams(a.Params); err != nil {
+		return "", nil, fmt.Errorf("amneziawg: %w", err)
+	}
+	for _, k := range append(append([]string{}, awgParamKeys...), awgOptionalKeys...) {
+		if v, ok := a.Params[k]; ok {
+			fmt.Fprintf(&b, "%s=%s\n", k, strings.TrimSpace(v))
 		}
-		fmt.Fprintf(&b, "%s=%s\n", k, v)
 	}
 	b.WriteString("replace_peers=true\n")
 	peers := 0

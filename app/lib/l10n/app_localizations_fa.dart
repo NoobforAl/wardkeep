@@ -1284,9 +1284,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get flSignaturePacket => 'I1 (بسته امضا)';
 
   @override
-  String get flControlledJunk => 'J1 (بسته زائد کنترل‌شده)';
-
-  @override
   String get hpAuthorizedKeys =>
       'قالب authorized_keys؛ خالی یعنی هر کلیدی پذیرفته می‌شود';
 

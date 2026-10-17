@@ -673,7 +673,6 @@
   "flBridgeLines": "Bridge lines",
   "flJc": "Jc (junk packet count)",
   "flSignaturePacket": "I1 (signature packet)",
-  "flControlledJunk": "J1 (controlled junk)",
   "hpAuthorizedKeys": "authorized_keys format; empty accepts any key",
   "hpIkeTcp": "Carry IKE and ESP over TCP for networks that block UDP",
   "hpDefaultsToServer": "Defaults to the server address",
