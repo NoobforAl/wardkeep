@@ -40,8 +40,8 @@ ThemeData buildTheme(Brightness brightness) {
           secondaryContainer: _inkHighest,
           onSecondaryContainer: Color(0xFFDCE6F4),
           tertiary: connectingAmber,
-          error: disconnectRed,
-          onError: Colors.white,
+          error: Color(0xFFD9677C),
+          onError: Color(0xFF2B0710),
           surface: _ink,
           onSurface: Color(0xFFDCE3EE),
           onSurfaceVariant: Color(0xFF8D9AB0),
@@ -50,7 +50,7 @@ ThemeData buildTheme(Brightness brightness) {
           surfaceContainer: _inkPanel,
           surfaceContainerHigh: _inkHigh,
           surfaceContainerHighest: _inkHighest,
-          outline: Color(0xFF4B5B75),
+          outline: Color(0xFF6A7C99),
           outlineVariant: Color(0xFF223047),
         )
       // Cold stone by day.
@@ -59,7 +59,7 @@ ThemeData buildTheme(Brightness brightness) {
           onPrimary: Colors.white,
           primaryContainer: Color(0xFFD3E0F2),
           onPrimaryContainer: Color(0xFF0E2340),
-          secondary: Color(0xFF2E8B98),
+          secondary: Color(0xFF267A86),
           onSecondary: Colors.white,
           secondaryContainer: Color(0xFFD0D9E6),
           onSecondaryContainer: Color(0xFF16233A),
@@ -74,7 +74,7 @@ ThemeData buildTheme(Brightness brightness) {
           surfaceContainer: Color(0xFFF3F5F8),
           surfaceContainerHigh: Color(0xFFDDE3EC),
           surfaceContainerHighest: Color(0xFFD0D9E6),
-          outline: Color(0xFF8796AD),
+          outline: Color(0xFF66758C),
           outlineVariant: Color(0xFFCBD3DF),
         );
 
@@ -92,6 +92,10 @@ ThemeData buildTheme(Brightness brightness) {
     titleLarge: base.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
     titleMedium: base.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
     titleSmall: base.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+    // Nothing smaller than 12 sp (Material's smallest labels are 11), small print 13.
+    bodySmall: base.textTheme.bodySmall?.copyWith(fontSize: 13),
+    labelMedium: base.textTheme.labelMedium?.copyWith(fontSize: 13),
+    labelSmall: base.textTheme.labelSmall?.copyWith(fontSize: 12),
   );
 
   return base.copyWith(
@@ -136,7 +140,8 @@ ThemeData buildTheme(Brightness brightness) {
         textStyle: text.titleMedium,
       ),
     ),
-    textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(shape: shape)),
+    // Buttons are 16 sp, like the main one.
+    textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(shape: shape, textStyle: text.titleMedium)),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: scheme.surfaceContainerHigh,

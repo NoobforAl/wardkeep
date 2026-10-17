@@ -18,6 +18,8 @@ const _screens = <(String, Size, double)>[
   ('small phone, large text', Size(320, 568), 1.3),
   ('short', Size(360, 427), 1.3),
   ('tablet', Size(800, 1280), 1.0),
+  ('phone, largest text', Size(412, 915), 2.0),
+  ('small phone, largest text', Size(360, 640), 2.0),
 ];
 
 void main() {

@@ -99,7 +99,7 @@ class _GroupTile extends StatelessWidget {
         SelectableText(
           group.text,
           textDirection: TextDirection.ltr,
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
         ),
       ],
     );
