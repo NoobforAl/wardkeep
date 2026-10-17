@@ -60,15 +60,16 @@ class _Scene {
   final double homeAlpha, exitAlpha;
   final Color homeColor, exitColor;
 
-  bool same(_Scene o) =>
-      lat == o.lat &&
-      lon == o.lon &&
-      home == o.home &&
-      exit == o.exit &&
-      homeAlpha == o.homeAlpha &&
-      exitAlpha == o.exitAlpha &&
-      homeColor == o.homeColor &&
-      exitColor == o.exitColor;
+  _Scene withColors(Color homeColor, Color exitColor) => _Scene(
+    lat: lat,
+    lon: lon,
+    home: home,
+    exit: exit,
+    homeAlpha: homeAlpha,
+    exitAlpha: exitAlpha,
+    homeColor: homeColor,
+    exitColor: exitColor,
+  );
 
   /// In between [a] and [b]. A marker sits where [b] has it (or where [a] had it while it fades out).
   static _Scene lerp(_Scene a, _Scene b, double t) => _Scene(
@@ -137,13 +138,21 @@ class _EarthBackdropState extends State<EarthBackdrop> with SingleTickerProvider
   @override
   void didUpdateWidget(EarthBackdrop old) {
     super.didUpdateWidget(old);
-    // Start from what is on screen now, so a change in mid-flight does not jump.
-    final now = _Scene.lerp(_from, _to, Curves.easeInOutCubic.transform(_fly.value));
-    final next = _target(now.lon);
-    if (next.same(_to)) return;
-    _from = now;
-    _to = next;
-    _fly.forward(from: 0);
+    // The parent rebuilds on every speed and clock tick. The camera travels only when a
+    // place changes; deciding that from the computed target would not do, because its
+    // longitude is worked out from where the globe is right now and so differs on every
+    // rebuild in the middle of a flight (the globe restarted its flight again and again).
+    if (old.home != widget.home || old.exit != widget.exit) {
+      // Start from what is on screen now, so a change in mid-flight does not jump.
+      final now = _Scene.lerp(_from, _to, Curves.easeInOutCubic.transform(_fly.value));
+      _from = now;
+      _to = _target(now.lon);
+      _fly.forward(from: 0);
+    } else if (old.homeColor != widget.homeColor || old.exitColor != widget.exitColor) {
+      // Only a colour changed (the exit turns from "connecting" to "connected"): no new flight.
+      _from = _from.withColors(widget.homeColor, widget.exitColor);
+      _to = _to.withColors(widget.homeColor, widget.exitColor);
+    }
   }
 
   @override
