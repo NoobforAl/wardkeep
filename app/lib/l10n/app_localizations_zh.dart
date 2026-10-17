@@ -1539,9 +1539,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get bypassCountriesNeedDb => '需要离线国家数据库';
-
-  @override
   String get bypassCountriesIntro => '前往所选国家的流量将绕过 VPN，直接访问互联网。其地址范围来自离线国家数据库。';
 
   @override
@@ -1561,4 +1558,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get windowClose => '关闭';
+
+  @override
+  String get globeRecenter => '还原地球';
+
+  @override
+  String get bypassCountriesZoneIntro =>
+      '勾选的每个国家会下载其地址范围（几千字节）。完整的离线数据库更精确，且无需下载。';
+
+  @override
+  String get bypassCountriesDownloading => '正在下载…';
+
+  @override
+  String get bypassCountriesFailed => '下载失败，点按重试。';
+
+  @override
+  String get bypassCountriesYourServer => '您选择的服务器在这里：其流量也将绕过 VPN。';
 }

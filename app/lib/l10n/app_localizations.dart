@@ -2720,12 +2720,6 @@ abstract class AppLocalizations {
   /// **'{names} +{count}'**
   String bypassCountriesMore(String names, int count);
 
-  /// No description provided for @bypassCountriesNeedDb.
-  ///
-  /// In en, this message translates to:
-  /// **'Needs the offline country database'**
-  String get bypassCountriesNeedDb;
-
   /// No description provided for @bypassCountriesIntro.
   ///
   /// In en, this message translates to:
@@ -2767,6 +2761,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get windowClose;
+
+  /// No description provided for @globeRecenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Centre the Earth'**
+  String get globeRecenter;
+
+  /// No description provided for @bypassCountriesZoneIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Each country you tick downloads its address ranges (a few kilobytes). The full offline database is more exact and needs no download.'**
+  String get bypassCountriesZoneIntro;
+
+  /// No description provided for @bypassCountriesDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get bypassCountriesDownloading;
+
+  /// No description provided for @bypassCountriesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not download. Tap to try again.'**
+  String get bypassCountriesFailed;
+
+  /// No description provided for @bypassCountriesYourServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Your selected server is here: its traffic would skip the VPN too.'**
+  String get bypassCountriesYourServer;
 }
 
 class _AppLocalizationsDelegate

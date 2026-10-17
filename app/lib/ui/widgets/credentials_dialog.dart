@@ -15,6 +15,8 @@ Future<bool> askCredentials(BuildContext context, WidgetRef ref, ProfileInfo pro
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
+        // Scrolls when the keyboard leaves too little room (a small phone).
+        scrollable: true,
         title: Text(context.l10n.credTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,

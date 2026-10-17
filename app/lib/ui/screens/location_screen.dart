@@ -396,7 +396,8 @@ class _CountryDialogState extends State<_CountryDialog> {
       contentPadding: const EdgeInsets.only(top: 12),
       content: SizedBox(
         width: 360,
-        height: 420,
+        // Up to 420, less where the keyboard and the dialog's own title and buttons leave no room.
+        height: (MediaQuery.sizeOf(context).height - MediaQuery.viewInsetsOf(context).bottom - 230).clamp(140.0, 420.0),
         child: Column(
           children: [
             Padding(

@@ -443,12 +443,16 @@
   "bypassCountriesTitle": "国家和地区",
   "bypassCountriesNone": "未选择国家",
   "bypassCountriesMore": "{names} +{count}",
-  "bypassCountriesNeedDb": "需要离线国家数据库",
   "bypassCountriesIntro": "前往所选国家的流量将绕过 VPN，直接访问互联网。其地址范围来自离线国家数据库。",
   "bypassCountriesGetDb": "获取国家数据库",
   "bypassCountriesSearch": "搜索国家",
   "windowMinimize": "最小化",
   "windowMaximize": "最大化",
   "windowRestore": "还原",
-  "windowClose": "关闭"
+  "windowClose": "关闭",
+  "globeRecenter": "还原地球",
+  "bypassCountriesZoneIntro": "勾选的每个国家会下载其地址范围（几千字节）。完整的离线数据库更精确，且无需下载。",
+  "bypassCountriesDownloading": "正在下载…",
+  "bypassCountriesFailed": "下载失败，点按重试。",
+  "bypassCountriesYourServer": "您选择的服务器在这里：其流量也将绕过 VPN。"
 }

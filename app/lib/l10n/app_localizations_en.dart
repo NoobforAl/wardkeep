@@ -1595,9 +1595,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bypassCountriesNeedDb => 'Needs the offline country database';
-
-  @override
   String get bypassCountriesIntro =>
       'Traffic to the chosen countries goes straight to the internet, around the VPN. Their address ranges come from the offline country database.';
 
@@ -1618,4 +1615,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get windowClose => 'Close';
+
+  @override
+  String get globeRecenter => 'Centre the Earth';
+
+  @override
+  String get bypassCountriesZoneIntro =>
+      'Each country you tick downloads its address ranges (a few kilobytes). The full offline database is more exact and needs no download.';
+
+  @override
+  String get bypassCountriesDownloading => 'Downloading…';
+
+  @override
+  String get bypassCountriesFailed => 'Could not download. Tap to try again.';
+
+  @override
+  String get bypassCountriesYourServer =>
+      'Your selected server is here: its traffic would skip the VPN too.';
 }

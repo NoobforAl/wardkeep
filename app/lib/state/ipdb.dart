@@ -190,6 +190,63 @@ class IpCountryDb {
 // ---------------------------------------------------------------------------------------------------
 // Building it from the CSV files
 
+/// Ranges that may lie inside one another, made into ranges that do not overlap: where several cover an
+/// address the most specific one (the one that starts last, or ends first) decides. [flip] is XORed into
+/// every value first, so that 64-bit numbers held as signed ints order as unsigned ones; the result is
+/// sorted and in the original form. Neighbouring ranges of one country are joined.
+({List<int> starts, List<int> ends, List<int> codes}) _flatten(List<int> s, List<int> e, List<int> c, int flip) {
+  final order = List<int>.generate(s.length, (i) => i)
+    ..sort((x, y) {
+      final byStart = (s[x] ^ flip).compareTo(s[y] ^ flip);
+      // From the same start the bigger range first, so that the smaller one, which overrides it, comes later.
+      return byStart != 0 ? byStart : (e[y] ^ flip).compareTo(e[x] ^ flip);
+    });
+  final outS = <int>[], outE = <int>[], outC = <int>[];
+  void emit(int a, int b, int code) {
+    if (b < a) return;
+    if (outS.isNotEmpty && outC.last == code && outE.last + 1 == a) {
+      outE[outE.length - 1] = b;
+    } else {
+      outS.add(a);
+      outE.add(b);
+      outC.add(code);
+    }
+  }
+
+  // The ranges that are open at this point, outermost first, and the first address not yet written.
+  final openEnd = <int>[], openCode = <int>[];
+  var cursor = 0;
+  for (final i in order) {
+    final a = s[i] ^ flip, b = e[i] ^ flip;
+    while (openEnd.isNotEmpty && openEnd.last < a) {
+      emit(cursor, openEnd.last, openCode.last);
+      cursor = openEnd.last + 1;
+      openEnd.removeLast();
+      openCode.removeLast();
+    }
+    if (openEnd.isNotEmpty) emit(cursor, a - 1, openCode.last); // the outer range, up to this one
+    cursor = a;
+    // An outer range that this one covers to its end, or runs past, has nothing left to say.
+    while (openEnd.isNotEmpty && openEnd.last <= b) {
+      openEnd.removeLast();
+      openCode.removeLast();
+    }
+    openEnd.add(b);
+    openCode.add(c[i]);
+  }
+  while (openEnd.isNotEmpty) {
+    emit(cursor, openEnd.last, openCode.last);
+    cursor = openEnd.last + 1;
+    openEnd.removeLast();
+    openCode.removeLast();
+  }
+  return (
+    starts: [for (final v in outS) v ^ flip],
+    ends: [for (final v in outE) v ^ flip],
+    codes: outC,
+  );
+}
+
 /// What [compileIpDb] made.
 class IpDbBuilt {
   const IpDbBuilt(this.v4Ranges, this.v6Ranges, this.bytes);
@@ -237,21 +294,26 @@ IpDbBuilt _compile(String v4Csv, String v6Csv, String outPath) {
       if (cc.length != 2 || cc == 'ZZ' || cc == 'XX') continue;
       final a = parse(f[0].trim()), b = parse(f[1].trim());
       if (a == null || b == null) continue;
-      final code = cc.codeUnitAt(0) << 8 | cc.codeUnitAt(1);
-      // Neighbouring ranges of one country become one range: the file shrinks a lot.
-      if (s.isNotEmpty && c.last == code && e.last + 1 == a) {
-        e[e.length - 1] = b;
-      } else {
-        s.add(a);
-        e.add(b);
-        c.add(code);
-      }
+      s.add(a);
+      e.add(b);
+      c.add(cc.codeUnitAt(0) << 8 | cc.codeUnitAt(1));
     }
   }
 
   read(v4Csv, ip4, v4s, v4e, v4c);
   read(v6Csv, ip6hi, v6s, v6e, v6c);
   if (v4s.isEmpty) throw const FormatException('the IPv4 data has no ranges');
+  // Registries list a small allocation inside a bigger one (about 2 % of the ranges): the most specific
+  // range wins, and neighbours of one country become one range, which also shrinks the file a lot.
+  final f4 = _flatten(v4s, v4e, v4c, 0);
+  // IPv6 values are unsigned 64-bit numbers held in signed ints: flip the top bit to order them.
+  final f6 = _flatten(v6s, v6e, v6c, IpCountryDb._flip);
+  v4s..clear()..addAll(f4.starts);
+  v4e..clear()..addAll(f4.ends);
+  v4c..clear()..addAll(f4.codes);
+  v6s..clear()..addAll(f6.starts);
+  v6e..clear()..addAll(f6.ends);
+  v6c..clear()..addAll(f6.codes);
 
   final l = IpCountryDb._layout(v4s.length, v6s.length);
   final out = Uint8List(l.end);

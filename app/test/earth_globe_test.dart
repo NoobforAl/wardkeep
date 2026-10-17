@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:omnitun/l10n/app_localizations.dart';
 import 'package:omnitun/ui/widgets/earth_globe.dart';
 
 const _tehran = (35.7, 51.4);
@@ -10,6 +12,8 @@ const _berlin = (52.5, 13.4);
 void main() {
   _flowTests();
   Widget globe({(double, double)? home, (double, double)? exit, Color exitColor = Colors.amber}) => MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     home: SizedBox(
       width: 400,
       height: 400,
@@ -145,6 +149,8 @@ void main() {
     testWidgets('it turns inside a page that scrolls, and the page still scrolls elsewhere', (tester) async {
       final controller = ScrollController();
       await tester.pumpWidget(MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
         home: SingleChildScrollView(
           controller: controller,
           child: Column(children: [
@@ -176,6 +182,8 @@ void main() {
 void _flowTests() {
   Widget globe({bool connecting = false, bool connected = false, int up = 0, int down = 0, bool reduce = false}) =>
       MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
         home: MediaQuery(
           data: MediaQueryData(disableAnimations: reduce),
           child: SizedBox(
@@ -249,4 +257,115 @@ void _flowTests() {
       await tester.pumpAndSettle();
     });
   });
+
+/// Zoom and the way back: pinch or wheel zooms, and a button (there only when the Earth is away from the place
+/// it shows) brings it back.
+void zoomTests() {
+  Widget globe() => MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Center(
+      child: SizedBox(
+        width: 300,
+        height: 300,
+        child: EarthBackdrop(home: _tehran, homeColor: Colors.red, exitColor: Colors.amber),
+      ),
+    ),
+  );
+  EarthBackdropState state(WidgetTester tester) => tester.state<EarthBackdropState>(find.byType(EarthBackdrop));
+
+  group('zooming the Earth', () {
+    testWidgets('two fingers apart zoom in, together zoom out, within limits', (tester) async {
+      await tester.pumpWidget(globe());
+      final centre = tester.getCenter(find.byType(EarthBackdrop));
+      final a = await tester.startGesture(centre + const Offset(-30, 0), pointer: 1);
+      final b = await tester.startGesture(centre + const Offset(30, 0), pointer: 2);
+      await a.moveBy(const Offset(-30, 0));
+      await b.moveBy(const Offset(30, 0));
+      await tester.pump();
+      expect(state(tester).userZoom, greaterThan(1.5), reason: 'the fingers went from 60 to 120 apart');
+      await a.moveBy(const Offset(-400, 0));
+      await b.moveBy(const Offset(400, 0));
+      await tester.pump();
+      expect(state(tester).userZoom, lessThanOrEqualTo(2.2), reason: 'the zoom has a limit');
+      await a.up();
+      await b.up();
+      await tester.pumpAndSettle();
+      // and pinching in
+      final c = await tester.startGesture(centre + const Offset(-100, 0), pointer: 3);
+      final d = await tester.startGesture(centre + const Offset(100, 0), pointer: 4);
+      await c.moveBy(const Offset(90, 0));
+      await d.moveBy(const Offset(-90, 0));
+      await tester.pump();
+      expect(state(tester).userZoom, lessThan(2.2));
+      await c.up();
+      await d.up();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the mouse wheel zooms, and does not push the zoom past its limits', (tester) async {
+      await tester.pumpWidget(globe());
+      final mouse = TestPointer(1, PointerDeviceKind.mouse);
+      final at = tester.getCenter(find.byType(EarthBackdrop));
+      await tester.sendEventToBinding(mouse.hover(at));
+      await tester.sendEventToBinding(mouse.scroll(const Offset(0, -200)));
+      await tester.pump();
+      expect(state(tester).userZoom, greaterThan(1.3), reason: 'scrolling up zooms in');
+      for (var i = 0; i < 20; i++) {
+        await tester.sendEventToBinding(mouse.scroll(const Offset(0, -300)));
+      }
+      await tester.pump();
+      expect(state(tester).userZoom, lessThanOrEqualTo(2.2));
+      for (var i = 0; i < 40; i++) {
+        await tester.sendEventToBinding(mouse.scroll(const Offset(0, 300)));
+      }
+      await tester.pump();
+      expect(state(tester).userZoom, greaterThanOrEqualTo(0.6));
+    });
+
+    testWidgets('a button appears once the Earth is away, and brings it, turn and zoom, back', (tester) async {
+      await tester.pumpWidget(globe());
+      final button = find.byIcon(Icons.my_location_rounded);
+      double opacity() => tester.widget<AnimatedOpacity>(find.ancestor(of: button, matching: find.byType(AnimatedOpacity))).opacity;
+      expect(opacity(), 0, reason: 'nothing to go back to yet');
+
+      await tester.drag(find.byType(EarthBackdrop), const Offset(80, 30));
+      await tester.pumpAndSettle();
+      final mouse = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(mouse.hover(tester.getCenter(find.byType(EarthBackdrop))));
+      await tester.sendEventToBinding(mouse.scroll(const Offset(0, -200)));
+      await tester.pumpAndSettle();
+      expect(opacity(), 1);
+      expect(state(tester).turn, isNot((0.0, 0.0)));
+      expect(state(tester).userZoom, isNot(1.0));
+
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(state(tester).turn, (0.0, 0.0));
+      expect(state(tester).userZoom, 1.0);
+      expect(opacity(), 0, reason: 'back where it started: the button goes away again');
+    });
+
+    testWidgets('a pinch is not a tap (two taps bring it back, a pinch must not)', (tester) async {
+      await tester.pumpWidget(globe());
+      final centre = tester.getCenter(find.byType(EarthBackdrop));
+      final a = await tester.startGesture(centre + const Offset(-30, 0), pointer: 1);
+      final b = await tester.startGesture(centre + const Offset(30, 0), pointer: 2);
+      await a.moveBy(const Offset(-30, 0));
+      await b.moveBy(const Offset(30, 0));
+      await a.up();
+      await b.up();
+      await tester.pumpAndSettle();
+      final zoomed = state(tester).userZoom;
+      expect(zoomed, greaterThan(1.3));
+      // another touch right after must not count as the second tap of a double tap
+      await tester.tap(find.byType(EarthBackdrop));
+      await tester.pumpAndSettle();
+      expect(state(tester).userZoom, zoomed);
+    });
+  });
+}
+
+  zoomTests();
 }

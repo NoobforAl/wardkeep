@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../../l10n/l10n.dart';
 import '../../state/geo_data.dart';
 
 /// The land of the Earth as unit vectors, one per land cell of the grid
@@ -144,9 +145,9 @@ class EarthBackdrop extends StatefulWidget {
   State<EarthBackdrop> createState() => EarthBackdropState();
 }
 
-/// An eager pan: it wins the gesture arena at once, so a drag that starts on the Earth turns
-/// it even where the page around it could scroll.
-class _EagerPan extends PanGestureRecognizer {
+/// An eager scale (one finger turns, two pinch): it wins the gesture arena at once, so a drag that
+/// starts on the Earth turns it even where the page around it could scroll.
+class _EagerScale extends ScaleGestureRecognizer {
   @override
   void addAllowedPointer(PointerDownEvent event) {
     super.addAllowedPointer(event);
@@ -204,6 +205,17 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   bool get flowRunning => _flow.isActive;
   double _radius = 150;
   double _moved = 0; // how far the finger has gone since it touched, in pixels
+
+  /// How much the user has zoomed in or out (1 = as it comes), by pinching or with the wheel.
+  double _userZoom = 1, _zoomStart = 1;
+  static const _minZoom = 0.6, _maxZoom = 2.2;
+
+  /// The user's zoom (for tests).
+  @visibleForTesting
+  double get userZoom => _userZoom;
+
+  /// Whether the Earth is turned or zoomed away from the place it is showing.
+  bool get _away => _turnLat.abs() > 0.5 || _turnLon.abs() > 0.5 || (_userZoom - 1).abs() > 0.02;
   DateTime? _lastTap;
 
   _Scene _flying() => _Scene.lerp(_from, _to, Curves.easeInOutCubic.transform(_fly.value));
@@ -239,8 +251,10 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
         final k = math.exp(-dt * 9);
         _turnLat *= k;
         _turnLon *= k;
-        if (_turnLat.abs() < 0.05 && _turnLon.abs() < 0.05) {
+        _userZoom = 1 + (_userZoom - 1) * k;
+        if (_turnLat.abs() < 0.05 && _turnLon.abs() < 0.05 && (_userZoom - 1).abs() < 0.002) {
           _turnLat = _turnLon = 0;
+          _userZoom = 1;
           _coast.stop();
         }
         return;
@@ -262,29 +276,37 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     _coast.start();
   }
 
-  void _panStart(DragStartDetails d) {
+  void _scaleStart(ScaleStartDetails d) {
     _coast.stop();
     _recentring = false;
     _speedLat = _speedLon = 0;
     _moved = 0;
+    _zoomStart = _userZoom;
   }
 
-  void _panUpdate(DragUpdateDetails d) {
-    // One pixel across the middle of the globe is 1/r radians.
-    final perPixel = 180 / math.pi / _radius;
-    _moved += d.delta.distance;
-    setState(() => _turnBy(d.delta.dy * perPixel, -d.delta.dx * perPixel));
+  void _scaleUpdate(ScaleUpdateDetails d) {
+    if (d.pointerCount >= 2) {
+      // Two fingers: pinch to zoom (and no longer a tap).
+      _moved += 100 * (d.scale - 1).abs();
+      setState(() => _userZoom = (_zoomStart * d.scale).clamp(_minZoom, _maxZoom));
+      return;
+    }
+    // One finger: one pixel across the middle of the globe is 1/r radians.
+    final perPixel = 180 / math.pi / (_radius * _userZoom);
+    _moved += d.focalPointDelta.distance;
+    setState(() => _turnBy(d.focalPointDelta.dy * perPixel, -d.focalPointDelta.dx * perPixel));
   }
 
-  void _panEnd(DragEndDetails d) {
-    final perPixel = 180 / math.pi / _radius;
+  void _scaleEnd(ScaleEndDetails d) {
+    final perPixel = 180 / math.pi / (_radius * _userZoom);
     final v = d.velocity.pixelsPerSecond;
-    if (v.distance > 80) {
+    if (d.pointerCount == 0 && (_userZoom - _zoomStart).abs() < 0.01 && v.distance > 80) {
       _speedLat = (v.dy * perPixel).clamp(-240.0, 240.0);
       _speedLon = (-v.dx * perPixel).clamp(-240.0, 240.0);
       _startCoast();
       return;
     }
+    if (d.pointerCount > 0) return; // one finger of a pinch was lifted, the other still holds
     // A touch that hardly moved is a tap (a drag that stops before the finger lifts is not):
     // two taps in a row bring the Earth back.
     if (_moved > kTouchSlop) {
@@ -300,11 +322,19 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     }
   }
 
+  /// The mouse wheel zooms, a notch at a time.
+  void _wheel(PointerSignalEvent e) {
+    if (e is! PointerScrollEvent) return;
+    GestureBinding.instance.pointerSignalResolver.register(e, (_) {
+      setState(() => _userZoom = (_userZoom * math.exp(-e.scrollDelta.dy / 400)).clamp(_minZoom, _maxZoom));
+    });
+  }
+
   /// Turn the Earth back to the place it is showing.
   void recentre() {
     _recentring = true;
     _speedLat = _speedLon = 0;
-    if (_turnLat == 0 && _turnLon == 0) return;
+    if (_turnLat == 0 && _turnLon == 0 && _userZoom == 1) return;
     _startCoast();
   }
 
@@ -372,7 +402,7 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     super.dispose();
   }
 
-  double _zoom() => 1 - 0.18 * math.sin(math.pi * _fly.value);
+  double _zoom() => (1 - 0.18 * math.sin(math.pi * _fly.value)) * _userZoom;
 
   @override
   Widget build(BuildContext context) {
@@ -380,15 +410,19 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     return LayoutBuilder(
       builder: (context, box) {
         _radius = math.max(40.0, box.biggest.shortestSide / 2);
-        return RawGestureDetector(
+        return Listener(
+          onPointerSignal: _wheel,
+          // The button sits beside the gesture area, not in it: the gesture area takes every touch.
+          child: Stack(fit: StackFit.expand, children: [
+          RawGestureDetector(
           behavior: HitTestBehavior.opaque,
           gestures: {
-            _EagerPan: GestureRecognizerFactoryWithHandlers<_EagerPan>(
-              _EagerPan.new,
+            _EagerScale: GestureRecognizerFactoryWithHandlers<_EagerScale>(
+              _EagerScale.new,
               (r) => r
-                ..onStart = _panStart
-                ..onUpdate = _panUpdate
-                ..onEnd = _panEnd,
+                ..onStart = _scaleStart
+                ..onUpdate = _scaleUpdate
+                ..onEnd = _scaleEnd,
             ),
           },
           child: Stack(
@@ -430,6 +464,25 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
                 ),
             ],
           ),
+          ),
+          // Back to the place the Earth is showing; there only once it has been turned or zoomed.
+          Positioned(
+            right: 2,
+            bottom: 2,
+            child: AnimatedOpacity(
+              opacity: _away ? 1 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: IgnorePointer(
+                ignoring: !_away,
+                child: IconButton.filledTonal(
+                  tooltip: context.l10n.globeRecenter,
+                  onPressed: recentre,
+                  icon: const Icon(Icons.my_location_rounded, size: 20),
+                ),
+              ),
+            ),
+          ),
+          ]),
         );
       },
     );

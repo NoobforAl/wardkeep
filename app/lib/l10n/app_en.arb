@@ -947,12 +947,16 @@
       }
     }
   },
-  "bypassCountriesNeedDb": "Needs the offline country database",
   "bypassCountriesIntro": "Traffic to the chosen countries goes straight to the internet, around the VPN. Their address ranges come from the offline country database.",
   "bypassCountriesGetDb": "Get the country database",
   "bypassCountriesSearch": "Search countries",
   "windowMinimize": "Minimize",
   "windowMaximize": "Maximize",
   "windowRestore": "Restore",
-  "windowClose": "Close"
+  "windowClose": "Close",
+  "globeRecenter": "Centre the Earth",
+  "bypassCountriesZoneIntro": "Each country you tick downloads its address ranges (a few kilobytes). The full offline database is more exact and needs no download.",
+  "bypassCountriesDownloading": "Downloading…",
+  "bypassCountriesFailed": "Could not download. Tap to try again.",
+  "bypassCountriesYourServer": "Your selected server is here: its traffic would skip the VPN too."
 }

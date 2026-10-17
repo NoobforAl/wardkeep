@@ -139,7 +139,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1)); // the store writes after a short delay
   });
 
-  testWidgets('the picker lists the countries of the database, toggles one and saves it; without a database it says so',
+  testWidgets('the picker lists the countries of the database, toggles one and saves it; without it every country is offered',
       (tester) async {
     final db = await tester.runAsync(() => _build(tmp, '1.0.0.0,1.0.0.255,AU\n203.0.113.0,203.0.113.255,DE\n', ''));
     Future<ProviderContainer> show(IpCountryDb? withDb) async {
@@ -177,8 +177,13 @@ void main() {
     expect(find.text('Australia'), findsOneWidget);
     expect(find.text('Germany'), findsNothing);
 
+    // Without the database every country is offered (each downloads its own small list), and the
+    // database is offered as the more exact option.
     c = await show(null);
-    expect(find.text('Needs the offline country database'), findsOneWidget);
+    expect(find.textContaining('a few kilobytes'), findsOneWidget);
     expect(find.text('Get the country database'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'franc');
+    await tester.pumpAndSettle();
+    expect(find.text('France'), findsOneWidget, reason: 'a country with no ranges in any database is still offered');
   });
 }

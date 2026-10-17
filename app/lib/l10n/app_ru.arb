@@ -443,12 +443,16 @@
   "bypassCountriesTitle": "Страны",
   "bypassCountriesNone": "Страны не выбраны",
   "bypassCountriesMore": "{names} +{count}",
-  "bypassCountriesNeedDb": "Нужна офлайн-база стран",
   "bypassCountriesIntro": "Трафик в выбранные страны идёт напрямую в интернет, минуя VPN. Диапазоны их адресов берутся из офлайн-базы стран.",
   "bypassCountriesGetDb": "Скачать базу стран",
   "bypassCountriesSearch": "Поиск стран",
   "windowMinimize": "Свернуть",
   "windowMaximize": "Развернуть",
   "windowRestore": "Восстановить",
-  "windowClose": "Закрыть"
+  "windowClose": "Закрыть",
+  "globeRecenter": "Вернуть Землю",
+  "bypassCountriesZoneIntro": "Для каждой отмеченной страны скачиваются её диапазоны адресов (несколько килобайт). Полная офлайн-база точнее и не требует загрузки.",
+  "bypassCountriesDownloading": "Загрузка…",
+  "bypassCountriesFailed": "Не удалось скачать. Нажмите, чтобы повторить.",
+  "bypassCountriesYourServer": "Здесь ваш выбранный сервер: его трафик тоже пойдёт мимо VPN."
 }

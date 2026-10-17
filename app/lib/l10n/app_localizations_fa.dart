@@ -1595,9 +1595,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get bypassCountriesNeedDb => 'به پایگاه‌داده آفلاین کشورها نیاز دارد';
-
-  @override
   String get bypassCountriesIntro =>
       'ترافیک به کشورهای انتخاب‌شده مستقیم به اینترنت می‌رود، نه از طریق VPN. بازه‌های نشانی آن‌ها از پایگاه‌داده آفلاین کشورها می‌آید.';
 
@@ -1618,4 +1615,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get windowClose => 'بستن';
+
+  @override
+  String get globeRecenter => 'برگرداندن زمین';
+
+  @override
+  String get bypassCountriesZoneIntro =>
+      'برای هر کشوری که انتخاب می‌کنید بازه‌های نشانی‌اش دانلود می‌شود (چند کیلوبایت). پایگاه‌داده کامل آفلاین دقیق‌تر است و به دانلود نیاز ندارد.';
+
+  @override
+  String get bypassCountriesDownloading => 'در حال دانلود…';
+
+  @override
+  String get bypassCountriesFailed => 'دانلود نشد. برای تلاش دوباره بزنید.';
+
+  @override
+  String get bypassCountriesYourServer =>
+      'سرور انتخاب‌شده شما اینجاست: ترافیک آن هم از VPN رد نمی‌شود.';
 }

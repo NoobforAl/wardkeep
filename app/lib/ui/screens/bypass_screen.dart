@@ -11,6 +11,7 @@ import '../../engine/engine.dart';
 import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/bypass_countries.dart';
+import '../../state/country_zones.dart';
 import '../../state/ipdb_state.dart';
 import '../../state/providers.dart';
 import '../insets.dart';
@@ -72,7 +73,11 @@ class BypassScreen extends ConsumerWidget {
     final l = context.l10n;
     final chosen = ref.watch(settingsProvider.select((s) => s.bypassCountries));
     if (chosen.isEmpty) return l.bypassCountriesNone;
-    if (!ref.watch(ipDbProvider.select((s) => s.db != null))) return l.bypassCountriesNeedDb;
+    // Without the database each country has its own small list; one that failed to download is said so.
+    if (!ref.watch(ipDbProvider.select((s) => s.db != null))) {
+      final zones = ref.watch(countryZonesProvider);
+      if (chosen.any((c) => zones[c.toUpperCase()]?.status == ZoneStatus.failed)) return l.bypassCountriesFailed;
+    }
     final names = [for (final c in chosen.take(2)) context.countryName(c)].join(', ');
     return chosen.length > 2 ? l.bypassCountriesMore(names, chosen.length - 2) : names;
   }

@@ -1642,9 +1642,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get bypassCountriesNeedDb => 'يتطلب قاعدة بيانات الدول دون اتصال';
-
-  @override
   String get bypassCountriesIntro =>
       'تذهب الحركة إلى الدول المختارة مباشرة إلى الإنترنت دون المرور عبر VPN. تأتي نطاقات عناوينها من قاعدة بيانات الدول دون اتصال.';
 
@@ -1665,4 +1662,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get windowClose => 'إغلاق';
+
+  @override
+  String get globeRecenter => 'إرجاع الأرض';
+
+  @override
+  String get bypassCountriesZoneIntro =>
+      'ينزّل كل بلد تختاره نطاقات عناوينه (بضعة كيلوبايت). قاعدة البيانات الكاملة دون اتصال أدق ولا تحتاج إلى تنزيل.';
+
+  @override
+  String get bypassCountriesDownloading => 'جارٍ التنزيل…';
+
+  @override
+  String get bypassCountriesFailed => 'تعذّر التنزيل. اضغط للمحاولة مجددًا.';
+
+  @override
+  String get bypassCountriesYourServer =>
+      'الخادم الذي اخترته هنا: ستتجاوز حركته VPN أيضًا.';
 }

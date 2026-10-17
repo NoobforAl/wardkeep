@@ -1629,9 +1629,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get bypassCountriesNeedDb => 'Нужна офлайн-база стран';
-
-  @override
   String get bypassCountriesIntro =>
       'Трафик в выбранные страны идёт напрямую в интернет, минуя VPN. Диапазоны их адресов берутся из офлайн-базы стран.';
 
@@ -1652,4 +1649,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get windowClose => 'Закрыть';
+
+  @override
+  String get globeRecenter => 'Вернуть Землю';
+
+  @override
+  String get bypassCountriesZoneIntro =>
+      'Для каждой отмеченной страны скачиваются её диапазоны адресов (несколько килобайт). Полная офлайн-база точнее и не требует загрузки.';
+
+  @override
+  String get bypassCountriesDownloading => 'Загрузка…';
+
+  @override
+  String get bypassCountriesFailed =>
+      'Не удалось скачать. Нажмите, чтобы повторить.';
+
+  @override
+  String get bypassCountriesYourServer =>
+      'Здесь ваш выбранный сервер: его трафик тоже пойдёт мимо VPN.';
 }
