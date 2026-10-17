@@ -136,6 +136,11 @@ type Engine struct {
 	classicRun *classicRun
 	// torRun is the Tor client behind a selected Tor profile.
 	torRun *torRun
+	// dnsRun is the DNSCrypt forwarder when the resolver setting is a DNSCrypt stamp.
+	dnsRun *dnsCryptRun
+	// meshID is the ID of the mesh (Tailscale) profile whose endpoint is in the
+	// running sing-box config, "" when there is none.
+	meshID string
 	// carryFailover is reported once the next connection succeeds (a failover
 	// that had to restart the engine, e.g. from AmneziaWG to sing-box).
 	carryFailover *FailoverEvent
@@ -339,11 +344,20 @@ func (e *Engine) startSingboxLocked(profiles []*profile.Profile, opts singbox.Op
 		// Tor profiles only run when selected (Tor must bootstrap first).
 		profiles = withoutTor(profiles)
 	}
+	// A mesh device is online only while its profile is the selected one.
+	profiles = withoutIdleMesh(profiles, selected)
+	if opts.StateDir == "" {
+		opts.StateDir = e.meshStateDir()
+	}
 	if opts.LocalDNS == "" {
 		opts.LocalDNS = e.systemDNS()
 	}
+	if err := e.startDNSCryptLocked(&opts); err != nil {
+		return fail(StagePrepare, err)
+	}
 	cfg, skipped, err := singbox.Build(profiles, opts)
 	if err != nil {
+		e.stopDNSCryptLocked()
 		return fail(StagePrepare, err)
 	}
 	var skippedMsgs []string
@@ -356,15 +370,22 @@ func (e *Engine) startSingboxLocked(profiles []*profile.Profile, opts singbox.Op
 	e.setState(State{Status: StatusStarting, Skipped: skippedMsgs, Selected: selected, Progress: progress(StageEngineStart, "")})
 	instance, ctx, cancel, err := e.newBox(cfg)
 	if err != nil {
+		e.stopDNSCryptLocked()
 		return fail(StageEngineStart, err)
 	}
 	// instance.Start opens the TUN / listening port, so failures here belong to the tunnel stage.
 	if err = instance.Start(); err != nil {
 		instance.Close()
 		cancel()
+		e.stopDNSCryptLocked()
 		return fail(StageTunnelUp, err)
 	}
 	e.instance, e.cancel = instance, cancel
+	e.bindDNSCryptLocked(instance)
+	e.meshID = ""
+	if m := selectedMesh(profiles, selected); m != nil {
+		e.meshID = m.ID
+	}
 	// sing-box's cache file restores the selector's last choice from a previous
 	// run, which would silently override the profile chosen now.
 	if err := e.applySelectionLocked(selected); err != nil {
@@ -428,7 +449,9 @@ func (e *Engine) Select(tag string) error {
 	defer e.mu.Unlock()
 	// AmneziaWG runs outside sing-box, so switching to or from it restarts the tunnel.
 	target := findProfile(e.profiles, tag)
+	// A mesh profile joins its network only while it is selected, so switching to or from one restarts.
 	if e.awgRun != nil || e.platformRun != nil || e.classicRun != nil || e.torRun != nil ||
+		(e.instance != nil && (e.meshID != "" || (target != nil && target.Protocol == profile.Tailscale)) && tag != e.meshID) ||
 		(e.instance != nil && target != nil && (target.Protocol == profile.Tor || target.Protocol == profile.AmneziaWG || isPlatformProtocol(target.Protocol) || usesClassic(target))) {
 		if tag != singbox.TagAuto && target == nil {
 			return fmt.Errorf("unknown profile %q", tag)
@@ -527,6 +550,7 @@ func (e *Engine) stopLocked() error {
 
 // teardownLocked closes the running tunnel without reporting a state.
 func (e *Engine) teardownLocked() error {
+	e.stopDNSCryptLocked()
 	if run := e.torRun; run != nil {
 		e.torRun = nil
 		defer run.stop()
@@ -551,7 +575,7 @@ func (e *Engine) teardownLocked() error {
 	}
 	err := e.instance.Close()
 	e.cancel()
-	e.instance, e.cancel = nil, nil
+	e.instance, e.cancel, e.meshID = nil, nil, ""
 	if err != nil && !errors.Is(err, context.Canceled) {
 		return err
 	}

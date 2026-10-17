@@ -18,7 +18,7 @@ func init() {
 	// certificate and looks like a real site), UDP protocols last.
 	for _, p := range []Protocol{
 		vlessReality{}, shadowsocks{}, trojan{}, hysteria2{}, tuic{}, anyTLS{}, shadowTLS{}, naive{}, sstp{}, ikev2{}, amneziawg{}, wireguard{},
-		openvpn{udp: true}, openvpn{},
+		openvpn{udp: true}, openvpn{}, dnscryptService{},
 	} {
 		register(p)
 	}
@@ -341,13 +341,17 @@ func (o openvpn) Spec() Spec {
 }
 
 func (o openvpn) Inbounds(env Env, port int, accts []Account) Config {
-	pool := "10.18.0.1/16"
+	pool, pool6 := "10.18.0.1/16", openvpnUDPAddress6
 	if !o.udp {
-		pool = "10.19.0.1/16"
+		pool, pool6 = "10.19.0.1/16", openvpnTCPAddress6
+	}
+	address := []string{pool}
+	if env.IPv6 {
+		address = append(address, pool6)
 	}
 	return Config{Endpoints: []obj{{
 		"type": "openvpn-server", "tag": o.key(), "listen": "::", "listen_port": port,
-		"network": o.network(), "address": []string{pool},
+		"network": o.network(), "address": address,
 		"users": users(accts, func(a Account) obj { return obj{"username": a.Name, "password": a.Password} }),
 		"tls": obj{
 			"certificate":               env.OpenVPN.ServerCert,

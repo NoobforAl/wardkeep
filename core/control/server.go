@@ -23,6 +23,7 @@ import (
 
 	"github.com/NoobforAl/omnitun/core/engine"
 	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/omnitun/core/killswitch"
 	"github.com/NoobforAl/omnitun/core/links"
 	"github.com/NoobforAl/omnitun/core/netcheck"
 	"github.com/NoobforAl/omnitun/core/profile"
@@ -62,12 +63,19 @@ type ServerConfig struct {
 	PlatformVPN engine.PlatformVPN
 	// OnState is called on every engine state change, after clients are notified.
 	OnState func(engine.State)
+	// KillSwitch arms the Windows kill switch for "start" requests that ask
+	// for it (core/killswitch). Nil: such requests are refused.
+	KillSwitch *killswitch.Manager
+	// KillSwitchResolver looks up the VPN servers' names for the kill switch
+	// (tests); nil uses the system resolver.
+	KillSwitchResolver killswitch.Resolver
 }
 
 // Server owns the engine and serves UI clients.
 type Server struct {
 	cfg    ServerConfig
 	engine *engine.Engine
+	ks     ksState
 
 	mu         sync.Mutex
 	clients    map[*client]struct{}
@@ -118,6 +126,7 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 		CertificateStore: cfg.CertificateStore,
 		SkipHandshake:    cfg.SkipHandshake,
 		OnState: func(st engine.State) {
+			s.ksOnState(st)
 			s.broadcast(Event{Event: "state", Data: st})
 			if cfg.OnState != nil {
 				cfg.OnState(st)
@@ -209,7 +218,9 @@ func (s *Server) Close() error {
 	for c := range clients {
 		c.close()
 	}
-	return s.engine.Stop()
+	err := s.engine.Stop()
+	s.ksStop()
+	return err
 }
 
 // broadcast queues an event for every client without blocking; slow clients drop events.
@@ -426,6 +437,12 @@ func (s *Server) dispatch(req Request) (any, error) {
 		if err != nil {
 			return nil, err
 		}
+		if err := singbox.CheckDNS(p.DNS); err != nil {
+			return nil, &Error{Code: CodeBadRequest, Message: "DNS: " + err.Error()}
+		}
+		if err := singbox.CheckDNSRelay(p.DNSRelay); err != nil {
+			return nil, &Error{Code: CodeBadRequest, Message: "DNS relay: " + err.Error()}
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		s.engine.ReportProgress(engine.StageNetworkCheck)
@@ -439,7 +456,10 @@ func (s *Server) dispatch(req Request) (any, error) {
 			Selected:        p.Selected,
 			ProxyPrivate:    p.ProxyPrivate,
 			SystemProxy:     p.SystemProxy,
+			MTU:             p.MTU,
+			NoIPv6:          p.NoIPv6,
 			DNS:             p.DNS,
+			DNSRelay:        p.DNSRelay,
 			Failover:        p.Failover,
 			IncludePackages: p.IncludePackages,
 			ExcludePackages: p.ExcludePackages,
@@ -450,7 +470,11 @@ func (s *Server) dispatch(req Request) (any, error) {
 			// The app checked the lists when they were added; lines that cannot be used are skipped.
 			opts.Bypass, _ = singbox.ParseBypassList(p.Bypass)
 		}
+		if err := s.ksPrepare(p, &opts); err != nil {
+			return nil, err
+		}
 		if err := s.engine.Start(p.Profiles, opts); err != nil {
+			s.ksStop()
 			return nil, &Error{Code: CodeStartFailed, Message: err.Error()}
 		}
 		return s.engine.State(), nil
@@ -477,7 +501,9 @@ func (s *Server) dispatch(req Request) (any, error) {
 			Entries: list.Count(), Ranges: len(list.CIDRs), Domains: list.Count() - len(list.CIDRs), Issues: issues,
 		}, nil
 	case "stop":
-		return s.engine.State(), s.engine.Stop()
+		err := s.engine.Stop()
+		s.ksStop() // also lifts a block raised for a start that never got far
+		return s.engine.State(), err
 	case "select":
 		p, err := decode[SelectParams](req.Params)
 		if err != nil {
@@ -508,6 +534,9 @@ func (s *Server) dispatch(req Request) (any, error) {
 		defer cancel()
 		return s.engine.TestLatency(ctx, p.Profiles, p.URL)
 	default:
+		if res, handled, err := s.dispatchMesh(req); handled {
+			return res, err
+		}
 		return nil, &Error{Code: CodeUnknownMethod, Message: fmt.Sprintf("unknown method %q", req.Method)}
 	}
 }

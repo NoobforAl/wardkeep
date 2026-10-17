@@ -37,6 +37,8 @@ var formSamples = map[string]map[string]string{
 	profile.SSTP:  {"server": "vpn.example.com", "username": "alice", "password": "pw", "tls.insecure": "true"},
 	profile.IKEv2: {"server": "vpn.example.com", "username": "alice", "password": "pw", "ikev2.tcp": "true", "ikev2.remote_id": "vpn.example.com"},
 	profile.Tor:   {"tor.builtin": "snowflake"},
+	profile.Tailscale: {"password": "tskey-auth-kABC123-secret", "tailscale.control_url": "https://hs.example.com", "tailscale.hostname": "phone",
+		"tailscale.exit_node": "home-pc", "tailscale.accept_routes": "true", "tailscale.ephemeral": "true"},
 	profile.OpenVPN: {"server": "vpn.example.com", "username": "u", "password": "p", "openvpn.network": "tcp",
 		"openvpn.ca": "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----"},
 	profile.Hysteria: {"server": "vpn.example.com", "password": "auth", "hysteria.obfs": "obfspw", "hysteria.up_mbps": "20", "hysteria.down_mbps": "100"},
@@ -102,7 +104,7 @@ func TestFormProfilesExportImportAndBuild(t *testing.T) {
 				t.Fatalf("link: %v", err)
 			}
 			switch protocol {
-			case profile.AmneziaWG, profile.SSTP, profile.IKEv2, profile.Tor:
+			case profile.AmneziaWG, profile.SSTP, profile.IKEv2, profile.Tor, profile.Tailscale:
 				return // not sing-box outbounds
 			}
 			if _, _, _, err := singbox.Outbound(p, "t"); err != nil {

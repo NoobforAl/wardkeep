@@ -345,6 +345,31 @@ func sshStr(sel func(*SSHOpts) *string) strPtr {
 	}
 }
 
+func tsOf(p *Profile, create bool) *TailscaleOpts {
+	if p.Tailscale == nil && create {
+		p.Tailscale = &TailscaleOpts{}
+	}
+	return p.Tailscale
+}
+
+func tsStr(sel func(*TailscaleOpts) *string) strPtr {
+	return func(p *Profile, create bool) *string {
+		if o := tsOf(p, create); o != nil {
+			return sel(o)
+		}
+		return nil
+	}
+}
+
+func tsBool(sel func(*TailscaleOpts) *bool) boolPtr {
+	return func(p *Profile, create bool) *bool {
+		if o := tsOf(p, create); o != nil {
+			return sel(o)
+		}
+		return nil
+	}
+}
+
 func torOf(p *Profile, create bool) *TorOpts {
 	if p.Tor == nil && create {
 		p.Tor = &TorOpts{}
@@ -683,6 +708,21 @@ func protocolFields(protocol string) ([]Field, bool) {
 				return nil
 			}, advanced, help("Safe for SSTP: the password exchange proves the server")),
 		}, true
+	case Tailscale:
+		return []Field{
+			secret("password", "Auth key", func(p *Profile, _ bool) *string { return &p.Password }, required,
+				help("A pre-authorized key from the Tailscale admin page, or made by headscale preauthkeys create")),
+			text("tailscale.control_url", "Control server", tsStr(func(o *TailscaleOpts) *string { return &o.ControlURL }),
+				help("Empty uses Tailscale; for Headscale, its address such as https://hs.example.com")),
+			text("tailscale.hostname", "Device name", tsStr(func(o *TailscaleOpts) *string { return &o.Hostname }),
+				help("The name this device has in the network; empty uses the device's own")),
+			text("tailscale.exit_node", "Exit device", tsStr(func(o *TailscaleOpts) *string { return &o.ExitNode }),
+				help("Name or address of a device whose internet connection to use; empty reaches only your devices")),
+			toggle("tailscale.accept_routes", "Use subnets of other devices", tsBool(func(o *TailscaleOpts) *bool { return &o.AcceptRoutes }),
+				advanced),
+			toggle("tailscale.ephemeral", "Temporary device", tsBool(func(o *TailscaleOpts) *bool { return &o.Ephemeral }),
+				advanced, help("Removed from the network when it goes offline")),
+		}, true
 	case Tor:
 		return []Field{
 			text("tor.builtin", "Bridges", func(p *Profile, c bool) *string {
@@ -707,7 +747,7 @@ var formLabels = []struct{ protocol, label string }{
 	{VLESS, "VLESS"}, {VMess, "VMess"}, {Trojan, "Trojan"}, {Shadowsocks, "Shadowsocks"},
 	{Hysteria2, "Hysteria 2"}, {Hysteria, "Hysteria"}, {TUIC, "TUIC"}, {AnyTLS, "AnyTLS"}, {Naive, "NaiveProxy"},
 	{WireGuard, "WireGuard"}, {AmneziaWG, "AmneziaWG"}, {OpenVPN, "OpenVPN"}, {IKEv2, "IKEv2/IPsec"}, {SSTP, "SSTP"},
-	{SSH, "SSH"}, {Tor, "Tor"},
+	{SSH, "SSH"}, {Tor, "Tor"}, {Tailscale, "Tailscale / Headscale"},
 }
 
 // defaultPorts are the ports a new profile starts with.
@@ -718,7 +758,7 @@ var defaultPorts = map[string]int{
 
 func commonFields(protocol string) []Field {
 	fs := []Field{text("name", "Name", func(p *Profile, _ bool) *string { return &p.Name })}
-	if protocol == Tor {
+	if protocol == Tor || protocol == Tailscale {
 		return fs
 	}
 	return append(fs,

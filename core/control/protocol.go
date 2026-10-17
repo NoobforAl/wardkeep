@@ -51,6 +51,7 @@ const (
 	CodeSubscriptionFailed = "SUBSCRIPTION_FAILED"
 	CodeAuthFailed         = "AUTH_FAILED"
 	CodeLookupFailed       = "LOOKUP_FAILED"
+	CodeMeshFailed         = "MESH_FAILED" // a mesh call failed (the device is offline, does not offer an exit, ...)
 
 	// Specific failures of import and subscriptions (the Message is English;
 	// see Error.Args for the numbers a translation needs).
@@ -103,7 +104,10 @@ type StartParams struct {
 	Selected     string             `json:"selected,omitempty"` // profile ID or "auto"
 	ProxyPrivate bool               `json:"proxy_private,omitempty"`
 	SystemProxy  bool               `json:"system_proxy,omitempty"`
-	DNS          string             `json:"dns,omitempty"` // remote resolver URL, see singbox.Options.DNS
+	MTU          int                `json:"mtu,omitempty"`       // TUN packet size; 0 = default, see singbox.CheckMTU
+	NoIPv6       bool               `json:"no_ipv6,omitempty"`   // keep IPv6 out of the VPN (refused, not leaked)
+	DNS          string             `json:"dns,omitempty"`       // remote resolver URL or DNS stamp, see singbox.Options.DNS
+	DNSRelay     string             `json:"dns_relay,omitempty"` // relay of Anonymized DNSCrypt: a relay stamp or ip:port
 	// Failover switches to the next working profile (in list order) when the selected one fails.
 	Failover bool   `json:"failover,omitempty"`
 	TestURL  string `json:"test_url,omitempty"`
@@ -115,6 +119,10 @@ type StartParams struct {
 	// BypassOnly they are the only ones that use it.
 	Bypass     string `json:"bypass,omitempty"`
 	BypassOnly bool   `json:"bypass_only,omitempty"`
+	// KillSwitch (Windows service, TUN mode) blocks all traffic outside the
+	// tunnel while connected; KillSwitchEarly also while connecting.
+	KillSwitch      bool `json:"kill_switch,omitempty"`
+	KillSwitchEarly bool `json:"kill_switch_early,omitempty"`
 }
 
 // BypassParams is a bypass list to check.

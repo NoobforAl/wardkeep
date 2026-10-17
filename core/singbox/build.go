@@ -50,6 +50,13 @@ type Options struct {
 	// https://host/path (DoH), tls://host (DoT), tcp://host, udp://host or a bare IP (UDP).
 	// Default https://1.1.1.1/dns-query.
 	DNS string
+	// DNS may also be a DNS stamp ("sdns://..."): DoH, DoT, DoQ and plain
+	// stamps are used as such; a DNSCrypt stamp is served by a local forwarder
+	// (core/dnscrypt) that the engine starts, and DNSForwarder is its address
+	// ("127.0.0.1:port"). DNSRelay, a relay stamp or "ip:port", makes DNSCrypt
+	// anonymized; the engine hands it to the forwarder.
+	DNSRelay     string
+	DNSForwarder string
 	// LocalDNS is the resolver used outside the tunnel (the proxy servers' own
 	// names, and bypassed sites), as a resolver URL. Empty uses the operating
 	// system's resolver, which phones need the engine to name (see engine.systemDNS).
@@ -60,6 +67,13 @@ type Options struct {
 	// SystemProxy points the OS proxy settings at the local port while
 	// running (proxy mode only); sing-box restores them on stop.
 	SystemProxy bool
+
+	// MTU of the TUN device (TUN mode); 0 uses DefaultMTU. A smaller value (1280-1500) helps on
+	// networks that drop big packets; valid values are MinMTU to MaxMTU.
+	MTU int
+	// NoIPv6 keeps IPv6 out of the VPN: names are only resolved to IPv4 addresses and a connection
+	// to an IPv6 address is refused (not sent around the VPN, which would leak the real address).
+	NoIPv6 bool
 
 	// Failover and FailoverInterval are used by the engine, not the config:
 	// when a pinned profile stops responding, switch to the next working one.
@@ -75,10 +89,25 @@ type Options struct {
 	// profiles are skipped without it.
 	TorSocks string
 
+	// StateDir is where mesh (Tailscale) profiles keep their device identity, one
+	// folder per profile; empty uses a relative folder.
+	StateDir string
+
 	// Bypass lists destinations that go around the VPN. With BypassOnly it is
 	// the other way round: only they use the VPN and everything else goes direct.
 	Bypass     *BypassList
 	BypassOnly bool
+
+	// KillSwitch (Windows, TUN mode) blocks every packet that does not use
+	// the tunnel while connected; KillSwitchEarly also blocks while connecting.
+	// Like Failover it is acted on by the control server (core/killswitch),
+	// not by the generated config.
+	KillSwitch      bool
+	KillSwitchEarly bool
+	// TunName names the TUN adapter (Windows). A fixed name lets the kill
+	// switch find the adapter and a later run clean up after a crash
+	// (core/winsvc); empty leaves the choice to sing-box.
+	TunName string
 }
 
 // SelfPackage in ExcludePackages stands for this app: the platform replaces it
@@ -107,12 +136,27 @@ func (o *Options) defaults() {
 	}
 	// Tor exits don't allow DNS over TLS (port 853) or plain DNS, but they do
 	// allow HTTPS: resolve through DoH while Tor is the way out.
-	if o.TorSocks != "" && !strings.HasPrefix(o.DNS, "https://") {
+	if o.TorSocks != "" && !torDNSOK(o.DNS) {
 		o.DNS = "https://1.1.1.1/dns-query"
 	}
 	if o.Selected == "" {
 		o.Selected = TagAuto
 	}
+}
+
+// The TUN device's packet size: DefaultMTU is what the config always used.
+const (
+	DefaultMTU = 9000
+	MinMTU     = 576
+	MaxMTU     = 65535
+)
+
+// CheckMTU says whether n is a value a TUN device can have (0 means the default).
+func CheckMTU(n int) error {
+	if n != 0 && (n < MinMTU || n > MaxMTU) {
+		return fmt.Errorf("MTU %d is outside %d-%d", n, MinMTU, MaxMTU)
+	}
+	return nil
 }
 
 type obj = map[string]any
@@ -127,6 +171,7 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		endpoints []any
 		tags      []string
 		skipped   []error
+		meshTags  []string
 	)
 	for _, p := range profiles {
 		p.EnsureID()
@@ -138,6 +183,21 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		)
 		if p.Protocol == profile.Tor {
 			out, err = torOutbound(opts.TorSocks, p.ID)
+		} else if p.Protocol == profile.Tailscale {
+			// A mesh device is online only while its profile is the selected one.
+			if p.ID != opts.Selected {
+				continue
+			}
+			if !meshSupported {
+				return nil, skipped, ErrMeshNotBuilt
+			}
+			var group obj
+			out, group = meshProfile(p, opts.StateDir)
+			meshTags = append(meshTags, out["tag"].(string))
+			tags = append(tags, p.ID)
+			endpoints = append(endpoints, out)
+			outbounds = append(outbounds, group)
+			continue
 		} else {
 			out, isEndpoint, extras, err = convert(p, p.ID)
 		}
@@ -180,6 +240,9 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		obj{"type": "direct", "tag": TagDirect},
 	)
 
+	if err := CheckMTU(opts.MTU); err != nil {
+		return nil, skipped, err
+	}
 	var inbounds []any
 	switch opts.Mode {
 	case ModeProxy:
@@ -198,10 +261,13 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 			"type":         "tun",
 			"tag":          "tun-in",
 			"address":      tunAddresses,
-			"mtu":          9000,
+			"mtu":          orInt(opts.MTU, DefaultMTU),
 			"auto_route":   true,
 			"strict_route": true,
 			"stack":        "mixed",
+		}
+		if opts.TunName != "" {
+			tun["interface_name"] = opts.TunName
 		}
 		// Tor runs as this app, which is kept out of the VPN; the system TCP
 		// stack answers through a listener in this app, and those replies
@@ -242,18 +308,27 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		return nil, skipped, fmt.Errorf("unknown mode %q", opts.Mode)
 	}
 
-	remoteDNS, err := dnsServer(opts.DNS)
+	remoteDNS, resolverIPs, err := remoteDNSServer(opts)
 	if err != nil {
 		return nil, skipped, err
 	}
 	remoteDNS["tag"] = "remote"
-	remoteDNS["detour"] = TagSelect
 
 	// Rules run in order, cheapest first, so most connections are decided
 	// before anything costly happens: DNS by port, then address matches (no
 	// packet inspection), and only then sniffing for names — and only when a
 	// listed name needs it.
 	rules := []any{obj{"port": 53, "action": "hijack-dns"}}
+	if opts.NoIPv6 {
+		// The TUN keeps its IPv6 address so IPv6 traffic is caught here and refused; with no IPv6
+		// address it would go out of the real network instead, around the VPN.
+		rules = append(rules, obj{"ip_version": 6, "action": "reject"})
+	}
+	if len(resolverIPs) > 0 {
+		// The resolver of a DNS stamp (and the relay) is only ever reached
+		// through the VPN, whatever the bypass lists or local ranges say.
+		rules = append(rules, obj{"ip_cidr": resolverIPs, "outbound": TagSelect})
+	}
 	if !opts.ProxyPrivate {
 		// Local addresses go direct (proxy mode, and anything that still
 		// reaches the TUN); ranges a profile routes on purpose stay proxied.
@@ -313,7 +388,7 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 				localDNS,
 			},
 			"final":    dnsFinal,
-			"strategy": "prefer_ipv4",
+			"strategy": dnsStrategy(opts.NoIPv6),
 		},
 		"inbounds":  inbounds,
 		"outbounds": outbounds,
@@ -335,7 +410,23 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 	if len(endpoints) > 0 {
 		cfg["endpoints"] = endpoints
 	}
+	applyMesh(cfg, meshTags)
 	return cfg, skipped, nil
+}
+
+func orInt(v, def int) int {
+	if v == 0 {
+		return def
+	}
+	return v
+}
+
+// dnsStrategy: IPv4 first (many networks have broken IPv6), or IPv4 only when IPv6 is switched off.
+func dnsStrategy(noIPv6 bool) string {
+	if noIPv6 {
+		return "ipv4_only"
+	}
+	return "prefer_ipv4"
 }
 
 // convert maps one profile to a sing-box outbound tagged tag (or an endpoint

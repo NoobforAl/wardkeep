@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/url"
 )
 
 // ErrNeedsCredentials means the profile needs a username and password before connecting.
@@ -30,6 +31,7 @@ const (
 	SSH         = "ssh"
 	IKEv2       = "ikev2" // in-core (veepin); optionally the OS's IKEv2 client
 	SSTP        = "sstp"
+	Tailscale   = "tailscale" // mesh VPN: Tailscale, or a Headscale control server
 )
 
 // Profile is one connectable server configuration.
@@ -48,18 +50,19 @@ type Profile struct {
 	Flow     string `json:"flow,omitempty"`   // vless flow, e.g. xtls-rprx-vision
 	AlterID  int    `json:"alter_id,omitempty"`
 
-	TLS        *TLS       `json:"tls,omitempty"`
-	Transport  *Transport `json:"transport,omitempty"`
-	WireGuard  *WG        `json:"wireguard,omitempty"`
-	Hysteria2  *Hy2       `json:"hysteria2,omitempty"`
-	TUIC       *TUICOpts  `json:"tuic,omitempty"`
-	OpenVPN    *OVPN      `json:"openvpn,omitempty"`
-	SSH        *SSHOpts   `json:"ssh,omitempty"`
-	Naive      *NaiveOpts `json:"naive,omitempty"`
-	IKEv2      *IKEv2Opts `json:"ikev2,omitempty"`
-	Tor        *TorOpts   `json:"tor,omitempty"`
-	Plugin     string     `json:"plugin,omitempty"` // shadowsocks SIP003 plugin
-	PluginOpts string     `json:"plugin_opts,omitempty"`
+	TLS        *TLS           `json:"tls,omitempty"`
+	Transport  *Transport     `json:"transport,omitempty"`
+	WireGuard  *WG            `json:"wireguard,omitempty"`
+	Hysteria2  *Hy2           `json:"hysteria2,omitempty"`
+	TUIC       *TUICOpts      `json:"tuic,omitempty"`
+	OpenVPN    *OVPN          `json:"openvpn,omitempty"`
+	SSH        *SSHOpts       `json:"ssh,omitempty"`
+	Naive      *NaiveOpts     `json:"naive,omitempty"`
+	IKEv2      *IKEv2Opts     `json:"ikev2,omitempty"`
+	Tor        *TorOpts       `json:"tor,omitempty"`
+	Tailscale  *TailscaleOpts `json:"tailscale,omitempty"`
+	Plugin     string         `json:"plugin,omitempty"` // shadowsocks SIP003 plugin
+	PluginOpts string         `json:"plugin_opts,omitempty"`
 
 	// Source is the original link or file text the profile came from.
 	Source string `json:"source,omitempty"`
@@ -135,6 +138,23 @@ type TorOpts struct {
 	Builtin string `json:"builtin,omitempty"`
 	// Bridges are custom bridge lines (as in a torrc, without "Bridge ").
 	Bridges []string `json:"bridges,omitempty"`
+}
+
+// TailscaleOpts configures a mesh profile (Server and Port are unused; the
+// control server is ControlURL). The auth key is Profile.Password.
+type TailscaleOpts struct {
+	// ControlURL is the coordination server, e.g. https://headscale.example.com;
+	// empty is Tailscale's own.
+	ControlURL string `json:"control_url,omitempty"`
+	// Hostname is the name this device has in the mesh; empty uses the device's own.
+	Hostname string `json:"hostname,omitempty"`
+	// ExitNode is the name or address of the device whose connection is used
+	// for everything; empty reaches only the mesh and uses the normal connection otherwise.
+	ExitNode string `json:"exit_node,omitempty"`
+	// AcceptRoutes uses the subnets other devices offer (a home network).
+	AcceptRoutes bool `json:"accept_routes,omitempty"`
+	// Ephemeral removes this device from the mesh when it goes offline.
+	Ephemeral bool `json:"ephemeral,omitempty"`
 }
 
 // NaiveOpts holds NaiveProxy options. User and password are in Username/Password.
@@ -214,6 +234,18 @@ func (p *Profile) Validate() error {
 		return fmt.Errorf("profile %q: missing protocol", p.Name)
 	}
 	if p.Protocol == Tor {
+		return nil
+	}
+	if p.Protocol == Tailscale {
+		if p.Password == "" {
+			return fmt.Errorf("profile %q: missing auth key", p.Name)
+		}
+		if o := p.Tailscale; o != nil && o.ControlURL != "" {
+			u, err := url.Parse(o.ControlURL)
+			if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+				return fmt.Errorf("profile %q: the control server must be an http:// or https:// address", p.Name)
+			}
+		}
 		return nil
 	}
 	if p.Server == "" {
@@ -297,6 +329,9 @@ func (p *Profile) EnsureID() {
 		key = fmt.Sprintf("%s|%s|%d|%s|%s", p.Protocol, p.Server, p.Port, p.UUID, p.Password)
 		if p.Tor != nil {
 			key += fmt.Sprintf("|%s|%q", p.Tor.Builtin, p.Tor.Bridges)
+		}
+		if p.Tailscale != nil {
+			key += fmt.Sprintf("|%s|%s", p.Tailscale.ControlURL, p.Tailscale.Hostname)
 		}
 	}
 	sum := sha256.Sum256([]byte(key))

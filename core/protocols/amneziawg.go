@@ -61,13 +61,21 @@ func (a amneziawg) Profile(env Env, port int, u Account) (*profile.Profile, erro
 	if err != nil {
 		return nil, err
 	}
+	address := []string{addr}
+	if env.IPv6 {
+		a6, err := AWGAddress6(u.WGAddress)
+		if err != nil {
+			return nil, err
+		}
+		address = append(address, a6)
+	}
 	params := make(map[string]string, len(env.AWG.Params))
 	maps.Copy(params, env.AWG.Params)
 	return &profile.Profile{
 		Name: profileName(env, a.Spec()), Protocol: profile.AmneziaWG, Server: env.Host, Port: port,
 		WireGuard: &profile.WG{
 			PrivateKey: u.WGPrivateKey, PeerPublicKey: env.AWG.PublicKey,
-			Address: []string{addr}, AllowedIPs: []string{"0.0.0.0/0", "::/0"},
+			Address: address, AllowedIPs: []string{"0.0.0.0/0", "::/0"},
 			DNS: []string{"1.1.1.1", "8.8.8.8"}, MTU: wireguardMTU, Keepalive: 25, Amnezia: params,
 		},
 	}, nil

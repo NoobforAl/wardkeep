@@ -158,6 +158,18 @@ func (e *Engine) probe(ctx context.Context, instance *box.Box, tag, testURL stri
 	// Endpoints that connect in the background (OpenVPN) refuse traffic until
 	// their handshake finishes; wait for that instead of failing at once.
 	readyBy := time.Now().Add(endpointReadyTimeout)
+	// A mesh device first logs in to its control server.
+	e.mu.Lock()
+	meshID := e.meshID
+	e.mu.Unlock()
+	if meshID != "" && tag == meshID {
+		if _, ts, _, err := e.meshEndpoint(); err == nil {
+			if err := waitMeshRunning(ctx, ts, meshJoinTimeout); err != nil {
+				return err
+			}
+		}
+		readyBy = time.Now().Add(meshJoinTimeout)
+	}
 	// Tor builds circuits on the first connection, which takes a while.
 	timeout := 8 * time.Second
 	e.mu.Lock()
@@ -182,6 +194,9 @@ func (e *Engine) probe(ctx context.Context, instance *box.Box, tag, testURL stri
 
 // endpointReadyTimeout is how long a probe waits for an endpoint that is still connecting.
 const endpointReadyTimeout = 15 * time.Second
+
+// meshJoinTimeout is how long a mesh device may take to log in and learn its peers.
+const meshJoinTimeout = 45 * time.Second
 
 // netCheck tests internet access through the tunnel's direct outbound, which
 // bypasses the VPN (protected socket on Android).

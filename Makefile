@@ -45,9 +45,14 @@ notices:
 	python scripts/gen-notices.py --out app/assets/third_party_notices.md
 
 # Real clients (OpenVPN, WireGuard, AmneziaWG, SSTP, IKEv2) against the Linux
-# server, in Docker. Needs Docker; PROTO="sstp ikev2" picks some.
+# server, in Docker: one user at a time, three users at once through three
+# protocols (own numbers each; one disabled, one reset), and IPv6 in the tunnels.
+# Needs Docker; PROTO="sstp ikev2" picks protocols, E2E_ARGS="--only concurrent"
+# (or single, ipv6; --quick; --keep) picks parts; PYTHON=python3 where `python`
+# is missing (CI). Containers and networks are named $E2E_PREFIX-* (default e2e).
+PYTHON ?= python
 docker-e2e:
-	python tools/dockertest/run.py $(PROTO)
+	$(PYTHON) tools/dockertest/run.py $(E2E_ARGS) $(PROTO)
 
 # ---------------------------------------------------------------------------
 # Development. `make help` lists these.
@@ -57,7 +62,7 @@ docker-e2e:
 #   make dev-web       the web API of that server (docs at http://127.0.0.1:<port>/docs)
 #   make dev-android   build the core for the connected phone, then run the app on it
 #   make fix           format and fix the code (gofmt, go fix, go vet, dart fix, cargo fmt)
-#   make docker-e2e    real VPN clients against the Linux server in Docker (PROTO="sstp ikev2")
+#   make docker-e2e    real VPN clients against the Linux server in Docker (PROTO="sstp ikev2", E2E_ARGS="--only ipv6")
 # ---------------------------------------------------------------------------
 
 DEV_DATA ?= .dev/server
@@ -113,3 +118,10 @@ fix:
 	go vet -tags "$(TAGS)" ./...
 	$(FLUTTER_SH); cd app && "$$FLUTTER" pub get >/dev/null && "$$(dirname "$$FLUTTER")/dart$(BAT)" fix --apply && "$$FLUTTER" analyze --no-fatal-infos
 	-cd tor && cargo fmt
+
+# The mesh (Tailscale/Headscale) client in Docker: two of our cores and a stock Tailscale
+# client against a Headscale server; they list and reach each other, and one is used as an
+# exit. Builds the core with the with_tailscale tag. Needs Docker; MESH_ARGS=--keep leaves it up.
+.PHONY: docker-mesh
+docker-mesh:
+	python tools/dockertest/mesh.py $(MESH_ARGS)

@@ -29,12 +29,22 @@ func (wireguard) Spec() Spec {
 
 func (wireguard) Inbounds(env Env, port int, accts []Account) Config {
 	peers := make([]any, 0, len(accts))
+	addresses := []string{env.WireGuard.Address}
+	if env.IPv6 {
+		addresses = append(addresses, wgServerAddress6)
+	}
 	for _, a := range accts {
-		peers = append(peers, obj{"public_key": a.WGPublicKey, "allowed_ips": []string{a.WGAddress}})
+		allowed := []string{a.WGAddress}
+		if env.IPv6 {
+			if a6, err := WGAddress6(a.WGAddress); err == nil {
+				allowed = append(allowed, a6)
+			}
+		}
+		peers = append(peers, obj{"public_key": a.WGPublicKey, "allowed_ips": allowed})
 	}
 	return Config{Endpoints: []obj{{
 		"type": "wireguard", "tag": "wireguard", "system": false, "name": "wg-server", "mtu": wireguardMTU,
-		"address": []string{env.WireGuard.Address}, "private_key": env.WireGuard.PrivateKey,
+		"address": addresses, "private_key": env.WireGuard.PrivateKey,
 		"listen_port": port, "peers": peers,
 	}}}
 }
@@ -43,11 +53,19 @@ func (w wireguard) Profile(env Env, port int, u Account) (*profile.Profile, erro
 	if u.WGPrivateKey == "" || u.WGAddress == "" {
 		return nil, fmt.Errorf("user %s has no WireGuard key or address", u.Name)
 	}
+	address := []string{u.WGAddress}
+	if env.IPv6 {
+		a6, err := WGAddress6(u.WGAddress)
+		if err != nil {
+			return nil, err
+		}
+		address = append(address, a6)
+	}
 	return &profile.Profile{
 		Name: profileName(env, w.Spec()), Protocol: profile.WireGuard, Server: env.Host, Port: port,
 		WireGuard: &profile.WG{
 			PrivateKey: u.WGPrivateKey, PeerPublicKey: env.WireGuard.PublicKey,
-			Address: []string{u.WGAddress}, AllowedIPs: []string{"0.0.0.0/0", "::/0"},
+			Address: address, AllowedIPs: []string{"0.0.0.0/0", "::/0"},
 			DNS: []string{"1.1.1.1", "8.8.8.8"}, MTU: wireguardMTU, Keepalive: 25,
 		},
 	}, nil

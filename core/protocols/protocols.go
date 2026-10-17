@@ -56,8 +56,11 @@ type Spec struct {
 	Host bool `json:"host,omitempty"`
 	// DefaultOff keeps the protocol disabled on a new server unless asked for
 	// (it needs more of the host than the others).
-	DefaultOff bool     `json:"default_off,omitempty"`
-	Options    []Option `json:"options,omitempty"`
+	DefaultOff bool `json:"default_off,omitempty"`
+	// Service marks a server-side service for the VPN's users that is not a way to
+	// connect (the DNSCrypt resolver): it has no client profile and no share link.
+	Service bool     `json:"service,omitempty"`
+	Options []Option `json:"options,omitempty"`
 }
 
 // Reality is the VLESS+Reality key material and the site it impersonates.
@@ -92,6 +95,10 @@ type Env struct {
 	OpenVPN     OpenVPN
 	WireGuard   WireGuard
 	AWG         AmneziaWG
+	DNSCrypt    DNSCrypt
+	// IPv6 gives every user a second, IPv6 address in the tunnels that can carry
+	// one (see ipv6.go) and makes the server route and NAT it.
+	IPv6 bool
 }
 
 // Account is one user's credentials; every protocol uses the ones it needs.

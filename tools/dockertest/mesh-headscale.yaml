@@ -1,0 +1,48 @@
+# Headscale for the mesh test (tools/dockertest/mesh.py): its own DERP relay (a
+# control server needs one), no OIDC, a throw-away database.
+server_url: http://wk-mesh-hs:8080
+listen_addr: 0.0.0.0:8080
+metrics_listen_addr: 127.0.0.1:9090
+grpc_listen_addr: 127.0.0.1:50443
+grpc_allow_insecure: false
+noise:
+  private_key_path: /var/lib/headscale/noise_private.key
+prefixes:
+  v4: 100.64.0.0/10
+  v6: fd7a:115c:a1e0::/48
+  allocation: sequential
+derp:
+  server:
+    enabled: true
+    region_id: 999
+    region_code: wk
+    region_name: Mesh test relay
+    stun_listen_addr: 0.0.0.0:3478
+    private_key_path: /var/lib/headscale/derp_server_private.key
+    automatically_add_embedded_derp_region: true
+    verify_clients: false
+  urls: []
+  paths: []
+  auto_update_enabled: false
+disable_check_updates: true
+node:
+  ephemeral:
+    inactivity_timeout: 30m
+database:
+  type: sqlite
+  sqlite:
+    path: /var/lib/headscale/db.sqlite
+dns:
+  magic_dns: true
+  base_domain: mesh.wk.test
+  override_local_dns: false
+  nameservers:
+    global:
+      - 1.1.1.1
+unix_socket: /var/run/headscale/headscale.sock
+unix_socket_permission: "0770"
+policy:
+  mode: file
+  path: /policy.json
+log:
+  level: info

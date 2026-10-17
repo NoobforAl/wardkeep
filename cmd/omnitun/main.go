@@ -27,6 +27,8 @@ flags (config, run):
   -tun          capture all traffic with a TUN device (needs admin/root)
   -port N       local SOCKS5/HTTP port in proxy mode (default 2080)
   -select ID    profile ID to use (default: auto, lowest latency)
+  -dns RESOLVER remote DNS: a URL (https://, tls://, tcp://, udp://) or a DNS stamp (sdns://, also DNSCrypt)
+  -dns-relay R  Anonymized DNSCrypt: a relay stamp or ip:port (with a DNSCrypt -dns)
 `
 
 func main() {
@@ -45,6 +47,8 @@ func run(cmd string, args []string) error {
 	tun := fs.Bool("tun", false, "")
 	port := fs.Int("port", 2080, "")
 	sel := fs.String("select", "", "")
+	dnsFlag := fs.String("dns", "", "")
+	dnsRelay := fs.String("dns-relay", "", "")
 	fs.Usage = func() { fmt.Fprint(os.Stderr, usage) }
 	_ = fs.Parse(args)
 	if fs.NArg() != 1 {
@@ -63,7 +67,13 @@ func run(cmd string, args []string) error {
 		fmt.Fprintln(os.Stderr, "skipped:", e)
 	}
 
-	opts := singbox.Options{ListenPort: *port, Selected: *sel, Mode: singbox.ModeProxy}
+	opts := singbox.Options{ListenPort: *port, Selected: *sel, Mode: singbox.ModeProxy, DNS: *dnsFlag, DNSRelay: *dnsRelay}
+	if err := singbox.CheckDNS(opts.DNS); err != nil {
+		return fmt.Errorf("-dns: %w", err)
+	}
+	if err := singbox.CheckDNSRelay(opts.DNSRelay); err != nil {
+		return fmt.Errorf("-dns-relay: %w", err)
+	}
 	if *tun {
 		opts.Mode = singbox.ModeTUN
 	}
@@ -72,6 +82,9 @@ func run(cmd string, args []string) error {
 	case "import":
 		return printJSON(res.Profiles)
 	case "config":
+		if singbox.DNSNeedsForwarder(opts.DNS) {
+			opts.DNSForwarder = "127.0.0.1:5353" // `run` starts the forwarder on a free port
+		}
 		cfg, skipped, err := singbox.Build(res.Profiles, opts)
 		for _, s := range skipped {
 			fmt.Fprintln(os.Stderr, "skipped:", s)

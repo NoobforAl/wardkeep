@@ -51,6 +51,8 @@ func Export(p *profile.Profile) (string, error) {
 		return sstp(p), nil
 	case profile.Tor:
 		return tor(p), nil
+	case profile.Tailscale:
+		return tailscale(p)
 	case profile.WireGuard, profile.AmneziaWG:
 		return wireguard(p)
 	}

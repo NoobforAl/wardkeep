@@ -2,6 +2,7 @@ package protocols
 
 import (
 	"encoding/json"
+	"errors"
 	"slices"
 	"strings"
 	"testing"
@@ -35,7 +36,7 @@ func TestRegistry(t *testing.T) {
 		t.Fatalf("keys: %v", keys)
 	}
 	for _, s := range Specs() {
-		if s.Name == "" || s.Label == "" || s.Description == "" || s.DefaultPort <= 0 || s.Profile == "" {
+		if s.Name == "" || s.Label == "" || s.Description == "" || s.DefaultPort <= 0 || (s.Profile == "") != s.Service {
 			t.Errorf("incomplete spec: %+v", s)
 		}
 		if !slices.Contains([]string{"tcp", "udp", "tcp+udp"}, s.Transport) {
@@ -81,6 +82,13 @@ func TestEveryProtocolIsCoherent(t *testing.T) {
 				}
 			}
 
+			if s.Service {
+				// A service for the users (the DNSCrypt resolver) is not a way to connect.
+				if _, err := proto.Profile(env, s.DefaultPort, alice); !errors.Is(err, ErrNoProfile) || s.ShareLink {
+					t.Fatalf("a service has no profile and no link: %v", err)
+				}
+				return
+			}
 			p, err := proto.Profile(env, s.DefaultPort, alice)
 			if err != nil {
 				t.Fatal(err)

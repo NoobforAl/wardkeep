@@ -1,0 +1,7 @@
+FROM debian:bookworm-slim
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        iproute2 iputils-ping curl ca-certificates procps tcpdump nftables iptables \
+    && rm -rf /var/lib/apt/lists/*
+COPY omnitun-server /usr/local/bin/omnitun-server
+COPY omnitun /usr/local/bin/omnitun
