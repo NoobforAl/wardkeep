@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'l10n/l10n.dart';
@@ -10,6 +12,7 @@ import 'state/incoming.dart';
 import 'state/providers.dart';
 import 'state/store.dart';
 import 'state/subscriptions.dart';
+import 'state/window_bounds.dart';
 import 'ui/incoming_import.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/onboarding_screen.dart';
@@ -19,8 +22,8 @@ import 'ui/widgets/window_frame.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _useOwnTitleBar();
   final store = await AppStore.open();
+  await _setUpWindow(store);
   // On a computer, opening a link or config file with Omnitun starts it with that as an argument.
   final startup = await IncomingShare.fromArguments(args);
   runApp(ProviderScope(
@@ -30,21 +33,90 @@ Future<void> main(List<String> args) async {
 }
 
 /// On Windows the system's title bar (its own minimize, maximize and close buttons, in the system's
-/// colours) is replaced by the app's own, drawn by [WindowFrame]. If the window cannot be set up the
-/// system's bar stays, so the app never ends up without one.
-Future<void> _useOwnTitleBar() async {
+/// colours) is replaced by the app's own, drawn by [WindowFrame], and the window is sized from the
+/// monitor instead of a fixed size, can be resized by every edge, and opens where it was left. If the
+/// window cannot be set up the system's bar and size stay, so the app is never left without them.
+Future<void> _setUpWindow(AppStore store) async {
   if (kIsWeb || !Platform.isWindows) return;
   try {
     await windowManager.ensureInitialized();
+    final bounds = openingBounds(
+      displays: await _usableDisplays(),
+      saved: boundsFromJson(store.read<Object>('window')),
+    );
     await windowManager.waitUntilReadyToShow(
-      const WindowOptions(titleBarStyle: TitleBarStyle.hidden, windowButtonVisibility: false, title: 'Omnitun'),
+      const WindowOptions(
+        titleBarStyle: TitleBarStyle.hidden,
+        windowButtonVisibility: false,
+        title: 'Omnitun',
+        minimumSize: minWindowSize,
+      ),
       () async {
+        await windowManager.setBounds(bounds);
         await windowManager.show();
         await windowManager.focus();
       },
     );
+    windowManager.addListener(_WindowMemory(store));
     customTitleBar = true;
   } catch (_) {}
+}
+
+/// The usable area (without the task bar) of every monitor, in logical pixels, the primary one first.
+Future<List<Rect>> _usableDisplays() async {
+  final primary = await screenRetriever.getPrimaryDisplay();
+  final all = await screenRetriever.getAllDisplays();
+  Rect usable(Display d) {
+    final size = d.visibleSize ?? d.size;
+    final at = d.visiblePosition ?? Offset.zero;
+    return Rect.fromLTWH(at.dx, at.dy, size.width, size.height);
+  }
+
+  return [usable(primary), for (final d in all) if (d.id != primary.id) usable(d)];
+}
+
+/// Remembers where the user left the window (size and place) for the next start, and fits it to the
+/// monitor it is moved to: a window sized for a big monitor would hang off a smaller one.
+class _WindowMemory with WindowListener {
+  _WindowMemory(this._store);
+
+  final AppStore _store;
+  Timer? _later;
+
+  void _remember() {
+    _later?.cancel();
+    _later = Timer(const Duration(milliseconds: 400), () async {
+      // A maximized, minimized or full screen window has no size of its own to remember.
+      if (await windowManager.isMaximized() || await windowManager.isMinimized() || await windowManager.isFullScreen()) {
+        return;
+      }
+      _store.write('window', boundsToJson(await windowManager.getBounds()));
+    });
+  }
+
+  @override
+  void onWindowResized() => _remember();
+
+  @override
+  void onWindowMoved() {
+    _fit();
+    _remember();
+  }
+
+  Future<void> _fit() async {
+    try {
+      if (await windowManager.isMaximized() || await windowManager.isMinimized() || await windowManager.isFullScreen()) {
+        return;
+      }
+      final now = await windowManager.getBounds();
+      final fit = openingBounds(displays: await _usableDisplays(), saved: now);
+      final same = (fit.left - now.left).abs() < 1 &&
+          (fit.top - now.top).abs() < 1 &&
+          (fit.width - now.width).abs() < 1 &&
+          (fit.height - now.height).abs() < 1;
+      if (!same) await windowManager.setBounds(fit);
+    } catch (_) {}
+  }
 }
 
 class OmnitunApp extends ConsumerStatefulWidget {

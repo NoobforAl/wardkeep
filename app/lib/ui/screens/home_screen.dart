@@ -238,16 +238,10 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 8, 0),
       child: Row(
         children: [
-          Text(
-            context.l10n.appName,
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(color: scheme.onSurface),
-          ),
           const Spacer(),
           IconButton(
             tooltip: context.l10n.tooltipSettings,
