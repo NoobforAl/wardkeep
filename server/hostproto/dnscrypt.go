@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,6 +12,7 @@ import (
 	"net/netip"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	dc "github.com/ameshkov/dnscrypt/v2"
@@ -434,6 +436,10 @@ type udpFront struct {
 	gate   *gate
 	magic  [8]byte
 
+	maxSessions int           // default udpSessionMax
+	idle        time.Duration // default udpSessionIdle
+	reads       atomic.Int64  // reads by the reply goroutines (tests watch it for spinning)
+
 	mu       sync.Mutex
 	sessions map[netip.AddrPort]*udpSession
 	closed   bool
@@ -503,14 +509,23 @@ func (f *udpFront) session(from netip.AddrPort) *udpSession {
 		s.last = now
 		return s
 	}
-	if len(f.sessions) >= udpSessionMax {
+	maxSessions, idle := f.maxSessions, f.idle
+	if maxSessions == 0 {
+		maxSessions = udpSessionMax
+	}
+	if idle == 0 {
+		idle = udpSessionIdle
+	}
+	if len(f.sessions) >= maxSessions {
+		// Idle sessions go: the table forgets them and closes their sockets, which
+		// ends their reply goroutines (a closed socket is not a timeout).
 		for k, s := range f.sessions {
-			if now.Sub(s.last) > udpSessionIdle {
-				s.conn.Close()
+			if now.Sub(s.last) > idle {
 				delete(f.sessions, k)
+				s.conn.Close()
 			}
 		}
-		if len(f.sessions) >= udpSessionMax {
+		if len(f.sessions) >= maxSessions {
 			return nil
 		}
 	}
@@ -520,30 +535,51 @@ func (f *udpFront) session(from netip.AddrPort) *udpSession {
 	}
 	s := &udpSession{conn: c, last: now}
 	f.sessions[from] = s
-	go func() {
-		buf := make([]byte, 65535)
-		for {
-			c.SetReadDeadline(time.Now().Add(udpSessionIdle))
-			n, err := c.Read(buf)
-			if err != nil {
-				f.mu.Lock()
-				if f.sessions[from] == s && time.Since(s.last) >= udpSessionIdle {
-					delete(f.sessions, from)
-					f.mu.Unlock()
-					c.Close()
-					return
-				}
-				closed := f.closed
-				f.mu.Unlock()
-				if closed {
-					return
-				}
-				continue
-			}
-			f.conn.WriteToUDPAddrPort(buf[:n], from)
-		}
-	}()
+	go f.reply(from, s, idle)
 	return s
+}
+
+// reply sends what the DNSCrypt server answers a client back to it. It ends when
+// the socket is closed (eviction, or the front closing), on any other read error,
+// or when the session has been idle for a whole period; it never retries after an
+// error that is not a timeout, and the goroutine closes its own socket on the way out.
+func (f *udpFront) reply(from netip.AddrPort, s *udpSession, idle time.Duration) {
+	defer s.conn.Close()
+	buf := make([]byte, 65535)
+	for {
+		s.conn.SetReadDeadline(time.Now().Add(idle))
+		n, err := s.conn.Read(buf)
+		f.reads.Add(1)
+		if err == nil {
+			f.conn.WriteToUDPAddrPort(buf[:n], from)
+			continue
+		}
+		var ne net.Error
+		if errors.Is(err, net.ErrClosed) || !errors.As(err, &ne) || !ne.Timeout() {
+			f.forget(from, s)
+			return
+		}
+		// A timeout: leave if the session is idle or no longer the client's current one.
+		f.mu.Lock()
+		current := f.sessions[from] == s
+		stop := f.closed || !current || time.Since(s.last) >= idle
+		if stop && current {
+			delete(f.sessions, from)
+		}
+		f.mu.Unlock()
+		if stop {
+			return
+		}
+	}
+}
+
+// forget removes a session from the table if it is still the client's.
+func (f *udpFront) forget(from netip.AddrPort, s *udpSession) {
+	f.mu.Lock()
+	if f.sessions[from] == s {
+		delete(f.sessions, from)
+	}
+	f.mu.Unlock()
 }
 
 // rateLimiter is a token bucket per client address.

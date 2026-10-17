@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"net"
 	"net/netip"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -417,5 +418,100 @@ func TestDNSCryptResolverRefusesANY(t *testing.T) {
 	}
 	if h.upstream.Load() != 0 {
 		t.Error("the upstream was asked for ANY")
+	}
+}
+
+// When the session table is full, idle sessions are evicted; their reply
+// goroutines must end (not spin on read errors from the closed socket), so the
+// table's limit really bounds the resources.
+func TestUDPFrontEvictionEndsTheReplyGoroutines(t *testing.T) {
+	// A UDP socket standing in for the DNSCrypt server behind the front.
+	inner, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer inner.Close()
+	outer, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &udpFront{
+		conn: outer, target: inner.LocalAddr().(*net.UDPAddr), inner: inner, gate: newGate(nil),
+		sessions: map[netip.AddrPort]*udpSession{}, done: make(chan struct{}),
+		maxSessions: 4, idle: 10 * time.Second,
+	}
+	f.gate.query = newRateLimiter(1000, 1000)
+	f.gate.cert = newRateLimiter(1000, 1000)
+	go f.run()
+	defer f.close()
+
+	settle := func(want int) int {
+		n := runtime.NumGoroutine()
+		for range 60 {
+			if n = runtime.NumGoroutine(); n <= want {
+				break
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+		return n
+	}
+	send := func(c *net.UDPConn) { c.WriteToUDP(make([]byte, 40), outer.LocalAddr().(*net.UDPAddr)) }
+	newClient := func() *net.UDPConn {
+		c, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { c.Close() })
+		return c
+	}
+	sessions := func() int { f.mu.Lock(); defer f.mu.Unlock(); return len(f.sessions) }
+	waitFor := func(what string, ok func() bool) {
+		for range 100 {
+			if ok() {
+				return
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+		t.Fatalf("timed out: %s", what)
+	}
+
+	base := runtime.NumGoroutine()
+	age := func() { // make every session look idle for a long time (their own read timeouts are far off)
+		f.mu.Lock()
+		for _, sess := range f.sessions {
+			sess.last = time.Now().Add(-time.Hour)
+		}
+		f.mu.Unlock()
+	}
+	for range 4 { // the table is full
+		send(newClient())
+	}
+	waitFor("four sessions", func() bool { return sessions() == 4 })
+
+	// Each new client finds a full table of idle sessions and evicts them.
+	for range 12 {
+		age()
+		send(newClient())
+		time.Sleep(20 * time.Millisecond)
+	}
+	if n := sessions(); n < 1 || n > 4 {
+		t.Fatalf("%d sessions in a table of 4", n)
+	}
+
+	// The evicted sessions' goroutines are gone: only the live sessions' remain, and nobody spins.
+	live := sessions()
+	if n := settle(base + live); n > base+live {
+		t.Errorf("%d goroutines with %d live sessions, %d before: evicted sessions leave goroutines behind", n, live, base)
+	}
+	before := f.reads.Load()
+	time.Sleep(300 * time.Millisecond)
+	if spun := f.reads.Load() - before; spun > 5 {
+		t.Errorf("%d reads in 300 ms with no traffic: the reply goroutines are spinning", spun)
+	}
+
+	// Closing the front ends the rest.
+	f.close()
+	if n := settle(base); n > base {
+		t.Errorf("%d goroutines after closing the front, %d before", n, base)
 	}
 }

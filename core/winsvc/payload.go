@@ -2,6 +2,7 @@ package winsvc
 
 import (
 	"fmt"
+	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -74,6 +75,35 @@ var adminSIDs = []string{sidSystem, sidAdministrators, sidTrustedInstall}
 // not weighed: a principal with an allow entry is reported even if a deny
 // entry would cancel it, which errs on the side of refusing.
 func writersOf(owner string, entries []aceEntry) []string {
+	return writersWith(owner, entries, writeMask)
+}
+
+// ancestorMask is what matters on a folder ABOVE the source: adding a file or
+// a subfolder there (write data, append data) does not let anyone replace the
+// folder below, so it is not counted; deleting or renaming children, deleting
+// the folder, and rewriting its list or owner are.
+const ancestorMask = fileDeleteChild | accessDelete | accessWriteDAC | accessWriteOwner | genericWrite | genericAll
+
+// writersOfAncestor is writersOf for a folder above the source.
+func writersOfAncestor(owner string, entries []aceEntry) []string {
+	return writersWith(owner, entries, ancestorMask)
+}
+
+// ancestorDirs returns the folders that contain file, nearest first, up to
+// the root of the drive: for C:.exe it is C:, C:, C:\.
+func ancestorDirs(file string) []string {
+	var out []string
+	for d := filepath.Dir(file); ; {
+		out = append(out, d)
+		parent := filepath.Dir(d)
+		if parent == d {
+			return out
+		}
+		d = parent
+	}
+}
+
+func writersWith(owner string, entries []aceEntry, mask uint32) []string {
 	var out []string
 	add := func(sid string) {
 		if !slices.Contains(adminSIDs, sid) && !slices.Contains(out, sid) {
@@ -84,7 +114,7 @@ func writersOf(owner string, entries []aceEntry) []string {
 		add(owner)
 	}
 	for _, e := range entries {
-		if e.Deny || e.Flags&aceInheritOnly != 0 || e.Mask&writeMask == 0 {
+		if e.Deny || e.Flags&aceInheritOnly != 0 || e.Mask&mask == 0 {
 			continue
 		}
 		add(e.SID)
@@ -92,10 +122,13 @@ func writersOf(owner string, entries []aceEntry) []string {
 	return out
 }
 
-// unsafeSourceError is the message for a source that others can change.
-func unsafeSourceError(path string, writers []string) error {
-	return fmt.Errorf("%s can be changed by accounts that are not administrators (%s), and the service would run what they put there as SYSTEM; "+
-		"copy omnitun-svc.exe (and libcronet.dll / omnitun-tor.exe if you use them) to a folder only administrators can write, "+
-		"for example one under Program Files, and run install from there (--unsafe-source skips this check; for development only)",
-		path, strings.Join(writers, ", "))
+// unsafeSourceError is the message for a source that others can change. what
+// says which part of the path failed ("the program file", "the folder it is in",
+// "a folder above it").
+func unsafeSourceError(what, path string, writers []string) error {
+	return fmt.Errorf("%s (%s) can be changed by accounts that are not administrators (%s), and the service would run what they put there as SYSTEM; "+
+		"copy omnitun-svc.exe (and libcronet.dll / omnitun-tor.exe if you use them) to a folder where neither it nor any folder above it "+
+		"can be changed by anyone but administrators, for example one under Program Files, and run install from there "+
+		"(--unsafe-source skips this check; for development only)",
+		what, path, strings.Join(writers, ", "))
 }

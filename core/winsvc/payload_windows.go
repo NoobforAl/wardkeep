@@ -10,36 +10,33 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
 
-// writersOfPath returns who besides SYSTEM, Administrators and TrustedInstaller
-// can change path (see writersOf). It only reads the access list.
-func writersOfPath(path string) ([]string, error) {
-	sd, err := windows.GetNamedSecurityInfo(path, windows.SE_FILE_OBJECT,
-		windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
+// aclEntries reads owner and access entries from an open handle.
+func aclEntries(h windows.Handle) (owner string, entries []aceEntry, err error) {
+	sd, err := windows.GetSecurityInfo(h, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
-	owner := ""
 	if o, _, err := sd.Owner(); err == nil && o != nil {
 		owner = o.String()
 	}
 	dacl, _, err := sd.DACL()
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	if dacl == nil {
 		// No list at all means everyone has full access.
-		return []string{"Everyone (no access list)"}, nil
+		return owner, []aceEntry{{SID: "Everyone (no access list)", Mask: genericAll}}, nil
 	}
-	var entries []aceEntry
 	for i := uint32(0); i < uint32(dacl.AceCount); i++ {
 		var ace *windows.ACCESS_ALLOWED_ACE
 		if err := windows.GetAce(dacl, i, &ace); err != nil {
-			return nil, err
+			return "", nil, err
 		}
 		switch ace.Header.AceType {
 		case windows.ACCESS_ALLOWED_ACE_TYPE, 9: // 9: allowed, with a condition (same layout)
@@ -51,6 +48,42 @@ func writersOfPath(path string) ([]string, error) {
 			entries = append(entries, aceEntry{SID: fmt.Sprintf("(access entry of type %d)", ace.Header.AceType), Mask: genericAll, Flags: ace.Header.AceFlags})
 		}
 	}
+	return owner, entries, nil
+}
+
+// openNode opens a file or folder to read its attributes and access list,
+// without following a link.
+func openNode(path string) (windows.Handle, uint32, error) {
+	p, err := windows.UTF16PtrFromString(path)
+	if err != nil {
+		return 0, 0, err
+	}
+	h, err := windows.CreateFile(p, windows.READ_CONTROL|windows.FILE_READ_ATTRIBUTES,
+		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil, windows.OPEN_EXISTING,
+		windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
+	if err != nil {
+		return 0, 0, err
+	}
+	var info windows.ByHandleFileInformation
+	if err := windows.GetFileInformationByHandle(h, &info); err != nil {
+		windows.CloseHandle(h)
+		return 0, 0, err
+	}
+	return h, info.FileAttributes, nil
+}
+
+// writersOfPath returns who besides SYSTEM, Administrators and TrustedInstaller
+// can change path (see writersOf). It only reads the access list.
+func writersOfPath(path string) ([]string, error) {
+	h, _, err := openNode(path)
+	if err != nil {
+		return nil, err
+	}
+	defer windows.CloseHandle(h)
+	owner, entries, err := aclEntries(h)
+	if err != nil {
+		return nil, err
+	}
 	return writersOf(owner, entries), nil
 }
 
@@ -61,14 +94,101 @@ func checkAdminOnly(path string) error {
 		return fmt.Errorf("read the access list of %s: %w", path, err)
 	}
 	if len(w) > 0 {
-		return unsafeSourceError(path, w)
+		return unsafeSourceError("the folder", path, w)
 	}
 	return nil
 }
 
+// checkFolderChain checks the folders that contain a source file, given as the
+// path it was found at and the real path of the open file: no folder in the
+// chain may be a link, and the one holding the file and every one above it up to
+// the drive root must not be changeable by non-administrators (the first with
+// the full write test, the ones above with ancestorMask: someone who can only
+// add entries to C:\ cannot replace the folder below). checked caches folders
+// already approved.
+func checkFolderChain(found, real string, checked map[string]bool) error {
+	for _, d := range ancestorDirs(found) {
+		h, attrs, err := openNode(d)
+		if err != nil {
+			return fmt.Errorf("open %s: %w", d, err)
+		}
+		windows.CloseHandle(h)
+		if attrs&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+			return fmt.Errorf("%s (a folder on the way to the program) is a link; use the real folder", d)
+		}
+	}
+	for i, d := range ancestorDirs(real) {
+		key := strings.ToLower(d)
+		if checked[key] {
+			continue
+		}
+		h, attrs, err := openNode(d)
+		if err != nil {
+			return fmt.Errorf("open %s: %w", d, err)
+		}
+		if attrs&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+			windows.CloseHandle(h)
+			return fmt.Errorf("%s (a folder on the way to the program) is a link; use the real folder", d)
+		}
+		owner, entries, err := aclEntries(h)
+		windows.CloseHandle(h)
+		if err != nil {
+			return fmt.Errorf("read the access list of %s: %w", d, err)
+		}
+		what, writers := "the folder holding the program", writersOf(owner, entries)
+		if i > 0 {
+			what, writers = "a folder above the program", writersOfAncestor(owner, entries)
+		}
+		if len(writers) > 0 {
+			return unsafeSourceError(what, d, writers)
+		}
+		checked[key] = true
+	}
+	return nil
+}
+
+// sourceFile is a file to be installed, held open: nobody can write to it, rename
+// it or delete it until it is closed (the share mode allows readers only).
+type sourceFile struct {
+	f     *os.File
+	name  string // the file name it gets in the install folder
+	found string // the path it was found at
+	real  string // its real path (links, substituted drives and 8.3 names resolved)
+}
+
+func (s *sourceFile) Close() { s.f.Close() }
+
+func closeAll(files []*sourceFile) {
+	for _, s := range files {
+		s.Close()
+	}
+}
+
+// finalPath returns the real path of an open file.
+func finalPath(h windows.Handle) (string, error) {
+	buf := make([]uint16, 1024)
+	for {
+		n, err := windows.GetFinalPathNameByHandle(h, &buf[0], uint32(len(buf)), 0 /* FILE_NAME_NORMALIZED | VOLUME_NAME_DOS */)
+		if err != nil {
+			return "", err
+		}
+		if int(n) < len(buf) {
+			return trimExtendedPrefix(windows.UTF16ToString(buf[:n])), nil
+		}
+		buf = make([]uint16, n+1)
+	}
+}
+
+// trimExtendedPrefix turns \\?\C:\x into C:\x and \\?\UNC\s\x into \\s\x.
+func trimExtendedPrefix(p string) string {
+	if rest, ok := strings.CutPrefix(p, `\\?\UNC\`); ok {
+		return `\\` + rest
+	}
+	return strings.TrimPrefix(p, `\\?\`)
+}
+
 // openSource opens a file to be installed. Links are not followed and nobody
-// can write to the file while it is open (the share mode allows readers only),
-// so what is read is what was checked.
+// can write to the file while it is open, so what is read is what was checked.
 func openSource(path string) (*os.File, error) {
 	p, err := windows.UTF16PtrFromString(path)
 	if err != nil {
@@ -95,16 +215,40 @@ func openSource(path string) (*os.File, error) {
 	return os.NewFile(uintptr(h), path), nil
 }
 
-// copyVerified copies from (opened as openSource does) to to, going through a
-// temporary file, and checks that what arrived is what was read: the SHA-256
-// of the bytes read from the source handle must equal the SHA-256 of the file
-// as it is on disk afterwards. It returns the hash.
+// checkSource checks an open source file through its own handle: the file's
+// access list, its real path and the folders around it.
+func checkSource(s *sourceFile, checked map[string]bool) error {
+	h := windows.Handle(s.f.Fd())
+	real, err := finalPath(h)
+	if err != nil {
+		return fmt.Errorf("find the real path of %s: %w", s.found, err)
+	}
+	s.real = real
+	owner, entries, err := aclEntries(h)
+	if err != nil {
+		return fmt.Errorf("read the access list of %s: %w", s.found, err)
+	}
+	if w := writersOf(owner, entries); len(w) > 0 {
+		return unsafeSourceError("the file", real, w)
+	}
+	return checkFolderChain(s.found, real, checked)
+}
+
+// copyVerified copies from (opened as openSource does) to to.
 func copyVerified(from, to string) (string, error) {
 	in, err := openSource(from)
 	if err != nil {
 		return "", err
 	}
 	defer in.Close()
+	return copyFrom(in, to)
+}
+
+// copyFrom copies the open file in to to, going through a temporary file, and
+// checks that what arrived is what was read: the SHA-256 of the bytes read
+// from the handle must equal that of the file on disk afterwards. It returns
+// the hash.
+func copyFrom(in *os.File, to string) (string, error) {
 	tmp := to + ".new"
 	os.Remove(tmp)
 	out, err := os.OpenFile(tmp, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o755)
@@ -183,24 +327,31 @@ func planInstall(exe string) (installPlan, error) {
 	return plan, nil
 }
 
-// checkPlanSafe refuses a source that non-administrators can change: the
-// folder (they could replace files in it) and every file (they could change
-// its contents).
-func checkPlanSafe(plan installPlan) error {
-	if err := checkAdminOnly(filepath.Dir(plan.exe)); err != nil {
-		return err
-	}
-	for from := range plan.files {
-		if err := checkAdminOnly(from); err != nil {
-			return err
+// openPlan opens every planned file once and keeps the handles; the checks
+// and, later, the copy and the hash all go through these handles. A source
+// that non-administrators could change is reported as unsafe (the files stay
+// open so a caller that goes on anyway still copies from the handles it checked);
+// err is for everything else. The caller closes the files.
+func openPlan(plan installPlan) (files []*sourceFile, unsafeErr error, err error) {
+	checked := map[string]bool{}
+	for from, name := range plan.files {
+		f, err := openSource(from)
+		if err != nil {
+			closeAll(files)
+			return nil, nil, err
+		}
+		s := &sourceFile{f: f, name: name, found: from}
+		files = append(files, s)
+		if cerr := checkSource(s, checked); cerr != nil && unsafeErr == nil {
+			unsafeErr = cerr
 		}
 	}
-	return nil
+	return files, unsafeErr, nil
 }
 
-// copyProgram copies the planned files into dir (a place only administrators
-// can write) and returns the installed program's path.
-func copyProgram(plan installPlan, dir string, logf func(string, ...any)) (string, error) {
+// copyProgram copies the open source files into dir (a place only
+// administrators can write) and returns the installed program's path.
+func copyProgram(files []*sourceFile, dir string, logf func(string, ...any)) (string, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
@@ -209,16 +360,16 @@ func copyProgram(plan installPlan, dir string, logf func(string, ...any)) (strin
 	if err := checkAdminOnly(dir); err != nil {
 		return "", fmt.Errorf("the install folder is not safe: %w", err)
 	}
-	for from, name := range plan.files {
-		to := filepath.Join(dir, name)
-		if filepath.Clean(from) == filepath.Clean(to) {
+	for _, s := range files {
+		to := filepath.Join(dir, s.name)
+		if strings.EqualFold(s.real, to) || strings.EqualFold(filepath.Clean(s.found), filepath.Clean(to)) {
 			continue // installing from the install folder itself
 		}
-		sum, err := copyVerified(from, to)
+		sum, err := copyFrom(s.f, to)
 		if err != nil {
 			return "", err
 		}
-		logf("copied %s to %s (sha256 %s)", filepath.Base(from), dir, sum)
+		logf("copied %s to %s (sha256 %s)", filepath.Base(s.found), dir, sum)
 	}
 	return filepath.Join(dir, ExeName), nil
 }

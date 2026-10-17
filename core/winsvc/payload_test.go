@@ -79,9 +79,9 @@ func TestWritersOf(t *testing.T) {
 	}
 }
 
-func TestUnsafeSourceMessageTellsWhatToDo(t *testing.T) {
-	msg := unsafeSourceError("C:\\build\\bin", []string{userSID}).Error()
-	for _, want := range []string{"C:\\build\\bin", userSID, "only administrators can write", "--unsafe-source"} {
+func TestUnsafeSourceMessageNamesTheFailingPart(t *testing.T) {
+	msg := unsafeSourceError("a folder above the program", "C:\\build", []string{userSID}).Error()
+	for _, want := range []string{"a folder above the program", "C:\\build", userSID, "any folder above it", "--unsafe-source"} {
 		if !strings.Contains(msg, want) {
 			t.Errorf("message lacks %q: %s", want, msg)
 		}

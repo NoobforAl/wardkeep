@@ -118,16 +118,23 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 	}
 	// Decide what is copied, and check where it comes from, before anything on
 	// the machine is changed.
-	var plan installPlan
+	var sources []*sourceFile
 	if !o.NoCopy {
-		if plan, err = planInstall(exe); err != nil {
+		plan, err := planInstall(exe)
+		if err != nil {
 			return err
 		}
-		if err := checkPlanSafe(plan); err != nil {
+		// The files are opened once and stay open until the copy is done.
+		var unsafe error
+		if sources, unsafe, err = openPlan(plan); err != nil {
+			return err
+		}
+		defer closeAll(sources)
+		if unsafe != nil {
 			if !o.UnsafeSource {
-				return err
+				return unsafe
 			}
-			logf("WARNING (--unsafe-source): %v", err)
+			logf("WARNING (--unsafe-source): %v", unsafe)
 		}
 	}
 
@@ -180,7 +187,7 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 
 	target := exe
 	if !o.NoCopy {
-		if target, err = copyProgram(plan, l.InstallDir, logf); err != nil {
+		if target, err = copyProgram(sources, l.InstallDir, logf); err != nil {
 			return err
 		}
 	} else {
