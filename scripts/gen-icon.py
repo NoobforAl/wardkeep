@@ -1,7 +1,8 @@
-"""Omnitun app icon v5: a knight's shield in the manner of Oscar of Astora's in Dark Souls 1 — a heater
-shield with a deep-blue field, a worn gold rim, a gold cross and pinstripe, a gold boss with a keyhole
-(a last ember in it), on a dark ground. Everything is drawn here, with lighting from a height map.
-Writes the Android adaptive icon layers, legacy PNGs, a Windows .ico and a 1024 px master.
+"""Omnitun app icon v6: the shield of Oscar of Astora in Dark Souls 1 — a kite-shaped shield with a thin
+worn silver rim, a deep navy field and ornate gold relief: a small crest in a laurel wreath, two leafy
+branches rising from the point, filigree in the corners. Everything is drawn here as masks and lit from
+a height map (bevel, scratches, wear), on a dark night-blue ground.
+Writes the Android adaptive icon layers, legacy PNGs and a Windows .ico, and a 1024 px master.
 
     python scripts/gen-icon.py <repo root>
 """
@@ -14,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = sys.argv[1]
 M = 1024          # master size
 SS = 2            # supersampling for the masters
-rng = np.random.default_rng(11)
+rng = np.random.default_rng(7)
 
 
 def bezier(p0, p1, p2, p3, n=64):
@@ -23,25 +24,25 @@ def bezier(p0, p1, p2, p3, n=64):
     return (1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t ** 2 * p2 + t ** 3 * p3
 
 
-def heater():
-    """A heater shield in unit coordinates (x -0.86..0.86, y -0.82..1.0, y down), a closed polygon."""
+def kite():
+    """The shield in unit coordinates (x -0.84..0.84, y -0.86..1.0, y down), a closed polygon: a wide,
+    slightly arched top with pointed corners, sides that curve in to a long point."""
     right = np.vstack([
-        bezier((0, -0.82), (0.3, -0.82), (0.6, -0.82), (0.80, -0.82)),
-        bezier((0.80, -0.82), (0.84, -0.82), (0.86, -0.80), (0.86, -0.76)),
-        bezier((0.86, -0.76), (0.86, -0.4), (0.86, -0.1), (0.86, 0.10)),
-        bezier((0.86, 0.10), (0.86, 0.58), (0.46, 0.84), (0, 1.0)),
+        bezier((0, -0.87), (0.30, -0.87), (0.62, -0.84), (0.84, -0.78)),
+        bezier((0.84, -0.78), (0.86, -0.3), (0.80, 0.05), (0.62, 0.38)),
+        bezier((0.62, 0.38), (0.46, 0.68), (0.20, 0.88), (0, 1.0)),
     ])
     left = right[::-1] * np.array([-1, 1])
     return np.vstack([right, left])
 
 
-SHAPE = heater()
+SHAPE = kite()
+HEIGHT_UNITS = 1.87
 
 
-def poly_mask(N, cx, cy, scale, shrink=1.0, dy=0.0):
+def poly_mask(N, pts):
     m = Image.new("L", (N, N), 0)
-    pts = [(cx + x * scale * shrink, cy + (y * shrink + dy) * scale) for x, y in SHAPE]
-    ImageDraw.Draw(m).polygon(pts, fill=255)
+    ImageDraw.Draw(m).polygon([tuple(p) for p in pts], fill=255)
     return m
 
 
@@ -54,132 +55,198 @@ def blur(a, radius):
     return arr(img)
 
 
-def noise(N, radius, seed_scale=1.0):
-    """Soft noise in 0..1."""
+def noise(N, radius):
     raw = rng.random((N // 4, N // 4)).astype(np.float32)
     img = Image.fromarray((raw * 255).astype(np.uint8), "L").resize((N, N), Image.BICUBIC)
     a = blur(arr(img), radius)
-    a = (a - a.min()) / max(a.max() - a.min(), 1e-6)
-    return a
+    return (a - a.min()) / max(a.max() - a.min(), 1e-6)
+
+
+class Canvas:
+    """Unit coordinates (the shield's) to pixels, and the drawing of the relief as one mask."""
+
+    def __init__(self, N, size):
+        self.N = N
+        self.scale = N * size / HEIGHT_UNITS
+        self.cx = N / 2
+        self.cy = N / 2 - 0.07 * self.scale          # the shape's middle is at y = 0.07
+        self.img = Image.new("L", (N, N), 0)
+        self.d = ImageDraw.Draw(self.img)
+
+    def px(self, x, y):
+        return (self.cx + x * self.scale, self.cy + y * self.scale)
+
+    def pts(self, points):
+        return [self.px(x, y) for x, y in points]
+
+    def line(self, a, b, w):
+        self.d.line([self.px(*a), self.px(*b)], fill=255, width=max(1, int(w * self.scale)))
+
+    def curve(self, points, w):
+        self.d.line(self.pts(points), fill=255, width=max(1, int(w * self.scale)), joint="curve")
+
+    def polygon(self, points):
+        self.d.polygon(self.pts(points), fill=255)
+
+    def circle(self, x, y, r, fill=255):
+        cx, cy = self.px(x, y)
+        r *= self.scale
+        self.d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=fill)
+
+    def leaf(self, x, y, angle, length, width):
+        """A pointed leaf from (x, y) in the direction [angle] (radians, 0 = right, y down)."""
+        t = np.linspace(0, 1, 18)
+        half = width / 2 * np.sin(np.pi * t) ** 0.75 * (1 - 0.25 * t)
+        u = t * length
+        top = np.stack([u, -half], axis=1)
+        bottom = np.stack([u[::-1], half[::-1]], axis=1)
+        pts = np.vstack([top, bottom])
+        c, s = np.cos(angle), np.sin(angle)
+        rot = np.stack([pts[:, 0] * c - pts[:, 1] * s + x, pts[:, 0] * s + pts[:, 1] * c + y], axis=1)
+        self.polygon(rot)
+
+    def mask(self):
+        return arr(self.img)
+
+
+def branch_points(side):
+    """One branch of the laurel, from the point of the shield up to the upper corner; side is -1 or 1."""
+    p = bezier((0.03, 0.80), (0.30, 0.62), (0.58, 0.30), (0.52, -0.10), n=40)
+    q = bezier((0.52, -0.10), (0.48, -0.36), (0.40, -0.52), (0.30, -0.64), n=24)
+    pts = np.vstack([p, q[1:]])
+    pts[:, 0] *= side
+    return pts
+
+
+def ornament(N, size):
+    """The gold relief as a mask: crest, wreath, two branches, corner filigree."""
+    c = Canvas(N, size)
+    # the two branches, with leaves along them on both sides, and a bud at the tip
+    for side in (-1, 1):
+        pts = branch_points(side)
+        c.curve(pts, 0.016)
+        for i in range(4, len(pts) - 2, 3):
+            x, y = pts[i]
+            dx, dy = pts[i + 1][0] - pts[i - 1][0], pts[i + 1][1] - pts[i - 1][1]
+            ang = np.arctan2(dy, dx)
+            k = i / len(pts)
+            ln = 0.15 - 0.05 * k
+            wd = 0.062 - 0.016 * k
+            c.leaf(x, y, ang - 0.75, ln, wd)
+            c.leaf(x, y, ang + 0.75, ln, wd)
+        x, y = pts[-1]
+        c.circle(x, y, 0.026)
+        c.leaf(x, y, np.arctan2(pts[-1][1] - pts[-3][1], pts[-1][0] - pts[-3][0]), 0.12, 0.05)
+    # the wreath round the crest: a ring with small leaves leaning round it
+    cx, cy = 0.0, -0.13
+    ring = np.array([[cx + 0.285 * np.cos(a), cy + 0.285 * np.sin(a)] for a in np.linspace(0, 2 * np.pi, 90)])
+    c.curve(np.vstack([ring, ring[:1]]), 0.012)
+    for k in range(16):
+        a = k / 16 * 2 * np.pi
+        x, y = cx + 0.285 * np.cos(a), cy + 0.285 * np.sin(a)
+        tangent = a + np.pi / 2          # all the leaves run the same way round, like a wreath
+        c.leaf(x, y, tangent + 0.5, 0.135, 0.058)
+        c.leaf(x, y, tangent - 0.5, 0.135, 0.058)
+    # the crest: a small shield
+    crest = SHAPE * 0.185 + np.array([cx, cy - 0.01])
+    c.polygon(crest)
+    c.d.polygon(c.pts(SHAPE * 0.142 + np.array([cx, cy - 0.005])), fill=0)      # a hollow in it
+    c.polygon(SHAPE * 0.085 + np.array([cx, cy - 0.005]))
+    # the corner filigree: a bracket and a small triangle in each upper corner, a chevron at the point
+    for sgn in (-1, 1):
+        c.polygon([(sgn * 0.70, -0.70), (sgn * 0.50, -0.70), (sgn * 0.70, -0.50)])
+        c.line((sgn * 0.70, -0.70), (sgn * 0.34, -0.72), 0.022)
+        c.line((sgn * 0.70, -0.70), (sgn * 0.72, -0.30), 0.022)
+        c.polygon([(sgn * 0.57, -0.60), (sgn * 0.47, -0.68), (sgn * 0.45, -0.60), (sgn * 0.5, -0.52)])
+    c.polygon([(0, 0.93), (-0.09, 0.80), (0, 0.84), (0.09, 0.80)])
+    return c.mask()
+
+
+def inner_mask(N, size, rim_w):
+    """The field: the shield shrunk by the rim's width (about its middle)."""
+    c = Canvas(N, size)
+    mid = np.array([0.0, 0.07])
+    pts = (SHAPE - mid) * (1 - rim_w / 0.95) + mid
+    c.polygon(pts)
+    return c.mask()
+
+
+def outer_mask(N, size):
+    c = Canvas(N, size)
+    c.polygon(SHAPE)
+    return c.mask()
 
 
 def shield(N, size, mono=False):
     """The shield on a transparent N px canvas; size = its height as a fraction of N."""
-    scale = N * size / 1.82           # the shape is 1.82 units tall
-    cx, cy = N / 2, N / 2 - 0.09 * scale + 0.0 * N
-    rim_w = 0.13                       # the width of the iron rim, in units
-
-    outer = arr(poly_mask(N, cx, cy, scale))
-    inner = arr(poly_mask(N, cx, cy, scale, shrink=1 - rim_w / 0.9))
-    pin_out = arr(poly_mask(N, cx, cy, scale, shrink=1 - (rim_w + 0.045) / 0.9))
-    pin_in = arr(poly_mask(N, cx, cy, scale, shrink=1 - (rim_w + 0.075) / 0.9))
-    pin = np.clip(inner - pin_out, 0, 1) * 0 + np.clip(pin_out - pin_in, 0, 1)
-    yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
-    ux, uy = (xx - cx) / scale, (yy - cy) / scale          # unit coordinates
-
-    # the cross: a vertical and a horizontal band over the field
-    bw = 0.085
-    cross_y = -0.12
-    band = np.maximum(np.abs(ux) < bw, np.abs(uy - cross_y) < bw * 0.95).astype(np.float32) * inner
-    # the boss: a round iron dome where the bands meet, with a ring round it
-    br = np.hypot(ux, uy - cross_y)
-    boss = (br < 0.215).astype(np.float32)
-    boss_ring = ((br < 0.255) & (br >= 0.215)).astype(np.float32)
-    # the keyhole in it
-    ky = uy - cross_y
-    hole = ((np.hypot(ux, ky + 0.035) < 0.058) |
-            ((ky > -0.02) & (ky < 0.135) & (np.abs(ux) < 0.016 + (ky + 0.02) * 0.14))).astype(np.float32)
-    # rivets along the rim
-    rivets = np.zeros((N, N), np.float32)
-    rim_mid = 1 - (rim_w / 0.9) / 2
-    ring = SHAPE * rim_mid
-    seg = np.hypot(*np.diff(np.vstack([ring, ring[:1]]), axis=0).T)
-    along = np.concatenate([[0], np.cumsum(seg)])
-    for t in np.linspace(0, along[-1], 22, endpoint=False):
-        i = int(np.searchsorted(along, t))
-        x, y = ring[min(i, len(ring) - 1)]
-        px, py = cx + x * scale, cy + y * scale
-        rr = 0.019 * scale
-        rivets[(xx - px) ** 2 + (yy - py) ** 2 < rr * rr] = 1.0
+    s1 = N / 1024
+    outer = outer_mask(N, size)
+    field = inner_mask(N, size, 0.055)
+    orn = ornament(N, size) * field
+    rim = np.clip(outer - field, 0, 1)
 
     if mono:
-        # one colour, for the themed icon: rim, bands, boss ring and rivets; keyhole and field are empty
-        a = np.clip(outer * (1 - inner) + band + boss_ring + pin, 0, 1) * outer
-        a = np.clip(a - hole, 0, 1)
+        # one colour, for the themed icon: the rim and the relief; the field stays empty
+        a = np.clip(rim + orn, 0, 1)
         white = np.full((N, N, 3), 255, np.uint8)
         return Image.fromarray(np.dstack([white, (a * 255).astype(np.uint8)]), "RGBA")
 
-    # height map for the lighting
-    s1 = N / 1024
-    dome = boss * np.clip(1 - (br / 0.215) ** 2, 0, 1)
-    h = (0.55 * blur(outer, 10 * s1) + 0.35 * blur(inner, 7 * s1) + 0.25 * blur(band, 4 * s1)
-         + 0.25 * blur(boss, 5 * s1) + 0.30 * blur(dome, 6 * s1) + 0.12 * blur(pin, 2 * s1) + 0.20 * blur(boss_ring, 2.5 * s1)
-         - 0.55 * blur(hole, 2.2 * s1) + 0.20 * blur(rivets, 1.5 * s1))
-    h += (noise(N, 1.2 * s1) - 0.5) * 0.012                      # pitted metal
+    # height map: the rim is raised, the gold relief stands on the field, a pitted metal grain over all
+    h = 0.55 * blur(outer, 8 * s1) + 0.30 * blur(field, 6 * s1) + 0.55 * blur(orn, 2.2 * s1) + 0.18 * blur(orn, 6 * s1)
+    h += (noise(N, 1.1 * s1) - 0.5) * 0.015
     gy, gx = np.gradient(h * 14.0)
-    # light from the upper left, a little in front
-    shade = np.clip(0.5 + (-gx * 0.62 - gy * 0.78) * 0.9, 0, 1)
-    spec = np.clip((-gx * 0.62 - gy * 0.78) - 0.35, 0, 1) ** 1.6
+    lightness = -gx * 0.62 - gy * 0.78                       # light from the upper left
+    shade = np.clip(0.5 + lightness * 0.9, 0, 1)
+    spec = np.clip(lightness - 0.3, 0, 1) ** 1.5
 
-    # colours of the materials
-    iron_rim = np.array((206, 164, 74), np.float32)     # the gold rim
-    iron_field = np.array((30, 60, 142), np.float32)    # the deep blue field
-    gold = np.array((192, 152, 68), np.float32)         # cross and pinstripe
-    boss_c = np.array((216, 176, 84), np.float32)
-    base = iron_field[None, None] * np.ones((N, N, 1), np.float32)
-    base = np.where((outer > 0.5)[..., None] & (inner < 0.5)[..., None], iron_rim, base)
-    base = np.where((pin > 0.5)[..., None], gold, base)
-    base = np.where((band > 0.5)[..., None], gold, base)
-    base = np.where((boss > 0.5)[..., None], boss_c, base)
-    base = np.where((boss_ring > 0.5)[..., None], gold * 0.78, base)
-    base = np.where((rivets > 0.5)[..., None], np.array((222, 190, 112), np.float32), base)
-    base = np.where((hole > 0.5)[..., None], np.array((8, 8, 12), np.float32), base)
+    silver = np.array((196, 202, 214), np.float32)
+    navy = np.array((34, 44, 112), np.float32)
+    gold = np.array((228, 184, 78), np.float32)
+    base = navy[None, None] * np.ones((N, N, 1), np.float32)
+    base = np.where((rim > 0.5)[..., None], silver, base)
+    base = np.where((orn > 0.5)[..., None], gold, base)
 
-    # wear: dark grime in the corners and along the edge, scratches, a dusting of rust and verdigris
-    grime = noise(N, 40 * s1)
-    edge_wear = np.clip(blur(outer, 4 * s1) - blur(outer, 22 * s1), 0, 1)
-    mottled = 0.86 + 0.22 * noise(N, 6 * s1)
-    scratches = Image.new("L", (N, N), 0)
-    d = ImageDraw.Draw(scratches)
-    for _ in range(70):
+    # wear: a paint-like mottling on the blue, darker grime in the folds, tarnish in the gold, the
+    # silver rubbed through here and there, a few scratches
+    mottle = 0.86 + 0.28 * noise(N, 5 * s1)
+    grime = noise(N, 38 * s1)
+    ao = 1 - 0.5 * np.clip(blur(1 - field, 30 * s1) * 1.5, 0, 1) * (field > 0.5)       # the field darkens near the rim
+    tarnish = np.clip((noise(N, 4 * s1) - 0.5) * 3.0, 0, 1) * (orn > 0.5)
+    base = base * (1 - 0.35 * tarnish[..., None]) + tarnish[..., None] * np.array((92, 66, 28), np.float32) * 0.35
+    wear = np.clip((noise(N, 3 * s1) - 0.62) * 4.0, 0, 1) * (rim > 0.5)
+    base = base * (1 - 0.55 * wear[..., None]) + wear[..., None] * np.array((82, 86, 98), np.float32) * 0.55
+
+    scr = Image.new("L", (N, N), 0)
+    d = ImageDraw.Draw(scr)
+    for _ in range(60):
         x0, y0 = rng.random() * N, rng.random() * N
         ang = rng.normal(0.9, 0.5)
-        ln = (0.04 + rng.random() * 0.14) * N
-        d.line((x0, y0, x0 + np.cos(ang) * ln, y0 + np.sin(ang) * ln), fill=int(60 + rng.random() * 150), width=max(1, int(1.2 * s1)))
-    scr = arr(scratches.filter(ImageFilter.GaussianBlur(0.6 * s1)))
-    rim_zone = (outer > 0.5) & (inner < 0.5)
-    ao = 1 - 0.55 * np.clip(blur(1 - inner, 26 * s1) * 1.4, 0, 1) * (inner > 0.5)      # the field darkens near the rim
-    rust = np.clip((noise(N, 9 * s1) - 0.58) * 4.0, 0, 1) * rim_zone
-    tarnish = np.clip((noise(N, 5 * s1) - 0.45) * 3.0, 0, 1) * (band > 0.5)
-    base = base * (1 - 0.35 * tarnish[..., None]) + tarnish[..., None] * np.array((70, 52, 26), np.float32) * 0.35
-    base = base * (1 - 0.45 * rust[..., None]) + rust[..., None] * np.array((84, 60, 28), np.float32) * 0.45
-    lit = (0.30 + 1.0 * shade)[..., None] * ao[..., None]
-    rgb = base * lit * mottled[..., None] * (1 - 0.42 * grime[..., None])
-    rgb = rgb + spec[..., None] * np.array((255, 226, 150), np.float32) * 0.5
-    rgb = rgb + edge_wear[..., None] * np.array((110, 92, 52), np.float32) * 0.42     # bright metal on the rim edge
-    rgb = rgb + scr[..., None] * np.array((190, 170, 120), np.float32) * 0.2 * (outer > 0.5)[..., None]
-    # the ember in the keyhole: a last warm light, the only colour in the icon
-    glow = blur(hole, 14 * s1) * 0.9
-    rgb = rgb + glow[..., None] * np.array((255, 120, 40), np.float32) * 0.55 * (1 - hole[..., None])
-    rgb = np.where((hole > 0.5)[..., None], rgb + np.array((190, 80, 24), np.float32) * 0.5 * np.clip(1 - np.abs(ky + 0.035) / 0.2, 0, 1)[..., None], rgb)
+        ln = (0.04 + rng.random() * 0.12) * N
+        d.line((x0, y0, x0 + np.cos(ang) * ln, y0 + np.sin(ang) * ln), fill=int(60 + rng.random() * 150), width=max(1, int(1.1 * s1)))
+    scratches = arr(scr.filter(ImageFilter.GaussianBlur(0.6 * s1)))
+
+    lit = ((0.34 + 1.0 * shade) * ao)[..., None]
+    rgb = base * lit * mottle[..., None] * (1 - 0.30 * grime[..., None])
+    rgb = rgb + spec[..., None] * np.array((255, 236, 170), np.float32) * 0.8 * (orn > 0.5)[..., None]    # gold glints
+    rgb = rgb + spec[..., None] * np.array((230, 236, 250), np.float32) * 0.35 * (rim > 0.5)[..., None]    # silver glints
+    rgb = rgb + scratches[..., None] * np.array((200, 205, 220), np.float32) * 0.22 * (outer > 0.5)[..., None]
 
     out = np.dstack([np.clip(rgb, 0, 255), outer * 255]).astype(np.uint8)
-    img = Image.fromarray(out, "RGBA")
-    # a thin dark edge to separate it from the ground
-    return img
+    return Image.fromarray(out, "RGBA")
 
 
 def drop_shadow(N, size):
-    scale = N * size / 1.82
-    cx, cy = N / 2, N / 2 - 0.09 * scale
-    m = arr(poly_mask(N, cx + 0.02 * scale, cy + 0.04 * scale, scale))
-    a = blur(m, 30 * N / 1024) * 0.7
+    c = Canvas(N, size)
+    c.cx += 0.02 * c.scale
+    c.cy += 0.04 * c.scale
+    c.polygon(SHAPE)
+    a = blur(c.mask(), 30 * N / 1024) * 0.7
     black = np.zeros((N, N, 3), np.uint8)
     return Image.fromarray(np.dstack([black, (a * 255).astype(np.uint8)]), "RGBA")
 
 
 def background(N):
-    """A dark ground: cold charcoal, lighter behind the shield, fogged at the edges."""
+    """A dark ground: night blue, lighter behind the shield, fogged at the edges."""
     yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
     r = np.hypot((xx - N / 2) / N, (yy - N * 0.46) / N)
     t = np.clip(r / 0.75, 0, 1)
@@ -212,14 +279,14 @@ def save(img, *parts):
 
 N = M * SS
 
-# adaptive layers: 108 dp canvas, content inside the central 66 dp (61 %)
-fg_size = 0.645
+# adaptive layers: 108 dp canvas, content inside the central 66 dp (61 %); the shield fills it
+fg_size = 0.66
 fg = down(Image.alpha_composite(drop_shadow(N, fg_size), shield(N, fg_size)), M)
 mono = down(shield(N, fg_size, mono=True), M)
 bg = down(background(N), M)
 
 # legacy / store icon: everything together, the shield bigger
-big = 0.86
+big = 0.88
 legacy = down(Image.alpha_composite(Image.alpha_composite(background(N), drop_shadow(N, big)), shield(N, big)), M)
 
 res = ("app", "android", "app", "src", "main", "res")
