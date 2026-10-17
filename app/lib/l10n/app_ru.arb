@@ -440,5 +440,12 @@
   "ipdbSubDownloading": "Загрузка {percent}%",
   "ipdbSubStopped": "Остановлено на {percent}%",
   "ipdbErrNetwork": "нет соединения с серверами данных",
-  "ipdbErrMirrors": "серверы данных прислали не тот файл"
+  "ipdbErrMirrors": "серверы данных прислали не тот файл",
+  "bypassCountriesTitle": "Страны",
+  "bypassCountriesNone": "Страны не выбраны",
+  "bypassCountriesMore": "{names} +{count}",
+  "bypassCountriesNeedDb": "Нужна офлайн-база стран",
+  "bypassCountriesIntro": "Трафик в выбранные страны идёт напрямую в интернет, минуя VPN. Диапазоны их адресов берутся из офлайн-базы стран.",
+  "bypassCountriesGetDb": "Скачать базу стран",
+  "bypassCountriesSearch": "Поиск стран"
 }

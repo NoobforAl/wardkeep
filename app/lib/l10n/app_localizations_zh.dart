@@ -1529,4 +1529,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ipdbErrMirrors => '数据服务器返回的文件不正确';
+
+  @override
+  String get bypassCountriesTitle => '国家和地区';
+
+  @override
+  String get bypassCountriesNone => '未选择国家';
+
+  @override
+  String bypassCountriesMore(String names, int count) {
+    return '$names +$count';
+  }
+
+  @override
+  String get bypassCountriesNeedDb => '需要离线国家数据库';
+
+  @override
+  String get bypassCountriesIntro => '前往所选国家的流量将绕过 VPN，直接访问互联网。其地址范围来自离线国家数据库。';
+
+  @override
+  String get bypassCountriesGetDb => '获取国家数据库';
+
+  @override
+  String get bypassCountriesSearch => '搜索国家';
 }

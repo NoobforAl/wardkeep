@@ -113,3 +113,34 @@ func TestBypassListDecidesTheRoute(t *testing.T) {
 		t.Fatalf("an unlisted address did not go direct in 'only these' mode: %q %v", body, err)
 	}
 }
+
+// A whole country's ranges (the app adds them as one big list) still make a configuration sing-box accepts,
+// in every mode, and building it stays fast.
+func TestBypassCountrySizedListPassesSchema(t *testing.T) {
+	var text string
+	for i := range 60000 {
+		text += fmt.Sprintf("%d.%d.%d.0/24\n", 40+i/32768, (i/128)%256, (i%128)*2)
+	}
+	text += "2a00:1450::/32\n"
+	list, issues := singbox.ParseBypassList(text)
+	if len(issues) != 0 {
+		t.Fatal(issues[0])
+	}
+	p, err := importer.ParseLink(testLinks()[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, mode := range []singbox.Mode{singbox.ModeProxy, singbox.ModeTUN} {
+		for _, only := range []bool{false, true} {
+			start := time.Now()
+			cfg, _, err := singbox.Build(p.AsSlice(), singbox.Options{Mode: mode, Bypass: list, BypassOnly: only})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := CheckConfig(cfg); err != nil {
+				t.Fatalf("(%s, only=%v): sing-box rejected the config: %v", mode, only, err)
+			}
+			t.Logf("%s only=%v: built and checked in %s", mode, only, time.Since(start))
+		}
+	}
+}

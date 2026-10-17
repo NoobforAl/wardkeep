@@ -1585,4 +1585,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ipdbErrMirrors => 'the data servers did not send the right file';
+
+  @override
+  String get bypassCountriesTitle => 'Countries';
+
+  @override
+  String get bypassCountriesNone => 'No country chosen';
+
+  @override
+  String bypassCountriesMore(String names, int count) {
+    return '$names +$count';
+  }
+
+  @override
+  String get bypassCountriesNeedDb => 'Needs the offline country database';
+
+  @override
+  String get bypassCountriesIntro =>
+      'Traffic to the chosen countries goes straight to the internet, around the VPN. Their address ranges come from the offline country database.';
+
+  @override
+  String get bypassCountriesGetDb => 'Get the country database';
+
+  @override
+  String get bypassCountriesSearch => 'Search countries';
 }

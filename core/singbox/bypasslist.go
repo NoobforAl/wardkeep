@@ -7,9 +7,15 @@ import (
 	"strings"
 )
 
-// MaxBypassEntries bounds a bypass list so a huge file cannot slow every
-// connection down or bloat the configuration.
+// MaxBypassEntries bounds the names (domains, keywords, expressions) of a bypass
+// list so a huge file cannot slow every connection down or bloat the configuration.
 const MaxBypassEntries = 50000
+
+// MaxBypassRanges bounds the addresses and ranges of a list separately: a
+// country's ranges (the app can add whole countries) are tens of thousands of
+// entries, and an address range costs one lookup in a sorted set, not a scan
+// like a name expression does.
+const MaxBypassRanges = 1000000
 
 // BypassList is a set of destinations that go around the VPN (or, with
 // Options.BypassOnly, the only ones that use it). Written one entry per line:
@@ -85,9 +91,13 @@ func ParseBypassList(text string) (*BypassList, []BypassIssue) {
 		bad := func(code, msg string) {
 			issues = append(issues, BypassIssue{Line: n + 1, Text: clip(raw), Message: msg, Code: code})
 		}
-		if b.Count() >= MaxBypassEntries {
+		if names := len(b.Suffix) + len(b.Full) + len(b.Keyword) + len(b.Regex); names >= MaxBypassEntries {
 			bad(BypassTooMany, fmt.Sprintf("more than %d entries: the rest is ignored", MaxBypassEntries))
 			issues[len(issues)-1].Limit = MaxBypassEntries
+			break
+		} else if len(b.CIDRs) >= MaxBypassRanges {
+			bad(BypassTooMany, fmt.Sprintf("more than %d entries: the rest is ignored", MaxBypassRanges))
+			issues[len(issues)-1].Limit = MaxBypassRanges
 			break
 		}
 		if seen[strings.ToLower(line)] {

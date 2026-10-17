@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../engine/core_engine.dart';
 import '../engine/engine.dart';
 import 'countries.dart';
+import 'bypass_countries.dart';
 import 'ipdb_state.dart';
 import 'location.dart';
 import 'store.dart';
@@ -364,7 +365,9 @@ class ConnectionController extends Notifier<EngineState> {
         excludePackages: settings.splitMode == 'exclude' ? settings.splitApps : const [],
         autoFailover: settings.autoFailover,
         bypassLan: settings.bypassLan,
-        bypass: ref.read(bypassListsProvider.notifier).enabledText,
+        bypass: [ref.read(bypassListsProvider.notifier).enabledText, ref.read(bypassCountryTextProvider)]
+            .where((t) => t.isNotEmpty)
+            .join('\n'),
         bypassOnly: settings.bypassOnly,
       ),
     );
@@ -615,6 +618,7 @@ class SettingsState {
     this.autoFailover = true,
     this.bypassLan = true,
     this.bypassOnly = false,
+    this.bypassCountries = const [],
     this.remoteDns = defaultRemoteDns,
     this.splitMode = 'off',
     this.splitApps = const [],
@@ -638,6 +642,10 @@ class SettingsState {
 
   /// With bypass lists: only the listed destinations use the VPN, everything else goes direct.
   final bool bypassOnly;
+
+  /// Two-letter codes of the countries whose address ranges bypass the VPN (they come from the offline
+  /// country database; see bypass_countries.dart). With [bypassOnly] they are the only ones that use it.
+  final List<String> bypassCountries;
 
   /// Resolver used through the tunnel: https://, tls://, tcp://, udp:// or an IP.
   final String remoteDns;
@@ -663,6 +671,7 @@ class SettingsState {
     bool? autoFailover,
     bool? bypassLan,
     bool? bypassOnly,
+    List<String>? bypassCountries,
     String? remoteDns,
     String? splitMode,
     List<String>? splitApps,
@@ -677,6 +686,7 @@ class SettingsState {
         autoFailover: autoFailover ?? this.autoFailover,
         bypassLan: bypassLan ?? this.bypassLan,
         bypassOnly: bypassOnly ?? this.bypassOnly,
+        bypassCountries: bypassCountries ?? this.bypassCountries,
         remoteDns: remoteDns ?? this.remoteDns,
         splitMode: splitMode ?? this.splitMode,
         splitApps: splitApps ?? this.splitApps,
@@ -692,6 +702,7 @@ class SettingsState {
         'auto_failover': autoFailover,
         'bypass_lan': bypassLan,
         'bypass_only': bypassOnly,
+        'bypass_countries': bypassCountries,
         'remote_dns': remoteDns,
         'split_mode': splitMode,
         'split_apps': splitApps,
@@ -708,6 +719,7 @@ class SettingsState {
         autoFailover: j['auto_failover'] as bool? ?? defaults.autoFailover,
         bypassLan: j['bypass_lan'] as bool? ?? defaults.bypassLan,
         bypassOnly: j['bypass_only'] as bool? ?? defaults.bypassOnly,
+        bypassCountries: [for (final c in (j['bypass_countries'] as List? ?? const [])) c as String],
         remoteDns: j['remote_dns'] as String? ?? defaults.remoteDns,
         splitMode: j['split_mode'] as String? ?? defaults.splitMode,
         splitApps: [for (final a in (j['split_apps'] as List? ?? const [])) a as String],

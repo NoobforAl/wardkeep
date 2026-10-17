@@ -440,5 +440,12 @@
   "ipdbSubDownloading": "正在下载 {percent}%",
   "ipdbSubStopped": "停在 {percent}%",
   "ipdbErrNetwork": "无法连接数据服务器",
-  "ipdbErrMirrors": "数据服务器返回的文件不正确"
+  "ipdbErrMirrors": "数据服务器返回的文件不正确",
+  "bypassCountriesTitle": "国家和地区",
+  "bypassCountriesNone": "未选择国家",
+  "bypassCountriesMore": "{names} +{count}",
+  "bypassCountriesNeedDb": "需要离线国家数据库",
+  "bypassCountriesIntro": "前往所选国家的流量将绕过 VPN，直接访问互联网。其地址范围来自离线国家数据库。",
+  "bypassCountriesGetDb": "获取国家数据库",
+  "bypassCountriesSearch": "搜索国家"
 }

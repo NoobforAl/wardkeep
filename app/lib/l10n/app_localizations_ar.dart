@@ -1632,4 +1632,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ipdbErrMirrors => 'لم ترسل خوادم البيانات الملف الصحيح';
+
+  @override
+  String get bypassCountriesTitle => 'الدول';
+
+  @override
+  String get bypassCountriesNone => 'لم تُختر أي دولة';
+
+  @override
+  String bypassCountriesMore(String names, int count) {
+    return '$names +$count';
+  }
+
+  @override
+  String get bypassCountriesNeedDb => 'يتطلب قاعدة بيانات الدول دون اتصال';
+
+  @override
+  String get bypassCountriesIntro =>
+      'تذهب الحركة إلى الدول المختارة مباشرة إلى الإنترنت دون المرور عبر VPN. تأتي نطاقات عناوينها من قاعدة بيانات الدول دون اتصال.';
+
+  @override
+  String get bypassCountriesGetDb => 'الحصول على قاعدة بيانات الدول';
+
+  @override
+  String get bypassCountriesSearch => 'ابحث عن الدول';
 }

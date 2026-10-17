@@ -10,8 +10,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../engine/engine.dart';
 import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
+import '../../state/ipdb_state.dart';
 import '../../state/providers.dart';
 import '../insets.dart';
+import 'bypass_countries_screen.dart';
 
 /// Lists of domains, addresses and ranges that go around the VPN (or, in
 /// "only these" mode, the only ones that use it).
@@ -64,6 +66,16 @@ class BypassScreen extends ConsumerWidget {
     }
   }
 
+  /// "Iran, Germany +1", "No country chosen", or a note that the database is missing.
+  String _countriesSummary(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    final chosen = ref.watch(settingsProvider.select((s) => s.bypassCountries));
+    if (chosen.isEmpty) return l.bypassCountriesNone;
+    if (!ref.watch(ipDbProvider.select((s) => s.db != null))) return l.bypassCountriesNeedDb;
+    final names = [for (final c in chosen.take(2)) context.countryName(c)].join(', ');
+    return chosen.length > 2 ? l.bypassCountriesMore(names, chosen.length - 2) : names;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lists = ref.watch(bypassListsProvider);
@@ -108,6 +120,16 @@ class BypassScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                 child: Text(context.l10n.bypassIntro),
               ),
+              ListTile(
+                leading: const Icon(Icons.public),
+                title: Text(context.l10n.bypassCountriesTitle),
+                subtitle: Text(_countriesSummary(context, ref)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const BypassCountriesScreen()),
+                ),
+              ),
+              const Divider(height: 16),
               if (lists.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(24),

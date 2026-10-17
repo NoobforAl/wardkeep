@@ -440,5 +440,12 @@
   "ipdbSubDownloading": "در حال دانلود {percent}%",
   "ipdbSubStopped": "متوقف در {percent}%",
   "ipdbErrNetwork": "اتصال به سرورهای داده برقرار نشد",
-  "ipdbErrMirrors": "سرورهای داده فایل درست را نفرستادند"
+  "ipdbErrMirrors": "سرورهای داده فایل درست را نفرستادند",
+  "bypassCountriesTitle": "کشورها",
+  "bypassCountriesNone": "کشوری انتخاب نشده",
+  "bypassCountriesMore": "{names} +{count}",
+  "bypassCountriesNeedDb": "به پایگاه‌داده آفلاین کشورها نیاز دارد",
+  "bypassCountriesIntro": "ترافیک به کشورهای انتخاب‌شده مستقیم به اینترنت می‌رود، نه از طریق VPN. بازه‌های نشانی آن‌ها از پایگاه‌داده آفلاین کشورها می‌آید.",
+  "bypassCountriesGetDb": "دریافت پایگاه‌داده کشورها",
+  "bypassCountriesSearch": "جستجوی کشورها"
 }

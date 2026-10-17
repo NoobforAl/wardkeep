@@ -67,6 +67,8 @@ Add a list by typing, pasting, opening a `.txt` file or downloading a link. The 
 
 **Battery and speed.** The app tidies a list before using it: a name under another listed domain, a name containing a listed keyword, and nested or neighbouring address ranges are merged, so the matcher stays small. Traffic to listed addresses is decided first and never inspected; names are only recognised (from the first packet of a connection) when your list has names in it. Listed address ranges are kept out of the VPN's routes (the largest first, up to a limit of a few hundred routes; the rest are still bypassed, one step later). In "only the listed" mode with only addresses, nothing else enters the VPN at all.
 
+**Whole countries.** At the top of the same screen, **Countries** lets you tick countries whose addresses go straight to the internet, around the VPN (and, with *Only the listed destinations use the VPN*, the only ones that use it). The address ranges come from the **offline country database** (Settings → *Offline country database*, a one-time download of about 23 MB, public registry data): without it the screen says so and offers to get it. A country is a list of ranges that the app counts for you (Iran about 4 000 blocks, Germany about 83 000, the United States about 209 000), merged with your own lists; the ranges are a snapshot, so *Update* the database now and then. The tunnel to your server is not affected by this (the app's own connection to the server never goes through the tunnel), but anything you send to a ticked country skips the VPN, including the country your server is in.
+
 ## Settings worth knowing
 
 * **VPN mode** off = proxy only (a local SOCKS/HTTP port, no VPN permission). On Android it is on by default.

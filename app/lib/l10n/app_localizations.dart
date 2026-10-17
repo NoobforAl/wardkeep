@@ -2707,6 +2707,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'the data servers did not send the right file'**
   String get ipdbErrMirrors;
+
+  /// No description provided for @bypassCountriesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Countries'**
+  String get bypassCountriesTitle;
+
+  /// No description provided for @bypassCountriesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No country chosen'**
+  String get bypassCountriesNone;
+
+  /// No description provided for @bypassCountriesMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{names} +{count}'**
+  String bypassCountriesMore(String names, int count);
+
+  /// No description provided for @bypassCountriesNeedDb.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs the offline country database'**
+  String get bypassCountriesNeedDb;
+
+  /// No description provided for @bypassCountriesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic to the chosen countries goes straight to the internet, around the VPN. Their address ranges come from the offline country database.'**
+  String get bypassCountriesIntro;
+
+  /// No description provided for @bypassCountriesGetDb.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the country database'**
+  String get bypassCountriesGetDb;
+
+  /// No description provided for @bypassCountriesSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search countries'**
+  String get bypassCountriesSearch;
 }
 
 class _AppLocalizationsDelegate

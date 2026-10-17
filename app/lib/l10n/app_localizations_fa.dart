@@ -1585,4 +1585,28 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get ipdbErrMirrors => 'سرورهای داده فایل درست را نفرستادند';
+
+  @override
+  String get bypassCountriesTitle => 'کشورها';
+
+  @override
+  String get bypassCountriesNone => 'کشوری انتخاب نشده';
+
+  @override
+  String bypassCountriesMore(String names, int count) {
+    return '$names +$count';
+  }
+
+  @override
+  String get bypassCountriesNeedDb => 'به پایگاه‌داده آفلاین کشورها نیاز دارد';
+
+  @override
+  String get bypassCountriesIntro =>
+      'ترافیک به کشورهای انتخاب‌شده مستقیم به اینترنت می‌رود، نه از طریق VPN. بازه‌های نشانی آن‌ها از پایگاه‌داده آفلاین کشورها می‌آید.';
+
+  @override
+  String get bypassCountriesGetDb => 'دریافت پایگاه‌داده کشورها';
+
+  @override
+  String get bypassCountriesSearch => 'جستجوی کشورها';
 }

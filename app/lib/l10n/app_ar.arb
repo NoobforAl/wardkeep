@@ -440,5 +440,12 @@
   "ipdbSubDownloading": "جارٍ التنزيل {percent}%",
   "ipdbSubStopped": "توقف عند {percent}%",
   "ipdbErrNetwork": "تعذّر الاتصال بخوادم البيانات",
-  "ipdbErrMirrors": "لم ترسل خوادم البيانات الملف الصحيح"
+  "ipdbErrMirrors": "لم ترسل خوادم البيانات الملف الصحيح",
+  "bypassCountriesTitle": "الدول",
+  "bypassCountriesNone": "لم تُختر أي دولة",
+  "bypassCountriesMore": "{names} +{count}",
+  "bypassCountriesNeedDb": "يتطلب قاعدة بيانات الدول دون اتصال",
+  "bypassCountriesIntro": "تذهب الحركة إلى الدول المختارة مباشرة إلى الإنترنت دون المرور عبر VPN. تأتي نطاقات عناوينها من قاعدة بيانات الدول دون اتصال.",
+  "bypassCountriesGetDb": "الحصول على قاعدة بيانات الدول",
+  "bypassCountriesSearch": "ابحث عن الدول"
 }

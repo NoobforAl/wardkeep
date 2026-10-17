@@ -1619,4 +1619,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get ipdbErrMirrors => 'серверы данных прислали не тот файл';
+
+  @override
+  String get bypassCountriesTitle => 'Страны';
+
+  @override
+  String get bypassCountriesNone => 'Страны не выбраны';
+
+  @override
+  String bypassCountriesMore(String names, int count) {
+    return '$names +$count';
+  }
+
+  @override
+  String get bypassCountriesNeedDb => 'Нужна офлайн-база стран';
+
+  @override
+  String get bypassCountriesIntro =>
+      'Трафик в выбранные страны идёт напрямую в интернет, минуя VPN. Диапазоны их адресов берутся из офлайн-базы стран.';
+
+  @override
+  String get bypassCountriesGetDb => 'Скачать базу стран';
+
+  @override
+  String get bypassCountriesSearch => 'Поиск стран';
 }

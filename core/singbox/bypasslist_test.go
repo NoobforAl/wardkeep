@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/NoobforAl/omnitun/core/profile"
 )
@@ -193,5 +194,30 @@ func TestBypassIssuesHaveCodes(t *testing.T) {
 	_, issues = ParseBypassList(many.String())
 	if len(issues) != 1 || issues[0].Code != BypassTooMany || issues[0].Limit != MaxBypassEntries {
 		t.Fatalf("too many: %+v", issues)
+	}
+}
+
+// A whole country is tens of thousands of ranges: they are accepted (up to their own bound), merged,
+// and fitted into the route budget without the connection setup taking noticeable time.
+func TestParseBypassListTakesCountryRanges(t *testing.T) {
+	var b strings.Builder
+	n := 390000
+	for i := range n {
+		// Spread over a /8 block of IPv4: /24s with gaps so that few of them merge.
+		fmt.Fprintf(&b, "%d.%d.%d.0/24\n", 40+i/32768, (i/128)%256, (i%128)*2)
+	}
+	start := time.Now()
+	list, issues := ParseBypassList(b.String())
+	if len(issues) != 0 || len(list.CIDRs) != n {
+		t.Fatalf("parsed %d ranges, issues %v", len(list.CIDRs), issues)
+	}
+	opt := list.Optimized()
+	fit := FitExclusions(BypassPrefixes(nil), opt.CIDRs, RouteBudget)
+	if len(fit) > RouteBudget+len(LocalPrefixes) {
+		t.Fatalf("%d exclusions, budget %d", len(fit), RouteBudget)
+	}
+	t.Logf("%d ranges -> %d merged -> %d excluded routes in %s", n, len(opt.CIDRs), len(fit), time.Since(start))
+	if d := time.Since(start); d > 20*time.Second {
+		t.Fatalf("too slow: %s", d)
 	}
 }

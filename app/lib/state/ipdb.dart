@@ -130,6 +130,61 @@ class IpCountryDb {
   }
 
   static String _code(int cc) => String.fromCharCodes([cc >> 8, cc & 0xFF]);
+
+  static int _packed(String cc) => cc.codeUnitAt(0) << 8 | cc.codeUnitAt(1);
+
+  /// How many ranges the database holds for each country (IPv4 and IPv6 together), by two-letter code.
+  Map<String, int> rangeCounts() {
+    final counts = <int, int>{};
+    for (final c in v4Cc) {
+      counts[c] = (counts[c] ?? 0) + 1;
+    }
+    for (final c in v6Cc) {
+      counts[c] = (counts[c] ?? 0) + 1;
+    }
+    return {for (final e in counts.entries) _code(e.key): e.value};
+  }
+
+  /// The addresses of a country as the smallest list of CIDR blocks that covers them, one per entry:
+  /// IPv4 exactly, IPv6 by /64 blocks (the database keeps the upper 64 bits). Empty for an unknown code.
+  List<String> cidrsOf(String cc) {
+    if (cc.length != 2) return const [];
+    final code = _packed(cc.toUpperCase());
+    final out = <String>[];
+    for (var i = 0; i < v4Start.length; i++) {
+      if (v4Cc[i] != code) continue;
+      var a = v4Start[i];
+      final end = v4End[i];
+      while (a <= end) {
+        // The biggest block that starts at [a] and does not run past [end].
+        var size = a == 0 ? 1 << 32 : a & -a;
+        while (size > end - a + 1) {
+          size >>= 1;
+        }
+        out.add('${a >> 24 & 255}.${a >> 16 & 255}.${a >> 8 & 255}.${a & 255}/${32 - (size.bitLength - 1)}');
+        a += size;
+      }
+    }
+    final top = BigInt.one << 64;
+    for (var i = 0; i < v6Start.length; i++) {
+      if (v6Cc[i] != code) continue;
+      var a = BigInt.from(v6Start[i]).toUnsigned(64);
+      final end = BigInt.from(v6End[i]).toUnsigned(64);
+      while (a <= end) {
+        var size = a == BigInt.zero ? top : a & -a;
+        while (size > end - a + BigInt.one) {
+          size >>= 1;
+        }
+        final bytes = Uint8List(16);
+        for (var b = 0; b < 8; b++) {
+          bytes[b] = ((a >> (56 - 8 * b)) & BigInt.from(255)).toInt();
+        }
+        out.add('${InternetAddress.fromRawAddress(bytes).address}/${64 - (size.bitLength - 1)}');
+        a += size;
+      }
+    }
+    return out;
+  }
 }
 
 // ---------------------------------------------------------------------------------------------------

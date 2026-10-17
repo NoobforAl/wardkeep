@@ -934,5 +934,22 @@
     }
   },
   "ipdbErrNetwork": "no connection to the data servers",
-  "ipdbErrMirrors": "the data servers did not send the right file"
+  "ipdbErrMirrors": "the data servers did not send the right file",
+  "bypassCountriesTitle": "Countries",
+  "bypassCountriesNone": "No country chosen",
+  "bypassCountriesMore": "{names} +{count}",
+  "@bypassCountriesMore": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bypassCountriesNeedDb": "Needs the offline country database",
+  "bypassCountriesIntro": "Traffic to the chosen countries goes straight to the internet, around the VPN. Their address ranges come from the offline country database.",
+  "bypassCountriesGetDb": "Get the country database",
+  "bypassCountriesSearch": "Search countries"
 }
