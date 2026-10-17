@@ -204,6 +204,40 @@ void _flowTests() {
       );
   EarthBackdropState state(WidgetTester tester) => tester.state<EarthBackdropState>(find.byType(EarthBackdrop));
 
+  group('the still Earth under the animation', () {
+    // While the animation runs the still Earth is one picture, not nine thousand dots drawn on every frame.
+    Finder cached() => find.byWidgetPredicate((w) => w is CustomPaint && w.painter.runtimeType.toString() == '_ImagePainter');
+    Finder live() => find.byWidgetPredicate((w) => w is CustomPaint && w.painter.runtimeType.toString() == '_GlobePainter');
+
+    testWidgets('becomes a picture once the view has stood still, and is drawn live again when it moves', (tester) async {
+      await tester.pumpWidget(globe(connected: true, down: 100000));
+      expect(live(), findsOneWidget, reason: 'drawn live at first');
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(cached(), findsNothing, reason: 'not yet: the view has only just stopped');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+      expect(cached(), findsOneWidget);
+      expect(live(), findsNothing);
+
+      // turning it by hand draws it live again, and it settles again afterwards
+      await tester.drag(find.byType(EarthBackdrop), const Offset(50, 0));
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(live(), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      expect(cached(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('is never made while nothing animates', (tester) async {
+      await tester.pumpWidget(globe());
+      await tester.pump(const Duration(seconds: 2));
+      expect(cached(), findsNothing);
+      expect(live(), findsOneWidget);
+    });
+  });
+
   group('the connection animation', () {
     testWidgets('does not run when idle, runs while connecting and while connected, stops after', (tester) async {
       await tester.pumpWidget(globe());

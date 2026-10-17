@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -435,7 +436,10 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
               RepaintBoundary(
                 child: AnimatedBuilder(
                   animation: _fly,
-                  builder: (context, _) => CustomPaint(
+                  builder: (context, _) => _GlobeLayer(
+                    // While the connection animation runs over the Earth, the still Earth is kept as one
+                    // picture instead of being drawn dot by dot on every frame.
+                    settle: _animating,
                     painter: _GlobePainter(
                       scene: _shown(),
                       // Pull back in the middle of a flight, then settle: the camera "travels".
@@ -490,6 +494,108 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
       },
     );
   }
+}
+
+/// The dotted Earth. While [settle] is set (the connection animation runs over it) and the view has stood
+/// still for a moment, the Earth is drawn once into an image and that image is what is painted from then
+/// on: drawing nine thousand dots and a halo on every frame, as the animation asks for frames, used more
+/// than a whole processor core on a mid-range phone. A flight, a turn or a new size draws it live again.
+class _GlobeLayer extends StatefulWidget {
+  const _GlobeLayer({required this.painter, required this.settle});
+
+  final _GlobePainter painter;
+  final bool settle;
+
+  @override
+  State<_GlobeLayer> createState() => _GlobeLayerState();
+}
+
+class _GlobeLayerState extends State<_GlobeLayer> {
+  ui.Image? _image;
+  _GlobePainter? _of; // the view the image shows
+  Size _imageSize = Size.zero, _size = Size.zero;
+  double _imageRatio = 1, _ratio = 1;
+  Timer? _timer;
+
+  /// The glow of the rim and of the markers reaches out of the box: the picture keeps it.
+  static const _margin = 64.0;
+
+  bool get _fresh => _image != null && _of!.sameView(widget.painter) && _imageSize == _size && _imageRatio == _ratio;
+
+  void _check() {
+    _timer?.cancel();
+    if (!widget.settle || _fresh || _size.isEmpty) return;
+    // Only once the view has not changed for a moment (a flight or a drag changes it every frame).
+    _timer = Timer(const Duration(milliseconds: 220), _render);
+  }
+
+  void _render() {
+    if (!mounted || _size.isEmpty || _fresh) return;
+    final ratio = _ratio, size = _size, painter = widget.painter;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder)
+      ..scale(ratio)
+      ..translate(_margin, _margin);
+    painter.paint(canvas, size);
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(((size.width + 2 * _margin) * ratio).ceil(), ((size.height + 2 * _margin) * ratio).ceil());
+    picture.dispose();
+    setState(() {
+      _image?.dispose();
+      _image = image;
+      _of = painter;
+      _imageSize = size;
+      _imageRatio = ratio;
+    });
+  }
+
+  @override
+  void didUpdateWidget(_GlobeLayer old) {
+    super.didUpdateWidget(old);
+    _check();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _image?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _ratio = MediaQuery.devicePixelRatioOf(context);
+    return LayoutBuilder(
+      builder: (context, box) {
+        _size = box.biggest;
+        // Not in the build itself: the check starts a timer and may need the size just taken.
+        if (!_fresh && widget.settle) WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? _check() : null);
+        final image = _image;
+        if (image != null && _fresh) return CustomPaint(size: Size.infinite, painter: _ImagePainter(image, _ratio));
+        return CustomPaint(size: Size.infinite, painter: widget.painter);
+      },
+    );
+  }
+}
+
+/// Paints a picture of the Earth made at the screen's own pixel size (one pixel of it is one pixel of the screen).
+class _ImagePainter extends CustomPainter {
+  _ImagePainter(this.image, this.ratio);
+
+  final ui.Image image;
+  final double ratio;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas
+      ..save()
+      ..scale(1 / ratio);
+    canvas.drawImage(image, Offset(-_GlobeLayerState._margin * ratio, -_GlobeLayerState._margin * ratio), Paint()..filterQuality = FilterQuality.none);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_ImagePainter old) => old.image != image || old.ratio != ratio;
 }
 
 /// Screen position of points of the globe for one view: the middle of the globe at ([scene].lat,
@@ -669,14 +775,18 @@ class _GlobePainter extends CustomPainter {
     mark(exit, scene.exitAlpha, scene.exitColor, 1);
   }
 
+  /// Whether [other] draws exactly the same picture.
+  bool sameView(_GlobePainter? other) =>
+      other != null &&
+      scene.sameAs(other.scene) &&
+      zoom == other.zoom &&
+      ocean == other.ocean &&
+      oceanDeep == other.oceanDeep &&
+      land == other.land &&
+      rim == other.rim;
+
   @override
-  bool shouldRepaint(_GlobePainter old) =>
-      !scene.sameAs(old.scene) ||
-      zoom != old.zoom ||
-      ocean != old.ocean ||
-      oceanDeep != old.oceanDeep ||
-      land != old.land ||
-      rim != old.rim;
+  bool shouldRepaint(_GlobePainter old) => !sameView(old);
 }
 
 /// How strong a flow of [bps] bytes a second looks, 0 (nothing) to 1 (a megabyte a second or more).
