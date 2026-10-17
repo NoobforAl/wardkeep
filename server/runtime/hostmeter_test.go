@@ -13,7 +13,7 @@ type fakeMeter struct{ usage []hostproto.Usage }
 func (f *fakeMeter) Usage() []hostproto.Usage { return f.usage }
 
 func TestHostMetersCountChangesPerUserAndProtocol(t *testing.T) {
-	dir := tempDir(t)
+	dir := t.TempDir()
 	tr := stats.NewTracker(dir)
 	defer tr.Stop()
 	var h hostMeters
@@ -57,7 +57,7 @@ func TestHostMetersCountChangesPerUserAndProtocol(t *testing.T) {
 }
 
 func TestHostMetersLiveConnectionsAndSpeed(t *testing.T) {
-	tr := stats.NewTracker(tempDir(t))
+	tr := stats.NewTracker(t.TempDir())
 	defer tr.Stop()
 	clock := time.Unix(1000, 0)
 	h := hostMeters{now: func() time.Time { return clock }}
