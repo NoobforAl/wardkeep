@@ -18,7 +18,7 @@ import (
 // "preparing" and "opening the tunnel").
 const (
 	torPercentFrom = 25
-	torPercentTo   = 60
+	torPercentTo   = 63
 )
 
 // torRun is a Tor client started for a selected Tor profile. sing-box starts
@@ -183,6 +183,12 @@ func (e *Engine) torProgress(run *torRun, name string, percent int, detail Progr
 	s := e.state
 	detail.Stage, detail.Profile = StageEngineStart, name
 	detail.Percent = torPercentFrom + (torPercentTo-torPercentFrom)*percent/100
+	if detail.DetailCode == DetailTorBootstrap {
+		// Say the ring's own number, not Tor's: two different percents next to
+		// each other (label 90 %, ring 54 %) looked like a bug.
+		detail.DetailN = detail.Percent
+		detail.Detail = fmt.Sprintf("Connecting to Tor %d%%", detail.Percent)
+	}
 	s.Progress = &detail
 	e.setState(s)
 }
@@ -196,7 +202,7 @@ func (e *Engine) startTorOnce(ctx context.Context, run *torRun, dir string, brid
 		DataDir: dir,
 		Bridges: bridges,
 		OnBootstrap: func(percent int, status string) {
-			e.torProgress(run, name, percent*9/10, Progress{Detail: fmt.Sprintf("Connecting to Tor %d%%", percent), DetailCode: DetailTorBootstrap, DetailN: percent})
+			e.torProgress(run, name, percent*9/10, Progress{DetailCode: DetailTorBootstrap})
 		},
 		Logf: func(format string, args ...any) { e.logf("warn", format, args...) },
 	})
