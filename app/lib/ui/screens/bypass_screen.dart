@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../engine/engine.dart';
 import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
+import '../../state/bypass_countries.dart';
 import '../../state/ipdb_state.dart';
 import '../../state/providers.dart';
 import '../insets.dart';
@@ -82,6 +83,8 @@ class BypassScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final scheme = Theme.of(context).colorScheme;
     final enabled = lists.where((l) => l.enabled).fold<int>(0, (n, l) => n + l.entries);
+    final countryRanges = ref.watch(countryRangeCountsProvider);
+    final inUse = enabled + settings.bypassCountries.fold<int>(0, (n, c) => n + (countryRanges[c] ?? 0));
     return Scaffold(
       appBar: AppBar(
         title: Text(context.l10n.bypassTitle),
@@ -179,7 +182,7 @@ class BypassScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Text(
-                  enabled == 0 ? context.l10n.bypassNothing : context.l10n.bypassInUse(enabled),
+                  inUse == 0 ? context.l10n.bypassNothing : context.l10n.bypassInUse(inUse),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ),

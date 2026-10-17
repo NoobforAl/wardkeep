@@ -68,21 +68,32 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
               if (!hasDb)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: Card(
-                    color: scheme.errorContainer,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(l.bypassCountriesNeedDb, style: TextStyle(color: scheme.onErrorContainer)),
-                          const SizedBox(height: 8),
-                          FilledButton.tonal(
-                            onPressed: () =>
-                                Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const IpDbScreen())),
-                            child: Text(l.bypassCountriesGetDb),
-                          ),
-                        ],
+                  // A notice, not an error: a quiet card the width of the page.
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Card(
+                      color: scheme.surfaceContainerHigh,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
+                                const SizedBox(width: 12),
+                                Expanded(child: Text(l.bypassCountriesNeedDb)),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                              onPressed: () => Navigator.of(
+                                context,
+                              ).push(MaterialPageRoute<void>(builder: (_) => const IpDbScreen())),
+                              child: Text(l.bypassCountriesGetDb),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -142,5 +143,82 @@ func TestBypassCountrySizedListPassesSchema(t *testing.T) {
 			}
 			t.Logf("%s only=%v: built and checked in %s", mode, only, time.Since(start))
 		}
+	}
+}
+
+// The same decision with a country-sized list (what the app sends for a ticked country): 150 000 ranges
+// around a single listed address. The VPN is dead, so a request only works if the rules send it direct.
+func TestBypassCountrySizedListDecidesTheRoute(t *testing.T) {
+	serve := func(host, body string) string {
+		ln, err := net.Listen("tcp", net.JoinHostPort(host, "0"))
+		if err != nil {
+			t.Skipf("cannot listen on %s: %v", host, err)
+		}
+		srv := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.WriteString(w, body) })}
+		go srv.Serve(ln)
+		t.Cleanup(func() { srv.Close() })
+		return ln.Addr().String()
+	}
+	listed := serve("127.0.0.1", "listed")
+	other := serve("127.0.0.2", "other")
+
+	var b strings.Builder
+	for i := range 150000 {
+		fmt.Fprintf(&b, "%d.%d.%d.0/24\n", 40+i/32768, (i/128)%256, (i%128)*2)
+	}
+	b.WriteString("127.0.0.1/32\n2a00:1450::/32\n")
+	text := b.String()
+
+	res, err := importer.Import(fmt.Sprintf("ss://aes-128-gcm:pw@127.0.0.1:%d#dead", freePort(t)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fetch := func(proxyPort int, addr string) (string, error) {
+		proxy, _ := url.Parse("socks5://127.0.0.1:" + strconv.Itoa(proxyPort))
+		client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxy)}, Timeout: 6 * time.Second}
+		resp, err := client.Get("http://" + addr + "/")
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+		return string(body), nil
+	}
+	run := func(only bool) int {
+		parsed, issues := singbox.ParseBypassList(text)
+		if len(issues) != 0 || len(parsed.CIDRs) != 150002 {
+			t.Fatalf("%d ranges, issues %v", len(parsed.CIDRs), issues)
+		}
+		port := freePort(t)
+		e := New(Config{DataDir: tempDir(t), SkipHandshake: true})
+		start := time.Now()
+		err := e.Start(res.Profiles, singbox.Options{
+			ListenPort: port, LogLevel: "error", Selected: res.Profiles[0].ID, ProxyPrivate: true,
+			Bypass: parsed, BypassOnly: only,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("only=%v: started with %d ranges in %s", only, len(parsed.CIDRs), time.Since(start))
+		t.Cleanup(func() { e.Stop() })
+		return port
+	}
+
+	// The ticked country goes direct; an address outside it still uses the (dead) VPN.
+	port := run(false)
+	if body, err := fetch(port, listed); err != nil || body != "listed" {
+		t.Fatalf("an address of the country did not go direct: %q %v", body, err)
+	}
+	if body, err := fetch(port, other); err == nil {
+		t.Fatalf("an address outside the country went direct: %q", body)
+	}
+
+	// Only the country uses the VPN: its address fails (dead VPN), everything else goes direct.
+	port = run(true)
+	if body, err := fetch(port, listed); err == nil {
+		t.Fatalf("an address of the country went direct in 'only these' mode: %q", body)
+	}
+	if body, err := fetch(port, other); err != nil || body != "other" {
+		t.Fatalf("an address outside the country did not go direct in 'only these' mode: %q %v", body, err)
 	}
 }
