@@ -182,4 +182,8 @@ jobs:
           cd app/build/app/outputs/flutter-apk
           FLAGS=(--title "Wardkeep $VER" --generate-notes --verify-tag)
           if [ "$PRE" = "true" ]; then FLAGS+=(--prerelease); fi
-          gh release create "$TAG" "${FLAGS[@]}" omnitun-*.apk SHA256SUMS
+          if ! gh release create "$TAG" "${FLAGS[@]}" omnitun-*.apk SHA256SUMS; then
+            # the Windows workflow made the release first: add to it
+            sleep 15
+            gh release upload "$TAG" omnitun-*.apk SHA256SUMS --clobber
+          fi
