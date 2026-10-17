@@ -6,6 +6,8 @@ import '../../l10n/l10n.dart';
 import '../../state/countries.dart';
 import '../../state/location.dart';
 import '../../state/providers.dart';
+import '../../state/usage.dart';
+import '../widgets/profile_subtitle.dart';
 import '../widgets/country_flag.dart';
 import '../widgets/credentials_dialog.dart';
 import '../widgets/protocol_badge.dart';
@@ -93,6 +95,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
         if (g.profiles.any((p) => matches(g, p))) g,
     ];
     final tor = profiles.where((p) => p.protocol == 'tor').toList();
+    final mesh = profiles.where((p) => p.isMesh).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -186,6 +189,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
                       ),
                     for (final g in shown) ..._group(context, g, choice, countryOf, matches, query.isNotEmpty),
                     if (tor.isNotEmpty && query.isEmpty) ..._torRows(tor, choice),
+                    if (mesh.isNotEmpty && query.isEmpty) ..._meshRows(mesh, choice),
                   ],
                 ),
               ),
@@ -232,6 +236,12 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
           if (matches(g, p)) _ServerRow(profile: p, selected: choice == p.id, onTap: () => _choose(p.id)),
     ];
   }
+
+  /// The user's own devices (Tailscale / Headscale profiles): they run only when picked.
+  Iterable<Widget> _meshRows(List<ProfileInfo> mesh, String? choice) => [
+    Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 4), child: Text(context.l10n.devicesTitle)),
+    for (final p in mesh) _ServerRow(profile: p, selected: choice == p.id, onTap: () => _choose(p.id), mesh: true),
+  ];
 
   Iterable<Widget> _torRows(List<ProfileInfo> tor, String? choice) => [
     Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 4), child: Text(context.l10n.torGroup)),
@@ -283,12 +293,13 @@ class _Row extends StatelessWidget {
 
 /// One server (profile) under its country.
 class _ServerRow extends ConsumerWidget {
-  const _ServerRow({required this.profile, required this.selected, required this.onTap, this.tor = false});
+  const _ServerRow({required this.profile, required this.selected, required this.onTap, this.tor = false, this.mesh = false});
 
   final ProfileInfo profile;
   final bool selected;
   final VoidCallback onTap;
   final bool tor;
+  final bool mesh;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -299,12 +310,7 @@ class _ServerRow extends ConsumerWidget {
     return ListTile(
       contentPadding: const EdgeInsetsDirectional.only(start: 40, end: 4),
       title: Text(p.name, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        p.needsCredentials && !p.hasCredentials
-            ? context.l10n.needsSignIn(profileAddress(context, p))
-            : profileAddress(context, p),
-        overflow: TextOverflow.ellipsis,
-      ),
+      subtitle: ProfileSubtitle(p),
       selected: selected,
       selectedTileColor: scheme.primary.withValues(alpha: 0.12),
       onTap: onTap,
@@ -327,6 +333,8 @@ class _ServerRow extends ConsumerWidget {
                   if (code != null) ref.read(countryOverridesProvider.notifier).set(p.id, code == '' ? null : code);
                 case 'credentials':
                   askCredentials(context, ref, p);
+                case 'usage':
+                  ref.read(profileUsageProvider.notifier).reset(p.id);
                 case 'delete':
                   ref.read(profilesProvider.notifier).remove(p.id);
                 case 'default':
@@ -342,8 +350,10 @@ class _ServerRow extends ConsumerWidget {
               PopupMenuItem(value: 'share', child: Text(context.l10n.menuShare)),
               if (p.id != ref.read(defaultProfileProvider)?.id)
                 PopupMenuItem(value: 'default', child: Text(context.l10n.menuSetDefault)),
-              if (!tor) PopupMenuItem(value: 'country', child: Text(context.l10n.menuSetCountry)),
+              if (!tor && !mesh) PopupMenuItem(value: 'country', child: Text(context.l10n.menuSetCountry)),
               if (p.needsCredentials) PopupMenuItem(value: 'credentials', child: Text(context.l10n.menuCredentials)),
+              if (ref.read(usageOfProvider(p.id)) > 0)
+                PopupMenuItem(value: 'usage', child: Text(context.l10n.menuResetUsage)),
               PopupMenuItem(value: 'delete', child: Text(context.l10n.actionDelete)),
             ],
           ),

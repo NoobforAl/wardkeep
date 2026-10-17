@@ -4,6 +4,10 @@
 /// channel to the Android VpnService. [MockEngine] lets the UI run without it.
 library;
 
+import 'mesh.dart';
+
+export 'mesh.dart';
+
 /// Thrown for typed failures reported by the core; [message] is fit to show.
 class EngineException implements Exception {
   EngineException(this.code, this.message, [this.args = const {}]);
@@ -42,7 +46,21 @@ class ProfileInfo {
   final int port;
 
   /// What to show as the profile's address (Tor has no server).
-  String get address => protocol == 'tor' ? 'Tor network' : '$server:$port';
+  String get address => switch (protocol) {
+    'tor' => 'Tor network',
+    'tailscale' => meshControlHost ?? 'Tailscale',
+    _ => '$server:$port',
+  };
+
+  /// A Tailscale / Headscale profile: it joins a mesh of the user's own devices and has no server of its own.
+  bool get isMesh => protocol == 'tailscale';
+
+  /// The host of the mesh's control server (a Headscale), null for Tailscale's own.
+  String? get meshControlHost {
+    final url = (raw['tailscale'] as Map?)?['control_url'] as String? ?? '';
+    final host = Uri.tryParse(url)?.host ?? '';
+    return host.isEmpty ? null : host;
+  }
 
   /// [defaultGroup] or the ID of the subscription the profile came from.
   final String group;
@@ -96,12 +114,17 @@ class ConnectOptions {
     this.systemProxy = true,
     this.listenPort = 2080,
     this.dns = '',
+    this.dnsRelay = '',
     this.autoFailover = true,
     this.bypassLan = true,
     this.includePackages = const [],
     this.excludePackages = const [],
     this.bypass = '',
     this.bypassOnly = false,
+    this.killSwitch = false,
+    this.killSwitchEarly = false,
+    this.ipv6 = true,
+    this.mtu = 0,
   });
 
   /// Capture all traffic (needs VPN permission / admin). Otherwise proxy mode.
@@ -111,8 +134,11 @@ class ConnectOptions {
   final bool systemProxy;
   final int listenPort;
 
-  /// Remote resolver URL (https://, tls://, tcp://, udp://). Empty = core default.
+  /// Remote resolver: a URL (https://, tls://, tcp://, udp://) or a DNS stamp (sdns://). Empty = core default.
   final String dns;
+
+  /// Anonymized DNSCrypt: a relay stamp (or `ip:port`); only used when [dns] is a DNSCrypt stamp.
+  final String dnsRelay;
 
   /// Switch to the next working profile when the selected one stops responding.
   final bool autoFailover;
@@ -131,6 +157,17 @@ class ConnectOptions {
 
   /// With [bypass]: only the listed destinations use the VPN, everything else goes direct.
   final bool bypassOnly;
+
+  /// Windows service, VPN mode: block all traffic outside the tunnel while
+  /// connected ([killSwitchEarly]: also while connecting).
+  final bool killSwitch;
+  final bool killSwitchEarly;
+
+  /// Off keeps IPv6 out of the VPN (connections to IPv6 addresses are refused).
+  final bool ipv6;
+
+  /// The tunnel's packet size in VPN mode; 0 is the core's default.
+  final int mtu;
 }
 
 /// Where the tunnel exits, as a public service sees it.
@@ -235,6 +272,8 @@ class EngineState {
     this.errorCode,
     this.upBps = 0,
     this.downBps = 0,
+    this.upTotal = 0,
+    this.downTotal = 0,
     this.failover,
     this.progress,
   });
@@ -250,6 +289,10 @@ class EngineState {
   final int upBps;
   final int downBps;
 
+  /// Bytes sent and received since this tunnel started (the counters restart with every connection).
+  final int upTotal;
+  final int downTotal;
+
   /// The most recent automatic switch during this connection, if any.
   final FailoverInfo? failover;
 
@@ -264,6 +307,8 @@ class EngineState {
     String? errorCode,
     int? upBps,
     int? downBps,
+    int? upTotal,
+    int? downTotal,
   }) =>
       EngineState(
         status: status ?? this.status,
@@ -273,6 +318,8 @@ class EngineState {
         errorCode: errorCode ?? this.errorCode,
         upBps: upBps ?? this.upBps,
         downBps: downBps ?? this.downBps,
+        upTotal: upTotal ?? this.upTotal,
+        downTotal: downTotal ?? this.downTotal,
         failover: failover,
         progress: progress,
       );
@@ -433,6 +480,14 @@ abstract class VpnEngine {
 
   /// Checks the text of a bypass list: what it holds and which lines cannot be used.
   Future<BypassReport> parseBypass(String text);
+
+  /// The devices of the mesh a connected Tailscale / Headscale profile has joined.
+  /// Throws [EngineException] (NOT_RUNNING) when no mesh profile is connected.
+  Future<MeshStatus> meshStatus();
+
+  /// Uses the device [id] as the exit for all traffic, or the normal connection again when [id] is empty.
+  /// Returns the mesh as it is afterwards. Throws [EngineException] when the device is not an exit.
+  Future<MeshStatus> setMeshExit(String id);
 
   /// What the editor shows for [profile].
   Future<Map<String, String>> profileValues(ProfileInfo profile);

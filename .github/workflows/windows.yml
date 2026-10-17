@@ -7,14 +7,22 @@ name: Windows and server
 #                                         finishes first creates it, the other one adds to it)
 #   anything else (push, pull request) →  build both and keep them as run artifacts, to see that they build
 #
-# The Windows app is a ZIP of the Flutter app with the core (omnitun-svc.exe) next to it: unzip and run.
-# It is NOT signed: Windows SmartScreen will warn on the first start. An installer with a code-signing
-# certificate (a paid certificate, kept in a repository secret) is the next step; see PLAN.md, Phase 3.
+# The Windows app comes two ways, both with the core (omnitun-svc.exe) next to the app:
+#   * a ZIP of the Flutter release folder: unzip and run;
+#   * a per-user installer (installer/wardkeep.iss, Inno Setup; no administrator rights, Start menu entry,
+#     optional start with Windows, share links and config files, an uninstaller that can keep your data).
+# Both are signed (omnitun.exe, omnitun-svc.exe, the setup file and its uninstaller) only if the repository
+# has the secrets WINDOWS_CERT_PFX_BASE64 (the .pfx file, base64) and WINDOWS_CERT_PASSWORD; without them
+# (forks, pull requests, no certificate bought yet) the files are unsigned and SmartScreen warns on the
+# first start. Nothing else changes.
 # The server is two static Linux binaries (amd64, arm64) with SHA256SUMS, from scripts/build-server-release.sh.
 #
-# Every action is pinned to a full commit SHA. The two build jobs only read the repository (and run code
-# from dependencies, so they hold no token that can write); one small job at the end, which runs nothing
-# but the GitHub CLI on the files they made, is the only one that can add to a release.
+# Every action is pinned to a full commit SHA. The build jobs only read the repository, and the ones that
+# run code from dependencies (flutter pub get / build, go build) hold no secret and no token that can
+# write. The signing certificate is only in "windows-package", which runs nothing from dependencies: it
+# takes the finished app, signs it with signtool, packs it and builds the installer with Inno Setup. One
+# small job at the end, which runs nothing but the GitHub CLI on the files they made, is the only one that
+# can add to a release.
 
 on:
   push:
@@ -92,23 +100,108 @@ jobs:
         working-directory: app
         run: flutter build windows --release --build-name ${{ steps.version.outputs.core }} --build-number ${{ steps.version.outputs.number }}
 
-      - name: Put the app and the core together, zip, checksums
-        env:
-          VER: ${{ steps.version.outputs.name }}
+      - name: Put the app and the core together
         run: |
           Copy-Item -Recurse -Force app/build/windows/x64/runner/Release/* dist/app/
+          Get-ChildItem dist/app | Format-Table Name, Length
+
+      # Unsigned: the next job signs it (it is the only one that holds the certificate).
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: wardkeep-windows-app
+          path: dist/app
+          if-no-files-found: error
+
+  # Signs (if there is a certificate), zips, builds the installer, tries it, and makes the checksums.
+  windows-package:
+    needs: windows-app
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      VER: ${{ needs.windows-app.outputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wardkeep-windows-app
+          path: dist/app
+
+      # Without both secrets (forks, pull requests, no certificate yet) this step ends cleanly and the
+      # files stay unsigned.
+      - name: Code-signing certificate
+        id: cert
+        env:
+          WINDOWS_CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          if (-not $env:WINDOWS_CERT_PFX_BASE64 -or -not $env:WINDOWS_CERT_PASSWORD) {
+            'No signing certificate in the repository secrets: the files will not be signed.'
+            'signed=false' >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERT_PFX_BASE64))
+          "pfx=$pfx" >> $env:GITHUB_OUTPUT
+          'signed=true' >> $env:GITHUB_OUTPUT
+          'The files will be signed.'
+
+      # Before packing: the ZIP and the installer then hold the signed programs.
+      - name: Sign omnitun.exe and omnitun-svc.exe
+        if: steps.cert.outputs.signed == 'true'
+        env:
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          ./installer/sign.ps1 -Pfx '${{ steps.cert.outputs.pfx }}' -Files dist/app/omnitun.exe, dist/app/omnitun-svc.exe
+          Get-AuthenticodeSignature dist/app/omnitun.exe, dist/app/omnitun-svc.exe | Format-Table Status, Path
+
+      - name: ZIP
+        run: |
           $zip = "dist/omnitun-$env:VER-windows-x64.zip"
           Compress-Archive -Path dist/app/* -DestinationPath $zip -Force
-          (Get-FileHash $zip -Algorithm SHA256) | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $zip -Leaf)" } | Set-Content dist/SHA256SUMS-windows.txt
+
+      - name: Installer
+        env:
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+          PFX: ${{ steps.cert.outputs.pfx }}
+        run: |
+          if ($env:PFX) {
+            ./installer/build-installer.ps1 -Version $env:VER -SourceDir dist/app -OutputDir dist -Pfx $env:PFX
+          } else {
+            ./installer/build-installer.ps1 -Version $env:VER -SourceDir dist/app -OutputDir dist
+          }
+
+      # On this throw-away machine: install silently, look at the files and the registry entries, uninstall,
+      # and see that everything (but the user's data, unless it is asked for) is gone.
+      - name: Try the installer
+        run: |
+          ./installer/test-installer.ps1 -Setup "dist/omnitun-$env:VER-windows-x64-setup.exe" -Dir "$env:RUNNER_TEMP/wardkeep-try/Wardkeep"
+          ./installer/test-installer.ps1 -Setup "dist/omnitun-$env:VER-windows-x64-setup.exe" -Dir "$env:RUNNER_TEMP/wardkeep-try2/Wardkeep" -DeleteDataCheck
+
+      - name: Remove the certificate file
+        if: always() && steps.cert.outputs.pfx != ''
+        run: Remove-Item -Force '${{ steps.cert.outputs.pfx }}' -ErrorAction SilentlyContinue
+
+      - name: Checksums
+        run: |
+          $files = "dist/omnitun-$env:VER-windows-x64.zip", "dist/omnitun-$env:VER-windows-x64-setup.exe"
+          $files | ForEach-Object { "$((Get-FileHash $_ -Algorithm SHA256).Hash.ToLower())  $(Split-Path $_ -Leaf)" } | Set-Content dist/SHA256SUMS-windows.txt
           Get-Content dist/SHA256SUMS-windows.txt
-          Get-ChildItem dist | Format-Table Name, Length
+          Get-ChildItem dist -File | Format-Table Name, Length
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: wardkeep-windows
           path: |
             dist/omnitun-*-windows-x64.zip
+            dist/omnitun-*-windows-x64-setup.exe
             dist/SHA256SUMS-windows.txt
+          if-no-files-found: error
 
   server:
     runs-on: ubuntu-latest
@@ -146,7 +239,7 @@ jobs:
   # two jobs above built (no checkout, no build, no dependencies).
   publish:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    needs: [windows-app, server]
+    needs: [windows-app, windows-package, server]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -170,7 +263,7 @@ jobs:
           cd files
           cp SHA256SUMS SHA256SUMS-server.txt
           rm SHA256SUMS
-          FILES=(omnitun-"$VER"-windows-x64.zip SHA256SUMS-windows.txt omnitun-server-linux-amd64 omnitun-server-linux-arm64 SHA256SUMS-server.txt)
+          FILES=(omnitun-"$VER"-windows-x64.zip omnitun-"$VER"-windows-x64-setup.exe SHA256SUMS-windows.txt omnitun-server-linux-amd64 omnitun-server-linux-arm64 SHA256SUMS-server.txt)
           FLAGS=(--title "Wardkeep $VER" --generate-notes --verify-tag)
           if [[ "$VER" == *-* ]]; then FLAGS+=(--prerelease); fi
           if ! gh release create "$TAG" "${FLAGS[@]}" "${FILES[@]}"; then

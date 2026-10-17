@@ -258,6 +258,38 @@ void _flowTests() {
       expect(tester.hasRunningAnimations, isFalse);
     });
 
+    testWidgets('asks for a frame only when its clock moves: 11 a second when calm, 22 when busy', (tester) async {
+      await tester.pumpWidget(globe(connected: true));
+      await tester.pump(const Duration(seconds: 1)); // the Earth settles into its picture
+      await tester.pump(const Duration(seconds: 1));
+      expect(state(tester).flowPeriod, const Duration(milliseconds: 90));
+      // Between two ticks nothing asks for a frame: a Ticker would ask at every screen refresh.
+      expect(tester.binding.hasScheduledFrame, isFalse);
+      var frames = 0;
+      void count(Duration _) => frames++;
+      tester.binding.addPersistentFrameCallback(count);
+      await tester.pump(const Duration(seconds: 2));
+      // pump() draws one frame; the timer's ticks schedule the others (the test binding runs them on pump only),
+      // so what is checked is the number of clock changes seen by the overlay in two seconds.
+      final clock = state(tester).clockForTest;
+      final start = clock.value;
+      var changes = 0;
+      clock.addListener(() => changes++);
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(changes, inInclusiveRange(20, 24), reason: 'about 11 a second for two seconds');
+      expect(clock.value, greaterThan(start));
+
+      await tester.pumpWidget(globe(connected: true, down: 800000));
+      expect(state(tester).flowPeriod, const Duration(milliseconds: 45));
+      await tester.pumpWidget(globe(connecting: true));
+      expect(state(tester).flowPeriod, const Duration(milliseconds: 45));
+      await tester.pumpWidget(globe());
+      expect(state(tester).flowPeriod, Duration.zero);
+      expect(frames, greaterThan(0));
+    });
+
     testWidgets('does not run when the system asks for less motion', (tester) async {
       await tester.pumpWidget(globe(connected: true, down: 500000, reduce: true));
       expect(state(tester).flowRunning, isFalse);

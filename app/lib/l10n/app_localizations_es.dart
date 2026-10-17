@@ -1659,4 +1659,208 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'Tu servidor seleccionado está aquí: su tráfico también se saltaría la VPN.';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'Desactivado: solo se usa IPv4; las conexiones IPv6 se rechazan, no salen por fuera de la VPN.';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'Predeterminado';
+
+  @override
+  String get mtuHelp =>
+      'Tamaño de paquete del túnel (solo modo VPN). Prueba entre 1280 y 1420 si algunos sitios se cuelgan en la red móvil. Vacío es el valor predeterminado.';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return 'Introduce un número de $min a $max.';
+  }
+
+  @override
+  String get trayOpen => 'Abrir Wardkeep';
+
+  @override
+  String get trayQuit => 'Salir';
+
+  @override
+  String get traySwitchServer => 'Cambiar de servidor';
+
+  @override
+  String get keepInTray => 'Seguir en la bandeja del sistema';
+
+  @override
+  String get keepInTrayHint =>
+      'Al cerrar la ventana solo se oculta. Usa «Salir» en el menú de la bandeja para cerrar la app y la VPN.';
+
+  @override
+  String usageUsed(String size) {
+    return '$size usados';
+  }
+
+  @override
+  String get menuResetUsage => 'Reiniciar uso de datos';
+
+  @override
+  String get dnsPickerHelp =>
+      'Los nombres de sitios se consultan a través de la VPN con el resolvedor que elijas. DNSCrypt además demuestra que la respuesta viene de ese resolvedor.';
+
+  @override
+  String get dnsDefault => 'Predeterminado';
+
+  @override
+  String get dnsSectionDnscrypt =>
+      'DNSCrypt · DNSSEC, sin registros, sin filtrado';
+
+  @override
+  String get dnsCustom => 'Personalizado';
+
+  @override
+  String get dnsCustomLabel => 'Dirección o DNS stamp';
+
+  @override
+  String get dnsAnonymized => 'DNSCrypt anonimizado';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'Las consultas pasan por un relé, así que el resolvedor nunca ve de dónde vienen';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'Elige un resolvedor DNSCrypt para usar esto';
+
+  @override
+  String get dnsRelay => 'Relé';
+
+  @override
+  String get dnsRelayChoose => 'Elige un relé';
+
+  @override
+  String get dnsRelayAutomatic => 'Automático (otro operador)';
+
+  @override
+  String get dnsErrAddress =>
+      'Usa una dirección que empiece por https://, tls://, tcp:// o udp://, o un stamp sdns://';
+
+  @override
+  String get dnsErrDamaged =>
+      'Este stamp está dañado o cortado. Cópialo de nuevo.';
+
+  @override
+  String get dnsErrUnsupported => 'Este tipo de stamp no es compatible';
+
+  @override
+  String get dnsErrRelayStamp =>
+      'Este es el stamp de un relé, no de un resolvedor';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'Esto protege los nombres que consultas. No oculta a qué sitios te conectas después.';
+
+  @override
+  String get dnsAnonymizedShort => 'anonimizado';
+
+  @override
+  String get flAuthKey => 'Clave de autenticación';
+
+  @override
+  String get flControlServer => 'Servidor de control';
+
+  @override
+  String get flDeviceName => 'Nombre del dispositivo';
+
+  @override
+  String get flExitDevice => 'Dispositivo de salida';
+
+  @override
+  String get flUseSubnets => 'Usar las subredes de otros dispositivos';
+
+  @override
+  String get flTempDevice => 'Dispositivo temporal';
+
+  @override
+  String get hpAuthKey =>
+      'Una clave preautorizada de la página de administración de Tailscale o creada con headscale preauthkeys create';
+
+  @override
+  String get hpControlServer =>
+      'Vacío usa Tailscale; para Headscale, su dirección, como https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'El nombre de este dispositivo en la red; vacío usa el propio del dispositivo';
+
+  @override
+  String get hpExitDevice =>
+      'Nombre o dirección del dispositivo cuya conexión a internet usar; vacío solo llega a tus dispositivos';
+
+  @override
+  String get hpTempDevice => 'Se quita de la red cuando se desconecta';
+
+  @override
+  String get devicesTitle => 'Mis dispositivos';
+
+  @override
+  String get devicesNotConnected =>
+      'Conéctate con un perfil de Tailscale o Headscale para ver tus dispositivos.';
+
+  @override
+  String get devicesJoining => 'Uniéndose a la red…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'La red no aceptó la clave de este dispositivo. Crea una clave nueva y edita el perfil.';
+
+  @override
+  String get devicesEmpty => 'Aún no hay otros dispositivos en esta red.';
+
+  @override
+  String get devicesThisDevice => 'Este dispositivo';
+
+  @override
+  String get deviceOnline => 'En línea';
+
+  @override
+  String get deviceOffline => 'Sin conexión';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'Visto por última vez $when';
+  }
+
+  @override
+  String get deviceUseAsExit => 'Usar como salida';
+
+  @override
+  String get deviceStopExit => 'Dejar de usar como salida';
+
+  @override
+  String get deviceIsExit => 'Salida en uso';
+
+  @override
+  String get devicesExitHint =>
+      'Usa uno de tus dispositivos como salida: todo tu tráfico sale por su conexión.';
+
+  @override
+  String get deviceCopyName => 'Copiar nombre';
+
+  @override
+  String get deviceCopyAddress => 'Copiar dirección';
+
+  @override
+  String get deviceCopied => 'Copiado';
+
+  @override
+  String get errMeshExit =>
+      'Ese dispositivo no se puede usar como salida ahora. Debe estar en línea y ofrecer su conexión.';
 }

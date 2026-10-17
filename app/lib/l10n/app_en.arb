@@ -958,5 +958,207 @@
   "bypassCountriesZoneIntro": "Each country you tick downloads its address ranges (a few kilobytes). The full offline database is more exact and needs no download.",
   "bypassCountriesDownloading": "Downloading…",
   "bypassCountriesFailed": "Could not download. Tap to try again.",
-  "bypassCountriesYourServer": "Your selected server is here: its traffic would skip the VPN too."
+  "bypassCountriesYourServer": "Your selected server is here: its traffic would skip the VPN too.",
+  "ipv6Title": "IPv6",
+  "@ipv6Title": {
+    "description": "Settings switch: whether IPv6 traffic is allowed through the VPN"
+  },
+  "ipv6Hint": "Off: only IPv4 is used; IPv6 connections are refused, not sent around the VPN.",
+  "mtuTitle": "MTU",
+  "@mtuTitle": {
+    "description": "Settings row: the packet size of the VPN tunnel"
+  },
+  "mtuAuto": "Default",
+  "mtuHelp": "The packet size of the tunnel (VPN mode only). Try 1280 to 1420 if some sites hang on a mobile network. Empty is the default.",
+  "mtuInvalid": "Enter a number from {min} to {max}.",
+  "@mtuInvalid": {
+    "description": "Error under the MTU field",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "trayOpen": "Open Wardkeep",
+  "@trayOpen": {
+    "description": "Windows tray menu: brings the app window back"
+  },
+  "trayQuit": "Quit",
+  "@trayQuit": {
+    "description": "Windows tray menu: ends the app and its core"
+  },
+  "traySwitchServer": "Switch server",
+  "@traySwitchServer": {
+    "description": "Windows tray menu: submenu listing the servers"
+  },
+  "keepInTray": "Keep running in the tray",
+  "@keepInTray": {
+    "description": "Windows setting: closing the window hides it to the tray"
+  },
+  "keepInTrayHint": "Closing the window only hides it. Use Quit in the tray menu to end the app and the VPN.",
+  "@keepInTrayHint": {
+    "description": "Explains the keep-in-tray setting"
+  },
+  "usageUsed": "{size} used",
+  "@usageUsed": {
+    "description": "Under a server: how much data went through it, e.g. 1.2 GB used",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "menuResetUsage": "Reset data usage",
+  "dnsPickerHelp": "Website names are looked up through the VPN by the resolver you choose. DNSCrypt also proves that the answer came from that resolver.",
+  "@dnsPickerHelp": {
+    "description": "Help text at the top of the DNS screen"
+  },
+  "dnsDefault": "Default",
+  "@dnsDefault": {
+    "description": "Title of the default DNS choice"
+  },
+  "dnsSectionDnscrypt": "DNSCrypt · DNSSEC, no logs, no filtering",
+  "@dnsSectionDnscrypt": {
+    "description": "Header over the list of DNSCrypt resolvers; they all validate DNSSEC, keep no logs and block nothing"
+  },
+  "dnsCustom": "Custom",
+  "@dnsCustom": {
+    "description": "A DNS resolver the person types in"
+  },
+  "dnsCustomLabel": "Address or DNS stamp",
+  "@dnsCustomLabel": {
+    "description": "Field label: a resolver URL or an sdns:// stamp"
+  },
+  "dnsAnonymized": "Anonymized DNSCrypt",
+  "@dnsAnonymized": {
+    "description": "Switch: send DNSCrypt queries through a relay"
+  },
+  "dnsAnonymizedHint": "Queries go through a relay, so the resolver never sees where they come from",
+  "@dnsAnonymizedHint": {
+    "description": "Explains Anonymized DNSCrypt"
+  },
+  "dnsAnonymizedNeedsDnscrypt": "Choose a DNSCrypt resolver to use this",
+  "@dnsAnonymizedNeedsDnscrypt": {
+    "description": "Shown under the Anonymized switch while it cannot be used"
+  },
+  "dnsRelay": "Relay",
+  "@dnsRelay": {
+    "description": "The relay Anonymized DNSCrypt goes through"
+  },
+  "dnsRelayChoose": "Choose a relay",
+  "@dnsRelayChoose": {
+    "description": "Dialog title"
+  },
+  "dnsRelayAutomatic": "Automatic (another operator)",
+  "@dnsRelayAutomatic": {
+    "description": "Relay choice: the app picks one run by someone other than the resolver's operator"
+  },
+  "dnsErrAddress": "Use an address that starts with https://, tls://, tcp:// or udp://, or an sdns:// stamp",
+  "@dnsErrAddress": {
+    "description": "Error under the custom DNS field"
+  },
+  "dnsErrDamaged": "This stamp is damaged or cut short. Copy it again.",
+  "@dnsErrDamaged": {
+    "description": "Error for an invalid DNS stamp"
+  },
+  "dnsErrUnsupported": "This kind of stamp is not supported",
+  "@dnsErrUnsupported": {
+    "description": "Error for a DNS stamp of a kind the app does not use"
+  },
+  "dnsErrRelayStamp": "This is a relay stamp, not a resolver",
+  "@dnsErrRelayStamp": {
+    "description": "Error when a relay stamp is typed as the resolver"
+  },
+  "dnsLine": "DNS: {resolver}",
+  "@dnsLine": {
+    "description": "A line in the connected screen naming the resolver, e.g. DNS: DNSCrypt · quad9.net",
+    "placeholders": {
+      "resolver": {
+        "type": "String"
+      }
+    }
+  },
+  "dnsLimits": "This protects the names you look up. It does not hide which sites you then connect to.",
+  "@dnsLimits": {
+    "description": "Short note at the bottom of the DNS screen"
+  },
+  "dnsAnonymizedShort": "anonymized",
+  "@dnsAnonymizedShort": {
+    "description": "Short tag after a DNS resolver name when its queries go through a relay"
+  },
+  "flAuthKey": "Auth key",
+  "@flAuthKey": {
+    "description": "Field label of the Tailscale/Headscale profile editor (the key that lets this device join the network)"
+  },
+  "flControlServer": "Control server",
+  "@flControlServer": {
+    "description": "Field label of the Tailscale/Headscale profile editor (the coordination server)"
+  },
+  "flDeviceName": "Device name",
+  "@flDeviceName": {
+    "description": "Field label of the Tailscale/Headscale profile editor (this device's name in the network)"
+  },
+  "flExitDevice": "Exit device",
+  "@flExitDevice": {
+    "description": "Field label of the Tailscale/Headscale profile editor (the device whose internet connection is used)"
+  },
+  "flUseSubnets": "Use subnets of other devices",
+  "@flUseSubnets": {
+    "description": "Field label of the Tailscale/Headscale profile editor (accept the routes other devices advertise)"
+  },
+  "flTempDevice": "Temporary device",
+  "@flTempDevice": {
+    "description": "Field label of the Tailscale/Headscale profile editor (an ephemeral node)"
+  },
+  "hpAuthKey": "A pre-authorized key from the Tailscale admin page, or made by headscale preauthkeys create",
+  "@hpAuthKey": {
+    "description": "Help text under the auth key field of the Tailscale/Headscale profile editor"
+  },
+  "hpControlServer": "Empty uses Tailscale; for Headscale, its address such as https://hs.example.com",
+  "@hpControlServer": {
+    "description": "Help text under the control server field of the Tailscale/Headscale profile editor"
+  },
+  "hpDeviceName": "The name this device has in the network; empty uses the device's own",
+  "@hpDeviceName": {
+    "description": "Help text under the device name field of the Tailscale/Headscale profile editor"
+  },
+  "hpExitDevice": "Name or address of a device whose internet connection to use; empty reaches only your devices",
+  "@hpExitDevice": {
+    "description": "Help text under the exit device field of the Tailscale/Headscale profile editor"
+  },
+  "hpTempDevice": "Removed from the network when it goes offline",
+  "@hpTempDevice": {
+    "description": "Help text under the temporary device switch of the Tailscale/Headscale profile editor"
+  },
+  "devicesTitle": "My devices",
+  "@devicesTitle": {
+    "description": "Title of the screen that lists the devices of the connected Tailscale/Headscale network; also the name of that group in the location list"
+  },
+  "devicesNotConnected": "Connect a Tailscale or Headscale profile to see your devices.",
+  "devicesJoining": "Joining the network…",
+  "devicesLoginNeeded": "The network did not accept this device's key. Make a new key and edit the profile.",
+  "devicesEmpty": "No other devices in this network yet.",
+  "devicesThisDevice": "This device",
+  "deviceOnline": "Online",
+  "deviceOffline": "Offline",
+  "deviceLastSeen": "Last seen {when}",
+  "@deviceLastSeen": {
+    "description": "When an offline device was last online",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceUseAsExit": "Use as exit",
+  "deviceStopExit": "Stop using as exit",
+  "deviceIsExit": "Exit in use",
+  "devicesExitHint": "Use one of your devices as the exit: all your traffic leaves from its connection.",
+  "deviceCopyName": "Copy name",
+  "deviceCopyAddress": "Copy address",
+  "deviceCopied": "Copied",
+  "errMeshExit": "That device cannot be used as the exit right now. It must be online and offer its connection."
 }

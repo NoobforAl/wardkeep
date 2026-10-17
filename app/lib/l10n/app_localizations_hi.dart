@@ -1635,4 +1635,206 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'आपका चुना हुआ सर्वर यहाँ है: उसका ट्रैफ़िक भी VPN को छोड़ देगा।';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'बंद: केवल IPv4 उपयोग होता है; IPv6 कनेक्शन अस्वीकार होते हैं, VPN के बाहर नहीं जाते।';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'डिफ़ॉल्ट';
+
+  @override
+  String get mtuHelp =>
+      'टनल में पैकेट का आकार (केवल VPN मोड)। मोबाइल नेटवर्क पर कुछ साइटें अटकें तो 1280 से 1420 आज़माएँ। खाली का मतलब डिफ़ॉल्ट।';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return '$min से $max के बीच की संख्या दर्ज करें।';
+  }
+
+  @override
+  String get trayOpen => 'Wardkeep खोलें';
+
+  @override
+  String get trayQuit => 'बाहर निकलें';
+
+  @override
+  String get traySwitchServer => 'सर्वर बदलें';
+
+  @override
+  String get keepInTray => 'ट्रे में चलता रहे';
+
+  @override
+  String get keepInTrayHint =>
+      'विंडो बंद करने पर वह केवल छिप जाती है। ऐप और VPN बंद करने के लिए ट्रे मेनू में “बाहर निकलें” चुनें।';
+
+  @override
+  String usageUsed(String size) {
+    return '$size उपयोग हुआ';
+  }
+
+  @override
+  String get menuResetUsage => 'डेटा उपयोग रीसेट करें';
+
+  @override
+  String get dnsPickerHelp =>
+      'वेबसाइट के नाम VPN के ज़रिए आपके चुने हुए रिज़ॉल्वर से खोजे जाते हैं। DNSCrypt यह भी साबित करता है कि जवाब उसी रिज़ॉल्वर से आया है।';
+
+  @override
+  String get dnsDefault => 'डिफ़ॉल्ट';
+
+  @override
+  String get dnsSectionDnscrypt => 'DNSCrypt · DNSSEC, बिना लॉग, बिना फ़िल्टर';
+
+  @override
+  String get dnsCustom => 'कस्टम';
+
+  @override
+  String get dnsCustomLabel => 'पता या DNS stamp';
+
+  @override
+  String get dnsAnonymized => 'गुमनाम DNSCrypt';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'क्वेरी एक रिले से होकर जाती हैं, इसलिए रिज़ॉल्वर कभी नहीं देखता कि वे कहाँ से आईं';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'इसके लिए कोई DNSCrypt रिज़ॉल्वर चुनें';
+
+  @override
+  String get dnsRelay => 'रिले';
+
+  @override
+  String get dnsRelayChoose => 'रिले चुनें';
+
+  @override
+  String get dnsRelayAutomatic => 'अपने-आप (दूसरा ऑपरेटर)';
+
+  @override
+  String get dnsErrAddress =>
+      'https://, tls://, tcp:// या udp:// से शुरू होने वाला पता, या sdns:// stamp दें';
+
+  @override
+  String get dnsErrDamaged =>
+      'यह stamp खराब या अधूरा है। इसे दोबारा कॉपी करें।';
+
+  @override
+  String get dnsErrUnsupported => 'इस तरह का stamp समर्थित नहीं है';
+
+  @override
+  String get dnsErrRelayStamp => 'यह रिले का stamp है, रिज़ॉल्वर का नहीं';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'यह आपके खोजे गए नामों की सुरक्षा करता है। यह नहीं छिपाता कि आप बाद में किन साइटों से जुड़ते हैं।';
+
+  @override
+  String get dnsAnonymizedShort => 'गुमनाम';
+
+  @override
+  String get flAuthKey => 'प्रमाणीकरण कुंजी';
+
+  @override
+  String get flControlServer => 'कंट्रोल सर्वर';
+
+  @override
+  String get flDeviceName => 'डिवाइस का नाम';
+
+  @override
+  String get flExitDevice => 'एग्ज़िट डिवाइस';
+
+  @override
+  String get flUseSubnets => 'अन्य डिवाइसों के सबनेट का उपयोग करें';
+
+  @override
+  String get flTempDevice => 'अस्थायी डिवाइस';
+
+  @override
+  String get hpAuthKey =>
+      'Tailscale एडमिन पेज से मिली पूर्व-अधिकृत कुंजी, या headscale preauthkeys create से बनाई गई';
+
+  @override
+  String get hpControlServer =>
+      'खाली छोड़ने पर Tailscale; Headscale के लिए उसका पता, जैसे https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'नेटवर्क में इस डिवाइस का नाम; खाली छोड़ने पर डिवाइस का अपना नाम';
+
+  @override
+  String get hpExitDevice =>
+      'उस डिवाइस का नाम या पता जिसका इंटरनेट कनेक्शन इस्तेमाल करना है; खाली छोड़ने पर केवल आपके डिवाइस तक पहुँच';
+
+  @override
+  String get hpTempDevice => 'ऑफ़लाइन होने पर नेटवर्क से हटा दिया जाता है';
+
+  @override
+  String get devicesTitle => 'मेरे डिवाइस';
+
+  @override
+  String get devicesNotConnected =>
+      'अपने डिवाइस देखने के लिए Tailscale या Headscale प्रोफ़ाइल से कनेक्ट करें।';
+
+  @override
+  String get devicesJoining => 'नेटवर्क से जुड़ रहे हैं…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'नेटवर्क ने इस डिवाइस की कुंजी स्वीकार नहीं की। नई कुंजी बनाएँ और प्रोफ़ाइल बदलें।';
+
+  @override
+  String get devicesEmpty => 'इस नेटवर्क में अभी कोई और डिवाइस नहीं है।';
+
+  @override
+  String get devicesThisDevice => 'यह डिवाइस';
+
+  @override
+  String get deviceOnline => 'ऑनलाइन';
+
+  @override
+  String get deviceOffline => 'ऑफ़लाइन';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'आख़िरी बार $when को देखा गया';
+  }
+
+  @override
+  String get deviceUseAsExit => 'एग्ज़िट के रूप में उपयोग करें';
+
+  @override
+  String get deviceStopExit => 'एग्ज़िट के रूप में उपयोग बंद करें';
+
+  @override
+  String get deviceIsExit => 'एग्ज़िट उपयोग में';
+
+  @override
+  String get devicesExitHint =>
+      'अपने किसी डिवाइस को एग्ज़िट बनाएँ: आपका सारा ट्रैफ़िक उसके कनेक्शन से बाहर जाएगा।';
+
+  @override
+  String get deviceCopyName => 'नाम कॉपी करें';
+
+  @override
+  String get deviceCopyAddress => 'पता कॉपी करें';
+
+  @override
+  String get deviceCopied => 'कॉपी किया गया';
+
+  @override
+  String get errMeshExit =>
+      'उस डिवाइस को अभी एग्ज़िट के रूप में उपयोग नहीं किया जा सकता। वह ऑनलाइन होना चाहिए और अपना कनेक्शन साझा करना चाहिए।';
 }

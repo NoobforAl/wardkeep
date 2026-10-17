@@ -243,7 +243,7 @@ class DbCountries extends Notifier<Map<String, String>> {
     _for = db;
     final hosts = {
       for (final p in ref.read(profilesProvider))
-        if (p.protocol != 'tor' && p.server.isNotEmpty) p.server,
+        if (p.protocol != 'tor' && !p.isMesh && p.server.isNotEmpty) p.server,
     }.where((h) => !state.containsKey(h) && _tried.add(h)).toList();
     // A few at a time: each name is a DNS question.
     for (var i = 0; i < hosts.length; i += 4) {

@@ -23,6 +23,7 @@ String? translateCode(AppLocalizations l, String code, Map<String, String> args)
     'SUB_HTTP' => l.subHttp(args['status'] ?? ''),
     'SUB_TOO_LARGE' => l.subTooLarge,
     'SUB_BAD_URL' => l.subBadUrl,
+    'MESH_FAILED' => l.errMeshExit,
     _ => null,
   };
 }

@@ -2807,6 +2807,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your selected server is here: its traffic would skip the VPN too.'**
   String get bypassCountriesYourServer;
+
+  /// Settings switch: whether IPv6 traffic is allowed through the VPN
+  ///
+  /// In en, this message translates to:
+  /// **'IPv6'**
+  String get ipv6Title;
+
+  /// No description provided for @ipv6Hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: only IPv4 is used; IPv6 connections are refused, not sent around the VPN.'**
+  String get ipv6Hint;
+
+  /// Settings row: the packet size of the VPN tunnel
+  ///
+  /// In en, this message translates to:
+  /// **'MTU'**
+  String get mtuTitle;
+
+  /// No description provided for @mtuAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get mtuAuto;
+
+  /// No description provided for @mtuHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The packet size of the tunnel (VPN mode only). Try 1280 to 1420 if some sites hang on a mobile network. Empty is the default.'**
+  String get mtuHelp;
+
+  /// Error under the MTU field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number from {min} to {max}.'**
+  String mtuInvalid(int min, int max);
+
+  /// Windows tray menu: brings the app window back
+  ///
+  /// In en, this message translates to:
+  /// **'Open Wardkeep'**
+  String get trayOpen;
+
+  /// Windows tray menu: ends the app and its core
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get trayQuit;
+
+  /// Windows tray menu: submenu listing the servers
+  ///
+  /// In en, this message translates to:
+  /// **'Switch server'**
+  String get traySwitchServer;
+
+  /// Windows setting: closing the window hides it to the tray
+  ///
+  /// In en, this message translates to:
+  /// **'Keep running in the tray'**
+  String get keepInTray;
+
+  /// Explains the keep-in-tray setting
+  ///
+  /// In en, this message translates to:
+  /// **'Closing the window only hides it. Use Quit in the tray menu to end the app and the VPN.'**
+  String get keepInTrayHint;
+
+  /// Under a server: how much data went through it, e.g. 1.2 GB used
+  ///
+  /// In en, this message translates to:
+  /// **'{size} used'**
+  String usageUsed(String size);
+
+  /// No description provided for @menuResetUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset data usage'**
+  String get menuResetUsage;
+
+  /// Help text at the top of the DNS screen
+  ///
+  /// In en, this message translates to:
+  /// **'Website names are looked up through the VPN by the resolver you choose. DNSCrypt also proves that the answer came from that resolver.'**
+  String get dnsPickerHelp;
+
+  /// Title of the default DNS choice
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get dnsDefault;
+
+  /// Header over the list of DNSCrypt resolvers; they all validate DNSSEC, keep no logs and block nothing
+  ///
+  /// In en, this message translates to:
+  /// **'DNSCrypt · DNSSEC, no logs, no filtering'**
+  String get dnsSectionDnscrypt;
+
+  /// A DNS resolver the person types in
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get dnsCustom;
+
+  /// Field label: a resolver URL or an sdns:// stamp
+  ///
+  /// In en, this message translates to:
+  /// **'Address or DNS stamp'**
+  String get dnsCustomLabel;
+
+  /// Switch: send DNSCrypt queries through a relay
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymized DNSCrypt'**
+  String get dnsAnonymized;
+
+  /// Explains Anonymized DNSCrypt
+  ///
+  /// In en, this message translates to:
+  /// **'Queries go through a relay, so the resolver never sees where they come from'**
+  String get dnsAnonymizedHint;
+
+  /// Shown under the Anonymized switch while it cannot be used
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a DNSCrypt resolver to use this'**
+  String get dnsAnonymizedNeedsDnscrypt;
+
+  /// The relay Anonymized DNSCrypt goes through
+  ///
+  /// In en, this message translates to:
+  /// **'Relay'**
+  String get dnsRelay;
+
+  /// Dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a relay'**
+  String get dnsRelayChoose;
+
+  /// Relay choice: the app picks one run by someone other than the resolver's operator
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic (another operator)'**
+  String get dnsRelayAutomatic;
+
+  /// Error under the custom DNS field
+  ///
+  /// In en, this message translates to:
+  /// **'Use an address that starts with https://, tls://, tcp:// or udp://, or an sdns:// stamp'**
+  String get dnsErrAddress;
+
+  /// Error for an invalid DNS stamp
+  ///
+  /// In en, this message translates to:
+  /// **'This stamp is damaged or cut short. Copy it again.'**
+  String get dnsErrDamaged;
+
+  /// Error for a DNS stamp of a kind the app does not use
+  ///
+  /// In en, this message translates to:
+  /// **'This kind of stamp is not supported'**
+  String get dnsErrUnsupported;
+
+  /// Error when a relay stamp is typed as the resolver
+  ///
+  /// In en, this message translates to:
+  /// **'This is a relay stamp, not a resolver'**
+  String get dnsErrRelayStamp;
+
+  /// A line in the connected screen naming the resolver, e.g. DNS: DNSCrypt · quad9.net
+  ///
+  /// In en, this message translates to:
+  /// **'DNS: {resolver}'**
+  String dnsLine(String resolver);
+
+  /// Short note at the bottom of the DNS screen
+  ///
+  /// In en, this message translates to:
+  /// **'This protects the names you look up. It does not hide which sites you then connect to.'**
+  String get dnsLimits;
+
+  /// Short tag after a DNS resolver name when its queries go through a relay
+  ///
+  /// In en, this message translates to:
+  /// **'anonymized'**
+  String get dnsAnonymizedShort;
+
+  /// Field label of the Tailscale/Headscale profile editor (the key that lets this device join the network)
+  ///
+  /// In en, this message translates to:
+  /// **'Auth key'**
+  String get flAuthKey;
+
+  /// Field label of the Tailscale/Headscale profile editor (the coordination server)
+  ///
+  /// In en, this message translates to:
+  /// **'Control server'**
+  String get flControlServer;
+
+  /// Field label of the Tailscale/Headscale profile editor (this device's name in the network)
+  ///
+  /// In en, this message translates to:
+  /// **'Device name'**
+  String get flDeviceName;
+
+  /// Field label of the Tailscale/Headscale profile editor (the device whose internet connection is used)
+  ///
+  /// In en, this message translates to:
+  /// **'Exit device'**
+  String get flExitDevice;
+
+  /// Field label of the Tailscale/Headscale profile editor (accept the routes other devices advertise)
+  ///
+  /// In en, this message translates to:
+  /// **'Use subnets of other devices'**
+  String get flUseSubnets;
+
+  /// Field label of the Tailscale/Headscale profile editor (an ephemeral node)
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary device'**
+  String get flTempDevice;
+
+  /// Help text under the auth key field of the Tailscale/Headscale profile editor
+  ///
+  /// In en, this message translates to:
+  /// **'A pre-authorized key from the Tailscale admin page, or made by headscale preauthkeys create'**
+  String get hpAuthKey;
+
+  /// Help text under the control server field of the Tailscale/Headscale profile editor
+  ///
+  /// In en, this message translates to:
+  /// **'Empty uses Tailscale; for Headscale, its address such as https://hs.example.com'**
+  String get hpControlServer;
+
+  /// Help text under the device name field of the Tailscale/Headscale profile editor
+  ///
+  /// In en, this message translates to:
+  /// **'The name this device has in the network; empty uses the device\'s own'**
+  String get hpDeviceName;
+
+  /// Help text under the exit device field of the Tailscale/Headscale profile editor
+  ///
+  /// In en, this message translates to:
+  /// **'Name or address of a device whose internet connection to use; empty reaches only your devices'**
+  String get hpExitDevice;
+
+  /// Help text under the temporary device switch of the Tailscale/Headscale profile editor
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from the network when it goes offline'**
+  String get hpTempDevice;
+
+  /// Title of the screen that lists the devices of the connected Tailscale/Headscale network; also the name of that group in the location list
+  ///
+  /// In en, this message translates to:
+  /// **'My devices'**
+  String get devicesTitle;
+
+  /// No description provided for @devicesNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a Tailscale or Headscale profile to see your devices.'**
+  String get devicesNotConnected;
+
+  /// No description provided for @devicesJoining.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining the network…'**
+  String get devicesJoining;
+
+  /// No description provided for @devicesLoginNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'The network did not accept this device\'s key. Make a new key and edit the profile.'**
+  String get devicesLoginNeeded;
+
+  /// No description provided for @devicesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No other devices in this network yet.'**
+  String get devicesEmpty;
+
+  /// No description provided for @devicesThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get devicesThisDevice;
+
+  /// No description provided for @deviceOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get deviceOnline;
+
+  /// No description provided for @deviceOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get deviceOffline;
+
+  /// When an offline device was last online
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen {when}'**
+  String deviceLastSeen(String when);
+
+  /// No description provided for @deviceUseAsExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as exit'**
+  String get deviceUseAsExit;
+
+  /// No description provided for @deviceStopExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop using as exit'**
+  String get deviceStopExit;
+
+  /// No description provided for @deviceIsExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit in use'**
+  String get deviceIsExit;
+
+  /// No description provided for @devicesExitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use one of your devices as the exit: all your traffic leaves from its connection.'**
+  String get devicesExitHint;
+
+  /// No description provided for @deviceCopyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy name'**
+  String get deviceCopyName;
+
+  /// No description provided for @deviceCopyAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy address'**
+  String get deviceCopyAddress;
+
+  /// No description provided for @deviceCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get deviceCopied;
+
+  /// No description provided for @errMeshExit.
+  ///
+  /// In en, this message translates to:
+  /// **'That device cannot be used as the exit right now. It must be online and offer its connection.'**
+  String get errMeshExit;
 }
 
 class _AppLocalizationsDelegate

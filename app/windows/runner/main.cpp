@@ -15,6 +15,14 @@ namespace {
 // window forward and ends.
 constexpr wchar_t kSingleInstanceMutex[] = L"Local\\Wardkeep.SingleInstance";
 
+// Started by Windows at sign-in (the installer's "start with Windows"): no window of its own.
+bool IsBackgroundStart(const std::vector<std::string>& arguments) {
+  for (const auto& a : arguments) {
+    if (a == "--background") return true;
+  }
+  return false;
+}
+
 bool HandOverToRunningCopy(const std::vector<std::string>& arguments) {
   HWND existing = nullptr;
   // The first copy may still be opening its window.
@@ -36,6 +44,10 @@ bool HandOverToRunningCopy(const std::vector<std::string>& arguments) {
     data.lpData = const_cast<char*>(joined.data());
     ::SendMessageW(existing, WM_COPYDATA, 0, reinterpret_cast<LPARAM>(&data));
   }
+  // A start at sign-in while the app is already running has nothing to show.
+  if (IsBackgroundStart(arguments)) return true;
+  // The first copy may be hidden in the tray (Settings: keep running in the tray): bring it back.
+  if (!::IsWindowVisible(existing)) ::ShowWindow(existing, SW_SHOW);
   if (::IsIconic(existing)) ::ShowWindow(existing, SW_RESTORE);
   ::SetForegroundWindow(existing);
   return true;
@@ -65,11 +77,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
+  const bool background = IsBackgroundStart(command_line_arguments);
+
   flutter::DartProject project(L"data");
 
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);
+  window.SetStartHidden(background);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(520, 720);
   if (!window.Create(L"Wardkeep", origin, size)) {

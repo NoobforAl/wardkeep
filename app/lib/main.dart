@@ -18,10 +18,12 @@ import 'ui/screens/home_screen.dart';
 import 'ui/screens/onboarding_screen.dart';
 import 'ui/screens/profiles_screen.dart';
 import 'ui/theme.dart';
+import 'ui/tray.dart';
 import 'ui/widgets/window_frame.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  startInBackground = args.contains('--background');
   final store = await AppStore.open();
   await _setUpWindow(store);
   // On a computer, opening a link or config file with Wardkeep starts it with that as an argument.
@@ -53,6 +55,8 @@ Future<void> _setUpWindow(AppStore store) async {
       ),
       () async {
         await windowManager.setBounds(bounds);
+        // Started by Windows at sign-in: stays in the tray until it is opened.
+        if (startInBackground) return;
         await windowManager.show();
         await windowManager.focus();
       },
@@ -133,6 +137,12 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // The tray icon (Windows), when the window has been set up (the icon is what brings it back).
+      if (customTitleBar) {
+        unawaited(ref.read(trayProvider).start());
+      } else if (startInBackground) {
+        unawaited(windowManager.show()); // no window set-up, so no tray either: nothing else would bring it back
+      }
       // Update subscriptions whose refresh interval has passed.
       ref.read(subscriptionsProvider.notifier).refreshDue();
       // A link or file sent by another app comes first; the introduction steps aside for it.

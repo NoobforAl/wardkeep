@@ -42,6 +42,10 @@ class ScriptedEngine implements VpnEngine {
   @override
   Future<BypassReport> parseBypass(String text) async => const BypassReport();
   @override
+  Future<MeshStatus> meshStatus() async => throw UnimplementedError();
+  @override
+  Future<MeshStatus> setMeshExit(String id) async => throw UnimplementedError();
+  @override
   Future<Map<String, String>> profileValues(ProfileInfo profile) async => const {};
   @override
   Future<String> exportLink(ProfileInfo profile) async => '';

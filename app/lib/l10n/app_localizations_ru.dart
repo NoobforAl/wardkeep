@@ -1667,4 +1667,207 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'Здесь ваш выбранный сервер: его трафик тоже пойдёт мимо VPN.';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'Выкл.: только IPv4; соединения IPv6 отклоняются, а не идут в обход VPN.';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'По умолчанию';
+
+  @override
+  String get mtuHelp =>
+      'Размер пакета в туннеле (только режим VPN). Если на мобильной сети часть сайтов зависает, попробуйте от 1280 до 1420. Пусто — по умолчанию.';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return 'Введите число от $min до $max.';
+  }
+
+  @override
+  String get trayOpen => 'Открыть Wardkeep';
+
+  @override
+  String get trayQuit => 'Выход';
+
+  @override
+  String get traySwitchServer => 'Сменить сервер';
+
+  @override
+  String get keepInTray => 'Работать в трее';
+
+  @override
+  String get keepInTrayHint =>
+      'Закрытие окна только скрывает его. Чтобы завершить приложение и VPN, выберите «Выход» в меню значка.';
+
+  @override
+  String usageUsed(String size) {
+    return 'Использовано $size';
+  }
+
+  @override
+  String get menuResetUsage => 'Сбросить счётчик данных';
+
+  @override
+  String get dnsPickerHelp =>
+      'Имена сайтов разрешаются через VPN выбранным вами резолвером. DNSCrypt также доказывает, что ответ пришёл именно от него.';
+
+  @override
+  String get dnsDefault => 'По умолчанию';
+
+  @override
+  String get dnsSectionDnscrypt =>
+      'DNSCrypt · DNSSEC, без логов, без фильтрации';
+
+  @override
+  String get dnsCustom => 'Свой адрес';
+
+  @override
+  String get dnsCustomLabel => 'Адрес или DNS-штамп';
+
+  @override
+  String get dnsAnonymized => 'Анонимный DNSCrypt';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'Запросы идут через ретранслятор, поэтому резолвер не видит, откуда они';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'Выберите резолвер DNSCrypt, чтобы включить это';
+
+  @override
+  String get dnsRelay => 'Ретранслятор';
+
+  @override
+  String get dnsRelayChoose => 'Выберите ретранслятор';
+
+  @override
+  String get dnsRelayAutomatic => 'Автоматически (другой оператор)';
+
+  @override
+  String get dnsErrAddress =>
+      'Введите адрес, начинающийся с https://, tls://, tcp:// или udp://, либо штамп sdns://';
+
+  @override
+  String get dnsErrDamaged =>
+      'Штамп повреждён или обрезан. Скопируйте его заново.';
+
+  @override
+  String get dnsErrUnsupported => 'Этот тип штампа не поддерживается';
+
+  @override
+  String get dnsErrRelayStamp => 'Это штамп ретранслятора, а не резолвера';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'Это защищает имена, которые вы запрашиваете. Оно не скрывает, к каким сайтам вы потом подключаетесь.';
+
+  @override
+  String get dnsAnonymizedShort => 'анонимно';
+
+  @override
+  String get flAuthKey => 'Ключ авторизации';
+
+  @override
+  String get flControlServer => 'Сервер управления';
+
+  @override
+  String get flDeviceName => 'Имя устройства';
+
+  @override
+  String get flExitDevice => 'Устройство выхода';
+
+  @override
+  String get flUseSubnets => 'Использовать подсети других устройств';
+
+  @override
+  String get flTempDevice => 'Временное устройство';
+
+  @override
+  String get hpAuthKey =>
+      'Заранее авторизованный ключ со страницы администратора Tailscale или созданный командой headscale preauthkeys create';
+
+  @override
+  String get hpControlServer =>
+      'Пусто — Tailscale; для Headscale — его адрес, например https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'Имя этого устройства в сети; пусто — собственное имя устройства';
+
+  @override
+  String get hpExitDevice =>
+      'Имя или адрес устройства, чьё интернет-соединение использовать; пусто — доступ только к вашим устройствам';
+
+  @override
+  String get hpTempDevice => 'Удаляется из сети, когда перестаёт быть на связи';
+
+  @override
+  String get devicesTitle => 'Мои устройства';
+
+  @override
+  String get devicesNotConnected =>
+      'Подключите профиль Tailscale или Headscale, чтобы увидеть свои устройства.';
+
+  @override
+  String get devicesJoining => 'Подключение к сети…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'Сеть не приняла ключ этого устройства. Создайте новый ключ и измените профиль.';
+
+  @override
+  String get devicesEmpty => 'В этой сети пока нет других устройств.';
+
+  @override
+  String get devicesThisDevice => 'Это устройство';
+
+  @override
+  String get deviceOnline => 'В сети';
+
+  @override
+  String get deviceOffline => 'Не в сети';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'Был в сети $when';
+  }
+
+  @override
+  String get deviceUseAsExit => 'Использовать как выход';
+
+  @override
+  String get deviceStopExit => 'Больше не использовать как выход';
+
+  @override
+  String get deviceIsExit => 'Используется как выход';
+
+  @override
+  String get devicesExitHint =>
+      'Используйте одно из своих устройств как выход: весь ваш трафик пойдёт через его соединение.';
+
+  @override
+  String get deviceCopyName => 'Копировать имя';
+
+  @override
+  String get deviceCopyAddress => 'Копировать адрес';
+
+  @override
+  String get deviceCopied => 'Скопировано';
+
+  @override
+  String get errMeshExit =>
+      'Сейчас это устройство нельзя использовать как выход. Оно должно быть в сети и предоставлять своё соединение.';
 }

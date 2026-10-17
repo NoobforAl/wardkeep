@@ -45,10 +45,10 @@ List<ProfileInfo> byLatency(Iterable<ProfileInfo> profiles) {
   return list;
 }
 
-/// Profiles that Auto and country choices may start on. Tor only runs when the
-/// user picks it, and a profile that wants a password the app doesn't have
+/// Profiles that Auto and country choices may start on. Tor and a mesh of the user's own
+/// devices only run when the user picks them, and a profile that wants a password the app doesn't have
 /// can't start on its own.
-bool _automatic(ProfileInfo p) => p.protocol != 'tor' && !(p.needsCredentials && !p.hasCredentials);
+bool _automatic(ProfileInfo p) => p.protocol != 'tor' && !p.isMesh && !(p.needsCredentials && !p.hasCredentials);
 
 /// The order in which [profiles] are tried for [choice], or null without profiles.
 /// [countryOf] gives the country of a profile (null = unknown).
@@ -105,7 +105,7 @@ List<CountryGroup> groupByCountry(
 ) {
   final by = <String?, List<ProfileInfo>>{};
   for (final p in profiles) {
-    if (p.protocol == 'tor') continue; // Tor has its own row
+    if (p.protocol == 'tor' || p.isMesh) continue; // Tor and the user's own devices have their own rows
     by.putIfAbsent(countryOf(p), () => []).add(p);
   }
   final known = [

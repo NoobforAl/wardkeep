@@ -1639,4 +1639,205 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'Seçtiğiniz sunucu burada: trafiği de VPN\'i atlar.';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'Kapalı: yalnızca IPv4 kullanılır; IPv6 bağlantıları reddedilir, VPN dışına gönderilmez.';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'Varsayılan';
+
+  @override
+  String get mtuHelp =>
+      'Tünelin paket boyutu (yalnızca VPN modu). Mobil ağda bazı siteler takılırsa 1280 ile 1420 arasını deneyin. Boş bırakmak varsayılandır.';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return '$min ile $max arasında bir sayı girin.';
+  }
+
+  @override
+  String get trayOpen => 'Wardkeep\'i aç';
+
+  @override
+  String get trayQuit => 'Çık';
+
+  @override
+  String get traySwitchServer => 'Sunucuyu değiştir';
+
+  @override
+  String get keepInTray => 'Sistem tepsisinde çalışmaya devam et';
+
+  @override
+  String get keepInTrayHint =>
+      'Pencereyi kapatmak onu yalnızca gizler. Uygulamayı ve VPN\'i sonlandırmak için tepsi menüsünden “Çık”ı seçin.';
+
+  @override
+  String usageUsed(String size) {
+    return '$size kullanıldı';
+  }
+
+  @override
+  String get menuResetUsage => 'Veri kullanımını sıfırla';
+
+  @override
+  String get dnsPickerHelp =>
+      'Site adları, seçtiğiniz çözümleyici tarafından VPN üzerinden sorgulanır. DNSCrypt ayrıca yanıtın o çözümleyiciden geldiğini kanıtlar.';
+
+  @override
+  String get dnsDefault => 'Varsayılan';
+
+  @override
+  String get dnsSectionDnscrypt => 'DNSCrypt · DNSSEC, günlüksüz, filtresiz';
+
+  @override
+  String get dnsCustom => 'Özel';
+
+  @override
+  String get dnsCustomLabel => 'Adres veya DNS stamp';
+
+  @override
+  String get dnsAnonymized => 'Anonim DNSCrypt';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'Sorgular bir aktarıcıdan geçer; çözümleyici nereden geldiklerini hiç görmez';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'Bunu kullanmak için bir DNSCrypt çözümleyici seçin';
+
+  @override
+  String get dnsRelay => 'Aktarıcı';
+
+  @override
+  String get dnsRelayChoose => 'Bir aktarıcı seçin';
+
+  @override
+  String get dnsRelayAutomatic => 'Otomatik (başka işletmeci)';
+
+  @override
+  String get dnsErrAddress =>
+      'https://, tls://, tcp:// veya udp:// ile başlayan bir adres ya da sdns:// stamp girin';
+
+  @override
+  String get dnsErrDamaged => 'Bu stamp bozuk veya yarım. Yeniden kopyalayın.';
+
+  @override
+  String get dnsErrUnsupported => 'Bu tür stamp desteklenmiyor';
+
+  @override
+  String get dnsErrRelayStamp => 'Bu bir aktarıcı stamp\'i, çözümleyici değil';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'Bu, sorguladığınız adları korur. Ardından hangi sitelere bağlandığınızı gizlemez.';
+
+  @override
+  String get dnsAnonymizedShort => 'anonim';
+
+  @override
+  String get flAuthKey => 'Kimlik doğrulama anahtarı';
+
+  @override
+  String get flControlServer => 'Kontrol sunucusu';
+
+  @override
+  String get flDeviceName => 'Cihaz adı';
+
+  @override
+  String get flExitDevice => 'Çıkış cihazı';
+
+  @override
+  String get flUseSubnets => 'Diğer cihazların alt ağlarını kullan';
+
+  @override
+  String get flTempDevice => 'Geçici cihaz';
+
+  @override
+  String get hpAuthKey =>
+      'Tailscale yönetim sayfasından alınan önceden yetkilendirilmiş bir anahtar ya da headscale preauthkeys create ile oluşturulmuş';
+
+  @override
+  String get hpControlServer =>
+      'Boş bırakılırsa Tailscale kullanılır; Headscale için adresi, örneğin https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'Bu cihazın ağdaki adı; boşsa cihazın kendi adı kullanılır';
+
+  @override
+  String get hpExitDevice =>
+      'İnternet bağlantısı kullanılacak cihazın adı veya adresi; boşsa yalnızca kendi cihazlarınıza ulaşılır';
+
+  @override
+  String get hpTempDevice => 'Çevrimdışı olunca ağdan kaldırılır';
+
+  @override
+  String get devicesTitle => 'Cihazlarım';
+
+  @override
+  String get devicesNotConnected =>
+      'Cihazlarınızı görmek için bir Tailscale veya Headscale profiline bağlanın.';
+
+  @override
+  String get devicesJoining => 'Ağa katılınıyor…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'Ağ bu cihazın anahtarını kabul etmedi. Yeni bir anahtar oluşturup profili düzenleyin.';
+
+  @override
+  String get devicesEmpty => 'Bu ağda henüz başka cihaz yok.';
+
+  @override
+  String get devicesThisDevice => 'Bu cihaz';
+
+  @override
+  String get deviceOnline => 'Çevrimiçi';
+
+  @override
+  String get deviceOffline => 'Çevrimdışı';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'Son görülme $when';
+  }
+
+  @override
+  String get deviceUseAsExit => 'Çıkış olarak kullan';
+
+  @override
+  String get deviceStopExit => 'Çıkış olarak kullanmayı bırak';
+
+  @override
+  String get deviceIsExit => 'Çıkış kullanımda';
+
+  @override
+  String get devicesExitHint =>
+      'Cihazlarınızdan birini çıkış olarak kullanın: tüm trafiğiniz onun bağlantısından çıkar.';
+
+  @override
+  String get deviceCopyName => 'Adı kopyala';
+
+  @override
+  String get deviceCopyAddress => 'Adresi kopyala';
+
+  @override
+  String get deviceCopied => 'Kopyalandı';
+
+  @override
+  String get errMeshExit =>
+      'Bu cihaz şu anda çıkış olarak kullanılamıyor. Çevrimiçi olmalı ve bağlantısını sunmalı.';
 }

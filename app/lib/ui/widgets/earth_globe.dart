@@ -180,33 +180,55 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   // the system does not ask for less motion), at 11 to 22 frames a second. Only the overlay on top
   // of the globe is redrawn by it; the dotted Earth underneath is kept as it is.
   final _clock = ValueNotifier<double>(0);
-  late final Ticker _flow = createTicker(_onFlow);
-  Duration _lastFlow = Duration.zero;
 
-  void _onFlow(Duration elapsed) {
-    // Every frame costs the same on a mid-range phone (the whole screen is drawn again), so the rate is
-    // what counts: about 22 frames a second while data moves, about 11 while the line only breathes.
+  // A timer, not a Ticker: a running Ticker asks for a new frame at every screen refresh (60 a second) even
+  // if the clock does not move, and on a mid-range phone every frame draws the whole screen again (measured:
+  // 59 frames a second and a whole processor core). The timer asks for a frame only when the clock moves.
+  Timer? _flowTimer;
+  final _flowWatch = Stopwatch();
+  Duration _flowPeriod = Duration.zero;
+
+  /// Every frame costs the same, so the rate is what counts: about 22 frames a second while data moves or
+  /// the connection is being made, about 11 while the line only breathes.
+  Duration get _wantedPeriod {
     final calm = !widget.connecting && widget.upBps < 50 && widget.downBps < 50;
-    if (elapsed - _lastFlow < Duration(milliseconds: calm ? 90 : 45)) return;
-    _lastFlow = elapsed;
-    _clock.value = elapsed.inMicroseconds / 1e6;
+    return Duration(milliseconds: calm ? 90 : 45);
   }
+
+  void _onFlow(Timer _) => _clock.value = _flowWatch.elapsedMicroseconds / 1e6;
 
   bool get _animating => widget.connecting || widget.connected;
 
   void _syncFlow() {
     final run = _animating && !MediaQuery.disableAnimationsOf(context);
-    if (run && !_flow.isActive) {
-      _lastFlow = Duration.zero;
-      _flow.start();
-    } else if (!run && _flow.isActive) {
-      _flow.stop();
+    if (run) {
+      final period = _wantedPeriod;
+      if (_flowTimer == null || period != _flowPeriod) {
+        _flowTimer?.cancel();
+        _flowPeriod = period;
+        if (!_flowWatch.isRunning) _flowWatch.start();
+        _flowTimer = Timer.periodic(period, _onFlow);
+      }
+    } else if (_flowTimer != null) {
+      _flowTimer!.cancel();
+      _flowTimer = null;
+      _flowWatch
+        ..stop()
+        ..reset();
     }
   }
 
   /// Whether the connection animation is running (for tests).
   @visibleForTesting
-  bool get flowRunning => _flow.isActive;
+  bool get flowRunning => _flowTimer?.isActive ?? false;
+
+  /// The animation's clock (for tests).
+  @visibleForTesting
+  ValueNotifier<double> get clockForTest => _clock;
+
+  /// How often the animation draws a frame (for tests); zero when it does not run.
+  @visibleForTesting
+  Duration get flowPeriod => flowRunning ? _flowPeriod : Duration.zero;
   double _radius = 150;
   double _moved = 0; // how far the finger has gone since it touched, in pixels
 
@@ -399,7 +421,7 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
 
   @override
   void dispose() {
-    _flow.dispose();
+    _flowTimer?.cancel();
     _clock.dispose();
     _coast.dispose();
     _fly.dispose();

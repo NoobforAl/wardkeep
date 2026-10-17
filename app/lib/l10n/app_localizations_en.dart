@@ -1632,4 +1632,206 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'Your selected server is here: its traffic would skip the VPN too.';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'Off: only IPv4 is used; IPv6 connections are refused, not sent around the VPN.';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'Default';
+
+  @override
+  String get mtuHelp =>
+      'The packet size of the tunnel (VPN mode only). Try 1280 to 1420 if some sites hang on a mobile network. Empty is the default.';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return 'Enter a number from $min to $max.';
+  }
+
+  @override
+  String get trayOpen => 'Open Wardkeep';
+
+  @override
+  String get trayQuit => 'Quit';
+
+  @override
+  String get traySwitchServer => 'Switch server';
+
+  @override
+  String get keepInTray => 'Keep running in the tray';
+
+  @override
+  String get keepInTrayHint =>
+      'Closing the window only hides it. Use Quit in the tray menu to end the app and the VPN.';
+
+  @override
+  String usageUsed(String size) {
+    return '$size used';
+  }
+
+  @override
+  String get menuResetUsage => 'Reset data usage';
+
+  @override
+  String get dnsPickerHelp =>
+      'Website names are looked up through the VPN by the resolver you choose. DNSCrypt also proves that the answer came from that resolver.';
+
+  @override
+  String get dnsDefault => 'Default';
+
+  @override
+  String get dnsSectionDnscrypt => 'DNSCrypt · DNSSEC, no logs, no filtering';
+
+  @override
+  String get dnsCustom => 'Custom';
+
+  @override
+  String get dnsCustomLabel => 'Address or DNS stamp';
+
+  @override
+  String get dnsAnonymized => 'Anonymized DNSCrypt';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'Queries go through a relay, so the resolver never sees where they come from';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'Choose a DNSCrypt resolver to use this';
+
+  @override
+  String get dnsRelay => 'Relay';
+
+  @override
+  String get dnsRelayChoose => 'Choose a relay';
+
+  @override
+  String get dnsRelayAutomatic => 'Automatic (another operator)';
+
+  @override
+  String get dnsErrAddress =>
+      'Use an address that starts with https://, tls://, tcp:// or udp://, or an sdns:// stamp';
+
+  @override
+  String get dnsErrDamaged =>
+      'This stamp is damaged or cut short. Copy it again.';
+
+  @override
+  String get dnsErrUnsupported => 'This kind of stamp is not supported';
+
+  @override
+  String get dnsErrRelayStamp => 'This is a relay stamp, not a resolver';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'This protects the names you look up. It does not hide which sites you then connect to.';
+
+  @override
+  String get dnsAnonymizedShort => 'anonymized';
+
+  @override
+  String get flAuthKey => 'Auth key';
+
+  @override
+  String get flControlServer => 'Control server';
+
+  @override
+  String get flDeviceName => 'Device name';
+
+  @override
+  String get flExitDevice => 'Exit device';
+
+  @override
+  String get flUseSubnets => 'Use subnets of other devices';
+
+  @override
+  String get flTempDevice => 'Temporary device';
+
+  @override
+  String get hpAuthKey =>
+      'A pre-authorized key from the Tailscale admin page, or made by headscale preauthkeys create';
+
+  @override
+  String get hpControlServer =>
+      'Empty uses Tailscale; for Headscale, its address such as https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'The name this device has in the network; empty uses the device\'s own';
+
+  @override
+  String get hpExitDevice =>
+      'Name or address of a device whose internet connection to use; empty reaches only your devices';
+
+  @override
+  String get hpTempDevice => 'Removed from the network when it goes offline';
+
+  @override
+  String get devicesTitle => 'My devices';
+
+  @override
+  String get devicesNotConnected =>
+      'Connect a Tailscale or Headscale profile to see your devices.';
+
+  @override
+  String get devicesJoining => 'Joining the network…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'The network did not accept this device\'s key. Make a new key and edit the profile.';
+
+  @override
+  String get devicesEmpty => 'No other devices in this network yet.';
+
+  @override
+  String get devicesThisDevice => 'This device';
+
+  @override
+  String get deviceOnline => 'Online';
+
+  @override
+  String get deviceOffline => 'Offline';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'Last seen $when';
+  }
+
+  @override
+  String get deviceUseAsExit => 'Use as exit';
+
+  @override
+  String get deviceStopExit => 'Stop using as exit';
+
+  @override
+  String get deviceIsExit => 'Exit in use';
+
+  @override
+  String get devicesExitHint =>
+      'Use one of your devices as the exit: all your traffic leaves from its connection.';
+
+  @override
+  String get deviceCopyName => 'Copy name';
+
+  @override
+  String get deviceCopyAddress => 'Copy address';
+
+  @override
+  String get deviceCopied => 'Copied';
+
+  @override
+  String get errMeshExit =>
+      'That device cannot be used as the exit right now. It must be online and offer its connection.';
 }

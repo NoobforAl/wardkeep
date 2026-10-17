@@ -1617,4 +1617,208 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'Máy chủ đã chọn nằm ở đây: lưu lượng của nó cũng sẽ bỏ qua VPN.';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'Tắt: chỉ dùng IPv4; kết nối IPv6 bị từ chối, không đi ra ngoài VPN.';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'Mặc định';
+
+  @override
+  String get mtuHelp =>
+      'Kích thước gói của đường hầm (chỉ chế độ VPN). Thử 1280 đến 1420 nếu một số trang bị treo trên mạng di động. Để trống là mặc định.';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return 'Nhập một số từ $min đến $max.';
+  }
+
+  @override
+  String get trayOpen => 'Mở Wardkeep';
+
+  @override
+  String get trayQuit => 'Thoát';
+
+  @override
+  String get traySwitchServer => 'Đổi máy chủ';
+
+  @override
+  String get keepInTray => 'Tiếp tục chạy trong khay hệ thống';
+
+  @override
+  String get keepInTrayHint =>
+      'Đóng cửa sổ chỉ ẩn nó đi. Chọn “Thoát” trong menu khay để dừng ứng dụng và VPN.';
+
+  @override
+  String usageUsed(String size) {
+    return 'Đã dùng $size';
+  }
+
+  @override
+  String get menuResetUsage => 'Đặt lại dung lượng đã dùng';
+
+  @override
+  String get dnsPickerHelp =>
+      'Tên trang web được tra cứu qua VPN bởi trình phân giải bạn chọn. DNSCrypt còn chứng minh câu trả lời đến đúng từ trình phân giải đó.';
+
+  @override
+  String get dnsDefault => 'Mặc định';
+
+  @override
+  String get dnsSectionDnscrypt =>
+      'DNSCrypt · DNSSEC, không nhật ký, không lọc';
+
+  @override
+  String get dnsCustom => 'Tùy chỉnh';
+
+  @override
+  String get dnsCustomLabel => 'Địa chỉ hoặc DNS stamp';
+
+  @override
+  String get dnsAnonymized => 'DNSCrypt ẩn danh';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'Truy vấn đi qua một relay nên trình phân giải không bao giờ thấy chúng đến từ đâu';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'Chọn một trình phân giải DNSCrypt để dùng mục này';
+
+  @override
+  String get dnsRelay => 'Relay';
+
+  @override
+  String get dnsRelayChoose => 'Chọn một relay';
+
+  @override
+  String get dnsRelayAutomatic => 'Tự động (nhà vận hành khác)';
+
+  @override
+  String get dnsErrAddress =>
+      'Dùng địa chỉ bắt đầu bằng https://, tls://, tcp:// hoặc udp://, hoặc một stamp sdns://';
+
+  @override
+  String get dnsErrDamaged =>
+      'Stamp này bị hỏng hoặc bị cắt cụt. Hãy sao chép lại.';
+
+  @override
+  String get dnsErrUnsupported => 'Loại stamp này không được hỗ trợ';
+
+  @override
+  String get dnsErrRelayStamp =>
+      'Đây là stamp của relay, không phải của trình phân giải';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'Mục này bảo vệ các tên bạn tra cứu. Nó không che giấu những trang bạn kết nối tới sau đó.';
+
+  @override
+  String get dnsAnonymizedShort => 'ẩn danh';
+
+  @override
+  String get flAuthKey => 'Khóa xác thực';
+
+  @override
+  String get flControlServer => 'Máy chủ điều khiển';
+
+  @override
+  String get flDeviceName => 'Tên thiết bị';
+
+  @override
+  String get flExitDevice => 'Thiết bị thoát';
+
+  @override
+  String get flUseSubnets => 'Dùng mạng con của thiết bị khác';
+
+  @override
+  String get flTempDevice => 'Thiết bị tạm thời';
+
+  @override
+  String get hpAuthKey =>
+      'Khóa được cấp phép trước từ trang quản trị Tailscale, hoặc tạo bằng headscale preauthkeys create';
+
+  @override
+  String get hpControlServer =>
+      'Để trống là dùng Tailscale; với Headscale, nhập địa chỉ của nó, ví dụ https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'Tên của thiết bị này trong mạng; để trống sẽ dùng tên của thiết bị';
+
+  @override
+  String get hpExitDevice =>
+      'Tên hoặc địa chỉ của thiết bị có kết nối internet sẽ được dùng; để trống chỉ truy cập các thiết bị của bạn';
+
+  @override
+  String get hpTempDevice => 'Bị xóa khỏi mạng khi ngoại tuyến';
+
+  @override
+  String get devicesTitle => 'Thiết bị của tôi';
+
+  @override
+  String get devicesNotConnected =>
+      'Hãy kết nối hồ sơ Tailscale hoặc Headscale để xem thiết bị của bạn.';
+
+  @override
+  String get devicesJoining => 'Đang tham gia mạng…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'Mạng không chấp nhận khóa của thiết bị này. Hãy tạo khóa mới và sửa hồ sơ.';
+
+  @override
+  String get devicesEmpty => 'Mạng này chưa có thiết bị nào khác.';
+
+  @override
+  String get devicesThisDevice => 'Thiết bị này';
+
+  @override
+  String get deviceOnline => 'Trực tuyến';
+
+  @override
+  String get deviceOffline => 'Ngoại tuyến';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'Lần cuối thấy $when';
+  }
+
+  @override
+  String get deviceUseAsExit => 'Dùng làm lối ra';
+
+  @override
+  String get deviceStopExit => 'Ngừng dùng làm lối ra';
+
+  @override
+  String get deviceIsExit => 'Đang dùng làm lối ra';
+
+  @override
+  String get devicesExitHint =>
+      'Dùng một thiết bị của bạn làm lối ra: toàn bộ lưu lượng sẽ đi ra từ kết nối của nó.';
+
+  @override
+  String get deviceCopyName => 'Sao chép tên';
+
+  @override
+  String get deviceCopyAddress => 'Sao chép địa chỉ';
+
+  @override
+  String get deviceCopied => 'Đã sao chép';
+
+  @override
+  String get errMeshExit =>
+      'Hiện không thể dùng thiết bị đó làm lối ra. Nó phải trực tuyến và chia sẻ kết nối của mình.';
 }

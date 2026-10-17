@@ -1620,4 +1620,205 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'Server pilihan Anda ada di sini: lalu lintasnya juga melewati VPN.';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'Mati: hanya IPv4 yang dipakai; koneksi IPv6 ditolak, tidak dikirim di luar VPN.';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'Bawaan';
+
+  @override
+  String get mtuHelp =>
+      'Ukuran paket terowongan (hanya mode VPN). Coba 1280 sampai 1420 jika sebagian situs macet di jaringan seluler. Kosong berarti bawaan.';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return 'Masukkan angka dari $min sampai $max.';
+  }
+
+  @override
+  String get trayOpen => 'Buka Wardkeep';
+
+  @override
+  String get trayQuit => 'Keluar';
+
+  @override
+  String get traySwitchServer => 'Ganti server';
+
+  @override
+  String get keepInTray => 'Tetap berjalan di baki sistem';
+
+  @override
+  String get keepInTrayHint =>
+      'Menutup jendela hanya menyembunyikannya. Pilih “Keluar” di menu baki untuk mengakhiri aplikasi dan VPN.';
+
+  @override
+  String usageUsed(String size) {
+    return '$size terpakai';
+  }
+
+  @override
+  String get menuResetUsage => 'Atur ulang pemakaian data';
+
+  @override
+  String get dnsPickerHelp =>
+      'Nama situs dicari lewat VPN oleh resolver yang Anda pilih. DNSCrypt juga membuktikan bahwa jawabannya benar-benar dari resolver itu.';
+
+  @override
+  String get dnsDefault => 'Bawaan';
+
+  @override
+  String get dnsSectionDnscrypt => 'DNSCrypt · DNSSEC, tanpa log, tanpa filter';
+
+  @override
+  String get dnsCustom => 'Kustom';
+
+  @override
+  String get dnsCustomLabel => 'Alamat atau DNS stamp';
+
+  @override
+  String get dnsAnonymized => 'DNSCrypt anonim';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'Kueri melewati relay, jadi resolver tidak pernah melihat asalnya';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'Pilih resolver DNSCrypt untuk memakai ini';
+
+  @override
+  String get dnsRelay => 'Relay';
+
+  @override
+  String get dnsRelayChoose => 'Pilih relay';
+
+  @override
+  String get dnsRelayAutomatic => 'Otomatis (operator lain)';
+
+  @override
+  String get dnsErrAddress =>
+      'Gunakan alamat yang diawali https://, tls://, tcp:// atau udp://, atau stamp sdns://';
+
+  @override
+  String get dnsErrDamaged => 'Stamp ini rusak atau terpotong. Salin ulang.';
+
+  @override
+  String get dnsErrUnsupported => 'Jenis stamp ini tidak didukung';
+
+  @override
+  String get dnsErrRelayStamp => 'Ini stamp relay, bukan resolver';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'Ini melindungi nama yang Anda cari. Ini tidak menyembunyikan situs yang kemudian Anda sambungi.';
+
+  @override
+  String get dnsAnonymizedShort => 'anonim';
+
+  @override
+  String get flAuthKey => 'Kunci autentikasi';
+
+  @override
+  String get flControlServer => 'Server kontrol';
+
+  @override
+  String get flDeviceName => 'Nama perangkat';
+
+  @override
+  String get flExitDevice => 'Perangkat keluar';
+
+  @override
+  String get flUseSubnets => 'Gunakan subnet perangkat lain';
+
+  @override
+  String get flTempDevice => 'Perangkat sementara';
+
+  @override
+  String get hpAuthKey =>
+      'Kunci pra-otorisasi dari halaman admin Tailscale, atau dibuat dengan headscale preauthkeys create';
+
+  @override
+  String get hpControlServer =>
+      'Kosong memakai Tailscale; untuk Headscale, alamatnya, misalnya https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'Nama perangkat ini di jaringan; kosong memakai nama bawaan perangkat';
+
+  @override
+  String get hpExitDevice =>
+      'Nama atau alamat perangkat yang koneksi internetnya dipakai; kosong hanya menjangkau perangkat Anda';
+
+  @override
+  String get hpTempDevice => 'Dihapus dari jaringan saat offline';
+
+  @override
+  String get devicesTitle => 'Perangkat saya';
+
+  @override
+  String get devicesNotConnected =>
+      'Sambungkan profil Tailscale atau Headscale untuk melihat perangkat Anda.';
+
+  @override
+  String get devicesJoining => 'Bergabung ke jaringan…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'Jaringan tidak menerima kunci perangkat ini. Buat kunci baru dan ubah profilnya.';
+
+  @override
+  String get devicesEmpty => 'Belum ada perangkat lain di jaringan ini.';
+
+  @override
+  String get devicesThisDevice => 'Perangkat ini';
+
+  @override
+  String get deviceOnline => 'Online';
+
+  @override
+  String get deviceOffline => 'Offline';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'Terakhir terlihat $when';
+  }
+
+  @override
+  String get deviceUseAsExit => 'Gunakan sebagai jalur keluar';
+
+  @override
+  String get deviceStopExit => 'Berhenti memakai sebagai jalur keluar';
+
+  @override
+  String get deviceIsExit => 'Jalur keluar dipakai';
+
+  @override
+  String get devicesExitHint =>
+      'Pakai salah satu perangkat Anda sebagai jalur keluar: semua lalu lintas Anda keluar lewat koneksinya.';
+
+  @override
+  String get deviceCopyName => 'Salin nama';
+
+  @override
+  String get deviceCopyAddress => 'Salin alamat';
+
+  @override
+  String get deviceCopied => 'Disalin';
+
+  @override
+  String get errMeshExit =>
+      'Perangkat itu tidak bisa dipakai sebagai jalur keluar saat ini. Perangkat harus online dan menawarkan koneksinya.';
 }

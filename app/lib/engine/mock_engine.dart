@@ -57,7 +57,8 @@ class MockEngine implements VpnEngine {
     _log('connected, health probe ok');
     _traffic?.cancel();
     _traffic = Timer.periodic(const Duration(seconds: 1), (_) {
-      _emit(_state.copyWith(upBps: _rng.nextInt(200000), downBps: _rng.nextInt(2000000)));
+      final up = _rng.nextInt(200000), down = _rng.nextInt(2000000);
+      _emit(_state.copyWith(upBps: up, downBps: down, upTotal: _state.upTotal + up, downTotal: _state.downTotal + down));
     });
   }
 
@@ -168,6 +169,54 @@ class MockEngine implements VpnEngine {
       'server': server,
       'port': port,
     });
+  }
+
+  /// The mesh [meshStatus] answers while connected (tests change it): a small home network.
+  MeshStatus mesh = MeshStatus(
+    state: 'Running',
+    network: 'home',
+    domain: 'home.example',
+    self: const MeshDevice(id: 's', name: 'phone', dnsName: 'phone.home.example', os: 'android', addresses: ['100.64.0.1'], online: true),
+    devices: [
+      const MeshDevice(
+        id: 'a', name: 'home-pc', dnsName: 'home-pc.home.example', os: 'windows', addresses: ['100.64.0.2', 'fd7a::2'],
+        online: true, exitOption: true, owner: 'Alice',
+      ),
+      const MeshDevice(id: 'b', name: 'laptop', dnsName: 'laptop.home.example', os: 'linux', addresses: ['100.64.0.3'], online: true, owner: 'Alice'),
+      MeshDevice(
+        id: 'c', name: 'tablet', dnsName: 'tablet.home.example', os: 'android', addresses: ['100.64.0.4'], exitOption: true,
+        lastSeen: DateTime(2026, 10, 1, 12), owner: 'Alice',
+      ),
+    ],
+  );
+
+  @override
+  Future<MeshStatus> meshStatus() async {
+    if (_state.status != ConnStatus.connected) throw EngineException('NOT_RUNNING', 'no mesh profile is connected');
+    return mesh;
+  }
+
+  @override
+  Future<MeshStatus> setMeshExit(String id) async {
+    if (_state.status != ConnStatus.connected) throw EngineException('NOT_RUNNING', 'no mesh profile is connected');
+    final target = mesh.devices.where((d) => d.id == id).firstOrNull;
+    if (id.isNotEmpty && target == null) throw EngineException('MESH_FAILED', 'peer not found: $id');
+    if (target != null && !target.exitOption) throw EngineException('MESH_FAILED', 'peer does not offer exit node: $id');
+    if (target != null && !target.online) throw EngineException('MESH_FAILED', 'the device is offline');
+    mesh = MeshStatus(
+      state: mesh.state,
+      network: mesh.network,
+      domain: mesh.domain,
+      self: mesh.self,
+      devices: [
+        for (final d in mesh.devices)
+          MeshDevice(
+            id: d.id, name: d.name, dnsName: d.dnsName, os: d.os, addresses: d.addresses, online: d.online,
+            exitOption: d.exitOption, exit: d.id == id && id.isNotEmpty, lastSeen: d.lastSeen, owner: d.owner,
+          ),
+      ],
+    );
+    return mesh;
   }
 
   /// What [exitInfo] answers (tests change it).

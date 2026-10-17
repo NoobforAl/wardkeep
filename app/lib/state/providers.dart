@@ -361,6 +361,7 @@ class ConnectionController extends Notifier<EngineState> {
         tunMode: settings.tunMode,
         systemProxy: settings.systemProxy,
         dns: settings.remoteDns,
+        dnsRelay: settings.dnsRelay,
         includePackages: settings.splitMode == 'include' ? settings.splitApps : const [],
         excludePackages: settings.splitMode == 'exclude' ? settings.splitApps : const [],
         autoFailover: settings.autoFailover,
@@ -369,6 +370,8 @@ class ConnectionController extends Notifier<EngineState> {
             .where((t) => t.isNotEmpty)
             .join('\n'),
         bypassOnly: settings.bypassOnly,
+        ipv6: settings.ipv6,
+        mtu: settings.mtu,
       ),
     );
   }
@@ -405,9 +408,10 @@ class ExitController extends Notifier<ExitInfo?> {
       final info = withDbCountry(await ref.read(engineProvider).exitInfo(), ref.read(ipDbActiveProvider));
       if (generation != _generation) return; // connected elsewhere, or disconnected, meanwhile
       state = info;
-      // Tor's exit changes with every circuit, so it says nothing about the profile.
+      // Tor's exit changes with every circuit, and a mesh exits where the user already is (or at a device
+      // chosen later), so neither says anything about the profile.
       final profile = ref.read(profilesProvider).where((p) => p.id == profileId).firstOrNull;
-      if (info.country != null && profile != null && profile.protocol != 'tor') {
+      if (info.country != null && profile != null && profile.protocol != 'tor' && !profile.isMesh) {
         ref.read(learnedCountriesProvider.notifier).learn(profile.id, info.country!);
       }
     } catch (_) {
@@ -636,11 +640,15 @@ class SettingsState {
     this.bypassOnly = false,
     this.bypassCountries = const [],
     this.remoteDns = defaultRemoteDns,
+    this.dnsRelay = '',
     this.splitMode = 'off',
     this.splitApps = const [],
     this.theme = 'dark',
     this.language = '',
+    this.keepInTray = false,
     this.showExit = true,
+    this.ipv6 = true,
+    this.mtu = 0,
   });
 
   static const defaultRemoteDns = 'https://1.1.1.1/dns-query';
@@ -666,6 +674,10 @@ class SettingsState {
   /// Resolver used through the tunnel: https://, tls://, tcp://, udp:// or an IP.
   final String remoteDns;
 
+  /// Anonymized DNSCrypt: the relay (a relay stamp) the queries go through; '' = none.
+  /// Only used when [remoteDns] is a DNSCrypt stamp.
+  final String dnsRelay;
+
   /// Split tunneling (Android): 'off', 'include' (only [splitApps] use the VPN)
   /// or 'exclude' ([splitApps] bypass the VPN).
   final String splitMode;
@@ -680,6 +692,15 @@ class SettingsState {
   /// After connecting, ask a public service (through the VPN) for the exit address and country.
   final bool showExit;
 
+  /// Windows: closing the window hides it to the tray icon instead of ending the app (see ui/tray.dart).
+  final bool keepInTray;
+
+  /// IPv6 through the VPN; off keeps it out (refused, not leaked).
+  final bool ipv6;
+
+  /// The tunnel's packet size (VPN mode); 0 is the core's default.
+  final int mtu;
+
   SettingsState copyWith({
     bool? tunMode,
     bool? systemProxy,
@@ -689,11 +710,15 @@ class SettingsState {
     bool? bypassOnly,
     List<String>? bypassCountries,
     String? remoteDns,
+    String? dnsRelay,
     String? splitMode,
     List<String>? splitApps,
     String? theme,
     String? language,
+    bool? keepInTray,
     bool? showExit,
+    bool? ipv6,
+    int? mtu,
   }) =>
       SettingsState(
         tunMode: tunMode ?? this.tunMode,
@@ -704,11 +729,15 @@ class SettingsState {
         bypassOnly: bypassOnly ?? this.bypassOnly,
         bypassCountries: bypassCountries ?? this.bypassCountries,
         remoteDns: remoteDns ?? this.remoteDns,
+        dnsRelay: dnsRelay ?? this.dnsRelay,
         splitMode: splitMode ?? this.splitMode,
         splitApps: splitApps ?? this.splitApps,
         theme: theme ?? this.theme,
         language: language ?? this.language,
+        keepInTray: keepInTray ?? this.keepInTray,
         showExit: showExit ?? this.showExit,
+        ipv6: ipv6 ?? this.ipv6,
+        mtu: mtu ?? this.mtu,
       );
 
   Map<String, dynamic> toJson() => {
@@ -720,11 +749,15 @@ class SettingsState {
         'bypass_only': bypassOnly,
         'bypass_countries': bypassCountries,
         'remote_dns': remoteDns,
+        'dns_relay': dnsRelay,
         'split_mode': splitMode,
         'split_apps': splitApps,
         'theme': theme,
         'language': language,
+        'keep_in_tray': keepInTray,
         'show_exit': showExit,
+        'ipv6': ipv6,
+        'mtu': mtu,
       };
 
   /// Missing keys keep the values from [defaults].
@@ -737,11 +770,15 @@ class SettingsState {
         bypassOnly: j['bypass_only'] as bool? ?? defaults.bypassOnly,
         bypassCountries: [for (final c in (j['bypass_countries'] as List? ?? const [])) c as String],
         remoteDns: j['remote_dns'] as String? ?? defaults.remoteDns,
+        dnsRelay: j['dns_relay'] as String? ?? defaults.dnsRelay,
         splitMode: j['split_mode'] as String? ?? defaults.splitMode,
         splitApps: [for (final a in (j['split_apps'] as List? ?? const [])) a as String],
         theme: j['theme'] as String? ?? defaults.theme,
         language: j['language'] as String? ?? defaults.language,
+        keepInTray: j['keep_in_tray'] as bool? ?? defaults.keepInTray,
         showExit: j['show_exit'] as bool? ?? defaults.showExit,
+        ipv6: j['ipv6'] as bool? ?? defaults.ipv6,
+        mtu: j['mtu'] as int? ?? defaults.mtu,
       );
 }
 

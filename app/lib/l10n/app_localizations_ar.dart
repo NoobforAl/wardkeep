@@ -1679,4 +1679,205 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'الخادم الذي اخترته هنا: ستتجاوز حركته VPN أيضًا.';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'متوقف: يُستخدم IPv4 فقط؛ تُرفض اتصالات IPv6 ولا تُرسل خارج VPN.';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'الافتراضي';
+
+  @override
+  String get mtuHelp =>
+      'حجم الحزمة في النفق (وضع VPN فقط). جرّب من 1280 إلى 1420 إذا تعلّقت بعض المواقع على شبكة الجوال. الفراغ يعني الافتراضي.';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return 'أدخل رقمًا من $min إلى $max.';
+  }
+
+  @override
+  String get trayOpen => 'فتح Wardkeep';
+
+  @override
+  String get trayQuit => 'إنهاء';
+
+  @override
+  String get traySwitchServer => 'تبديل الخادم';
+
+  @override
+  String get keepInTray => 'المتابعة في منطقة الإشعارات';
+
+  @override
+  String get keepInTrayHint =>
+      'إغلاق النافذة يخفيها فقط. استخدم «إنهاء» من قائمة الأيقونة لإيقاف التطبيق وVPN.';
+
+  @override
+  String usageUsed(String size) {
+    return 'المستخدم $size';
+  }
+
+  @override
+  String get menuResetUsage => 'تصفير استهلاك البيانات';
+
+  @override
+  String get dnsPickerHelp =>
+      'تُحَلّ أسماء المواقع عبر الـ VPN بواسطة المحلِّل الذي تختاره. كما يُثبت DNSCrypt أن الرد جاء من هذا المحلِّل نفسه.';
+
+  @override
+  String get dnsDefault => 'الافتراضي';
+
+  @override
+  String get dnsSectionDnscrypt => 'DNSCrypt · DNSSEC، بلا سجلات، بلا تصفية';
+
+  @override
+  String get dnsCustom => 'مخصص';
+
+  @override
+  String get dnsCustomLabel => 'عنوان أو DNS stamp';
+
+  @override
+  String get dnsAnonymized => 'DNSCrypt المجهول';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'تمر الاستعلامات عبر مرحِّل، فلا يرى المحلِّل مصدرها أبدًا';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'اختر محلِّل DNSCrypt لاستخدام هذا الخيار';
+
+  @override
+  String get dnsRelay => 'المرحِّل';
+
+  @override
+  String get dnsRelayChoose => 'اختر مرحِّلًا';
+
+  @override
+  String get dnsRelayAutomatic => 'تلقائي (مشغِّل آخر)';
+
+  @override
+  String get dnsErrAddress =>
+      'استخدم عنوانًا يبدأ بـ https:// أو tls:// أو tcp:// أو udp://، أو stamp من نوع sdns://';
+
+  @override
+  String get dnsErrDamaged => 'هذا الـ stamp تالف أو مقطوع. انسخه مرة أخرى.';
+
+  @override
+  String get dnsErrUnsupported => 'هذا النوع من الـ stamp غير مدعوم';
+
+  @override
+  String get dnsErrRelayStamp => 'هذا stamp مرحِّل وليس محلِّلًا';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'يحمي هذا الأسماء التي تبحث عنها، لكنه لا يُخفي المواقع التي تتصل بها بعد ذلك.';
+
+  @override
+  String get dnsAnonymizedShort => 'مجهول';
+
+  @override
+  String get flAuthKey => 'مفتاح المصادقة';
+
+  @override
+  String get flControlServer => 'خادم التحكم';
+
+  @override
+  String get flDeviceName => 'اسم الجهاز';
+
+  @override
+  String get flExitDevice => 'جهاز الخروج';
+
+  @override
+  String get flUseSubnets => 'استخدام الشبكات الفرعية للأجهزة الأخرى';
+
+  @override
+  String get flTempDevice => 'جهاز مؤقت';
+
+  @override
+  String get hpAuthKey =>
+      'مفتاح مصرّح به مسبقًا من صفحة إدارة Tailscale، أو أنشأه الأمر headscale preauthkeys create';
+
+  @override
+  String get hpControlServer =>
+      'الفارغ يعني Tailscale؛ وفي Headscale أدخل عنوانه مثل https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'الاسم الذي يحمله هذا الجهاز في الشبكة؛ الفارغ يستخدم اسم الجهاز نفسه';
+
+  @override
+  String get hpExitDevice =>
+      'اسم أو عنوان الجهاز الذي سيُستخدم اتصاله بالإنترنت؛ الفارغ يصل إلى أجهزتك فقط';
+
+  @override
+  String get hpTempDevice => 'تتم إزالته من الشبكة عند انقطاعه';
+
+  @override
+  String get devicesTitle => 'أجهزتي';
+
+  @override
+  String get devicesNotConnected =>
+      'اتصل بملف Tailscale أو Headscale لرؤية أجهزتك.';
+
+  @override
+  String get devicesJoining => 'جارٍ الانضمام إلى الشبكة…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'لم تقبل الشبكة مفتاح هذا الجهاز. أنشئ مفتاحًا جديدًا وعدّل الملف.';
+
+  @override
+  String get devicesEmpty => 'لا توجد أجهزة أخرى في هذه الشبكة بعد.';
+
+  @override
+  String get devicesThisDevice => 'هذا الجهاز';
+
+  @override
+  String get deviceOnline => 'متصل';
+
+  @override
+  String get deviceOffline => 'غير متصل';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'آخر ظهور $when';
+  }
+
+  @override
+  String get deviceUseAsExit => 'استخدام كمخرج';
+
+  @override
+  String get deviceStopExit => 'إيقاف الاستخدام كمخرج';
+
+  @override
+  String get deviceIsExit => 'مخرج قيد الاستخدام';
+
+  @override
+  String get devicesExitHint =>
+      'استخدم أحد أجهزتك كمخرج: تخرج كل حركة بياناتك من اتصاله.';
+
+  @override
+  String get deviceCopyName => 'نسخ الاسم';
+
+  @override
+  String get deviceCopyAddress => 'نسخ العنوان';
+
+  @override
+  String get deviceCopied => 'تم النسخ';
+
+  @override
+  String get errMeshExit =>
+      'لا يمكن استخدام هذا الجهاز كمخرج الآن. يجب أن يكون متصلًا ويتيح اتصاله.';
 }

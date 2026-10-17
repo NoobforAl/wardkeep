@@ -8,6 +8,8 @@ import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
 import '../../state/subscriptions.dart';
+import '../../state/usage.dart';
+import '../widgets/profile_subtitle.dart';
 import '../widgets/protocol_badge.dart';
 import 'location_screen.dart';
 import 'profile_editor_screen.dart';
@@ -166,12 +168,7 @@ class _GroupList extends ConsumerWidget {
                   ],
                 ],
               ),
-              subtitle: Text(
-                p.needsCredentials && !p.hasCredentials
-                    ? context.l10n.needsSignIn(profileAddress(context, p))
-                    : profileAddress(context, p),
-                overflow: TextOverflow.ellipsis,
-              ),
+              subtitle: ProfileSubtitle(p),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -193,6 +190,7 @@ class _GroupList extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.defaultSetToast(p.name))));
                       }
                       if (v == 'credentials') askCredentials(context, ref, p);
+                      if (v == 'usage') ref.read(profileUsageProvider.notifier).reset(p.id);
                     },
                     itemBuilder: (_) => [
                       if (ref.read(formsProvider).value?.any((f) => f.protocol == p.protocol) ?? false)
@@ -204,6 +202,8 @@ class _GroupList extends ConsumerWidget {
                       if (p.id != defaultId) PopupMenuItem(value: 'default', child: Text(context.l10n.menuSetDefault)),
                       if (p.needsCredentials)
                         PopupMenuItem(value: 'credentials', child: Text(context.l10n.menuCredentials)),
+                      if (ref.read(usageOfProvider(p.id)) > 0)
+                        PopupMenuItem(value: 'usage', child: Text(context.l10n.menuResetUsage)),
                       PopupMenuItem(value: 'delete', child: Text(context.l10n.actionDelete)),
                     ],
                   ),

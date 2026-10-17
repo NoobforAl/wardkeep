@@ -20,6 +20,9 @@ class FlutterWindow : public Win32Window {
   explicit FlutterWindow(const flutter::DartProject& project);
   virtual ~FlutterWindow();
 
+  // Started by Windows at sign-in (--background): the window stays hidden; the tray icon brings it back.
+  void SetStartHidden(bool hidden) { start_hidden_ = hidden; }
+
  protected:
   // Win32Window:
   bool OnCreate() override;
@@ -33,6 +36,8 @@ class FlutterWindow : public Win32Window {
 
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+
+  bool start_hidden_ = false;
 
   // Tells the app what a second start of it was asked to open.
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> incoming_;

@@ -1632,4 +1632,207 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get bypassCountriesYourServer =>
       'سرور انتخاب‌شده شما اینجاست: ترافیک آن هم از VPN رد نمی‌شود.';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint =>
+      'خاموش: فقط IPv4 استفاده می‌شود؛ اتصال‌های IPv6 رد می‌شوند و بیرون از VPN نمی‌روند.';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => 'پیش‌فرض';
+
+  @override
+  String get mtuHelp =>
+      'اندازهٔ بسته‌های تونل (فقط حالت VPN). اگر در شبکهٔ موبایل بعضی سایت‌ها گیر می‌کنند، ۱۲۸۰ تا ۱۴۲۰ را امتحان کنید. خالی یعنی پیش‌فرض.';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return 'عددی از $min تا $max وارد کنید.';
+  }
+
+  @override
+  String get trayOpen => 'باز کردن Wardkeep';
+
+  @override
+  String get trayQuit => 'خروج';
+
+  @override
+  String get traySwitchServer => 'تغییر سرور';
+
+  @override
+  String get keepInTray => 'ادامهٔ اجرا در سینی سیستم';
+
+  @override
+  String get keepInTrayHint =>
+      'بستن پنجره فقط آن را پنهان می‌کند. برای پایان دادن به برنامه و VPN از «خروج» در منوی سینی استفاده کنید.';
+
+  @override
+  String usageUsed(String size) {
+    return '$size مصرف شده';
+  }
+
+  @override
+  String get menuResetUsage => 'صفر کردن مصرف داده';
+
+  @override
+  String get dnsPickerHelp =>
+      'نام وب‌سایت‌ها از طریق VPN و توسط حل‌کننده‌ای که انتخاب می‌کنید جست‌وجو می‌شوند. DNSCrypt همچنین ثابت می‌کند که پاسخ از همان حل‌کننده آمده است.';
+
+  @override
+  String get dnsDefault => 'پیش‌فرض';
+
+  @override
+  String get dnsSectionDnscrypt => 'DNSCrypt · DNSSEC، بدون لاگ، بدون فیلتر';
+
+  @override
+  String get dnsCustom => 'سفارشی';
+
+  @override
+  String get dnsCustomLabel => 'نشانی یا DNS stamp';
+
+  @override
+  String get dnsAnonymized => 'DNSCrypt ناشناس';
+
+  @override
+  String get dnsAnonymizedHint =>
+      'پرس‌وجوها از یک رله می‌گذرند، پس حل‌کننده هرگز مبدأ آن‌ها را نمی‌بیند';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt =>
+      'برای استفاده از این گزینه یک حل‌کننده DNSCrypt انتخاب کنید';
+
+  @override
+  String get dnsRelay => 'رله';
+
+  @override
+  String get dnsRelayChoose => 'یک رله انتخاب کنید';
+
+  @override
+  String get dnsRelayAutomatic => 'خودکار (اپراتور دیگر)';
+
+  @override
+  String get dnsErrAddress =>
+      'نشانی‌ای که با https://‎ یا tls://‎ یا tcp://‎ یا udp://‎ شروع می‌شود، یا یک stamp از نوع sdns://‎ وارد کنید';
+
+  @override
+  String get dnsErrDamaged =>
+      'این stamp خراب یا ناقص است. دوباره آن را کپی کنید.';
+
+  @override
+  String get dnsErrUnsupported => 'این نوع stamp پشتیبانی نمی‌شود';
+
+  @override
+  String get dnsErrRelayStamp =>
+      'این stamp مربوط به یک رله است، نه یک حل‌کننده';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS: $resolver';
+  }
+
+  @override
+  String get dnsLimits =>
+      'این گزینه از نام‌هایی که جست‌وجو می‌کنید محافظت می‌کند. اینکه پس از آن به کدام سایت‌ها وصل می‌شوید را پنهان نمی‌کند.';
+
+  @override
+  String get dnsAnonymizedShort => 'ناشناس';
+
+  @override
+  String get flAuthKey => 'کلید احراز هویت';
+
+  @override
+  String get flControlServer => 'سرور کنترل';
+
+  @override
+  String get flDeviceName => 'نام دستگاه';
+
+  @override
+  String get flExitDevice => 'دستگاه خروجی';
+
+  @override
+  String get flUseSubnets => 'استفاده از زیرشبکه‌های دستگاه‌های دیگر';
+
+  @override
+  String get flTempDevice => 'دستگاه موقت';
+
+  @override
+  String get hpAuthKey =>
+      'کلید از پیش مجاز از صفحهٔ مدیریت Tailscale، یا ساخته‌شده با headscale preauthkeys create';
+
+  @override
+  String get hpControlServer =>
+      'خالی یعنی Tailscale؛ برای Headscale نشانی آن، مثلاً https://hs.example.com';
+
+  @override
+  String get hpDeviceName =>
+      'نامی که این دستگاه در شبکه دارد؛ خالی یعنی نام خود دستگاه';
+
+  @override
+  String get hpExitDevice =>
+      'نام یا نشانی دستگاهی که اتصال اینترنتش استفاده شود؛ خالی یعنی فقط دسترسی به دستگاه‌های خودتان';
+
+  @override
+  String get hpTempDevice => 'هنگام آفلاین شدن از شبکه حذف می‌شود';
+
+  @override
+  String get devicesTitle => 'دستگاه‌های من';
+
+  @override
+  String get devicesNotConnected =>
+      'برای دیدن دستگاه‌هایتان به یک نمایهٔ Tailscale یا Headscale وصل شوید.';
+
+  @override
+  String get devicesJoining => 'در حال پیوستن به شبکه…';
+
+  @override
+  String get devicesLoginNeeded =>
+      'شبکه کلید این دستگاه را نپذیرفت. کلید تازه بسازید و نمایه را ویرایش کنید.';
+
+  @override
+  String get devicesEmpty => 'هنوز دستگاه دیگری در این شبکه نیست.';
+
+  @override
+  String get devicesThisDevice => 'این دستگاه';
+
+  @override
+  String get deviceOnline => 'آنلاین';
+
+  @override
+  String get deviceOffline => 'آفلاین';
+
+  @override
+  String deviceLastSeen(String when) {
+    return 'آخرین بازدید $when';
+  }
+
+  @override
+  String get deviceUseAsExit => 'استفاده به‌عنوان خروجی';
+
+  @override
+  String get deviceStopExit => 'توقف استفاده به‌عنوان خروجی';
+
+  @override
+  String get deviceIsExit => 'خروجی در حال استفاده';
+
+  @override
+  String get devicesExitHint =>
+      'یکی از دستگاه‌هایتان را خروجی کنید: تمام ترافیک شما از اتصال آن بیرون می‌رود.';
+
+  @override
+  String get deviceCopyName => 'کپی نام';
+
+  @override
+  String get deviceCopyAddress => 'کپی نشانی';
+
+  @override
+  String get deviceCopied => 'کپی شد';
+
+  @override
+  String get errMeshExit =>
+      'اکنون نمی‌توان از آن دستگاه به‌عنوان خروجی استفاده کرد. باید آنلاین باشد و اتصالش را ارائه کند.';
 }

@@ -15,6 +15,8 @@ import '../../state/geo_data.dart';
 import '../widgets/credentials_dialog.dart';
 import '../widgets/earth_globe.dart';
 import '../widgets/star_field.dart';
+import 'dns_screen.dart';
+import 'devices_screen.dart';
 import 'location_screen.dart';
 import 'profiles_screen.dart';
 import 'settings_screen.dart';
@@ -163,7 +165,7 @@ Future<void> _toggle(BuildContext context, WidgetRef ref) async {
 String? _exitCode(WidgetRef ref, EngineState s) {
   if (s.status != ConnStatus.connected) return null;
   final active = ref.watch(profilesProvider).where((p) => p.id == s.activeProfileId).firstOrNull;
-  if (active == null || active.protocol == 'tor') return null;
+  if (active == null || active.protocol == 'tor' || active.isMesh) return null;
   return ref.watch(exitProvider)?.country ?? ref.watch(profileCountryProvider)(active);
 }
 
@@ -217,7 +219,7 @@ class _Earth extends ConsumerWidget {
       exitCode = _exitCode(ref, state);
     } else if (state.status == ConnStatus.connecting) {
       final primary = ref.watch(connectionPlanProvider)?.primary;
-      if (primary != null && primary.protocol != 'tor') exitCode = ref.watch(profileCountryProvider)(primary);
+      if (primary != null && primary.protocol != 'tor' && !primary.isMesh) exitCode = ref.watch(profileCountryProvider)(primary);
     }
 
     return EarthBackdrop(
@@ -303,7 +305,8 @@ class _HeroState extends ConsumerState<_Hero> {
     final exit = ref.watch(exitProvider);
     final tor = active?.protocol == 'tor';
     // The country the service saw is the truth; the guess is the fallback.
-    final code = tor ? null : exit?.country ?? (active == null ? null : countryOf(active));
+    final mesh = active?.isMesh ?? false;
+    final code = tor || mesh ? null : exit?.country ?? (active == null ? null : countryOf(active));
     // Where you appear to be: the country, or Tor; null when it is not known.
     final place = tor ? context.l10n.torNetwork : (code == null ? null : context.countryName(code));
     // Where you really are, while not protected (only when address lookups are allowed).
@@ -343,7 +346,19 @@ class _HeroState extends ConsumerState<_Hero> {
           ],
           if (connected && active != null) ...[
             const SizedBox(height: 16),
-            _ExitChip(code: code, tor: tor, title: active.name, ip: exit?.ip, accent: color),
+            _ExitChip(
+              code: code,
+              tor: tor,
+              mesh: mesh,
+              title: active.name,
+              ip: mesh ? null : exit?.ip,
+              accent: color,
+              // A mesh profile opens the list of its devices.
+              onDevices: mesh
+                  ? () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DevicesScreen()))
+                  : null,
+            ),
+            const DnsLine(),
           ],
           if (connected && s.connectedSince != null) ...[
             const SizedBox(height: 16),
@@ -375,15 +390,21 @@ class _ExitChip extends StatelessWidget {
   const _ExitChip({
     required this.code,
     required this.tor,
+    this.mesh = false,
     required this.title,
     this.ip,
     required this.accent,
+    this.onDevices,
   });
 
   final String? code;
   final bool tor;
+
+  /// A Tailscale / Headscale profile: the chip shows a devices icon and opens [onDevices].
+  final bool mesh;
   final String title;
   final String? ip;
+  final VoidCallback? onDevices;
 
   /// Colour of the chip's outline: red where you are unprotected, the status colour when connected.
   final Color accent;
@@ -392,7 +413,7 @@ class _ExitChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    return Container(
+    final chip = Container(
       padding: const EdgeInsetsDirectional.fromSTEB(6, 6, 14, 6),
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
@@ -405,7 +426,7 @@ class _ExitChip extends StatelessWidget {
           CountryFlag(
             code,
             size: 30,
-            icon: tor ? Icons.security : Icons.public,
+            icon: tor ? Icons.security : (mesh ? Icons.devices_other_rounded : Icons.public),
             label: tor ? context.l10n.torNetwork : null,
           ),
           const SizedBox(width: 12),
@@ -427,11 +448,22 @@ class _ExitChip extends StatelessWidget {
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
+                if (onDevices != null)
+                  Text(
+                    context.l10n.devicesTitle,
+                    style: text.bodySmall?.copyWith(color: scheme.primary),
+                  ),
               ],
             ),
           ),
+          if (onDevices != null) Icon(Icons.chevron_right, size: 20, color: scheme.primary),
         ],
       ),
+    );
+    if (onDevices == null) return chip;
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(borderRadius: BorderRadius.circular(40), onTap: onDevices, child: chip),
     );
   }
 }

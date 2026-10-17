@@ -1574,4 +1574,193 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bypassCountriesYourServer => '您选择的服务器在这里：其流量也将绕过 VPN。';
+
+  @override
+  String get ipv6Title => 'IPv6';
+
+  @override
+  String get ipv6Hint => '关闭：只用 IPv4；IPv6 连接会被拒绝，而不是绕过 VPN。';
+
+  @override
+  String get mtuTitle => 'MTU';
+
+  @override
+  String get mtuAuto => '默认';
+
+  @override
+  String get mtuHelp =>
+      '隧道的数据包大小（仅 VPN 模式）。如果在移动网络上有些网站卡住，试试 1280 到 1420。留空为默认值。';
+
+  @override
+  String mtuInvalid(int min, int max) {
+    return '请输入 $min 到 $max 之间的数字。';
+  }
+
+  @override
+  String get trayOpen => '打开 Wardkeep';
+
+  @override
+  String get trayQuit => '退出';
+
+  @override
+  String get traySwitchServer => '切换服务器';
+
+  @override
+  String get keepInTray => '在托盘中继续运行';
+
+  @override
+  String get keepInTrayHint => '关闭窗口只会将其隐藏。要结束应用和 VPN，请使用托盘菜单中的“退出”。';
+
+  @override
+  String usageUsed(String size) {
+    return '已用 $size';
+  }
+
+  @override
+  String get menuResetUsage => '重置流量统计';
+
+  @override
+  String get dnsPickerHelp => '网站域名通过 VPN 由你选择的解析器查询。DNSCrypt 还能证明答复确实来自该解析器。';
+
+  @override
+  String get dnsDefault => '默认';
+
+  @override
+  String get dnsSectionDnscrypt => 'DNSCrypt · DNSSEC、无日志、无过滤';
+
+  @override
+  String get dnsCustom => '自定义';
+
+  @override
+  String get dnsCustomLabel => '地址或 DNS stamp';
+
+  @override
+  String get dnsAnonymized => '匿名 DNSCrypt';
+
+  @override
+  String get dnsAnonymizedHint => '查询经由中继转发，解析器看不到请求来自何处';
+
+  @override
+  String get dnsAnonymizedNeedsDnscrypt => '请先选择一个 DNSCrypt 解析器';
+
+  @override
+  String get dnsRelay => '中继';
+
+  @override
+  String get dnsRelayChoose => '选择中继';
+
+  @override
+  String get dnsRelayAutomatic => '自动（其他运营方）';
+
+  @override
+  String get dnsErrAddress =>
+      '请输入以 https://、tls://、tcp:// 或 udp:// 开头的地址，或 sdns:// stamp';
+
+  @override
+  String get dnsErrDamaged => '此 stamp 已损坏或被截断，请重新复制。';
+
+  @override
+  String get dnsErrUnsupported => '不支持此类 stamp';
+
+  @override
+  String get dnsErrRelayStamp => '这是中继的 stamp，不是解析器';
+
+  @override
+  String dnsLine(String resolver) {
+    return 'DNS：$resolver';
+  }
+
+  @override
+  String get dnsLimits => '这保护的是你查询的域名，并不会隐藏你随后连接的网站。';
+
+  @override
+  String get dnsAnonymizedShort => '匿名';
+
+  @override
+  String get flAuthKey => '认证密钥';
+
+  @override
+  String get flControlServer => '控制服务器';
+
+  @override
+  String get flDeviceName => '设备名称';
+
+  @override
+  String get flExitDevice => '出口设备';
+
+  @override
+  String get flUseSubnets => '使用其他设备的子网';
+
+  @override
+  String get flTempDevice => '临时设备';
+
+  @override
+  String get hpAuthKey =>
+      '来自 Tailscale 管理页面的预授权密钥，或由 headscale preauthkeys create 生成';
+
+  @override
+  String get hpControlServer =>
+      '留空使用 Tailscale；使用 Headscale 时填写其地址，如 https://hs.example.com';
+
+  @override
+  String get hpDeviceName => '此设备在网络中的名称；留空则使用设备自己的名称';
+
+  @override
+  String get hpExitDevice => '要使用其网络连接的设备的名称或地址；留空则只访问您自己的设备';
+
+  @override
+  String get hpTempDevice => '离线后会从网络中移除';
+
+  @override
+  String get devicesTitle => '我的设备';
+
+  @override
+  String get devicesNotConnected => '连接 Tailscale 或 Headscale 配置后即可查看您的设备。';
+
+  @override
+  String get devicesJoining => '正在加入网络…';
+
+  @override
+  String get devicesLoginNeeded => '网络未接受此设备的密钥。请生成新密钥并编辑配置。';
+
+  @override
+  String get devicesEmpty => '此网络中还没有其他设备。';
+
+  @override
+  String get devicesThisDevice => '本设备';
+
+  @override
+  String get deviceOnline => '在线';
+
+  @override
+  String get deviceOffline => '离线';
+
+  @override
+  String deviceLastSeen(String when) {
+    return '最后在线 $when';
+  }
+
+  @override
+  String get deviceUseAsExit => '用作出口';
+
+  @override
+  String get deviceStopExit => '不再用作出口';
+
+  @override
+  String get deviceIsExit => '正用作出口';
+
+  @override
+  String get devicesExitHint => '把您的某台设备用作出口：您的所有流量都将从它的网络出去。';
+
+  @override
+  String get deviceCopyName => '复制名称';
+
+  @override
+  String get deviceCopyAddress => '复制地址';
+
+  @override
+  String get deviceCopied => '已复制';
+
+  @override
+  String get errMeshExit => '目前无法把该设备用作出口。它必须在线并共享其网络连接。';
 }

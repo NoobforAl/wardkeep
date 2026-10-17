@@ -197,7 +197,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
                 child: Text(context.l10n.subscriptionEditNote),
               ),
             for (final f in basic) _field(context, f),
-            if (_protocol != 'tor')
+            if (_protocol != 'tor' && _protocol != 'tailscale')
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CountryFlag(code),

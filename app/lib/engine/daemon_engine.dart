@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../state/dns_state.dart';
 import 'engine.dart';
 
 export 'engine.dart' show EngineException;
@@ -50,6 +51,40 @@ class DaemonEngine implements VpnEngine {
         jsonDecode(await File(controlFile ?? defaultControlFile()).readAsString()) as Map<String, dynamic>;
     return _connect(control['addr'] as String, control['token'] as String, null);
   }
+
+  /// The control file of the Windows service (`omnitun-svc` running as SYSTEM,
+  /// see core/winsvc): `%ProgramData%\omnitun\control\control.json`. The
+  /// service makes its directory readable only by the accounts named at
+  /// install time, so for any other user the file simply cannot be read.
+  /// Null off Windows.
+  static String? serviceControlFile([Map<String, String>? env]) {
+    if (!Platform.isWindows && env == null) return null;
+    final e = env ?? Platform.environment;
+    final programData = e['ProgramData'] ?? r'C:\ProgramData';
+    return '$programData\\omnitun\\control\\control.json';
+  }
+
+  /// Connects to the Windows service when it is installed, running and lets
+  /// this user in; null in every other case (no file, a stale file, a wrong
+  /// token, not readable), so the caller keeps using its own daemon.
+  static Future<DaemonEngine?> attachService({String? controlFile}) async {
+    final file = controlFile ?? serviceControlFile();
+    if (file == null || !File(file).existsSync()) return null;
+    try {
+      final engine = await attach(controlFile: file);
+      engine.isService = true;
+      return engine;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// True for the Windows service (it runs as SYSTEM: VPN mode needs no admin
+  /// rights, but it has no desktop session, so no system proxy).
+  bool isService = false;
+
+  /// True once the control connection is lost.
+  bool get isClosed => _closed.isCompleted;
 
   /// Connects to a core whose address and token are already known (Android in-process core).
   static Future<DaemonEngine> attachTo(String addr, String token) => _connect(addr, token, null);
@@ -163,6 +198,8 @@ class DaemonEngine implements VpnEngine {
       errorCode: s['error_code'] as String?,
       upBps: (s['up_bps'] as num?)?.toInt() ?? 0,
       downBps: (s['down_bps'] as num?)?.toInt() ?? 0,
+      upTotal: (s['up_total'] as num?)?.toInt() ?? 0,
+      downTotal: (s['down_total'] as num?)?.toInt() ?? 0,
       failover: f == null
           ? null
           : FailoverInfo(
@@ -192,12 +229,17 @@ class DaemonEngine implements VpnEngine {
     'listen_port': options.listenPort,
     'system_proxy': options.systemProxy,
     if (options.dns.isNotEmpty) 'dns': options.dns,
+    if (options.dnsRelay.isNotEmpty && isDnsCryptStamp(options.dns)) 'dns_relay': options.dnsRelay,
     'failover': options.autoFailover,
     if (!options.bypassLan) 'proxy_private': true,
     if (options.includePackages.isNotEmpty) 'include_packages': options.includePackages,
     if (options.excludePackages.isNotEmpty) 'exclude_packages': options.excludePackages,
     if (options.bypass.isNotEmpty) 'bypass': options.bypass,
     if (options.bypass.isNotEmpty && options.bypassOnly) 'bypass_only': true,
+    if (options.killSwitch && options.tunMode) 'kill_switch': true,
+    if (options.killSwitch && options.tunMode && options.killSwitchEarly) 'kill_switch_early': true,
+    if (!options.ipv6) 'no_ipv6': true,
+    if (options.mtu > 0) 'mtu': options.mtu,
   };
 
   @override
@@ -272,6 +314,13 @@ class DaemonEngine implements VpnEngine {
 
   @override
   Future<ExitInfo> exitInfo() async => ExitInfo.fromJson(await _call('exit_info') as Map<String, dynamic>);
+
+  @override
+  Future<MeshStatus> meshStatus() async => MeshStatus.fromJson(await _call('mesh_status') as Map<String, dynamic>);
+
+  @override
+  Future<MeshStatus> setMeshExit(String id) async =>
+      MeshStatus.fromJson(await _call('mesh_exit', {'id': id}) as Map<String, dynamic>);
 
   @override
   Future<BypassReport> parseBypass(String text) async =>

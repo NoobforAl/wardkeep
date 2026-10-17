@@ -9,8 +9,10 @@ import '../../state/providers.dart';
 import '../../state/ipdb_state.dart';
 import '../insets.dart';
 import 'bypass_screen.dart';
+import 'dns_screen.dart';
 import 'ipdb_screen.dart';
 import 'logs_screen.dart';
+import 'network_tiles.dart';
 import 'notices_screen.dart';
 import 'profiles_screen.dart';
 import 'split_tunnel_screen.dart';
@@ -80,6 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                   value: s.bypassLan,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(bypassLan: v)),
                 ),
+                ...networkTiles(context, ref, s),
                 ListTile(
                   leading: const Icon(Icons.alt_route_rounded),
                   title: Text(l.bypassTitle),
@@ -118,9 +121,9 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.hub_outlined),
                   title: Text(l.remoteDns),
-                  subtitle: Text(s.remoteDns, textDirection: TextDirection.ltr),
-                  trailing: const Icon(Icons.edit_outlined),
-                  onTap: () => _editDns(context, ref, s.remoteDns),
+                  subtitle: Text(dnsSummary(l, s), textDirection: TextDirection.ltr),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => open(const DnsScreen()),
                 ),
               ]),
               _Header(l.settingsApp),
@@ -176,6 +179,14 @@ class SettingsScreen extends ConsumerWidget {
                   value: s.stopOnClose,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(stopOnClose: v)),
                 ),
+                if (Platform.isWindows)
+                  SwitchListTile(
+                    secondary: const Icon(Icons.web_asset_off_outlined),
+                    title: Text(l.keepInTray),
+                    subtitle: Text(l.keepInTrayHint),
+                    value: s.keepInTray,
+                    onChanged: (v) => ctrl.update((s) => s.copyWith(keepInTray: v)),
+                  ),
                 ListTile(
                   leading: const Icon(Icons.receipt_long_outlined),
                   title: Text(l.tooltipLogs),
@@ -232,63 +243,6 @@ Future<void> _pickLanguage(BuildContext context, WidgetRef ref, String current) 
     ),
   );
   if (picked != null) ref.read(settingsProvider.notifier).update((s) => s.copyWith(language: picked));
-}
-
-Future<void> _editDns(BuildContext context, WidgetRef ref, String current) async {
-  final value = await showDialog<String>(context: context, builder: (_) => _DnsDialog(current));
-  if (value != null && value.isNotEmpty) {
-    ref.read(settingsProvider.notifier).update((s) => s.copyWith(remoteDns: value));
-  }
-}
-
-/// Owns its controller so it is disposed only after the dialog leaves the tree.
-class _DnsDialog extends StatefulWidget {
-  const _DnsDialog(this.initial);
-
-  final String initial;
-
-  @override
-  State<_DnsDialog> createState() => _DnsDialogState();
-}
-
-class _DnsDialogState extends State<_DnsDialog> {
-  late final _controller = TextEditingController(text: widget.initial);
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return AlertDialog(
-      title: Text(l.remoteDns),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.remoteDnsHelp),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            keyboardType: TextInputType.url,
-            textDirection: TextDirection.ltr, // an address is left to right in every language
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, SettingsState.defaultRemoteDns),
-          child: Text(l.actionReset),
-        ),
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l.actionCancel)),
-        FilledButton(onPressed: () => Navigator.pop(context, _controller.text.trim()), child: Text(l.actionSave)),
-      ],
-    );
-  }
 }
 
 /// A rounded card holding one section's rows.

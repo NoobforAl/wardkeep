@@ -17,7 +17,9 @@ import 'mock_engine.dart';
 /// error if that keeps failing. Falls back to [MockEngine] when no core can be
 /// started at all, logging why.
 class CoreEngine implements VpnEngine {
-  CoreEngine() {
+  /// [serviceControlFile] and [localControlFile] override where the Windows
+  /// service's and the per-user daemon's control files are (tests).
+  CoreEngine({this._serviceControlFile, this._localControlFile}) {
     _ready = _start();
   }
 
@@ -36,6 +38,21 @@ class CoreEngine implements VpnEngine {
   final _states = StreamController<EngineState>.broadcast();
   final _logs = StreamController<String>.broadcast();
   final _subs = <StreamSubscription<Object?>>[];
+
+  final String? _serviceControlFile;
+  final String? _localControlFile;
+  // Windows: the per-user daemon and, when installed, the SYSTEM service.
+  DaemonEngine? _local;
+  DaemonEngine? _service;
+  final _watched = <DaemonEngine>{};
+  EngineState _last = const EngineState();
+
+  /// True while the Windows service carries the connection (VPN mode without
+  /// administrator rights).
+  bool get usingService {
+    final e = _inner;
+    return e is DaemonEngine && e.isService;
+  }
 
   Future<VpnEngine> _start() async {
     VpnEngine engine;
@@ -60,14 +77,14 @@ class CoreEngine implements VpnEngine {
     if (reconnect) {
       // The daemon may still be running; otherwise start a new one.
       try {
-        return await DaemonEngine.attach();
+        return await DaemonEngine.attach(controlFile: _localControlFile);
       } catch (_) {}
     }
     final exe = findDaemonExecutable();
     if (exe == null) {
       throw StateError('omnitun-svc not found (build it with scripts/go.ps1 build -o bin/ ./cmd/...)');
     }
-    return DaemonEngine.launch(exe);
+    return DaemonEngine.launch(exe, controlFile: _localControlFile);
   }
 
   void _adopt(VpnEngine engine) {
@@ -76,14 +93,53 @@ class CoreEngine implements VpnEngine {
     }
     _subs
       ..clear()
-      ..add(engine.states.listen(_states.add))
+      ..add(engine.states.listen((s) {
+        _last = s;
+        _states.add(s);
+      }))
       ..add(engine.logs.listen(_logs.add));
     _inner = engine;
     if (engine is DaemonEngine) {
-      unawaited(engine.closed.then((_) {
-        if (!_disposed) _ready = _reconnect();
-      }));
+      if (engine.isService) {
+        _service = engine;
+      } else {
+        _local = engine;
+      }
+      // One watcher per connection, and only the engine in use is replaced.
+      if (_watched.add(engine)) {
+        unawaited(engine.closed.then((_) {
+          _watched.remove(engine);
+          if (!_disposed && identical(_inner, engine)) _ready = _reconnect();
+        }));
+      }
     }
+  }
+
+  /// Windows: VPN mode runs in the service when one is installed and lets this
+  /// user in, so the app needs no administrator rights; everything else runs in
+  /// the per-user daemon (the service has no desktop session, so it cannot set
+  /// the system proxy, and without a service nothing changes). A tunnel is
+  /// never left running in the engine that is switched away from.
+  Future<void> _chooseEngine(bool vpnMode) async {
+    final current = await _ready;
+    DaemonEngine? target;
+    if (vpnMode) {
+      var svc = _service;
+      if (svc == null || svc.isClosed) {
+        svc = _service = await DaemonEngine.attachService(controlFile: _serviceControlFile);
+      }
+      target = svc;
+    } else if (current is DaemonEngine && current.isService) {
+      var local = _local;
+      if (local == null || local.isClosed) local = _local = await _connectCore(reconnect: true);
+      target = local;
+    }
+    if (target == null || identical(target, current)) return;
+    if (_last.status != ConnStatus.disconnected && _last.status != ConnStatus.error) {
+      await current.disconnect();
+    }
+    _ready = Future.value(target);
+    _adopt(target);
   }
 
   Future<VpnEngine> _reconnect() async {
@@ -138,6 +194,7 @@ class CoreEngine implements VpnEngine {
     List<ProfileInfo> fallbacks = const [],
     ConnectOptions options = const ConnectOptions(),
   }) async {
+    if (Platform.isWindows) await _chooseEngine(options.tunMode);
     final engine = await _ready;
     if (Platform.isAndroid && options.tunMode && engine is DaemonEngine) {
       // The system consent dialog must be accepted before the core can open a TUN.
@@ -200,6 +257,12 @@ class CoreEngine implements VpnEngine {
   Future<ExitInfo> exitInfo() async => (await _ready).exitInfo();
 
   @override
+  Future<MeshStatus> meshStatus() async => (await _ready).meshStatus();
+
+  @override
+  Future<MeshStatus> setMeshExit(String id) async => (await _ready).setMeshExit(id);
+
+  @override
   Future<BypassReport> parseBypass(String text) async => (await _ready).parseBypass(text);
 
   @override
@@ -226,6 +289,9 @@ class CoreEngine implements VpnEngine {
       s.cancel();
     }
     _inner?.dispose();
+    for (final e in [_local, _service]) {
+      if (e != null && !identical(e, _inner)) e.dispose();
+    }
     _states.close();
     _logs.close();
   }
