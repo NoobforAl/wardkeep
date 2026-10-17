@@ -12,7 +12,9 @@ name: Windows and server
 # certificate (a paid certificate, kept in a repository secret) is the next step; see PLAN.md, Phase 3.
 # The server is two static Linux binaries (amd64, arm64) with SHA256SUMS, from scripts/build-server-release.sh.
 #
-# Third-party actions are pinned to full commit SHAs, like in android.yml.
+# Every action is pinned to a full commit SHA. The two build jobs only read the repository (and run code
+# from dependencies, so they hold no token that can write); one small job at the end, which runs nothing
+# but the GitHub CLI on the files they made, is the only one that can add to a release.
 
 on:
   push:
@@ -32,15 +34,17 @@ permissions:
 
 jobs:
   windows-app:
+    outputs:
+      version: ${{ steps.version.outputs.name }}
     runs-on: windows-latest
     timeout-minutes: 45
-    permissions:
-      contents: write # to add the files to a release
     defaults:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Version
         id: version
@@ -63,7 +67,7 @@ jobs:
           "pre=$($ver.Contains('-').ToString().ToLower())" >> $env:GITHUB_OUTPUT
           "version $ver (name $core, build number $num)"
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
 
@@ -99,41 +103,22 @@ jobs:
           Get-Content dist/SHA256SUMS-windows.txt
           Get-ChildItem dist | Format-Table Name, Length
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: wardkeep-windows
           path: |
             dist/omnitun-*-windows-x64.zip
             dist/SHA256SUMS-windows.txt
 
-      - name: Add to the release
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
-          VER: ${{ steps.version.outputs.name }}
-          PRE: ${{ steps.version.outputs.pre }}
-        run: |
-          $files = @("dist/omnitun-$env:VER-windows-x64.zip", "dist/SHA256SUMS-windows.txt")
-          $flags = @('--title', "Wardkeep $env:VER", '--generate-notes', '--verify-tag')
-          if ($env:PRE -eq 'true') { $flags += '--prerelease' }
-          gh release create $env:TAG @flags @files
-          if ($LASTEXITCODE -ne 0) {
-            # the Android workflow made the release first: add to it
-            Start-Sleep -Seconds 15
-            gh release upload $env:TAG @files --clobber
-            if ($LASTEXITCODE -ne 0) { exit 1 }
-          }
-
   server:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
 
@@ -152,24 +137,44 @@ jobs:
           for f in dist/omnitun-server-linux-*; do file "$f"; done
           file dist/omnitun-server-linux-amd64 | grep -q "statically linked"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: wardkeep-server-linux
           path: dist/
 
+  # The only job that can write to the repository, and it runs nothing but the GitHub CLI on the files the
+  # two jobs above built (no checkout, no build, no dependencies).
+  publish:
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    needs: [windows-app, server]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # to add the files to a release
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wardkeep-windows
+          path: files
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wardkeep-server-linux
+          path: files
       - name: Add to the release
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
-          VER: ${{ steps.version.outputs.name }}
-          PRE: ${{ steps.version.outputs.pre }}
+          VER: ${{ needs.windows-app.outputs.version }}
         run: |
-          cp dist/SHA256SUMS dist/SHA256SUMS-server.txt
-          FILES=(dist/omnitun-server-linux-amd64 dist/omnitun-server-linux-arm64 dist/SHA256SUMS-server.txt)
+          cd files
+          cp SHA256SUMS SHA256SUMS-server.txt
+          rm SHA256SUMS
+          FILES=(omnitun-"$VER"-windows-x64.zip SHA256SUMS-windows.txt omnitun-server-linux-amd64 omnitun-server-linux-arm64 SHA256SUMS-server.txt)
           FLAGS=(--title "Wardkeep $VER" --generate-notes --verify-tag)
-          if [ "$PRE" = "true" ]; then FLAGS+=(--prerelease); fi
+          if [[ "$VER" == *-* ]]; then FLAGS+=(--prerelease); fi
           if ! gh release create "$TAG" "${FLAGS[@]}" "${FILES[@]}"; then
+            # the Android workflow made the release first: add to it
             sleep 15
             gh release upload "$TAG" "${FILES[@]}" --clobber
           fi
