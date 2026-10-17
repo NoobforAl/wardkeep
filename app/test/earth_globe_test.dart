@@ -64,4 +64,108 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     expect(tester.hasRunningAnimations, isFalse);
   });
+
+  group('turning the Earth by hand', () {
+    EarthBackdropState state(WidgetTester tester) => tester.state<EarthBackdropState>(find.byType(EarthBackdrop));
+
+    Future<void> rest(WidgetTester tester) async {
+      await tester.pumpWidget(globe(home: _tehran));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('dragging right turns it west, up turns it south, the way a ball under a finger turns', (tester) async {
+      await rest(tester);
+      final before = state(tester).shownCentre;
+      await tester.drag(find.byType(EarthBackdrop), const Offset(80, 0));
+      await tester.pumpAndSettle();
+      final after = state(tester).shownCentre;
+      expect(after.$2, lessThan(before.$2), reason: 'a drag to the right shows land further west');
+      await tester.drag(find.byType(EarthBackdrop), const Offset(0, -60));
+      await tester.pumpAndSettle();
+      expect(state(tester).shownCentre.$1, lessThan(after.$1), reason: 'a drag up shows land further south');
+    });
+
+    testWidgets('it cannot be turned past the poles', (tester) async {
+      await rest(tester);
+      for (var i = 0; i < 8; i++) {
+        await tester.drag(find.byType(EarthBackdrop), const Offset(0, 150));
+      }
+      await tester.pumpAndSettle();
+      expect(state(tester).shownCentre.$1, lessThanOrEqualTo(75.0));
+      for (var i = 0; i < 16; i++) {
+        await tester.drag(find.byType(EarthBackdrop), const Offset(0, -150));
+      }
+      await tester.pumpAndSettle();
+      expect(state(tester).shownCentre.$1, greaterThanOrEqualTo(-75.0));
+    });
+
+    testWidgets('a fling coasts and then stops by itself', (tester) async {
+      await rest(tester);
+      await tester.fling(find.byType(EarthBackdrop), const Offset(200, 0), 1500);
+      await tester.pump(const Duration(milliseconds: 100));
+      final early = state(tester).turn.$2;
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(state(tester).turn.$2, isNot(early), reason: 'it should still be coasting');
+      await tester.pumpAndSettle();
+      final stopped = state(tester).turn.$2;
+      await tester.pump(const Duration(seconds: 2));
+      expect(state(tester).turn.$2, stopped);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    testWidgets('a double tap brings it back to the place it shows', (tester) async {
+      await rest(tester);
+      final home = state(tester).shownCentre;
+      await tester.drag(find.byType(EarthBackdrop), const Offset(-90, 40));
+      await tester.pumpAndSettle();
+      expect(state(tester).shownCentre, isNot(home));
+      await tester.tap(find.byType(EarthBackdrop));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.byType(EarthBackdrop));
+      await tester.pumpAndSettle();
+      final back = state(tester).shownCentre;
+      expect((back.$1 - home.$1).abs(), lessThan(0.1));
+      expect((back.$2 - home.$2).abs(), lessThan(0.1));
+    });
+
+    testWidgets('a new place after the user turned it flies on from where the user left it', (tester) async {
+      await rest(tester);
+      await tester.drag(find.byType(EarthBackdrop), const Offset(120, 30));
+      await tester.pumpAndSettle();
+      final left = state(tester).shownCentre;
+      await tester.pumpWidget(globe(home: _tehran, exit: _berlin));
+      final start = state(tester).shownCentre;
+      expect((start.$1 - left.$1).abs(), lessThan(0.5), reason: 'the globe jumped when the flight began');
+      expect((start.$2 - left.$2).abs(), lessThan(0.5), reason: 'the globe jumped when the flight began');
+      await tester.pumpAndSettle();
+      expect(state(tester).turn, (0.0, 0.0));
+    });
+
+    testWidgets('it turns inside a page that scrolls, and the page still scrolls elsewhere', (tester) async {
+      final controller = ScrollController();
+      await tester.pumpWidget(MaterialApp(
+        home: SingleChildScrollView(
+          controller: controller,
+          child: Column(children: [
+            SizedBox(
+              width: 300,
+              height: 300,
+              child: EarthBackdrop(home: _tehran, homeColor: Colors.red, exitColor: Colors.amber),
+            ),
+            const SizedBox(height: 1200, width: 300),
+          ]),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      final before = state(tester).turn;
+      await tester.drag(find.byType(EarthBackdrop), const Offset(0, -120));
+      await tester.pumpAndSettle();
+      expect(controller.offset, 0, reason: 'a drag on the Earth must not scroll the page');
+      expect(state(tester).turn, isNot(before));
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400), warnIfMissed: false);
+      await tester.dragFrom(const Offset(700, 500), const Offset(0, -200));
+      await tester.pumpAndSettle();
+      expect(controller.offset, greaterThan(0), reason: 'the page scrolls where the Earth is not');
+    });
+  });
 }

@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../state/geo_data.dart';
 
@@ -60,6 +62,18 @@ class _Scene {
   final double homeAlpha, exitAlpha;
   final Color homeColor, exitColor;
 
+  /// The same scene, looking [dLat] degrees further north and [dLon] further east.
+  _Scene shift(double dLat, double dLon) => _Scene(
+    lat: lat + dLat,
+    lon: lon + dLon,
+    home: home,
+    exit: exit,
+    homeAlpha: homeAlpha,
+    exitAlpha: exitAlpha,
+    homeColor: homeColor,
+    exitColor: exitColor,
+  );
+
   _Scene withColors(Color homeColor, Color exitColor) => _Scene(
     lat: lat,
     lon: lon,
@@ -88,6 +102,11 @@ class _Scene {
 /// are while unprotected, and on connecting it flies (zooming out on the way) to where you
 /// exit, with an arc between the two; on disconnecting it flies back. It only moves during
 /// the flight (about two seconds), so it costs next to nothing the rest of the time.
+///
+/// The user can turn it with a finger or a mouse: drag in any direction (it keeps coasting a
+/// moment, and the latitude stops short of the poles so it cannot flip over) and double tap
+/// to bring it back to the place it is showing. The turn is added on top of the flight and is
+/// folded into it when a place changes, so nothing jumps.
 class EarthBackdrop extends StatefulWidget {
   const EarthBackdrop({super.key, this.home, this.exit, required this.homeColor, required this.exitColor});
 
@@ -96,10 +115,20 @@ class EarthBackdrop extends StatefulWidget {
   final Color homeColor, exitColor;
 
   @override
-  State<EarthBackdrop> createState() => _EarthBackdropState();
+  State<EarthBackdrop> createState() => EarthBackdropState();
 }
 
-class _EarthBackdropState extends State<EarthBackdrop> with SingleTickerProviderStateMixin {
+/// An eager pan: it wins the gesture arena at once, so a drag that starts on the Earth turns
+/// it even where the page around it could scroll.
+class _EagerPan extends PanGestureRecognizer {
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
+  }
+}
+
+class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMixin {
   /// The globe at rest, when no place is known: Europe, Africa and the Middle East.
   static const _restLat = 18.0, _restLon = 20.0;
 
@@ -109,6 +138,120 @@ class _EarthBackdropState extends State<EarthBackdrop> with SingleTickerProvider
   late final AnimationController _fly = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000));
   late _Scene _from;
   late _Scene _to;
+
+  /// How far north the globe may be turned, either way.
+  static const _maxLat = 75.0;
+
+  // The user's turn, in degrees, added to the flight; and its coasting speed (degrees a second).
+  double _turnLat = 0, _turnLon = 0, _speedLat = 0, _speedLon = 0;
+  bool _recentring = false;
+  Duration _lastTick = Duration.zero;
+  late final Ticker _coast = createTicker(_onCoast);
+  double _radius = 150;
+  double _moved = 0; // how far the finger has gone since it touched, in pixels
+  DateTime? _lastTap;
+
+  _Scene _flying() => _Scene.lerp(_from, _to, Curves.easeInOutCubic.transform(_fly.value));
+
+  /// What is on screen: the flight plus the user's turn, short of the poles.
+  _Scene _shown() {
+    final f = _flying();
+    return f.shift((f.lat + _turnLat).clamp(-_maxLat, _maxLat) - f.lat, _turnLon);
+  }
+
+  /// Where the middle of the globe is now: (latitude, longitude).
+  @visibleForTesting
+  (double, double) get shownCentre {
+    final s = _shown();
+    return (s.lat, s.lon);
+  }
+
+  /// How far the user has turned it: (latitude, longitude).
+  @visibleForTesting
+  (double, double) get turn => (_turnLat, _turnLon);
+
+  void _turnBy(double dLat, double dLon) {
+    final f = _flying();
+    _turnLat = (f.lat + _turnLat + dLat).clamp(-_maxLat, _maxLat) - f.lat;
+    _turnLon += dLon;
+  }
+
+  void _onCoast(Duration now) {
+    final dt = ((now - _lastTick).inMicroseconds / 1e6).clamp(0.0, 0.05);
+    _lastTick = now;
+    setState(() {
+      if (_recentring) {
+        final k = math.exp(-dt * 9);
+        _turnLat *= k;
+        _turnLon *= k;
+        if (_turnLat.abs() < 0.05 && _turnLon.abs() < 0.05) {
+          _turnLat = _turnLon = 0;
+          _coast.stop();
+        }
+        return;
+      }
+      _turnBy(_speedLat * dt, _speedLon * dt);
+      final k = math.exp(-dt * 3.5);
+      _speedLat *= k;
+      _speedLon *= k;
+      if (_speedLat.abs() < 1.5 && _speedLon.abs() < 1.5) {
+        _speedLat = _speedLon = 0;
+        _coast.stop();
+      }
+    });
+  }
+
+  void _startCoast() {
+    if (_coast.isActive) return;
+    _lastTick = Duration.zero;
+    _coast.start();
+  }
+
+  void _panStart(DragStartDetails d) {
+    _coast.stop();
+    _recentring = false;
+    _speedLat = _speedLon = 0;
+    _moved = 0;
+  }
+
+  void _panUpdate(DragUpdateDetails d) {
+    // One pixel across the middle of the globe is 1/r radians.
+    final perPixel = 180 / math.pi / _radius;
+    _moved += d.delta.distance;
+    setState(() => _turnBy(d.delta.dy * perPixel, -d.delta.dx * perPixel));
+  }
+
+  void _panEnd(DragEndDetails d) {
+    final perPixel = 180 / math.pi / _radius;
+    final v = d.velocity.pixelsPerSecond;
+    if (v.distance > 80) {
+      _speedLat = (v.dy * perPixel).clamp(-240.0, 240.0);
+      _speedLon = (-v.dx * perPixel).clamp(-240.0, 240.0);
+      _startCoast();
+      return;
+    }
+    // A touch that hardly moved is a tap (a drag that stops before the finger lifts is not):
+    // two taps in a row bring the Earth back.
+    if (_moved > kTouchSlop) {
+      _lastTap = null;
+      return;
+    }
+    final now = DateTime.now(), last = _lastTap;
+    if (last != null && now.difference(last) < const Duration(milliseconds: 350)) {
+      _lastTap = null;
+      recentre();
+    } else {
+      _lastTap = now;
+    }
+  }
+
+  /// Turn the Earth back to the place it is showing.
+  void recentre() {
+    _recentring = true;
+    _speedLat = _speedLon = 0;
+    if (_turnLat == 0 && _turnLon == 0) return;
+    _startCoast();
+  }
 
   _Scene _target(double previousLon) {
     final home = widget.home, exit = widget.exit;
@@ -143,8 +286,11 @@ class _EarthBackdropState extends State<EarthBackdrop> with SingleTickerProvider
     // longitude is worked out from where the globe is right now and so differs on every
     // rebuild in the middle of a flight (the globe restarted its flight again and again).
     if (old.home != widget.home || old.exit != widget.exit) {
-      // Start from what is on screen now, so a change in mid-flight does not jump.
-      final now = _Scene.lerp(_from, _to, Curves.easeInOutCubic.transform(_fly.value));
+      // Start from what is on screen now (the user's turn included), so a change in
+      // mid-flight does not jump; from here on the turn is part of the flight.
+      final now = _shown();
+      _coast.stop();
+      _turnLat = _turnLon = _speedLat = _speedLon = 0;
       _from = now;
       _to = _target(now.lon);
       _fly.forward(from: 0);
@@ -157,6 +303,7 @@ class _EarthBackdropState extends State<EarthBackdrop> with SingleTickerProvider
 
   @override
   void dispose() {
+    _coast.dispose();
     _fly.dispose();
     super.dispose();
   }
@@ -164,26 +311,41 @@ class _EarthBackdropState extends State<EarthBackdrop> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).colorScheme.brightness == Brightness.dark;
-    return IgnorePointer(
-      child: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: _fly,
-          builder: (context, _) {
-            final t = _fly.value;
-            return CustomPaint(
-              painter: _GlobePainter(
-                scene: _Scene.lerp(_from, _to, Curves.easeInOutCubic.transform(t)),
-                // Pull back in the middle of a flight, then settle: the camera "travels".
-                zoom: 1 - 0.18 * math.sin(math.pi * t),
-                ocean: dark ? const Color(0xFF0B1422) : const Color(0xFFD3DCE8),
-                oceanDeep: dark ? const Color(0xFF060A12) : const Color(0xFFC3CEDD),
-                land: dark ? const Color(0xFF7FA3D6) : const Color(0xFF4B6A99),
-                rim: dark ? const Color(0xFF86A8D8) : const Color(0xFF6E8CB8),
-              ),
-            );
+    return LayoutBuilder(
+      builder: (context, box) {
+        _radius = math.max(40.0, box.biggest.shortestSide / 2);
+        return RawGestureDetector(
+          behavior: HitTestBehavior.opaque,
+          gestures: {
+            _EagerPan: GestureRecognizerFactoryWithHandlers<_EagerPan>(
+              _EagerPan.new,
+              (r) => r
+                ..onStart = _panStart
+                ..onUpdate = _panUpdate
+                ..onEnd = _panEnd,
+            ),
           },
-        ),
-      ),
+          child: RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _fly,
+              builder: (context, _) {
+                final t = _fly.value;
+                return CustomPaint(
+                  painter: _GlobePainter(
+                    scene: _shown(),
+                    // Pull back in the middle of a flight, then settle: the camera "travels".
+                    zoom: 1 - 0.18 * math.sin(math.pi * t),
+                    ocean: dark ? const Color(0xFF0B1422) : const Color(0xFFD3DCE8),
+                    oceanDeep: dark ? const Color(0xFF060A12) : const Color(0xFFC3CEDD),
+                    land: dark ? const Color(0xFF7FA3D6) : const Color(0xFF4B6A99),
+                    rim: dark ? const Color(0xFF86A8D8) : const Color(0xFF6E8CB8),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }
