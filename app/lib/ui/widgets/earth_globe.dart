@@ -176,14 +176,17 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   late final Ticker _coast = createTicker(_onCoast);
 
   // The connection animation: a clock in seconds that only runs while connecting or connected (and
-  // the system does not ask for less motion), at about 30 frames a second. Only the overlay on top
+  // the system does not ask for less motion), at 11 to 22 frames a second. Only the overlay on top
   // of the globe is redrawn by it; the dotted Earth underneath is kept as it is.
   final _clock = ValueNotifier<double>(0);
   late final Ticker _flow = createTicker(_onFlow);
   Duration _lastFlow = Duration.zero;
 
   void _onFlow(Duration elapsed) {
-    if (elapsed - _lastFlow < const Duration(milliseconds: 30)) return;
+    // Every frame costs the same on a mid-range phone (the whole screen is drawn again), so the rate is
+    // what counts: about 22 frames a second while data moves, about 11 while the line only breathes.
+    final calm = !widget.connecting && widget.upBps < 50 && widget.downBps < 50;
+    if (elapsed - _lastFlow < Duration(milliseconds: calm ? 90 : 45)) return;
     _lastFlow = elapsed;
     _clock.value = elapsed.inMicroseconds / 1e6;
   }
@@ -682,7 +685,7 @@ double _flowLevel(int bps) => bps < 50 ? 0 : ((math.log(bps) / math.ln10 - 1.7) 
 /// The connection animation drawn over the Earth (see [EarthBackdrop]): a packet and rings while
 /// connecting; a breathing exit, a faint line along the arc and dots streaming each way as fast and
 /// as many as the traffic is, while connected. Cheap on purpose (a few dozen dots): it redraws
-/// about 30 times a second while it runs.
+/// 11 to 22 times a second while it runs.
 class _FlowPainter extends CustomPainter {
   _FlowPainter({
     required this.scene,
