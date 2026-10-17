@@ -57,7 +57,9 @@ void main() {
       await tester.tap(find.text('Connect'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
-      await tester.pumpAndSettle();
+      // Connected, the Earth animates for as long as it lasts, so the screen never "settles": let the
+      // flight and a few frames of the animation go by and check the layout with it running.
+      await tester.pump(const Duration(seconds: 3));
       check('connected');
       await tester.tap(find.text('Disconnect'));
       await tester.pump(const Duration(milliseconds: 400));

@@ -8,6 +8,7 @@ const _berlin = (52.5, 13.4);
 /// The home screen rebuilds the globe on every speed and clock tick. The globe must fly once
 /// per change of place and stay still otherwise.
 void main() {
+  _flowTests();
   Widget globe({(double, double)? home, (double, double)? exit, Color exitColor = Colors.amber}) => MaterialApp(
     home: SizedBox(
       width: 400,
@@ -166,6 +167,86 @@ void main() {
       await tester.dragFrom(const Offset(700, 500), const Offset(0, -200));
       await tester.pumpAndSettle();
       expect(controller.offset, greaterThan(0), reason: 'the page scrolls where the Earth is not');
+    });
+  });
+}
+
+/// The connection animation: it runs only while connecting or connected, never while idle, and not when
+/// the system asks for less motion; and it paints (a packet, rings, a line and dots) without errors.
+void _flowTests() {
+  Widget globe({bool connecting = false, bool connected = false, int up = 0, int down = 0, bool reduce = false}) =>
+      MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(disableAnimations: reduce),
+          child: SizedBox(
+            width: 400,
+            height: 400,
+            child: EarthBackdrop(
+              home: _tehran,
+              exit: _berlin,
+              homeColor: Colors.red,
+              exitColor: Colors.teal,
+              connecting: connecting,
+              connected: connected,
+              upBps: up,
+              downBps: down,
+            ),
+          ),
+        ),
+      );
+  EarthBackdropState state(WidgetTester tester) => tester.state<EarthBackdropState>(find.byType(EarthBackdrop));
+
+  group('the connection animation', () {
+    testWidgets('does not run when idle, runs while connecting and while connected, stops after', (tester) async {
+      await tester.pumpWidget(globe());
+      await tester.pumpAndSettle();
+      expect(state(tester).flowRunning, isFalse);
+      expect(tester.hasRunningAnimations, isFalse);
+
+      await tester.pumpWidget(globe(connecting: true));
+      expect(state(tester).flowRunning, isTrue);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpWidget(globe(connected: true, up: 20000, down: 800000));
+      expect(state(tester).flowRunning, isTrue);
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.pumpWidget(globe());
+      expect(state(tester).flowRunning, isFalse, reason: 'it must stop when the VPN is off');
+      await tester.pumpAndSettle();
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    testWidgets('does not run when the system asks for less motion', (tester) async {
+      await tester.pumpWidget(globe(connected: true, down: 500000, reduce: true));
+      expect(state(tester).flowRunning, isFalse);
+    });
+
+    testWidgets('paints for every traffic level, with nothing moving too, without errors', (tester) async {
+      for (final (up, down) in [(0, 0), (30, 40), (2000, 500), (100000, 3000000), (900000000, 900000000)]) {
+        await tester.pumpWidget(globe(connected: true, up: up, down: down));
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        expect(tester.takeException(), isNull, reason: 'up $up down $down');
+      }
+      await tester.pumpWidget(globe(connecting: true));
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(globe());
+    });
+
+    testWidgets('keeps going when the Earth is turned by hand, and the dotted Earth is not redrawn for it', (tester) async {
+      await tester.pumpWidget(globe(connected: true, down: 100000));
+      await tester.drag(find.byType(EarthBackdrop), const Offset(60, 0));
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(state(tester).flowRunning, isTrue);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(globe());
+      await tester.pumpAndSettle();
     });
   });
 }

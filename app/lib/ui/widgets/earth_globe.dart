@@ -62,6 +62,16 @@ class _Scene {
   final double homeAlpha, exitAlpha;
   final Color homeColor, exitColor;
 
+  bool sameAs(_Scene o) =>
+      lat == o.lat &&
+      lon == o.lon &&
+      home == o.home &&
+      exit == o.exit &&
+      homeAlpha == o.homeAlpha &&
+      exitAlpha == o.exitAlpha &&
+      homeColor == o.homeColor &&
+      exitColor == o.exitColor;
+
   /// The same scene, looking [dLat] degrees further north and [dLon] further east.
   _Scene shift(double dLat, double dLon) => _Scene(
     lat: lat + dLat,
@@ -108,11 +118,27 @@ class _Scene {
 /// to bring it back to the place it is showing. The turn is added on top of the flight and is
 /// folded into it when a place changes, so nothing jumps.
 class EarthBackdrop extends StatefulWidget {
-  const EarthBackdrop({super.key, this.home, this.exit, required this.homeColor, required this.exitColor});
+  const EarthBackdrop({
+    super.key,
+    this.home,
+    this.exit,
+    required this.homeColor,
+    required this.exitColor,
+    this.connecting = false,
+    this.connected = false,
+    this.upBps = 0,
+    this.downBps = 0,
+  });
 
   /// (latitude, longitude) of where you are, and of the exit; null when not known / not connecting.
   final (double, double)? home, exit;
   final Color homeColor, exitColor;
+
+  /// While connecting, a packet runs from you to the exit and rings spread from the marker; while
+  /// connected, the exit breathes and dots stream along the arc, each way as fast and as many as the
+  /// traffic ([upBps], [downBps], bytes a second) is. Otherwise nothing moves.
+  final bool connecting, connected;
+  final int upBps, downBps;
 
   @override
   State<EarthBackdrop> createState() => EarthBackdropState();
@@ -147,6 +173,35 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   bool _recentring = false;
   Duration _lastTick = Duration.zero;
   late final Ticker _coast = createTicker(_onCoast);
+
+  // The connection animation: a clock in seconds that only runs while connecting or connected (and
+  // the system does not ask for less motion), at about 30 frames a second. Only the overlay on top
+  // of the globe is redrawn by it; the dotted Earth underneath is kept as it is.
+  final _clock = ValueNotifier<double>(0);
+  late final Ticker _flow = createTicker(_onFlow);
+  Duration _lastFlow = Duration.zero;
+
+  void _onFlow(Duration elapsed) {
+    if (elapsed - _lastFlow < const Duration(milliseconds: 30)) return;
+    _lastFlow = elapsed;
+    _clock.value = elapsed.inMicroseconds / 1e6;
+  }
+
+  bool get _animating => widget.connecting || widget.connected;
+
+  void _syncFlow() {
+    final run = _animating && !MediaQuery.disableAnimationsOf(context);
+    if (run && !_flow.isActive) {
+      _lastFlow = Duration.zero;
+      _flow.start();
+    } else if (!run && _flow.isActive) {
+      _flow.stop();
+    }
+  }
+
+  /// Whether the connection animation is running (for tests).
+  @visibleForTesting
+  bool get flowRunning => _flow.isActive;
   double _radius = 150;
   double _moved = 0; // how far the finger has gone since it touched, in pixels
   DateTime? _lastTap;
@@ -279,8 +334,15 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncFlow();
+  }
+
+  @override
   void didUpdateWidget(EarthBackdrop oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _syncFlow();
     // The parent rebuilds on every speed and clock tick. The camera travels only when a
     // place changes; deciding that from the computed target would not do, because its
     // longitude is worked out from where the globe is right now and so differs on every
@@ -303,10 +365,14 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
 
   @override
   void dispose() {
+    _flow.dispose();
+    _clock.dispose();
     _coast.dispose();
     _fly.dispose();
     super.dispose();
   }
+
+  double _zoom() => 1 - 0.18 * math.sin(math.pi * _fly.value);
 
   @override
   Widget build(BuildContext context) {
@@ -325,29 +391,89 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
                 ..onEnd = _panEnd,
             ),
           },
-          child: RepaintBoundary(
-            child: AnimatedBuilder(
-              animation: _fly,
-              builder: (context, _) {
-                final t = _fly.value;
-                return CustomPaint(
-                  painter: _GlobePainter(
-                    scene: _shown(),
-                    // Pull back in the middle of a flight, then settle: the camera "travels".
-                    zoom: 1 - 0.18 * math.sin(math.pi * t),
-                    ocean: dark ? const Color(0xFF0B1422) : const Color(0xFFD3DCE8),
-                    oceanDeep: dark ? const Color(0xFF060A12) : const Color(0xFFC3CEDD),
-                    land: dark ? const Color(0xFF7FA3D6) : const Color(0xFF4B6A99),
-                    rim: dark ? const Color(0xFF86A8D8) : const Color(0xFF6E8CB8),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // The Earth itself: redrawn only when the view changes (a flight, a turn).
+              RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _fly,
+                  builder: (context, _) => CustomPaint(
+                    painter: _GlobePainter(
+                      scene: _shown(),
+                      // Pull back in the middle of a flight, then settle: the camera "travels".
+                      zoom: _zoom(),
+                      ocean: dark ? const Color(0xFF0B1422) : const Color(0xFFD3DCE8),
+                      oceanDeep: dark ? const Color(0xFF060A12) : const Color(0xFFC3CEDD),
+                      land: dark ? const Color(0xFF7FA3D6) : const Color(0xFF4B6A99),
+                      rim: dark ? const Color(0xFF86A8D8) : const Color(0xFF6E8CB8),
+                    ),
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+              // The connection animation, on its own layer so the Earth is not redrawn for it.
+              if (_animating)
+                RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: Listenable.merge([_fly, _clock]),
+                    builder: (context, _) => CustomPaint(
+                      painter: _FlowPainter(
+                        scene: _shown(),
+                        zoom: _zoom(),
+                        seconds: _clock.value,
+                        connecting: widget.connecting,
+                        upBps: widget.upBps,
+                        downBps: widget.downBps,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
       },
     );
   }
+}
+
+/// Screen position of points of the globe for one view: the middle of the globe at ([scene].lat,
+/// lon), radius from [size] and [zoom].
+class _Projection {
+  _Projection(_Scene scene, Size size, double zoom)
+    : r = size.shortestSide / 2 * zoom,
+      c = size.center(Offset.zero),
+      _cosLon = math.cos(scene.lon * _deg),
+      _sinLon = math.sin(scene.lon * _deg),
+      _cosLat = math.cos(scene.lat * _deg),
+      _sinLat = math.sin(scene.lat * _deg);
+
+  static const _deg = math.pi / 180;
+
+  final double r;
+  final Offset c;
+  final double _cosLon, _sinLon, _cosLat, _sinLat;
+
+  /// Screen position and depth (z > 0 faces the viewer) of a point at [k] times the globe's radius.
+  (Offset, double) project(double x, double y, double z, [double k = 1]) {
+    final x1 = x * _cosLon - z * _sinLon;
+    final z1 = x * _sinLon + z * _cosLon;
+    final y2 = y * _cosLat - z1 * _sinLat;
+    final z2 = y * _sinLat + z1 * _cosLat;
+    return (Offset(c.dx + r * k * x1, c.dy - r * k * y2), z2);
+  }
+
+  static List<double> unit(double latDeg, double lonDeg) {
+    final lat = latDeg * _deg, lon = lonDeg * _deg;
+    return [math.cos(lat) * math.sin(lon), math.sin(lat), math.cos(lat) * math.cos(lon)];
+  }
+}
+
+/// The arc between two places: a point at [u] (0 at [h], 1 at [e]) of the great circle, raised above the
+/// surface in the middle; returns the unit vector and the radius factor to project it with.
+(List<double>, double) _arcAt(List<double> h, List<double> e, double omega, double u) {
+  final k1 = math.sin((1 - u) * omega) / math.sin(omega), k2 = math.sin(u * omega) / math.sin(omega);
+  final lift = 1 + 0.16 * math.sin(math.pi * u) * (omega / math.pi).clamp(0.25, 1.0);
+  return ([k1 * h[0] + k2 * e[0], k1 * h[1] + k2 * e[1], k1 * h[2] + k2 * e[2]], lift);
 }
 
 class _GlobePainter extends CustomPainter {
@@ -364,7 +490,6 @@ class _GlobePainter extends CustomPainter {
   final double zoom;
   final Color ocean, oceanDeep, land, rim;
 
-  static const _deg = math.pi / 180;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -378,22 +503,9 @@ class _GlobePainter extends CustomPainter {
       Paint()..shader = ui.Gradient.radial(c + Offset(-r * 0.35, -r * 0.4), r * 1.5, [ocean, oceanDeep]),
     );
 
-    final cosLon = math.cos(scene.lon * _deg), sinLon = math.sin(scene.lon * _deg);
-    final cosLat = math.cos(scene.lat * _deg), sinLat = math.sin(scene.lat * _deg);
-
-    /// Screen position and depth (z > 0 faces the viewer) of a point at [k] times the globe's radius.
-    (Offset, double) project(double x, double y, double z, [double k = 1]) {
-      final x1 = x * cosLon - z * sinLon;
-      final z1 = x * sinLon + z * cosLon;
-      final y2 = y * cosLat - z1 * sinLat;
-      final z2 = y * sinLat + z1 * cosLat;
-      return (Offset(c.dx + r * k * x1, c.dy - r * k * y2), z2);
-    }
-
-    List<double> unit(double latDeg, double lonDeg) {
-      final lat = latDeg * _deg, lon = lonDeg * _deg;
-      return [math.cos(lat) * math.sin(lon), math.sin(lat), math.cos(lat) * math.cos(lon)];
-    }
+    final projection = _Projection(scene, size, zoom);
+    final project = projection.project;
+    const unit = _Projection.unit;
 
     final land3 = _Land.instance;
     final n = land3.count;
@@ -463,10 +575,8 @@ class _GlobePainter extends CustomPainter {
         final paint = Paint()..color = scene.exitColor.withValues(alpha: 0.8 * a);
         const steps = 56;
         for (var i = 0; i <= steps; i += 2) {
-          final u = i / steps;
-          final k1 = math.sin((1 - u) * omega) / math.sin(omega), k2 = math.sin(u * omega) / math.sin(omega);
-          final lift = 1 + 0.16 * math.sin(math.pi * u) * (omega / math.pi).clamp(0.25, 1.0);
-          final (p, z) = project(k1 * h[0] + k2 * e[0], k1 * h[1] + k2 * e[1], k1 * h[2] + k2 * e[2], lift);
+          final (v, lift) = _arcAt(h, e, omega, i / steps);
+          final (p, z) = project(v[0], v[1], v[2], lift);
           if (z > 0) canvas.drawCircle(p, 1.7 * s, paint);
         }
       }
@@ -504,5 +614,153 @@ class _GlobePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GlobePainter old) => true;
+  bool shouldRepaint(_GlobePainter old) =>
+      !scene.sameAs(old.scene) ||
+      zoom != old.zoom ||
+      ocean != old.ocean ||
+      oceanDeep != old.oceanDeep ||
+      land != old.land ||
+      rim != old.rim;
+}
+
+/// How strong a flow of [bps] bytes a second looks, 0 (nothing) to 1 (a megabyte a second or more).
+double _flowLevel(int bps) => bps < 50 ? 0 : ((math.log(bps) / math.ln10 - 1.7) / 4.3).clamp(0.0, 1.0);
+
+/// The connection animation drawn over the Earth (see [EarthBackdrop]): a packet and rings while
+/// connecting; a breathing exit, a faint line along the arc and dots streaming each way as fast and
+/// as many as the traffic is, while connected. Cheap on purpose (a few dozen dots): it redraws
+/// about 30 times a second while it runs.
+class _FlowPainter extends CustomPainter {
+  _FlowPainter({
+    required this.scene,
+    required this.zoom,
+    required this.seconds,
+    required this.connecting,
+    required this.upBps,
+    required this.downBps,
+  });
+
+  final _Scene scene;
+  final double zoom, seconds;
+  final bool connecting;
+  final int upBps, downBps;
+
+  static double _fract(double x) => x - x.floorToDouble();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pr = _Projection(scene, size, zoom);
+    final s = (pr.r / 360).clamp(0.6, 1.2);
+    final home = scene.home, exit = scene.exit;
+
+    // Rings spreading from a marker, [period] seconds apart.
+    void rings((double, double)? at, Color color, double period, double strength) {
+      if (at == null) return;
+      final u = _Projection.unit(at.$1, at.$2);
+      final (p, z) = pr.project(u[0], u[1], u[2]);
+      if (z <= 0.05) return;
+      for (var i = 0; i < 2; i++) {
+        final ph = _fract(seconds / period + i / 2);
+        canvas.drawCircle(
+          p,
+          (8 + 46 * ph) * s,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.6
+            ..color = color.withValues(alpha: strength * math.pow(1 - ph, 1.6).toDouble()),
+        );
+      }
+    }
+
+    if (connecting) {
+      // Someone is knocking: rings at the place being reached (or where you are, for Tor).
+      if (exit != null) {
+        rings(exit, scene.exitColor, 1.6, 0.7);
+      } else {
+        rings(home, scene.exitColor, 1.6, 0.7);
+      }
+    } else {
+      // Connected: the exit breathes slowly.
+      rings(exit, scene.exitColor, 3.6, 0.35);
+    }
+
+    if (home == null || exit == null) return;
+    final a = math.min(scene.homeAlpha, scene.exitAlpha);
+    final h = _Projection.unit(home.$1, home.$2), e = _Projection.unit(exit.$1, exit.$2);
+    final omega = math.acos((h[0] * e[0] + h[1] * e[1] + h[2] * e[2]).clamp(-1.0, 1.0));
+    if (a < 0.01 || omega < 0.02) return;
+
+    Offset? at(double u, {double lift = 0}) {
+      final (v, k) = _arcAt(h, e, omega, u.clamp(0.0, 1.0));
+      final (p, z) = pr.project(v[0], v[1], v[2], k + lift);
+      return z > 0 ? p : null;
+    }
+
+    // The line itself, while connected: a thin glow along the path the data takes.
+    if (!connecting) {
+      final path = Path();
+      var pen = false;
+      const steps = 48;
+      for (var i = 0; i <= steps; i++) {
+        final p = at(i / steps);
+        if (p == null) {
+          pen = false;
+        } else if (pen) {
+          path.lineTo(p.dx, p.dy);
+        } else {
+          path.moveTo(p.dx, p.dy);
+          pen = true;
+        }
+      }
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.2 * s
+          ..strokeCap = StrokeCap.round
+          ..color = scene.exitColor.withValues(alpha: 0.5 * a),
+      );
+    }
+
+    // A dot with a short tail, travelling along the arc towards [dir] (+1 from you to the exit, -1 back).
+    void comet(double u, int dir, Color color, double alpha, double size) {
+      for (var k = 0; k < 5; k++) {
+        final p = at(u - dir * k * 0.014);
+        if (p == null) continue;
+        final fade = 1 - k / 5;
+        canvas.drawCircle(
+          p,
+          size * s * (0.55 + 0.45 * fade),
+          Paint()..color = color.withValues(alpha: alpha * a * fade),
+        );
+      }
+    }
+
+    if (connecting) {
+      // One packet after another from you to the exit.
+      comet(_fract(seconds / 1.3), 1, scene.exitColor, 0.95, 3.6);
+      comet(_fract(seconds / 1.3 + 0.5), 1, scene.exitColor, 0.55, 2.8);
+      return;
+    }
+
+    // Traffic: dots each way, more and faster the more is moving; when nothing moves, one slow dot
+    // each way, so the tunnel is seen to be alive.
+    void stream(int bps, int dir, Color color, double phase) {
+      final level = _flowLevel(bps);
+      final n = bps < 50 ? 1 : 2 + (level * 8).round();
+      final speed = bps < 50 ? 0.12 : 0.25 + 0.75 * level;
+      final alpha = bps < 50 ? 0.4 : 0.7 + 0.3 * level;
+      for (var i = 0; i < n; i++) {
+        final u = _fract(seconds * speed + phase + i / n);
+        comet(dir > 0 ? u : 1 - u, dir, color, alpha, 3.0 + 1.2 * level);
+      }
+    }
+
+    // Down (from the exit to you) in the exit's colour, up (from you) in a pale blue.
+    stream(downBps, -1, Color.lerp(scene.exitColor, Colors.white, 0.35)!, 0);
+    stream(upBps, 1, const Color(0xFFBFD6F5), 0.37);
+  }
+
+  @override
+  bool shouldRepaint(_FlowPainter old) => true;
 }

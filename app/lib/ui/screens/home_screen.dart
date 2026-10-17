@@ -225,6 +225,10 @@ class _Earth extends ConsumerWidget {
       exit: centerOf(exitCode),
       homeColor: disconnectRed,
       exitColor: statusColor(state.status, scheme),
+      connecting: state.status == ConnStatus.connecting,
+      connected: state.status == ConnStatus.connected,
+      upBps: state.upBps,
+      downBps: state.downBps,
     );
   }
 }
@@ -239,16 +243,6 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 10, 8, 0),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(9),
-            child: Image.asset(
-              'assets/logo.png',
-              width: 26,
-              height: 26,
-              filterQuality: FilterQuality.medium,
-            ),
-          ),
-          const SizedBox(width: 10),
           Text(
             context.l10n.appName,
             style: Theme.of(context).textTheme.titleMedium

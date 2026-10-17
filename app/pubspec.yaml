@@ -71,7 +71,6 @@ flutter:
   # The licenses of everything inside the app: make notices
   assets:
     - assets/third_party_notices.md
-    - assets/logo.png
     - assets/fonts/OFL-inter.txt
     - assets/fonts/OFL-vazirmatn.txt
 
