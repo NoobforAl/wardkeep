@@ -173,6 +173,13 @@ func (e *Engine) currentTor() *torRun {
 	return e.torRun
 }
 
+// torRingPercent is where the connection ring stands when Tor's own progress (bootstrap scaled to
+// 0-100, "building a circuit" included) is percent: its slice of the ring, torPercentFrom to torPercentTo.
+func torRingPercent(percent int) int {
+	percent = min(max(percent, 0), 100)
+	return torPercentFrom + (torPercentTo-torPercentFrom)*percent/100
+}
+
 // torProgress publishes Tor's bootstrap in the connection ring.
 func (e *Engine) torProgress(run *torRun, name string, percent int, detail Progress) {
 	e.mu.Lock()
@@ -182,7 +189,7 @@ func (e *Engine) torProgress(run *torRun, name string, percent int, detail Progr
 	}
 	s := e.state
 	detail.Stage, detail.Profile = StageEngineStart, name
-	detail.Percent = torPercentFrom + (torPercentTo-torPercentFrom)*percent/100
+	detail.Percent = torRingPercent(percent)
 	if detail.DetailCode == DetailTorBootstrap {
 		// Say the ring's own number, not Tor's: two different percents next to
 		// each other (label 90 %, ring 54 %) looked like a bug.

@@ -131,3 +131,45 @@ func TestStateReportsErrorCode(t *testing.T) {
 		t.Fatalf("a stopped state has a code: %+v", last)
 	}
 }
+
+// The connection ring only moves forward while Tor starts, whatever Tor reports, and Tor's slice of it
+// ends before the "opening tunnel" stage that follows.
+func TestTorRingPercentOnlyMovesForward(t *testing.T) {
+	last := -1
+	for p := 0; p <= 100; p++ {
+		got := torRingPercent(p)
+		if got < last {
+			t.Fatalf("the ring went back from %d to %d at Tor %d%%", last, got, p)
+		}
+		if got < torPercentFrom || got > torPercentTo {
+			t.Fatalf("Tor %d%% put the ring at %d, outside %d-%d", p, got, torPercentFrom, torPercentTo)
+		}
+		last = got
+	}
+	if torRingPercent(-5) != torPercentFrom || torRingPercent(500) != torPercentTo {
+		t.Fatalf("out-of-range values must stay inside the slice: %d %d", torRingPercent(-5), torRingPercent(500))
+	}
+	if torPercentTo >= stagePercent[StageTunnelUp] {
+		t.Fatalf("Tor's slice ends at %d, not before the tunnel stage (%d)", torPercentTo, stagePercent[StageTunnelUp])
+	}
+	// "Connecting to Tor 90%" is the ring's own number: the label and the bar agree.
+	if ring := torRingPercent(90 * 9 / 10); ring < 50 || ring > torPercentTo {
+		t.Fatalf("a bootstrap at 90%% reads %d on the ring", ring)
+	}
+}
+
+// Every engine reports its stages through one table, so the ring is non-decreasing across them (a
+// failover restarts it at the handshake on purpose).
+func TestStagePercentsIncrease(t *testing.T) {
+	order := []string{StageNetworkCheck, StagePrepare, StageEngineStart, StageTunnelUp, StageHandshake, StageConnected}
+	last := 0
+	for _, st := range order {
+		if stagePercent[st] <= last {
+			t.Fatalf("stage %s is at %d, not after %d", st, stagePercent[st], last)
+		}
+		last = stagePercent[st]
+	}
+	if last != 100 {
+		t.Fatalf("connected is at %d, not 100", last)
+	}
+}

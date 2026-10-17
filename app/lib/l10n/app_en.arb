@@ -951,5 +951,9 @@
   "bypassCountriesNeedDb": "Needs the offline country database",
   "bypassCountriesIntro": "Traffic to the chosen countries goes straight to the internet, around the VPN. Their address ranges come from the offline country database.",
   "bypassCountriesGetDb": "Get the country database",
-  "bypassCountriesSearch": "Search countries"
+  "bypassCountriesSearch": "Search countries",
+  "windowMinimize": "Minimize",
+  "windowMaximize": "Maximize",
+  "windowRestore": "Restore",
+  "windowClose": "Close"
 }

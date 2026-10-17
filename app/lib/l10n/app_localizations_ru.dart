@@ -1643,4 +1643,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bypassCountriesSearch => 'Поиск стран';
+
+  @override
+  String get windowMinimize => 'Свернуть';
+
+  @override
+  String get windowMaximize => 'Развернуть';
+
+  @override
+  String get windowRestore => 'Восстановить';
+
+  @override
+  String get windowClose => 'Закрыть';
 }

@@ -447,5 +447,9 @@
   "bypassCountriesNeedDb": "به پایگاه‌داده آفلاین کشورها نیاز دارد",
   "bypassCountriesIntro": "ترافیک به کشورهای انتخاب‌شده مستقیم به اینترنت می‌رود، نه از طریق VPN. بازه‌های نشانی آن‌ها از پایگاه‌داده آفلاین کشورها می‌آید.",
   "bypassCountriesGetDb": "دریافت پایگاه‌داده کشورها",
-  "bypassCountriesSearch": "جستجوی کشورها"
+  "bypassCountriesSearch": "جستجوی کشورها",
+  "windowMinimize": "کوچک‌کردن",
+  "windowMaximize": "بزرگ‌کردن",
+  "windowRestore": "بازگردانی",
+  "windowClose": "بستن"
 }

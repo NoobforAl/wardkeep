@@ -447,5 +447,9 @@
   "bypassCountriesNeedDb": "يتطلب قاعدة بيانات الدول دون اتصال",
   "bypassCountriesIntro": "تذهب الحركة إلى الدول المختارة مباشرة إلى الإنترنت دون المرور عبر VPN. تأتي نطاقات عناوينها من قاعدة بيانات الدول دون اتصال.",
   "bypassCountriesGetDb": "الحصول على قاعدة بيانات الدول",
-  "bypassCountriesSearch": "ابحث عن الدول"
+  "bypassCountriesSearch": "ابحث عن الدول",
+  "windowMinimize": "تصغير",
+  "windowMaximize": "تكبير",
+  "windowRestore": "استعادة",
+  "windowClose": "إغلاق"
 }

@@ -1609,4 +1609,16 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bypassCountriesSearch => 'جستجوی کشورها';
+
+  @override
+  String get windowMinimize => 'کوچک‌کردن';
+
+  @override
+  String get windowMaximize => 'بزرگ‌کردن';
+
+  @override
+  String get windowRestore => 'بازگردانی';
+
+  @override
+  String get windowClose => 'بستن';
 }

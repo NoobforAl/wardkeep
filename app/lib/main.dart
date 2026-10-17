@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'l10n/l10n.dart';
 import 'state/incoming.dart';
@@ -11,9 +15,11 @@ import 'ui/screens/home_screen.dart';
 import 'ui/screens/onboarding_screen.dart';
 import 'ui/screens/profiles_screen.dart';
 import 'ui/theme.dart';
+import 'ui/widgets/window_frame.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  await _useOwnTitleBar();
   final store = await AppStore.open();
   // On a computer, opening a link or config file with Omnitun starts it with that as an argument.
   final startup = await IncomingShare.fromArguments(args);
@@ -21,6 +27,24 @@ Future<void> main(List<String> args) async {
     overrides: [storeProvider.overrideWithValue(store), startupSharesProvider.overrideWithValue(startup)],
     child: const OmnitunApp(),
   ));
+}
+
+/// On Windows the system's title bar (its own minimize, maximize and close buttons, in the system's
+/// colours) is replaced by the app's own, drawn by [WindowFrame]. If the window cannot be set up the
+/// system's bar stays, so the app never ends up without one.
+Future<void> _useOwnTitleBar() async {
+  if (kIsWeb || !Platform.isWindows) return;
+  try {
+    await windowManager.ensureInitialized();
+    await windowManager.waitUntilReadyToShow(
+      const WindowOptions(titleBarStyle: TitleBarStyle.hidden, windowButtonVisibility: false, title: 'Omnitun'),
+      () async {
+        await windowManager.show();
+        await windowManager.focus();
+      },
+    );
+    customTitleBar = true;
+  } catch (_) {}
 }
 
 class OmnitunApp extends ConsumerStatefulWidget {
@@ -85,6 +109,7 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       onGenerateTitle: (context) => context.l10n.appName,
+      builder: (context, child) => customTitleBar ? WindowFrame(child: child!) : child!,
       home: const HomeScreen(),
     );
   }

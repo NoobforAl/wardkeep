@@ -447,5 +447,9 @@
   "bypassCountriesNeedDb": "Нужна офлайн-база стран",
   "bypassCountriesIntro": "Трафик в выбранные страны идёт напрямую в интернет, минуя VPN. Диапазоны их адресов берутся из офлайн-базы стран.",
   "bypassCountriesGetDb": "Скачать базу стран",
-  "bypassCountriesSearch": "Поиск стран"
+  "bypassCountriesSearch": "Поиск стран",
+  "windowMinimize": "Свернуть",
+  "windowMaximize": "Развернуть",
+  "windowRestore": "Восстановить",
+  "windowClose": "Закрыть"
 }

@@ -447,5 +447,9 @@
   "bypassCountriesNeedDb": "需要离线国家数据库",
   "bypassCountriesIntro": "前往所选国家的流量将绕过 VPN，直接访问互联网。其地址范围来自离线国家数据库。",
   "bypassCountriesGetDb": "获取国家数据库",
-  "bypassCountriesSearch": "搜索国家"
+  "bypassCountriesSearch": "搜索国家",
+  "windowMinimize": "最小化",
+  "windowMaximize": "最大化",
+  "windowRestore": "还原",
+  "windowClose": "关闭"
 }
