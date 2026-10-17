@@ -130,6 +130,11 @@ func (st *State) migrate() (bool, error) {
 		}
 		st.Server.AmneziaWG, changed = a, true
 	}
+	if ch, err := st.ensureDNSCrypt(); err != nil {
+		return false, err
+	} else if ch {
+		changed = true
+	}
 	if st.Server.API.Token == "" {
 		st.Server.API = API{Listen: "127.0.0.1", Port: DefaultAPIPort, Token: RandomHex(24)}
 		changed = true

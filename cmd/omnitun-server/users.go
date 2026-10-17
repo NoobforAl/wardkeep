@@ -235,13 +235,21 @@ func newUserCmd(o *options) *cobra.Command {
 }
 
 func newLinkCmd(o *options) *cobra.Command {
-	var qr, subOnly bool
+	var qr, subOnly, stamp bool
 	var file, ovpn string
 	cmd := &cobra.Command{
 		Use:   "link <name>",
-		Short: "Show a user's share links, subscription URL and QR codes",
-		Args:  cobra.ExactArgs(1),
+		Short: "Show a user's share links, subscription URL and QR codes (--stamp: the DNSCrypt resolver's stamp)",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if stamp {
+				return cobra.MaximumNArgs(1)(cmd, args) // the stamp belongs to the server, not to a user
+			}
+			return cobra.ExactArgs(1)(cmd, args)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if stamp {
+				return printDNSCryptStamp(o)
+			}
 			m := o.manager()
 			if file == "" && ovpn != "" {
 				file = "openvpn-" + ovpn
@@ -263,6 +271,7 @@ func newLinkCmd(o *options) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&qr, "qr", false, "show QR codes")
 	cmd.Flags().BoolVar(&subOnly, "sub", false, "only the subscription URL")
+	cmd.Flags().BoolVar(&stamp, "stamp", false, "print the DNS stamp (sdns://...) of the server's DNSCrypt resolver; no user needed")
 	cmd.Flags().StringVar(&file, "file", "", "print the user's config file for a protocol: wireguard, openvpn-udp or openvpn-tcp")
 	cmd.Flags().StringVar(&ovpn, "ovpn", "", "print the user's OpenVPN config file: udp or tcp (same as --file openvpn-udp|tcp)")
 	return cmd

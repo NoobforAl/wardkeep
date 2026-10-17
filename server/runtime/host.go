@@ -16,13 +16,15 @@ import (
 // sing-box ones do not.
 func (s *Server) startHostLocked(st *store.State) {
 	users := st.ActiveUsers(time.Now())
-	if len(users) == 0 {
+	// The DNSCrypt resolver answers whoever reaches it and needs no account.
+	if p := st.Server.Protocols[store.DNSCryptKey]; len(users) == 0 && (p == nil || !p.Enabled) {
 		return
 	}
 	var pools []string
+	ipv6 := false
 	for _, key := range hostproto.Keys() {
 		p := st.Server.Protocols[key]
-		if p == nil || !p.Enabled {
+		if p == nil || !p.Enabled || (len(users) == 0 && key != store.DNSCryptKey) {
 			continue
 		}
 		cfg := hostproto.Config{
@@ -57,7 +59,13 @@ func (s *Server) startHostLocked(st *store.State) {
 		if m, ok := srv.(hostproto.Meter); ok {
 			s.meters.add(key, m)
 		}
-		pools = append(pools, srv.Pool())
+		if pool := srv.Pool(); pool != "" {
+			pools = append(pools, pool)
+		}
+		if d, ok := srv.(hostproto.DualStack); ok && d.Pool6() != "" {
+			pools = append(pools, d.Pool6())
+			ipv6 = true
+		}
 		s.logf("serving %s on port %d", key, p.Port)
 	}
 	if len(pools) == 0 {
@@ -71,6 +79,10 @@ func (s *Server) startHostLocked(st *store.State) {
 	s.undoNAT = undo
 	if !hostproto.ForwardingEnabled() {
 		s.logf("warning: IP forwarding is off; enable it with `sysctl -w net.ipv4.ip_forward=1` or run `omnitun-server install`")
+	}
+	if ipv6 && !hostproto.ForwardingEnabled6() {
+		s.logf("warning: IPv6 forwarding is off, so IPv6 clients cannot get out; enable it with `sysctl -w net.ipv6.conf.all.forwarding=1` " +
+			"(and `net.ipv6.conf.all.accept_ra=2` if this host gets its IPv6 address from a router advertisement, which forwarding would otherwise switch off)")
 	}
 }
 

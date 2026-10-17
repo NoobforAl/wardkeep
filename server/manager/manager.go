@@ -60,6 +60,9 @@ type ServerInfo struct {
 	Connections int `json:"connections"`
 	// StartedAt is when the running server started.
 	StartedAt *time.Time `json:"started_at,omitempty"`
+	// IPv6 is true when users get an IPv6 address inside WireGuard, AmneziaWG,
+	// OpenVPN and IKEv2 tunnels.
+	IPv6 bool `json:"ipv6"`
 }
 
 // Usage is a user's traffic. Bytes are from the server's point of view:
@@ -91,6 +94,8 @@ type ProtocolInfo struct {
 	// Host marks protocols served outside sing-box (SSTP, IKEv2): they need
 	// Linux and CAP_NET_ADMIN.
 	Host bool `json:"host,omitempty"`
+	// AmneziaWGVersion is "2.0" or "1.x" for the amneziawg protocol, empty for the others.
+	AmneziaWGVersion string `json:"amneziawg_version,omitempty" enum:"1.x,2.0"`
 	// Traffic through this protocol's inbound, all users together. Live
 	// connections are 0 while the server is stopped.
 	MonthBytes  int64 `json:"month_bytes"`
@@ -143,6 +148,9 @@ func (m *Manager) Init(o InitOptions) (*ServerInfo, error) {
 		return nil, fmt.Errorf("%w: already initialized in %s", ErrConflict, m.Store.Dir)
 	}
 	// Check the choices before anything is written.
+	if _, err := store.ParseAWGVersion(o.AmneziaWGVersion); err != nil {
+		return nil, invalid("%v", err)
+	}
 	probe := &store.State{Server: store.Server{Protocols: map[string]*store.Proto{}}}
 	for _, key := range append(append([]string{}, o.Enabled...), mapKeys(o.Ports)...) {
 		if !slices.Contains(store.AllProtocols, key) {
@@ -188,6 +196,7 @@ func (m *Manager) serverInfo(st *store.State) *ServerInfo {
 		Users:       len(st.Users),
 		ActiveUsers: len(st.ActiveUsers(m.Now())),
 		SelfSigned:  st.Server.SelfSigned && !st.Server.ACMEActive(),
+		IPv6:        st.Server.IPv6,
 	}
 	if st.Server.Subscription.Enabled {
 		info.SubscriptionPort = st.Server.Subscription.Port
@@ -207,6 +216,22 @@ func (m *Manager) serverInfo(st *store.State) *ServerInfo {
 	return info
 }
 
+// SetIPv6 switches IPv6 inside the tunnels on or off. Users' WireGuard,
+// AmneziaWG and OpenVPN configs and links change with it (an extra address), so
+// they import them again; a running server applies it within seconds.
+func (m *Manager) SetIPv6(on bool) (*ServerInfo, error) {
+	var out *ServerInfo
+	err := m.Store.Update(func(st *store.State) error {
+		st.Server.IPv6 = on
+		out = m.serverInfo(st)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server returns the server's summary.
 func (m *Manager) Server() (*ServerInfo, error) {
 	st, err := m.Store.Load()
@@ -219,6 +244,9 @@ func (m *Manager) Server() (*ServerInfo, error) {
 func protocolInfo(st *store.State, key string, snap stats.Snapshot, running bool) ProtocolInfo {
 	p := st.Server.Protocols[key]
 	info := ProtocolInfo{Key: key, Name: key, Port: p.Port, Enabled: p.Enabled, Transport: "tcp"}
+	if key == store.AmneziaWGKey {
+		info.AmneziaWGVersion = st.Server.AmneziaWG.Version()
+	}
 	if proto, ok := protocols.Get(key); ok {
 		s := proto.Spec()
 		info.Name, info.Description, info.DefaultPort = s.Name, s.Description, s.DefaultPort
@@ -251,6 +279,11 @@ func (m *Manager) Protocols() ([]ProtocolInfo, error) {
 type ProtocolPatch struct {
 	Enabled *bool `json:"enabled,omitempty"`
 	Port    *int  `json:"port,omitempty" minimum:"1" maximum:"65535"`
+	// AmneziaWGVersion ("2.0" or "1.x") makes new obfuscation parameters of that
+	// version for the amneziawg protocol. Every user's AmneziaWG config and link
+	// changes with them, so their devices have to import it again. Setting the
+	// version the server already has changes nothing.
+	AmneziaWGVersion *string `json:"amneziawg_version,omitempty" enum:"1.x,2.0"`
 }
 
 // portUses lists every (port, transport) a protocol listens on.
@@ -303,9 +336,27 @@ func (m *Manager) SetProtocol(key string, patch ProtocolPatch) (*ProtocolInfo, e
 	if patch.Port != nil && (*patch.Port < 1 || *patch.Port > 65535) {
 		return nil, invalid("port %d is out of range", *patch.Port)
 	}
+	awgVersion := ""
+	if patch.AmneziaWGVersion != nil {
+		if key != store.AmneziaWGKey {
+			return nil, invalid("amneziawg_version only applies to %s", store.AmneziaWGKey)
+		}
+		v, err := store.ParseAWGVersion(*patch.AmneziaWGVersion)
+		if err != nil {
+			return nil, invalid("%v", err)
+		}
+		awgVersion = v
+	}
 	var out ProtocolInfo
 	err := m.Store.Update(func(st *store.State) error {
 		p := st.Server.Protocols[key]
+		if awgVersion != "" && st.Server.AmneziaWG.Version() != awgVersion {
+			params, err := store.NewAWGParams(awgVersion)
+			if err != nil {
+				return err
+			}
+			st.Server.AmneziaWG.Params = params
+		}
 		if patch.Enabled != nil {
 			p.Enabled = *patch.Enabled
 		}

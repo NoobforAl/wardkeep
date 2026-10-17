@@ -7,11 +7,13 @@ package hostproto
 import (
 	"fmt"
 	"net"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/xen0bit/veepin/ikev2"
 	"github.com/xen0bit/veepin/sstp"
@@ -41,6 +43,12 @@ type Config struct {
 	Runner Runner
 	// Logf receives the servers' own error messages.
 	Logf func(format string, args ...any)
+	// DNSListen is the address the DNSCrypt resolver listens on (default: all
+	// interfaces); tests use 127.0.0.1.
+	DNSListen string
+	// DNSRotateEvery is how often the DNSCrypt resolver's short-term key and
+	// certificate are replaced (default 7 days).
+	DNSRotateEvery time.Duration
 }
 
 // Server is a running host-level server.
@@ -60,6 +68,13 @@ type Usage struct {
 	Sessions int
 }
 
+// DualStack is implemented by the host servers that also give clients an IPv6
+// address; its network has to be covered by NAT like the IPv4 one.
+type DualStack interface {
+	// Pool6 is the IPv6 tunnel network, or "" when this run has none.
+	Pool6() string
+}
+
 // Meter is implemented by the host servers that count traffic per user.
 // Usage is cumulative since the server started (it never goes down while the
 // server runs), so a reader works out what is new by keeping the last values.
@@ -68,15 +83,18 @@ type Meter interface {
 }
 
 // Keys lists the protocols this package serves.
-func Keys() []string { return []string{"sstp", "ikev2", "amneziawg"} }
+func Keys() []string { return []string{"sstp", "ikev2", "amneziawg", "dnscrypt"} }
 
 // Start starts the host server for a protocol key. The server runs in the
 // background; Start returns once it is listening or has failed.
 func Start(key string, cfg Config) (Server, error) {
-	if len(cfg.Users) == 0 {
+	// The DNSCrypt resolver has no accounts: it answers whoever reaches it.
+	if len(cfg.Users) == 0 && key != "dnscrypt" {
 		return nil, fmt.Errorf("%s: no active users", key)
 	}
 	switch key {
+	case "dnscrypt":
+		return startDNSCrypt(cfg)
 	case "sstp":
 		return startSSTP(cfg)
 	case "ikev2":
@@ -104,6 +122,18 @@ func configureTUN(r Runner, name string, gateway net.IP, network *net.IPNet) err
 		return err
 	}
 	return r.Run("ip", "link", "set", "dev", name, "up")
+}
+
+// configureTUN6 gives the TUN device the gateway address of the IPv6 client
+// network (the device is already up).
+func configureTUN6(r Runner, name string, gateway netip.Addr, network netip.Prefix) error {
+	if name == "" || !gateway.IsValid() || !network.IsValid() {
+		return nil
+	}
+	if r == nil {
+		r = ExecRunner{}
+	}
+	return r.Run("ip", "-6", "addr", "add", fmt.Sprintf("%s/%d", gateway, network.Bits()), "dev", name)
 }
 
 // publicDNS is pushed to clients.
@@ -150,7 +180,10 @@ type ikev2Server struct {
 	s     *ikev2.Server
 	users string
 	m     *ikeMeter
+	pool6 string // "" when the server has no IPv6
 }
+
+func (x ikev2Server) Pool6() string { return x.pool6 }
 
 // Usage sums the live peers by the user they signed in as. A peer's counters
 // belong to its tunnel, which ends with the session, so what a user moved is
@@ -241,9 +274,13 @@ func startIKEv2(cfg Config) (Server, error) {
 	if ikePort == 0 {
 		ikePort = defaultIKEPort
 	}
+	pool6 := ""
+	if cfg.Env.IPv6 {
+		pool6 = protocols.IKEv2Pool6
+	}
 	srv, err := ikev2.NewServer(ikev2.ServerConfig{
 		Port500: ikePort, Port4500: cfg.Port, CertFile: cfg.CertFile, KeyFile: cfg.KeyFile, LocalID: cfg.Env.Host,
-		PublicIP: net.ParseIP(cfg.Env.Host), Pool: protocols.IKEv2Pool, DNS: publicDNS,
+		PublicIP: net.ParseIP(cfg.Env.Host), Pool: protocols.IKEv2Pool, Pool6: pool6, DNS: publicDNS,
 		EAPUsers: file, TCP: true,
 	})
 	if err != nil {
@@ -255,6 +292,13 @@ func startIKEv2(cfg Config) (Server, error) {
 		os.Remove(file)
 		return nil, fmt.Errorf("ikev2: %w", err)
 	}
+	if pool6 != "" {
+		if err := configureTUN6(cfg.Runner, srv.TUNName(), srv.Gateway6(), srv.Network6()); err != nil {
+			srv.Close()
+			os.Remove(file)
+			return nil, fmt.Errorf("ikev2: %w", err)
+		}
+	}
 	go srv.ListenAndServe()
-	return ikev2Server{s: srv, users: file, m: &ikeMeter{last: map[string][2]uint64{}, total: map[string][2]uint64{}}}, nil
+	return ikev2Server{s: srv, users: file, pool6: pool6, m: &ikeMeter{last: map[string][2]uint64{}, total: map[string][2]uint64{}}}, nil
 }

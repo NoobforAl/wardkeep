@@ -5,6 +5,8 @@ package runtime
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,6 +24,7 @@ import (
 	sjson "github.com/sagernet/sing/common/json"
 	"github.com/sagernet/sing/service"
 
+	"github.com/NoobforAl/omnitun/core/protocols"
 	"github.com/NoobforAl/omnitun/server/hostproto"
 	"github.com/NoobforAl/omnitun/server/logs"
 	"github.com/NoobforAl/omnitun/server/serverconf"
@@ -40,6 +43,7 @@ type Server struct {
 	cancel   context.CancelFunc
 	sub      *http.Server
 	loaded   time.Time // state file mod time of the running config
+	fp       string    // listenerFingerprint of the state the running listeners were built from
 
 	file    *logs.Log      // server.log
 	tracker *stats.Tracker // per-user traffic, shared by every sing-box run
@@ -63,6 +67,11 @@ func (s *Server) setWireGuardUsers(st *store.State) {
 	for _, u := range st.Users {
 		if p, err := netip.ParsePrefix(u.WGAddress); err == nil {
 			m[p.Addr()] = u.Name
+			if a6, err := protocols.WGAddress6(u.WGAddress); err == nil {
+				if p6, err := netip.ParsePrefix(a6); err == nil {
+					m[p6.Addr()] = u.Name // the IPv6 address of a server with IPv6 on
+				}
+			}
 		}
 	}
 	s.wgMu.Lock()
@@ -143,6 +152,7 @@ func (s *Server) Start() error {
 
 func (s *Server) startBoxLocked(st *store.State) error {
 	s.loaded = s.store.ModTime()
+	s.fp = listenerFingerprint(st)
 	cfg := serverconf.Build(st, s.store, time.Now())
 	inbounds, _ := cfg["inbounds"].([]any)
 	endpoints, _ := cfg["endpoints"].([]any)
@@ -199,6 +209,29 @@ func (s *Server) stopBoxLocked() {
 	}
 }
 
+// listenerFingerprint hashes the state the listeners (sing-box and the host
+// protocols) are built from. It leaves out only what they provably never read:
+// a user's note and quota figure and their usage-reset request (the accounting
+// loop reads those from the file itself) and the API settings (the API is
+// served on its own). Anything else, including a field added later, changes it,
+// so a change that matters always restarts the listeners.
+func listenerFingerprint(st *store.State) string {
+	c := *st
+	c.Server.API = store.API{}
+	c.Users = make([]*store.User, len(st.Users))
+	for i, u := range st.Users {
+		v := *u
+		v.Note, v.QuotaGB, v.UsageResetAt = "", 0, nil
+		c.Users[i] = &v
+	}
+	raw, err := json.Marshal(&c)
+	if err != nil {
+		return "" // never equal: the listeners are restarted
+	}
+	sum := sha256.Sum256(raw)
+	return hex.EncodeToString(sum[:])
+}
+
 // Reload restarts sing-box with the current state (brief interruption for
 // connected clients).
 func (s *Server) Reload() error {
@@ -242,13 +275,24 @@ func (s *Server) Watch(ctx context.Context) {
 // reloadIfNeeded reloads on file changes, or when the set of active users
 // changed because someone expired.
 func (s *Server) reloadIfNeeded(changed bool) error {
-	if changed {
-		s.logf("state changed, reloading")
-		return s.Reload()
-	}
+	modified := s.store.ModTime() // before reading, so a change made meanwhile is seen next time
 	st, err := s.store.Load()
 	if err != nil {
 		return err
+	}
+	if changed {
+		s.mu.Lock()
+		same := s.fp != "" && s.fp == listenerFingerprint(st)
+		if same {
+			s.loaded = modified
+		}
+		s.mu.Unlock()
+		if !same {
+			s.logf("state changed, reloading")
+			return s.Reload()
+		}
+		// A note, a quota figure or the API settings: nothing a listener was built from, so nobody is disconnected.
+		s.logf("state changed, nothing the listeners use: no restart")
 	}
 	s.mu.Lock()
 	running := s.instance != nil

@@ -124,8 +124,14 @@ type Server struct {
 	OpenVPN      OpenVPN      `json:"openvpn"`
 	WireGuard    WireGuard    `json:"wireguard"`
 	AmneziaWG    AmneziaWG    `json:"amneziawg"`
+	DNSCrypt     DNSCrypt     `json:"dnscrypt"`
 	API          API          `json:"api"`
 	ACME         ACME         `json:"acme"`
+	// IPv6 gives users an IPv6 address inside the tunnels that can carry one
+	// (WireGuard, AmneziaWG, OpenVPN, IKEv2) and makes the server route it. Off by
+	// default: a host without IPv6 to the internet would make apps wait for
+	// addresses that go nowhere.
+	IPv6 bool `json:"ipv6,omitempty"`
 }
 
 // ACMEActive reports whether certificates come from an ACME provider.

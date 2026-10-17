@@ -93,6 +93,18 @@ func New(o Options) http.Handler {
 	})
 
 	huma.Register(a, huma.Operation{
+		OperationID: "set-ipv6", Method: http.MethodPut, Path: "/api/v1/server/ipv6", Security: bearer,
+		Summary: "Switch IPv6 inside the tunnels on or off (users import their configs and links again)",
+	}, func(ctx context.Context, in *struct {
+		Body struct {
+			Enabled bool `json:"enabled"`
+		}
+	}) (*body[*manager.ServerInfo], error) {
+		info, err := m.SetIPv6(in.Body.Enabled)
+		return &body[*manager.ServerInfo]{Body: info}, toHTTP(err)
+	})
+
+	huma.Register(a, huma.Operation{
 		OperationID: "list-protocols", Method: http.MethodGet, Path: "/api/v1/protocols", Summary: "List protocols", Security: bearer,
 	}, func(ctx context.Context, _ *struct{}) (*body[[]manager.ProtocolInfo], error) {
 		list, err := m.Protocols()

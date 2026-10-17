@@ -1,6 +1,7 @@
 package hostproto
 
 import (
+	"maps"
 	"net"
 	"net/netip"
 	"os"
@@ -14,6 +15,9 @@ import (
 	"github.com/amnezia-vpn/amneziawg-go/tun"
 
 	"github.com/NoobforAl/omnitun/core/awg"
+	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/omnitun/core/links"
+	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/protocols"
 	"github.com/NoobforAl/omnitun/server/store"
 )
@@ -109,7 +113,13 @@ type awgFixture struct {
 
 func awgEnv(t *testing.T) (protocols.Env, protocols.Account) {
 	t.Helper()
-	a, err := store.NewAmneziaWG()
+	return awgEnvVersion(t, store.AWG2)
+}
+
+// awgEnvVersion is awgEnv with AmneziaWG 2.0 or classic 1.x parameters.
+func awgEnvVersion(t *testing.T, version string) (protocols.Env, protocols.Account) {
+	t.Helper()
+	a, err := store.NewAmneziaWGVersion(version)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,8 +134,13 @@ func awgEnv(t *testing.T) (protocols.Env, protocols.Account) {
 
 func startAWGServer(t *testing.T) *awgFixture {
 	t.Helper()
+	return startAWGServerVersion(t, store.AWG2)
+}
+
+func startAWGServerVersion(t *testing.T, version string) *awgFixture {
+	t.Helper()
 	fakeTunOpener(t)
-	e, user := awgEnv(t)
+	e, user := awgEnvVersion(t, version)
 	run := &fakeRunner{}
 	port := freeUDP(t)
 	srv, err := Start("amneziawg", Config{Env: e, Port: port, Users: []protocols.Account{user}, Runner: run})
@@ -150,6 +165,13 @@ func (f *awgFixture) pingAWG(t *testing.T, wait time.Duration, tweak func(*proto
 	if err != nil {
 		t.Fatal(err)
 	}
+	return f.pingProfile(t, p, wait)
+}
+
+// pingProfile connects a client device configured from p, the way the
+// engines do, and reports whether the server answers an echo request.
+func (f *awgFixture) pingProfile(t *testing.T, p *profile.Profile, wait time.Duration) bool {
+	t.Helper()
 	// The same device configuration the Android engine applies.
 	uapi, err := awg.UAPI(p, netip.MustParseAddrPort("127.0.0.1:"+strconv.Itoa(f.port)))
 	if err != nil {
@@ -257,6 +279,93 @@ func TestAmneziaWGCountsTrafficPerUser(t *testing.T) {
 	for _, other := range m.Usage() {
 		if other.User == "" {
 			t.Fatal("a peer without an owner was reported")
+		}
+	}
+}
+
+// importedProfiles are the client profiles a user's device gets from what the
+// server hands out: the awg:// link and the .conf file, read by the importer
+// of the app.
+func importedProfiles(t *testing.T, f *awgFixture) map[string]*profile.Profile {
+	t.Helper()
+	proto, _ := protocols.Get("amneziawg")
+	p, err := proto.Profile(f.env, f.port, f.user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	link, err := links.Export(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, conf, err := proto.(protocols.FileProtocol).File(f.env, f.port, f.user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := map[string]*profile.Profile{}
+	for what, text := range map[string]string{"link": link, "conf": conf} {
+		res, err := importer.Import(text)
+		if err != nil || len(res.Profiles) != 1 || res.Profiles[0].Protocol != profile.AmneziaWG {
+			t.Fatalf("importing the %s: %v %+v\n%s", what, err, res, text)
+		}
+		out[what] = res.Profiles[0]
+	}
+	return out
+}
+
+// A device built from the link or the .conf the server hands out shakes hands
+// with the server's own device and carries a ping, for AmneziaWG 2.0 (header
+// ranges, s3, s4) and for a classic 1.x interface alike.
+func TestAmneziaWGHandshakeFromTheHandedOutLinkAndConf(t *testing.T) {
+	for _, version := range []string{store.AWG2, store.AWGClassic} {
+		t.Run(version, func(t *testing.T) {
+			f := startAWGServerVersion(t, version)
+			wantGen := map[string]string{store.AWG2: "2.0", store.AWGClassic: "1.x"}[version]
+			if got := awg.Generation(f.env.AWG.Params); got != wantGen {
+				t.Fatalf("server parameters are generation %s, want %s", got, wantGen)
+			}
+			for what, p := range importedProfiles(t, f) {
+				if !maps.Equal(p.WireGuard.Amnezia, f.env.AWG.Params) {
+					t.Fatalf("the %s changed the parameters:\nserver %v\nclient %v", what, f.env.AWG.Params, p.WireGuard.Amnezia)
+				}
+				if err := awg.CheckParams(p.WireGuard.Amnezia); err != nil {
+					t.Fatalf("the %s: %v", what, err)
+				}
+				if !f.pingProfile(t, p, 10*time.Second) {
+					t.Fatalf("the device built from the %s did not carry a ping", what)
+				}
+			}
+		})
+	}
+}
+
+// Parameters that differ from the server's are not served: a 2.0 client does
+// not get through to a 1.x server (the library hides the server, so the ping
+// is never answered), which is what makes "same parameters" a real condition.
+func TestAmneziaWGClientWithAnotherVersionIsNotAnswered(t *testing.T) {
+	f := startAWGServerVersion(t, store.AWGClassic)
+	other, err := store.NewAWGParams(store.AWG2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f.pingAWG(t, 2*time.Second, func(_ *protocols.Account, e *protocols.Env) { e.AWG.Params = other }) {
+		t.Fatal("a 2.0 client reached a 1.x server")
+	}
+}
+
+// Many different 2.0 parameter sets are accepted by amneziawg-go itself, as
+// the server's device configuration.
+func TestAmneziaWGServerAcceptsEveryGeneratedParameterSet(t *testing.T) {
+	for range 100 {
+		e, user := awgEnvVersion(t, store.AWG2)
+		uapi, _, err := awgUAPI(Config{Env: e, Port: 51821, Users: []protocols.Account{user}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		dev := device.NewDevice(newFakeTun(false), conn.NewDefaultBind(), &device.Logger{Verbosef: func(string, ...any) {}, Errorf: func(string, ...any) {}})
+		err = dev.IpcSet(strings.Replace(uapi, "listen_port=51821\n", "", 1))
+		dev.Close()
+		if err != nil {
+			t.Fatalf("amneziawg-go rejected %v: %v", e.AWG.Params, err)
 		}
 	}
 }

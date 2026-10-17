@@ -66,7 +66,9 @@ func main() {
 	if err := dev.Up(); err != nil {
 		log.Fatal(err)
 	}
-	run("ip", "addr", "add", p.WireGuard.Address[0], "dev", *name)
+	for _, a := range p.WireGuard.Address { // IPv4 and, on a server with IPv6, IPv6
+		run("ip", "addr", "add", a, "dev", *name)
+	}
 	run("ip", "link", "set", "dev", *name, "up")
 	for r := range strings.SplitSeq(*route, ",") {
 		if r = strings.TrimSpace(r); r != "" {

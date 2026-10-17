@@ -520,6 +520,18 @@ func (m *model) updateProtocols(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			_, err := m.mgr.SetProtocol(p.Key, manager.ProtocolPatch{Enabled: &on})
 			return err
 		})
+	case "v":
+		// AmneziaWG 2.0 <-> 1.x: new obfuscation parameters, so every user imports their config again.
+		if p.Key == store.AmneziaWGKey {
+			next := store.AWG2
+			if p.AmneziaWGVersion == store.AWG2 {
+				next = store.AWGClassic
+			}
+			m.do("AmneziaWG "+next+" (users must import their config again)", func() error {
+				_, err := m.mgr.SetProtocol(p.Key, manager.ProtocolPatch{AmneziaWGVersion: &next})
+				return err
+			})
+		}
 	case "enter":
 		m.ask("Port for "+p.Key, strconv.Itoa(p.Port), func(m *model, v string) error {
 			port, err := strconv.Atoi(v)
@@ -666,9 +678,13 @@ func (m *model) protocolsView() string {
 		if p.Enabled {
 			state = okStyle.Render("on ")
 		}
-		b.WriteString(fmt.Sprintf("%s%s  %-14s port %-5d %s\n", cursor, state, p.Key, p.Port, dimStyle.Render(p.Transport)))
+		detail := p.Transport
+		if p.AmneziaWGVersion != "" {
+			detail += " · " + p.AmneziaWGVersion
+		}
+		b.WriteString(fmt.Sprintf("%s%s  %-14s port %-5d %s\n", cursor, state, p.Key, p.Port, dimStyle.Render(detail)))
 	}
-	b.WriteString("\n" + dimStyle.Render("space toggle · enter change port · tab next · q quit"))
+	b.WriteString("\n" + dimStyle.Render("space toggle · enter change port · v AmneziaWG 2.0/1.x · tab next · q quit"))
 	return b.String()
 }
 

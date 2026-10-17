@@ -39,6 +39,8 @@ func Env(st *store.State, s *store.Store) protocols.Env {
 		},
 		WireGuard: wireGuardEnv(srv),
 		AWG:       awgEnv(srv),
+		DNSCrypt:  dnsCryptEnv(srv),
+		IPv6:      srv.IPv6,
 	}
 	if data, err := os.ReadFile(env.CertPath); err == nil {
 		env.CertPEM = string(data)
@@ -176,6 +178,7 @@ func File(st *store.State, u *store.User, key string) (name, content string, err
 		OpenVPN:   protocols.OpenVPN{CA: st.Server.OpenVPN.CA, TLSCrypt: st.Server.OpenVPN.TLSCrypt},
 		WireGuard: wireGuardEnv(st.Server),
 		AWG:       awgEnv(st.Server),
+		IPv6:      st.Server.IPv6,
 	}
 	return fp.File(env, p.Port, Account(u))
 }
@@ -200,6 +203,9 @@ func Profiles(st *store.State, s *store.Store, u *store.User) ([]*profile.Profil
 		proto, ok := protocols.Get(key)
 		if p == nil || !p.Enabled || !ok {
 			continue
+		}
+		if proto.Spec().Service {
+			continue // the DNSCrypt resolver is not a way to connect
 		}
 		prof, err := proto.Profile(env, p.Port, Account(u))
 		if err != nil {

@@ -38,6 +38,8 @@ type awgServer struct {
 	r   Runner
 	// users names the owner of each peer, by the peer's public key in hex.
 	users map[string]string
+	// ipv6 is true when users also have an IPv6 address in the tunnel.
+	ipv6 bool
 }
 
 // awgSessionLife is how long after its last handshake a peer counts as
@@ -94,6 +96,14 @@ func (x awgServer) Close() error {
 
 func (awgServer) Pool() string { return protocols.AWGPool }
 
+// Pool6 is the tunnel's IPv6 network, or "" when the server has none.
+func (x awgServer) Pool6() string {
+	if x.ipv6 {
+		return protocols.AWGPool6
+	}
+	return ""
+}
+
 func hexKey(b64 string) (string, error) {
 	raw, err := base64.StdEncoding.DecodeString(strings.TrimSpace(b64))
 	if err != nil || len(raw) != 32 {
@@ -142,6 +152,13 @@ func awgUAPI(cfg Config) (string, map[string]string, error) {
 			return "", nil, fmt.Errorf("amneziawg: user %s: %w", u.Name, err)
 		}
 		fmt.Fprintf(&b, "public_key=%s\nreplace_allowed_ips=true\nallowed_ip=%s\n", pub, addr)
+		if cfg.Env.IPv6 {
+			a6, err := protocols.AWGAddress6(u.WGAddress)
+			if err != nil {
+				return "", nil, fmt.Errorf("amneziawg: user %s: %w", u.Name, err)
+			}
+			fmt.Fprintf(&b, "allowed_ip=%s\n", a6)
+		}
 		owners[pub] = u.Name
 		peers++
 	}
@@ -188,5 +205,10 @@ func startAWG(cfg Config) (Server, error) {
 	if err := r.Run("ip", "link", "set", "dev", name, "up"); err != nil {
 		return fail(fmt.Errorf("amneziawg: %w", err))
 	}
-	return awgServer{dev: dev, r: r, users: owners}, nil
+	if cfg.Env.IPv6 {
+		if err := r.Run("ip", "-6", "addr", "add", protocols.AWGServerAddress6(), "dev", name); err != nil {
+			return fail(fmt.Errorf("amneziawg: %w", err))
+		}
+	}
+	return awgServer{dev: dev, r: r, users: owners, ipv6: cfg.Env.IPv6}, nil
 }

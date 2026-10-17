@@ -30,6 +30,11 @@ type InitOptions struct {
 	SubPort          int
 	// Enabled lists the protocols to switch on; empty enables all of them.
 	Enabled []string
+	// AmneziaWGVersion is "2.0" (the default, also when empty) or "1.x" (classic)
+	// for the new server's AmneziaWG interface; see AWG2.
+	AmneziaWGVersion string
+	// IPv6 starts the server with IPv6 inside the tunnels (see Server.IPv6).
+	IPv6 bool
 }
 
 // EnabledAtInit decides whether a protocol starts enabled: those asked for,
@@ -91,6 +96,7 @@ func Init(s *Store, opts InitOptions) (*State, error) {
 			CertFile:    "tls.crt",
 			KeyFile:     "tls.key",
 			SelfSigned:  true,
+			IPv6:        opts.IPv6,
 			Subscription: Subscription{
 				Enabled: true, Listen: "0.0.0.0", Port: opts.SubPort, Path: RandomHex(8),
 			},
@@ -102,7 +108,10 @@ func Init(s *Store, opts InitOptions) (*State, error) {
 		return nil, err
 	}
 	st.Server.WireGuard = WireGuard{PrivateKey: wgPriv, PublicKey: wgPub}
-	if st.Server.AmneziaWG, err = NewAmneziaWG(); err != nil {
+	if st.Server.AmneziaWG, err = NewAmneziaWGVersion(opts.AmneziaWGVersion); err != nil {
+		return nil, err
+	}
+	if st.Server.DNSCrypt, err = NewDNSCrypt(opts.Name); err != nil {
 		return nil, err
 	}
 	if st.Server.OpenVPN, err = NewOpenVPN(opts.Name); err != nil {

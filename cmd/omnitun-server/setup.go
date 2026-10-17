@@ -51,7 +51,11 @@ func printProtocols(list []manager.ProtocolInfo, subPort int) {
 		if p.Connections > 0 {
 			conn = fmt.Sprint(p.Connections)
 		}
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\t%s\t%s\n", p.Key, p.Name, p.Port, p.Transport, status, humanBytes(p.MonthBytes), conn)
+		name := p.Name
+		if p.AmneziaWGVersion != "" {
+			name += " " + p.AmneziaWGVersion
+		}
+		fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\t%s\t%s\n", p.Key, name, p.Port, p.Transport, status, humanBytes(p.MonthBytes), conn)
 	}
 	if subPort > 0 {
 		fmt.Fprintf(w, "subscriptions\t\t%d\ttcp\thttp\t\t\n", subPort)
@@ -112,6 +116,59 @@ func newProtoCmd(o *options) *cobra.Command {
 			return o.print(p, func() { fmt.Printf("%s: enabled=%v port=%d\n", p.Key, p.Enabled, p.Port) })
 		},
 	}
-	cmd.AddCommand(list, setEnabled("enable", true), setEnabled("disable", false), port)
+	awgVersion := &cobra.Command{
+		Use:   "awg-version <2.0|1.x>",
+		Short: "Make new AmneziaWG obfuscation parameters of version 2.0 (default) or classic 1.x",
+		Long: `Make new AmneziaWG obfuscation parameters of the given version.
+
+2.0 draws every packet's header from a range and pads more packets, which is
+harder to recognise; use 1.x ("classic") only for clients that never got 2.0.
+Every user's AmneziaWG config and link changes, so their devices must import
+it again. The version the server already has is left alone.`,
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: []string{store.AWG2, store.AWGClassic},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			v, err := store.ParseAWGVersion(args[0])
+			if err != nil {
+				return fmt.Errorf("%w: %v", manager.ErrInvalid, err)
+			}
+			p, err := o.manager().SetProtocol(store.AmneziaWGKey, manager.ProtocolPatch{AmneziaWGVersion: &v})
+			if err != nil {
+				return err
+			}
+			return o.print(p, func() {
+				fmt.Printf("%s: AmneziaWG %s (users must import their AmneziaWG config or link again)\n", p.Key, p.AmneziaWGVersion)
+			})
+		},
+	}
+	ipv6 := &cobra.Command{
+		Use:   "ipv6 <on|off>",
+		Short: "Give users an IPv6 address inside WireGuard, AmneziaWG, OpenVPN and IKEv2 tunnels",
+		Long: `Give users an IPv6 address inside the tunnels that can carry one (WireGuard,
+AmneziaWG, OpenVPN, IKEv2/IPsec; SSTP cannot), and route and NAT it on this host.
+
+Turn it on only if this host has IPv6 to the internet and forwards it
+(sysctl net.ipv6.conf.all.forwarding=1): otherwise apps would try IPv6
+addresses that go nowhere. Users' configs and links change (an extra address),
+so their devices import them again.`,
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: []string{"on", "off"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var on bool
+			switch args[0] {
+			case "on":
+				on = true
+			case "off":
+			default:
+				return fmt.Errorf("%w: say on or off", manager.ErrInvalid)
+			}
+			info, err := o.manager().SetIPv6(on)
+			if err != nil {
+				return err
+			}
+			return o.print(info, func() { fmt.Println("IPv6 in the tunnels:", map[bool]string{true: "on", false: "off"}[info.IPv6]) })
+		},
+	}
+	cmd.AddCommand(list, setEnabled("enable", true), setEnabled("disable", false), port, awgVersion, ipv6)
 	return cmd
 }

@@ -2,7 +2,7 @@
 
 `omnitun-server` is one program that serves many VPN protocols to your own users, with one subscription link per user, quotas and traffic accounting, a terminal UI and a web API.
 
-**Honest status.** The sing-box protocols (the first ten below) are tested end to end against Wardkeep's own client. SSTP, IKEv2/IPsec and AmneziaWG have also run on Linux in Docker with real clients (`make docker-e2e`: `sstpc`, strongSwan, OpenVPN, `wg-quick` and an AmneziaWG client connect, reach a web server through the server's NAT, and are counted). The installer, the firewall helpers and ACME were written and unit-tested here on Windows with a fake command runner; **they have not run on a real Linux host yet**, and the Windows, iOS and Android IKEv2/SSTP clients have not been tried. Try `install --dry-run` first, then a fresh VPS you can throw away.
+**Honest status.** The sing-box protocols (the first ten below) are tested end to end against Wardkeep's own client. SSTP, IKEv2/IPsec and AmneziaWG have also run on Linux in Docker with real clients (`make docker-e2e`: `sstpc`, strongSwan, OpenVPN, `wg-quick` and an AmneziaWG client connect, reach a web server through the server's NAT, and are counted; see [Tests](#tests)). The same test connects three users at once through three protocols and checks IPv6 inside the tunnels. The installer, the firewall helpers and ACME were written and unit-tested here on Windows with a fake command runner; **they have not run on a real Linux host yet**, and the Windows, iOS and Android IKEv2/SSTP clients have not been tried. Try `install --dry-run` first, then a fresh VPS you can throw away.
 
 ## Quick start (a VPS you own)
 
@@ -40,7 +40,8 @@ omnitun-server init --host vpn.example.com --protocols vless-reality,trojan,hyst
 | OpenVPN UDP / TCP | 1194 | `.ovpn` download |
 | SSTP | 8448/tcp | **Linux, root or `CAP_NET_ADMIN`**; off by default |
 | IKEv2/IPsec | 4500/udp (+ 500/udp, TCP 4500) | **Linux, root or `CAP_NET_ADMIN`**; off by default; the server proves itself with its certificate, users sign in with EAP-MSCHAPv2 |
-| AmneziaWG | 51821/udp | **Linux, root or `CAP_NET_ADMIN`**; off by default; random obfuscation parameters per server; AmneziaWG 1.x only |
+| AmneziaWG | 51821/udp | **Linux, root or `CAP_NET_ADMIN`**; off by default; random obfuscation parameters per server; AmneziaWG 2.0 by default, 1.x on request (see below) |
+| DNSCrypt resolver | 5443/tcp+udp | not a way to connect: a DNS resolver for your users; off by default; see *DNSCrypt resolver* below |
 
 ```sh
 omnitun-server proto list                  # ports, status, traffic this month
@@ -50,6 +51,51 @@ omnitun-server firewall                    # open the ports again after changing
 ```
 
 SSTP, IKEv2 and AmneziaWG need a TUN device and NAT on the host. The server sets up and removes narrow nftables (or iptables) rules itself: clients may reach the internet; client-to-client traffic and the host's private networks are dropped. Docker's own firewall policy can still block forwarding. Native Windows and iOS IKEv2/SSTP clients need a certificate they trust, so use `cert acme` for those.
+
+### AmneziaWG: 2.0 or 1.x
+
+A new server makes **AmneziaWG 2.0** parameters: junk packets (`Jc` 4-12, `Jmin`, `Jmax`), paddings `S1`-`S4` for the four kinds of packet (with the 1.x rule `S1 + 56 != S2`), and four header **ranges** `H1`-`H4` that do not touch each other and stay clear of WireGuard's own message types 1-4. A 2.0 header is drawn from its range for every packet, so there is no fixed byte pattern left to match, which is what filters that learned AmneziaWG 1.x look for. That is why 2.0 is the default. The parameters are random per server, checked with the same rules the app uses when it imports them (`core/awg` `CheckParams`), and written into the `.conf` file and the `awg://` link every user gets.
+
+**Classic 1.x** (single-number headers, no `S3`/`S4`) is for old third-party clients that never learned 2.0:
+
+```sh
+omnitun-server init --host vpn.example.com --awg-version 1.x     # a new server (2.0 without the flag; the wizard asks too)
+omnitun-server proto awg-version 1.x                             # an existing one: new parameters, same keys
+omnitun-server proto list                                        # the AmneziaWG row shows 2.0 or 1.x
+```
+
+Over the web API: `PATCH /api/v1/protocols/amneziawg` with `{"amneziawg_version": "1.x"}`; in the terminal UI: `v` on the AmneziaWG line of the Protocols tab. Changing the version makes new parameters (the server's keys and the users' keys stay), so **every AmneziaWG user imports their config or link again**; asking for the version the server already has changes nothing. A server stored by an older build keeps the 1.x parameters it has until you change them.
+
+### IPv6 inside the tunnels
+
+Off by default, because a host without IPv6 to the internet would make apps wait for addresses that go nowhere:
+
+```sh
+omnitun-server init --host vpn.example.com --ipv6      # a new server
+omnitun-server proto ipv6 on                           # an existing one (off to switch back); PUT /api/v1/server/ipv6
+sysctl -w net.ipv6.conf.all.forwarding=1               # the host must forward IPv6 (the server warns when it does not)
+```
+
+With it on, every user gets a second, unique-local address in **WireGuard** (`fd30:0:0:1::/64`), **AmneziaWG** (`fd31:0:0:1::/64`), **OpenVPN** (`fd18:0:0:1::/64` UDP, `fd19:0:0:1::/64` TCP) and **IKEv2/IPsec** (`fd10:10:10::/64`); the address is derived from the user's IPv4 tunnel address, nothing more is stored. The server forwards and masquerades it (nftables `ip6` table, or `ip6tables`) with the same narrow policy as IPv4: the internet only, not client-to-client or the host's private networks (`fc00::/7`, `fe80::/10`, `::1`). IPv6 traffic is counted for the user like IPv4. **SSTP cannot carry IPv6.** The users' configs and links change (an extra address), so they import them again. If the host gets its own IPv6 address from a router advertisement, `forwarding=1` also switches that off unless `net.ipv6.conf.all.accept_ra=2` is set.
+
+### DNSCrypt resolver (optional)
+
+`dnscrypt` (5443, TCP and UDP) is not a way to connect: it is a DNS resolver for your users, encrypted and authenticated with [DNSCrypt](https://www.dnscrypt.org/), so the VPN's DNS is private and under your control. It is **off by default**.
+
+```sh
+omnitun-server proto enable dnscrypt       # a running server picks the change up
+omnitun-server firewall                    # opens 5443 on TCP and UDP
+omnitun-server link --stamp                # the DNS stamp (sdns://...) to give to clients
+omnitun-server dnscrypt status             # key, provider name, upstream, stamp
+omnitun-server dnscrypt upstream 9.9.9.9   # the resolver it asks (default: the host's resolv.conf, else 1.1.1.1)
+omnitun-server dnscrypt rotate-key         # a new long-term key: the stamp changes, give clients the new one
+```
+
+* **Keys.** `init` makes a long-term Ed25519 key; its public half is in the stamp, and clients refuse a resolver that cannot prove it holds it. The short-term key and the certificate it signs are made when the server starts and replaced every 7 days by the running server (a certificate is valid for 14 days; a client that held the old one takes the new one when its queries stop being answered). The stamp does not change with them.
+* **Stamp.** `link --stamp` (also `dnscrypt stamp`) prints it; it names the server's public address and the port. Paste it into Wardkeep's DNS screen (*Custom*), into `dnscrypt-proxy`, or any client that reads DNS stamps. It declares *no logs* and *no filtering* (the server does neither) and does not claim DNSSEC.
+* **Who can use it.** Anyone who can reach the port: the resolver has no accounts. Users reach it through the tunnel at the server's address, so you can keep the port closed to the public internet and still serve them: `firewall` opens it because the stamp is meant for use from anywhere, so close it by hand if you want the VPN's users only. One address can ask about 60 times a second (a burst of 120); more is dropped, which keeps an open port from being used for floods.
+* **It is not a VPN profile.** It never appears in a user's links or subscription.
+* **Host.** Linux or any system where the port can be bound; no root is needed above port 1023. Tested in Docker (`tools/dockertest/dnscrypt_leak.py` runs this resolver, a Shadowsocks server and a client in TUN mode, and checks that no lookup leaves the client's card).
 
 ## Users, links and quotas
 
@@ -100,6 +146,18 @@ omnitun-server import xray /etc/xray/config.json --host vpn.example.com --adopt-
 ```
 
 `import xray` moves an Xray or V2Ray server's users (with their UUIDs and Trojan passwords) and, for a new server, the VLESS+Reality key, short id, site and port, so existing client links keep working.
+
+## Tests
+
+Go tests (`go test ./server/... ./cmd/omnitun-server ./core/protocols`) cover the manager, the CLI, the API, the terminal UI, the in-process AmneziaWG, SSTP and IKEv2 servers (including a handshake between a client device built from the link or `.conf` the server hands out and the server's own device) and the NAT rule sets.
+
+`make docker-e2e` (`tools/dockertest/run.py`; needs Docker; about 25 minutes the first time) runs the real thing: this repo's Linux server in a container with a TUN device and NAT, a web server on a network only the server reaches, and client containers with the standard clients (`openvpn`, `wg-quick`, `sstpc`, strongSwan, and this repo's AmneziaWG client). It has three parts:
+
+- **single**: one user at a time, per protocol: the tunnel works and the web server sees the server's address (NAT), the server shows the live connection and speed, and the traffic is counted for the user and for the protocol.
+- **concurrent**: alice, bob and carol connected **at the same time** through three different protocols (OpenVPN UDP, WireGuard and SSTP; then AmneziaWG, IKEv2 and OpenVPN TCP), downloading 8, 4 and 2 MB. Each gets their own live numbers and their own counted bytes (checked against what each downloaded, so a mix-up between users would show), and the protocol totals match. Then bob is disabled and carol is reset while alice keeps downloading: the disabled user and the old credentials are refused, enabling brings bob back with his old credentials, carol's new ones work. **One thing this shows: a change to the user list restarts the listeners, so connected users are cut for a moment.** AmneziaWG and WireGuard clients pick up again by themselves and a transfer survives; an OpenVPN transfer did not, and SSTP and IKEv2 clients have to connect again. Changes that do not touch the listeners (a note, a quota figure, the API settings) no longer restart anything.
+- **ipv6**: `proto ipv6 on`, then WireGuard, AmneziaWG, OpenVPN (UDP and TCP) and IKEv2 each get an IPv6 address in the tunnel, reach an IPv6 web server through the server's NAT66, and the IPv6 traffic is counted for the user; SSTP is checked to have none.
+
+`E2E_PREFIX=name` prefixes the containers and networks (default `e2e`), `--only single|concurrent|ipv6`, `--quick`, `--keep`, and `PROTO="sstp ikev2"` choose parts. `.github/workflows/docker-e2e.yml` runs it on GitHub (Ubuntu runner, read-only token, no secrets, every action pinned by hash); that workflow has been checked for syntax only and **has not run on GitHub yet**.
 
 ## Files
 

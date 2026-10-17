@@ -91,6 +91,8 @@ Protocols: ` + strings.Join(protocols.Keys(), ", ") + `.`,
 	f.StringSliceVar(&enabled, "protocols", nil, "protocols to enable, comma separated (default: all)")
 	f.StringToIntVar(&ports, "port", nil, "port for a protocol, e.g. --port trojan=9443 (repeatable)")
 	f.StringVar(&firstUser, "first-user", "", "also create this user and print the subscription link")
+	f.StringVar(&opts.AmneziaWGVersion, "awg-version", "2.0", "AmneziaWG parameters: 2.0 (harder to recognise) or 1.x (classic, for old clients)")
+	f.BoolVar(&opts.IPv6, "ipv6", false, "give users an IPv6 address in WireGuard, AmneziaWG, OpenVPN and IKEv2 tunnels (the host needs IPv6 to the internet)")
 	f.BoolVar(&wizard, "wizard", false, "ask the questions even when --host is given")
 	return cmd
 }
@@ -200,6 +202,15 @@ func runWizard(start manager.InitOptions) (*wizardResult, error) {
 		fields = append([]huh.Field{huh.NewInput().Title("Site to imitate").
 			Description("Real HTTPS site for VLESS+Reality and ShadowTLS (host:port)").Value(&site)}, fields...)
 	}
+	awgVersion := start.AmneziaWGVersion
+	if awgVersion == "" {
+		awgVersion = store.AWG2
+	}
+	if contains(chosen, store.AmneziaWGKey) {
+		fields = append(fields, huh.NewSelect[string]().Title("AmneziaWG version").
+			Description("2.0 is harder for filters to recognise; pick 1.x only for old clients that cannot read 2.0").
+			Options(huh.NewOption("2.0 (recommended)", store.AWG2), huh.NewOption("1.x (classic)", store.AWGClassic)).Value(&awgVersion))
+	}
 	var firstUser string
 	fields = append(fields,
 		huh.NewInput().Title("Subscription port").Description("Where users' apps fetch their links").Value(&subPort).Validate(portValidator),
@@ -212,7 +223,7 @@ func runWizard(start manager.InitOptions) (*wizardResult, error) {
 	res := &wizardResult{firstUser: strings.TrimSpace(firstUser)}
 	res.opts = manager.InitOptions{
 		PublicHost: strings.TrimSpace(host), Name: strings.TrimSpace(name), RealityHandshake: strings.TrimSpace(site),
-		Enabled: chosen, Ports: map[string]int{},
+		Enabled: chosen, Ports: map[string]int{}, AmneziaWGVersion: awgVersion,
 	}
 	res.opts.SubPort, _ = strconv.Atoi(strings.TrimSpace(subPort))
 	for key, v := range portStrings {
