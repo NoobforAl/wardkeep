@@ -1,19 +1,21 @@
 # Releasing the Android app
 
-The pipeline is `.github/workflows/android.yml`. Only Android is built for now.
+The pipeline is `.github/workflows/android.yml`. Only Android is built, and only one file is published: a single
+APK that holds every ABI. There is no Windows, desktop or server download.
 
 | What you push | What runs |
 |---|---|
 | a branch (`main`) or a pull request | lint only: `flutter analyze` |
-| a tag `0.1.0`, `v0.1.0`, `0.2.0-rc1` | build the signed APKs and publish a GitHub Release |
+| a tag `0.1.0`, `v0.1.0`, `0.2.0-rc1` | build the signed APK and publish a GitHub Release |
 
 ```
 git tag 0.1.0
 git push origin 0.1.0
 ```
 
-A tag with a `-` (`0.2.0-rc1`) is published as a pre-release. The release holds one APK per ABI
-(`omnitun-0.1.0-arm64-v8a.apk`, `-armeabi-v7a`, `-x86_64`; almost every phone wants arm64-v8a) and `SHA256SUMS`.
+While the app is beta, every release is published as a pre-release, whatever the tag looks like, and its notes start
+with the text of `.github/release-notes.md` (beta, partly AI-written, no warranty). The release holds one file,
+`wardkeep-0.1.0.apk` (arm64-v8a, armeabi-v7a and x86_64 in one APK), and `SHA256SUMS`.
 The app's version name is the tag; Android's version code is derived from it (`0.1.0` → 100, `1.2.3` → 10203),
 so a later tag always counts as an update.
 
@@ -36,8 +38,8 @@ bash scripts/android-github-secrets.sh  # uploads them as repository secrets (ne
 
 ## Local release build
 
-`scripts/build-android-release.sh` (all steps, per ABI) or, with the Tor client and the core already built,
-`cd app && flutter build apk --release --split-per-abi --build-name=0.1.0 --build-number=100`; it signs with
+`scripts/build-android-release.sh` (all steps, one APK) or, with the Tor client and the core already built,
+`cd app && flutter build apk --release --build-name=0.1.0 --build-number=100`; it signs with
 `app/android/key.properties`.
 
 ## Build environment

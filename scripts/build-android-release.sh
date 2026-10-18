@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds signed release APKs (one per ABI) into app/build/app/outputs/flutter-apk/.
+# Builds one signed release APK (all ABIs in it) into app/build/app/outputs/flutter-apk/.
 # Creates a release keystore on first run: app/android/omnitun-release.jks and
 # app/android/key.properties (both git-ignored). BACK THEM UP: updates to an
 # installed app must be signed with the same key.
@@ -24,5 +24,5 @@ fi
 
 [[ "${1:-}" == "--skip-core" ]] || { scripts/build-android-core.sh; scripts/build-android-tor.sh arm64-v8a armeabi-v7a x86_64; }
 cd app
-"$FLUTTER" build apk --release --split-per-abi
-ls -lh build/app/outputs/flutter-apk/*-release.apk
+"$FLUTTER" build apk --release
+ls -lh build/app/outputs/flutter-apk/app-release.apk

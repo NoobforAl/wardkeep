@@ -4,8 +4,23 @@ Cross-platform VPN client (Flutter) with a Go/Rust core, plus a server for runni
 Android is the first-class client; the Windows app runs in proxy mode. The app is a Mullvad-style single screen
 (status, country, one button), translated into 13 languages (English, Persian, Russian, Chinese, Arabic, Spanish, Hindi, French, Portuguese, Urdu, Indonesian, Turkish, Vietnamese).
 
-* [App guide](docs/app.md) · [Server guide](docs/server.md)
+> **This is beta software.** It works on the devices it was tried on, but it has bugs and rough edges, and
+> things may change between releases.
+>
+> **Part of the code was written with AI assistance.** It is tested, but it has not been independently audited,
+> so do not rely on it where your safety depends on it.
+>
+> **No warranty.** It is provided "as is" under the [MIT license](LICENSE); the authors are not liable for any
+> damage, data loss or consequence of using it.
+
+* [App guide](docs/app.md) · [Server guide](docs/server.md) · [Contributing](CONTRIBUTING.md) · [Releasing](docs/release.md)
 * The release notes on GitHub say what was tried on real devices and what was only tested in code.
+
+## Download
+
+Releases ship one file: **`wardkeep-<version>.apk`**, a single signed Android APK (Android 10 or newer) that works
+on every phone. There is no download for Windows or any other system; build those yourself (see below). Check the
+file against `SHA256SUMS` on the release page.
 
 ## Layout
 
@@ -41,7 +56,7 @@ Android is the first-class client; the Windows app runs in proxy mode. The app i
 
 # Android core (.aar) — from Git Bash; needs Android SDK/NDK + JDK 17
 scripts/build-android-core.sh            # all ABIs; or: scripts/build-android-core.sh android/arm64
-# Signed release APKs, one per ABI (~30 MB each); creates a keystore on first run —
+# One signed release APK with every ABI in it; creates a keystore on first run —
 # back up app/android/omnitun-release.jks and key.properties
 scripts/build-android-release.sh         # add --skip-core to reuse the existing .aar
 
