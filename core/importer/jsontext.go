@@ -115,7 +115,7 @@ func relaxJSON(text string) string {
 	}
 	// A trailing comma: the next thing after it that is not white space closes an object or an array.
 	inString, escaped = false, false
-	for i := 0; i < len(b); i++ {
+	for i := range b {
 		c := b[i]
 		if inString {
 			switch {

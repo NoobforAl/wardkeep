@@ -258,14 +258,12 @@ func (f *Forwarder) serveUDP(pc *net.UDPConn) {
 		f.queries.Add(1)
 		select {
 		case f.inflight <- struct{}{}:
-			f.wg.Add(1)
-			go func() {
-				defer f.wg.Done()
+			f.wg.Go(func() {
 				defer func() { <-f.inflight }()
 				if resp := f.handle(pkt, true); resp != nil {
 					_, _ = pc.WriteToUDPAddrPort(resp, addr)
 				}
-			}()
+			})
 		default:
 			if resp := servfail(pkt); resp != nil {
 				f.failed.Add(1)
@@ -330,12 +328,10 @@ func (f *Forwarder) serveTCPConn(c net.Conn) {
 		}
 		select {
 		case f.inflight <- struct{}{}:
-			queries.Add(1)
-			go func() {
-				defer queries.Done()
+			queries.Go(func() {
 				defer func() { <-f.inflight }()
 				reply(f.handle(pkt, false))
-			}()
+			})
 		default:
 			f.failed.Add(1)
 			reply(servfail(pkt))

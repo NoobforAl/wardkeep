@@ -197,10 +197,8 @@ func (o *Options) Validate() error {
 			return errors.New("killswitch: invalid address range")
 		}
 	}
-	for _, app := range o.Apps {
-		if app == "" {
-			return errors.New("killswitch: empty program path")
-		}
+	if slices.Contains(o.Apps, "") {
+		return errors.New("killswitch: empty program path")
 	}
 	return nil
 }

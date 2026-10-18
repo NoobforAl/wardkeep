@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"slices"
+	"strings"
 )
 
 // Config is the service's settings, stored in Layout.Config. Only SYSTEM and
@@ -91,14 +92,15 @@ func ControlDirSDDL(sids []string) (string, error) {
 	if err := c.Validate(); err != nil {
 		return "", err
 	}
-	sddl := "O:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)"
+	var sddl strings.Builder
+	sddl.WriteString("O:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)")
 	for _, s := range sids {
 		if s == sidSystem || s == sidAdministrators {
 			continue // already there
 		}
-		sddl += "(A;OICI;FR;;;" + s + ")"
+		sddl.WriteString("(A;OICI;FR;;;" + s + ")")
 	}
-	return sddl, nil
+	return sddl.String(), nil
 }
 
 // RootSDDL is the owner (Administrators) and access-control list of %ProgramData%\omnitun: SYSTEM and

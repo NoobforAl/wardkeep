@@ -185,7 +185,7 @@ func (u *Upstream) Exchange(ctx context.Context, query []byte) ([]byte, error) {
 		return nil, errors.New("dnscrypt: query too short")
 	}
 	var lastErr error
-	for attempt := 0; attempt < 2; attempt++ {
+	for range 2 {
 		sess, err := u.session(ctx)
 		if err != nil {
 			return nil, err

@@ -32,7 +32,7 @@ func TestTunnelAddressesInIPv6(t *testing.T) {
 	// Every user keeps their own address, inside the server's network, never the server's own.
 	seen := map[string]bool{}
 	pool := netip.MustParsePrefix(WGPool6)
-	for a := 0; a < 4; a++ {
+	for a := range 4 {
 		for b := 2; b < 255; b++ {
 			got, _ := WGAddress6("10.30." + strconv.Itoa(a) + "." + strconv.Itoa(b) + "/32")
 			p := netip.MustParsePrefix(got)

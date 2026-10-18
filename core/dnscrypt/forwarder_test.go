@@ -111,7 +111,7 @@ func splitRelay(p []byte) (target string, payload []byte, ok bool) {
 	if len(p) < 28 {
 		return "", nil, false
 	}
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		if p[i] != 0xff {
 			return "", nil, false
 		}
@@ -455,7 +455,7 @@ func TestUnreachableResolverFailsClosedAndInflightIsLimited(t *testing.T) {
 	f := startForwarder(t, ForwarderConfig{Stamp: res.stamp, Dial: dial, MaxInflight: 2, Timeout: 2 * time.Second})
 
 	out := make(chan int, 6)
-	for i := 0; i < 6; i++ {
+	for i := range 6 {
 		go func(i int) {
 			m := new(dns.Msg)
 			m.SetQuestion(dns.Fqdn("host"+string(rune('a'+i))+".example.org"), dns.TypeA)
@@ -482,7 +482,7 @@ func TestUnreachableResolverFailsClosedAndInflightIsLimited(t *testing.T) {
 		}
 	}
 	close(release)
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		select {
 		case rcode := <-out:
 			if rcode != dns.RcodeServerFailure {

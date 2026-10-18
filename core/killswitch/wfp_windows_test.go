@@ -89,8 +89,7 @@ func TestRulesPassTheLibrariesTypeCheck(t *testing.T) {
 		if err == nil {
 			t.Fatalf("%s: added to a sublayer that does not exist?", r.Name)
 		}
-		var errno windows.Errno
-		if !errors.As(err, &errno) {
+		if _, ok := errors.AsType[windows.Errno](err); !ok {
 			t.Errorf("%s: rejected by the library's type check, not by the system: %v", r.Name, err)
 		}
 	}

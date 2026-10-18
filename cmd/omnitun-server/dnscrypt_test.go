@@ -74,7 +74,7 @@ func TestCLIDNSCryptResolver(t *testing.T) {
 	if err != nil || !strings.Contains(out, "TCP: ") || !strings.Contains(out, "5443") {
 		t.Fatalf("firewall: %v\n%s", err, out)
 	}
-	for _, line := range strings.Split(out, "\n") {
+	for line := range strings.SplitSeq(out, "\n") {
 		if strings.HasPrefix(line, "UDP:") && !strings.Contains(line, "5443") {
 			t.Errorf("UDP 5443 is not opened: %q", line)
 		}

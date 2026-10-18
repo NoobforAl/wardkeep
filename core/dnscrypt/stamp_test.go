@@ -179,8 +179,7 @@ func TestBadStampsGiveClearErrors(t *testing.T) {
 			t.Errorf("%q was accepted", in)
 			continue
 		}
-		var se *StampError
-		if !errors.As(err, &se) {
+		if _, ok := errors.AsType[*StampError](err); !ok {
 			t.Errorf("%q: error %T is not a StampError", in, err)
 		}
 		if want != "" && !bytes.Contains([]byte(err.Error()), []byte(want)) {

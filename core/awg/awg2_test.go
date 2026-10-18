@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 	"net/netip"
 	"os"
@@ -83,9 +84,7 @@ func TestParamsAreCheckedInWords(t *testing.T) {
 	}
 	with := func(k, v string) map[string]string {
 		m := map[string]string{}
-		for a, b := range good {
-			m[a] = b
-		}
+		maps.Copy(m, good)
 		m[k] = v
 		return m
 	}
