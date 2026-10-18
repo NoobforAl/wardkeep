@@ -258,11 +258,11 @@ void _flowTests() {
       expect(tester.hasRunningAnimations, isFalse);
     });
 
-    testWidgets('asks for a frame only when its clock moves: 11 a second when calm, 22 when busy', (tester) async {
+    testWidgets('asks for a frame only when its clock moves: 8 a second when calm, more the faster the data moves', (tester) async {
       await tester.pumpWidget(globe(connected: true));
       await tester.pump(const Duration(seconds: 1)); // the Earth settles into its picture
       await tester.pump(const Duration(seconds: 1));
-      expect(state(tester).flowPeriod, const Duration(milliseconds: 90));
+      expect(state(tester).flowPeriod, const Duration(milliseconds: 125));
       // Between two ticks nothing asks for a frame: a Ticker would ask at every screen refresh.
       expect(tester.binding.hasScheduledFrame, isFalse);
       var frames = 0;
@@ -278,16 +278,51 @@ void _flowTests() {
       for (var i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
-      expect(changes, inInclusiveRange(20, 24), reason: 'about 11 a second for two seconds');
+      expect(changes, inInclusiveRange(15, 17), reason: 'about 8 a second for two seconds');
       expect(clock.value, greaterThan(start));
 
-      await tester.pumpWidget(globe(connected: true, down: 800000));
-      expect(state(tester).flowPeriod, const Duration(milliseconds: 45));
       await tester.pumpWidget(globe(connecting: true));
-      expect(state(tester).flowPeriod, const Duration(milliseconds: 45));
+      expect(state(tester).flowPeriod, const Duration(milliseconds: 66));
       await tester.pumpWidget(globe());
       expect(state(tester).flowPeriod, Duration.zero);
       expect(frames, greaterThan(0));
+    });
+
+    testWidgets('has four speed steps, under 10 KB/s, to 1 MB/s, to 10 MB/s and above, each with its own frame rate', (tester) async {
+      for (final (down, step, ms) in [
+        (0, 0, 125),
+        (9999, 0, 125),
+        (10000, 1, 90),
+        (800000, 1, 90),
+        (1000000, 2, 66),
+        (9000000, 2, 66),
+        (10000000, 3, 50),
+        (900000000, 3, 50),
+      ]) {
+        await tester.pumpWidget(globe(connected: true, down: down));
+        expect(state(tester).speedStep, step, reason: '$down bytes a second');
+        expect(state(tester).flowPeriod, Duration(milliseconds: ms), reason: '$down bytes a second');
+        await tester.pumpWidget(globe()); // a new connection starts again from the slow step
+        expect(state(tester).speedStep, 0);
+      }
+      // the louder way decides
+      await tester.pumpWidget(globe(connected: true, up: 12000000, down: 100));
+      expect(state(tester).speedStep, 3);
+      await tester.pumpWidget(globe());
+    });
+
+    testWidgets('a speed hovering at a limit does not flicker between two steps', (tester) async {
+      await tester.pumpWidget(globe(connected: true, down: 12000000));
+      expect(state(tester).speedStep, 3);
+      await tester.pumpWidget(globe(connected: true, down: 9000000));
+      expect(state(tester).speedStep, 3, reason: 'still above 60 % of the limit');
+      await tester.pumpWidget(globe(connected: true, down: 5000000));
+      expect(state(tester).speedStep, 2);
+      await tester.pumpWidget(globe(connected: true, down: 1200000));
+      expect(state(tester).speedStep, 2);
+      await tester.pumpWidget(globe(connected: true, down: 400000));
+      expect(state(tester).speedStep, 1);
+      await tester.pumpWidget(globe());
     });
 
     testWidgets('does not run when the system asks for less motion', (tester) async {
@@ -296,7 +331,7 @@ void _flowTests() {
     });
 
     testWidgets('paints for every traffic level, with nothing moving too, without errors', (tester) async {
-      for (final (up, down) in [(0, 0), (30, 40), (2000, 500), (100000, 3000000), (900000000, 900000000)]) {
+      for (final (up, down) in [(0, 0), (30, 40), (2000, 500), (100000, 3000000), (100000, 30000000), (900000000, 900000000)]) {
         await tester.pumpWidget(globe(connected: true, up: up, down: down));
         for (var i = 0; i < 10; i++) {
           await tester.pump(const Duration(milliseconds: 100));

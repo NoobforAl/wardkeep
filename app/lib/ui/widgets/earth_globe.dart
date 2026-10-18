@@ -137,8 +137,9 @@ class EarthBackdrop extends StatefulWidget {
   final Color homeColor, exitColor;
 
   /// While connecting, a packet runs from you to the exit and rings spread from the marker; while
-  /// connected, the exit breathes and dots stream along the arc, each way as fast and as many as the
-  /// traffic ([upBps], [downBps], bytes a second) is. Otherwise nothing moves.
+  /// connected, the exit breathes and dots stream along the arc. How it looks follows the traffic
+  /// ([upBps], [downBps], bytes a second) in four steps, see [_looks]: slow and blue under 10 KB/s, green
+  /// up to 1 MB/s, amber up to 10 MB/s, and a red surge above that. Otherwise nothing moves.
   final bool connecting, connected;
   final int upBps, downBps;
 
@@ -177,8 +178,8 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   late final Ticker _coast = createTicker(_onCoast);
 
   // The connection animation: a clock in seconds that only runs while connecting or connected (and
-  // the system does not ask for less motion), at 11 to 22 frames a second. Only the overlay on top
-  // of the globe is redrawn by it; the dotted Earth underneath is kept as it is.
+  // the system does not ask for less motion), at 8 to 20 frames a second, fewer the slower the data
+  // moves. Only the overlay on top of the globe is redrawn by it; the dotted Earth underneath is kept.
   final _clock = ValueNotifier<double>(0);
 
   // A timer, not a Ticker: a running Ticker asks for a new frame at every screen refresh (60 a second) even
@@ -188,22 +189,36 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   final _flowWatch = Stopwatch();
   Duration _flowPeriod = Duration.zero;
 
-  /// Every frame costs the same, so the rate is what counts: about 22 frames a second while data moves or
-  /// the connection is being made, about 11 while the line only breathes.
-  Duration get _wantedPeriod {
-    final calm = !widget.connecting && widget.upBps < 50 && widget.downBps < 50;
-    return Duration(milliseconds: calm ? 90 : 45);
-  }
+  // How fast the data moves, one step each way (with a little hysteresis, so a speed hovering at a limit
+  // does not flicker between two looks); the louder way decides the colour, the line and the frame rate.
+  _Speed _upStep = _Speed.slow, _downStep = _Speed.slow;
+  _Speed get _step => _upStep.index >= _downStep.index ? _upStep : _downStep;
 
-  void _onFlow(Timer _) => _clock.value = _flowWatch.elapsedMicroseconds / 1e6;
+  // The colour of the animation: it glides to the colour of the step instead of jumping.
+  Color _tint = _looks.first.color;
+  final _arc = _ArcCache();
+
+  Color get _tintTarget => widget.connecting ? widget.exitColor : _looks[_step.index].color;
+
+  /// Every frame costs the same, so the rate is what counts: a slow line moves slowly and needs few frames,
+  /// a surge needs more. 66 ms (15 a second) while connecting.
+  Duration get _wantedPeriod => widget.connecting ? const Duration(milliseconds: 66) : _looks[_step.index].period;
+
+  void _onFlow(Timer _) {
+    _tint = Color.lerp(_tint, _tintTarget, 0.25)!;
+    _clock.value = _flowWatch.elapsedMicroseconds / 1e6;
+  }
 
   bool get _animating => widget.connecting || widget.connected;
 
   void _syncFlow() {
     final run = _animating && !MediaQuery.disableAnimationsOf(context);
     if (run) {
+      _upStep = _stepFor(widget.upBps, _upStep);
+      _downStep = _stepFor(widget.downBps, _downStep);
       final period = _wantedPeriod;
       if (_flowTimer == null || period != _flowPeriod) {
+        if (_flowTimer == null) _tint = _tintTarget;
         _flowTimer?.cancel();
         _flowPeriod = period;
         if (!_flowWatch.isRunning) _flowWatch.start();
@@ -212,11 +227,16 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     } else if (_flowTimer != null) {
       _flowTimer!.cancel();
       _flowTimer = null;
+      _upStep = _downStep = _Speed.slow;
       _flowWatch
         ..stop()
         ..reset();
     }
   }
+
+  /// The speed step of the animation, 0 (slow) to 3 (fast) (for tests).
+  @visibleForTesting
+  int get speedStep => _step.index;
 
   /// Whether the connection animation is running (for tests).
   @visibleForTesting
@@ -485,8 +505,10 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
                         zoom: _zoom(),
                         seconds: _clock.value,
                         connecting: widget.connecting,
-                        upBps: widget.upBps,
-                        downBps: widget.downBps,
+                        tint: _tint,
+                        up: _upStep,
+                        down: _downStep,
+                        arc: _arc,
                       ),
                     ),
                   ),
@@ -811,27 +833,217 @@ class _GlobePainter extends CustomPainter {
   bool shouldRepaint(_GlobePainter old) => !sameView(old);
 }
 
-/// How strong a flow of [bps] bytes a second looks, 0 (nothing) to 1 (a megabyte a second or more).
-double _flowLevel(int bps) => bps < 50 ? 0 : ((math.log(bps) / math.ln10 - 1.7) / 4.3).clamp(0.0, 1.0);
+/// How fast the data moves, in four steps. Each has its own look (see [_looks]).
+enum _Speed { slow, light, busy, fast }
+
+/// The look of one speed step of the connection animation.
+class _Look {
+  const _Look({
+    required this.from,
+    required this.color,
+    required this.period,
+    required this.dots,
+    required this.speed,
+    required this.tail,
+    required this.gap,
+    required this.size,
+    required this.alpha,
+    required this.lineWidth,
+    required this.lineAlpha,
+    required this.ringPeriod,
+    required this.ringStrength,
+    this.surge = false,
+  });
+
+  /// Where the step begins, in bytes a second.
+  final double from;
+  final Color color;
+
+  /// Time between two frames: the slower the data, the slower the motion, the fewer frames it needs.
+  final Duration period;
+
+  /// Dots on the line each way, how far one travels in a second (1 = the whole line), the length of its
+  /// tail (pieces, and the gap between them as a share of the line), its size and its opacity.
+  final int dots, tail;
+  final double speed, gap, size, alpha;
+
+  /// The line itself and the rings at the exit (seconds between two, and how strong).
+  final double lineWidth, lineAlpha, ringPeriod, ringStrength;
+
+  /// The top step is a different animation, not only a faster one: the line pulses with a halo round it, the
+  /// streaks are long, and rings spread from both ends.
+  final bool surge;
+}
+
+const _looks = [
+  // under 10 KB/s: a calm blue line, one slow dot each way
+  _Look(
+    from: 0,
+    color: Color(0xFF5CC8E8),
+    period: Duration(milliseconds: 125),
+    dots: 1,
+    speed: 0.07,
+    tail: 3,
+    gap: 0.012,
+    size: 2.6,
+    alpha: 0.55,
+    lineWidth: 1.6,
+    lineAlpha: 0.22,
+    ringPeriod: 4.5,
+    ringStrength: 0.30,
+  ),
+  // 10 KB/s to 1 MB/s: green, a few dots at a steady pace
+  _Look(
+    from: 10000,
+    color: Color(0xFF4ADE80),
+    period: Duration(milliseconds: 90),
+    dots: 3,
+    speed: 0.16,
+    tail: 4,
+    gap: 0.013,
+    size: 3.0,
+    alpha: 0.75,
+    lineWidth: 2.0,
+    lineAlpha: 0.35,
+    ringPeriod: 3.4,
+    ringStrength: 0.35,
+  ),
+  // 1 to 10 MB/s: amber, more dots with longer tails, quicker
+  _Look(
+    from: 1000000,
+    color: Color(0xFFFFB02E),
+    period: Duration(milliseconds: 66),
+    dots: 5,
+    speed: 0.32,
+    tail: 5,
+    gap: 0.016,
+    size: 3.4,
+    alpha: 0.9,
+    lineWidth: 2.6,
+    lineAlpha: 0.5,
+    ringPeriod: 2.2,
+    ringStrength: 0.45,
+  ),
+  // 10 MB/s and above: red, a surge
+  _Look(
+    from: 10000000,
+    color: Color(0xFFFF3B30),
+    period: Duration(milliseconds: 50),
+    dots: 7,
+    speed: 0.85,
+    tail: 7,
+    gap: 0.022,
+    size: 4.0,
+    alpha: 1,
+    lineWidth: 3.6,
+    lineAlpha: 0.7,
+    ringPeriod: 0.9,
+    ringStrength: 0.6,
+    surge: true,
+  ),
+];
+
+/// The step for [bps] bytes a second, coming from step [now]. It goes up at the limit and comes back down only
+/// once the speed is a good deal below it, so a speed hovering at a limit does not flicker.
+_Speed _stepFor(int bps, _Speed now) {
+  var step = now.index;
+  while (step < _looks.length - 1 && bps >= _looks[step + 1].from) {
+    step++;
+  }
+  while (step > 0 && bps < _looks[step].from * 0.6) {
+    step--;
+  }
+  return _Speed.values[step];
+}
+
+/// The arc between where you are and where you exit, as screen points (null where it is behind the Earth) and
+/// as one path. It only changes when the view does, so it is worked out once and not on every frame.
+class _Arc {
+  _Arc(this.points, this.path);
+
+  static const steps = 48;
+
+  final List<Offset?> points;
+  final Path path;
+
+  static _Arc? build(_Scene scene, Size size, double zoom) {
+    final home = scene.home, exit = scene.exit;
+    if (home == null || exit == null) return null;
+    final h = _Projection.unit(home.$1, home.$2), e = _Projection.unit(exit.$1, exit.$2);
+    final omega = math.acos((h[0] * e[0] + h[1] * e[1] + h[2] * e[2]).clamp(-1.0, 1.0));
+    if (omega < 0.02) return null;
+    final pr = _Projection(scene, size, zoom);
+    final points = <Offset?>[];
+    final path = Path();
+    var pen = false;
+    for (var i = 0; i <= steps; i++) {
+      final (v, k) = _arcAt(h, e, omega, i / steps);
+      final (p, z) = pr.project(v[0], v[1], v[2], k);
+      if (z <= 0) {
+        points.add(null);
+        pen = false;
+      } else {
+        points.add(p);
+        if (pen) {
+          path.lineTo(p.dx, p.dy);
+        } else {
+          path.moveTo(p.dx, p.dy);
+          pen = true;
+        }
+      }
+    }
+    return _Arc(points, path);
+  }
+
+  /// The point at [u] along the arc (0 at you, 1 at the exit); null where it is behind the Earth.
+  Offset? at(double u) {
+    final x = u.clamp(0.0, 1.0) * steps;
+    final i = math.min(x.floor(), steps - 1);
+    final a = points[i], b = points[i + 1];
+    if (a == null || b == null) return null;
+    return Offset.lerp(a, b, x - i);
+  }
+}
+
+/// Keeps the [_Arc] of the view it was made for.
+class _ArcCache {
+  _Scene? _scene;
+  double _zoom = 0;
+  Size _size = Size.zero;
+  _Arc? _arc;
+
+  _Arc? of(_Scene scene, Size size, double zoom) {
+    final c = _scene;
+    if (c != null && c.sameAs(scene) && _zoom == zoom && _size == size) return _arc;
+    _scene = scene;
+    _zoom = zoom;
+    _size = size;
+    return _arc = _Arc.build(scene, size, zoom);
+  }
+}
 
 /// The connection animation drawn over the Earth (see [EarthBackdrop]): a packet and rings while
-/// connecting; a breathing exit, a faint line along the arc and dots streaming each way as fast and
-/// as many as the traffic is, while connected. Cheap on purpose (a few dozen dots): it redraws
-/// 11 to 22 times a second while it runs.
+/// connecting; while connected a breathing exit, a line along the arc and dots streaming each way, in the look
+/// of the speed step ([_looks]): from one slow blue dot to a red, pulsing surge. Cheap on purpose (a few dozen
+/// dots, no blur, one reused paint, the arc worked out once): it redraws 8 to 20 times a second while it runs.
 class _FlowPainter extends CustomPainter {
   _FlowPainter({
     required this.scene,
     required this.zoom,
     required this.seconds,
     required this.connecting,
-    required this.upBps,
-    required this.downBps,
+    required this.tint,
+    required this.up,
+    required this.down,
+    required this.arc,
   });
 
   final _Scene scene;
   final double zoom, seconds;
   final bool connecting;
-  final int upBps, downBps;
+  final Color tint;
+  final _Speed up, down;
+  final _ArcCache arc;
 
   static double _fract(double x) => x - x.floorToDouble();
 
@@ -840,113 +1052,90 @@ class _FlowPainter extends CustomPainter {
     final pr = _Projection(scene, size, zoom);
     final s = (pr.r / 360).clamp(0.6, 1.2);
     final home = scene.home, exit = scene.exit;
+    final look = _looks[math.max(up.index, down.index)];
+    final paint = Paint();
 
-    // Rings spreading from a marker, [period] seconds apart.
-    void rings((double, double)? at, Color color, double period, double strength) {
+    // Rings spreading from a marker, [period] seconds apart ([phase] shifts them).
+    void rings((double, double)? at, double period, double strength, [double phase = 0]) {
       if (at == null) return;
       final u = _Projection.unit(at.$1, at.$2);
       final (p, z) = pr.project(u[0], u[1], u[2]);
       if (z <= 0.05) return;
+      paint
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6;
       for (var i = 0; i < 2; i++) {
-        final ph = _fract(seconds / period + i / 2);
-        canvas.drawCircle(
-          p,
-          (8 + 46 * ph) * s,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.6
-            ..color = color.withValues(alpha: strength * math.pow(1 - ph, 1.6).toDouble()),
-        );
+        final ph = _fract(seconds / period + phase + i / 2);
+        paint.color = tint.withValues(alpha: strength * math.pow(1 - ph, 1.6).toDouble());
+        canvas.drawCircle(p, (8 + 46 * ph) * s, paint);
       }
     }
 
     if (connecting) {
       // Someone is knocking: rings at the place being reached (or where you are, for Tor).
-      if (exit != null) {
-        rings(exit, scene.exitColor, 1.6, 0.7);
-      } else {
-        rings(home, scene.exitColor, 1.6, 0.7);
-      }
+      rings(exit ?? home, 1.6, 0.7);
     } else {
-      // Connected: the exit breathes slowly.
-      rings(exit, scene.exitColor, 3.6, 0.35);
+      // Connected: the exit breathes, as fast as the traffic is; in a surge it is answered from your end.
+      rings(exit, look.ringPeriod, look.ringStrength);
+      if (look.surge) rings(home, look.ringPeriod, look.ringStrength * 0.7, 0.5);
     }
 
-    if (home == null || exit == null) return;
+    final line = arc.of(scene, size, zoom);
+    if (line == null) return;
     final a = math.min(scene.homeAlpha, scene.exitAlpha);
-    final h = _Projection.unit(home.$1, home.$2), e = _Projection.unit(exit.$1, exit.$2);
-    final omega = math.acos((h[0] * e[0] + h[1] * e[1] + h[2] * e[2]).clamp(-1.0, 1.0));
-    if (a < 0.01 || omega < 0.02) return;
+    if (a < 0.01) return;
 
-    Offset? at(double u, {double lift = 0}) {
-      final (v, k) = _arcAt(h, e, omega, u.clamp(0.0, 1.0));
-      final (p, z) = pr.project(v[0], v[1], v[2], k + lift);
-      return z > 0 ? p : null;
-    }
-
-    // The line itself, while connected: a thin glow along the path the data takes.
+    // The line itself, while connected: a thin glow along the path the data takes; in a surge it is thick,
+    // pulses, and has a halo.
     if (!connecting) {
-      final path = Path();
-      var pen = false;
-      const steps = 48;
-      for (var i = 0; i <= steps; i++) {
-        final p = at(i / steps);
-        if (p == null) {
-          pen = false;
-        } else if (pen) {
-          path.lineTo(p.dx, p.dy);
-        } else {
-          path.moveTo(p.dx, p.dy);
-          pen = true;
-        }
+      final pulse = look.surge ? 0.75 + 0.25 * math.sin(seconds * 2 * math.pi * 2.2) : 1.0;
+      paint
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+      if (look.surge) {
+        paint
+          ..strokeWidth = look.lineWidth * 3.2 * s
+          ..color = tint.withValues(alpha: 0.16 * a * pulse);
+        canvas.drawPath(line.path, paint);
       }
-      canvas.drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.2 * s
-          ..strokeCap = StrokeCap.round
-          ..color = scene.exitColor.withValues(alpha: 0.5 * a),
-      );
+      paint
+        ..strokeWidth = look.lineWidth * s
+        ..color = tint.withValues(alpha: look.lineAlpha * a * pulse);
+      canvas.drawPath(line.path, paint);
     }
 
-    // A dot with a short tail, travelling along the arc towards [dir] (+1 from you to the exit, -1 back).
-    void comet(double u, int dir, Color color, double alpha, double size) {
-      for (var k = 0; k < 5; k++) {
-        final p = at(u - dir * k * 0.014);
+    // A dot with a tail of [tail] pieces [gap] apart, travelling along the arc towards [dir] (+1 from you to
+    // the exit, -1 back).
+    void comet(double u, int dir, Color color, int tail, double gap, double alpha, double size) {
+      paint.style = PaintingStyle.fill;
+      for (var k = 0; k < tail; k++) {
+        final p = line.at(u - dir * k * gap);
         if (p == null) continue;
-        final fade = 1 - k / 5;
-        canvas.drawCircle(
-          p,
-          size * s * (0.55 + 0.45 * fade),
-          Paint()..color = color.withValues(alpha: alpha * a * fade),
-        );
+        final fade = 1 - k / tail;
+        paint.color = color.withValues(alpha: alpha * a * fade);
+        canvas.drawCircle(p, size * s * (0.55 + 0.45 * fade), paint);
       }
     }
 
     if (connecting) {
       // One packet after another from you to the exit.
-      comet(_fract(seconds / 1.3), 1, scene.exitColor, 0.95, 3.6);
-      comet(_fract(seconds / 1.3 + 0.5), 1, scene.exitColor, 0.55, 2.8);
+      comet(_fract(seconds / 1.3), 1, tint, 5, 0.014, 0.95, 3.6);
+      comet(_fract(seconds / 1.3 + 0.5), 1, tint, 5, 0.014, 0.55, 2.8);
       return;
     }
 
-    // Traffic: dots each way, more and faster the more is moving; when nothing moves, one slow dot
-    // each way, so the tunnel is seen to be alive.
-    void stream(int bps, int dir, Color color, double phase) {
-      final level = _flowLevel(bps);
-      final n = bps < 50 ? 1 : 2 + (level * 8).round();
-      final speed = bps < 50 ? 0.12 : 0.25 + 0.75 * level;
-      final alpha = bps < 50 ? 0.4 : 0.7 + 0.3 * level;
-      for (var i = 0; i < n; i++) {
-        final u = _fract(seconds * speed + phase + i / n);
-        comet(dir > 0 ? u : 1 - u, dir, color, alpha, 3.0 + 1.2 * level);
+    // Traffic: dots each way, as many and as quick as that way's own step; down (from the exit to you) in a
+    // light tone of the animation's colour, up (from you) in a paler one.
+    void stream(_Speed step, int dir, Color color, double phase) {
+      final l = _looks[step.index];
+      for (var i = 0; i < l.dots; i++) {
+        final u = _fract(seconds * l.speed + phase + i / l.dots);
+        comet(dir > 0 ? u : 1 - u, dir, color, l.tail, l.gap, l.alpha, l.size);
       }
     }
 
-    // Down (from the exit to you) in the exit's colour, up (from you) in a pale blue.
-    stream(downBps, -1, Color.lerp(scene.exitColor, Colors.white, 0.35)!, 0);
-    stream(upBps, 1, const Color(0xFFBFD6F5), 0.37);
+    stream(down, -1, Color.lerp(tint, Colors.white, 0.35)!, 0);
+    stream(up, 1, Color.lerp(tint, Colors.white, 0.6)!, 0.37);
   }
 
   @override
