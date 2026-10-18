@@ -1,0 +1,94 @@
+name: Dependencies
+
+# Once a month (the 1st) and on request: do the Go modules, Dart packages and Rust crates we use have newer
+# versions? The answer is one issue (label "dependency-check"):
+#   * something is out of date, no issue open  →  a new issue with the list
+#   * something is out of date, one is open    →  that issue is updated, so there is never more than one
+#   * everything is current, one is open       →  it is closed
+# It is only a check: nothing is changed or updated here. GitHub Actions are not covered (Dependabot keeps
+# them current, see .github/dependabot.yml). The report is made by scripts/dependency-report.py, which you
+# can run yourself.
+#
+# Two jobs on purpose: "check" runs tools that fetch and build other people's code (cargo install, pub, go
+# list) and has no token that can write; "issue" has the write permission and runs nothing but the GitHub CLI
+# on the finished report.
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      outdated: ${{ steps.report.outputs.outdated }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-10-17)
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: "3.47.7"
+          channel: stable
+          cache: true
+
+      - name: cargo-outdated
+        run: cargo install --locked cargo-outdated
+
+      - name: Report
+        id: report
+        run: |
+          (cd app && flutter pub get)
+          python3 scripts/dependency-report.py --out report.md --github-output "$GITHUB_OUTPUT"
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependency-report
+          path: report.md
+
+  issue:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write # to open, update and close the issue
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dependency-report
+
+      - name: Open, update or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          OUTDATED: ${{ needs.check.outputs.outdated }}
+        run: |
+          LABEL=dependency-check
+          gh label create "$LABEL" --description "The monthly dependency check" --color 0E8A16 2>/dev/null || true
+          OPEN="$(gh issue list --label "$LABEL" --state open --json number --jq '.[0].number // empty')"
+          TODAY="$(date -u +%F)"
+          if [ "${OUTDATED:-0}" = "0" ]; then
+            if [ -n "$OPEN" ]; then
+              gh issue close "$OPEN" --comment "Everything is up to date now (checked $TODAY)."
+            fi
+            echo "nothing to report"
+            exit 0
+          fi
+          if [ -n "$OPEN" ]; then
+            gh issue edit "$OPEN" --title "Dependency check: $(date -u +%Y-%m)" --body-file report.md
+            gh issue comment "$OPEN" --body "Checked again on $TODAY: $OUTDATED to look at. The list in the description is current."
+          else
+            gh issue create --title "Dependency check: $(date -u +%Y-%m)" --label "$LABEL" --body-file report.md
+          fi

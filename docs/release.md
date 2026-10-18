@@ -42,6 +42,15 @@ bash scripts/android-github-secrets.sh  # uploads them as repository secrets (ne
 `cd app && flutter build apk --release --build-name=0.1.0 --build-number=100`; it signs with
 `app/android/key.properties`.
 
+## Dependencies
+
+`.github/workflows/dependencies.yml` runs on the 1st of every month (and on request, from the Actions tab). It lists the
+Go modules, Dart packages and Rust crates that have newer versions and opens one issue, labelled `dependency-check`,
+with the list; if an issue is already open it is updated, and when everything is current it is closed. It only
+checks: nothing is updated for you. Run the same report locally with `python scripts/dependency-report.py` (it needs
+`go`, `flutter` and `cargo-outdated`; set `GO`, `FLUTTER` or `CARGO` if they are not on `PATH`). GitHub Actions are not in
+the list: Dependabot proposes those (`.github/dependabot.yml`).
+
 ## Build environment
 
 * The workflow installs **NDK 29** (`29.0.14206865`). The runner's own NDK 27 cannot link the Cronet library the core
