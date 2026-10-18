@@ -279,14 +279,17 @@ def save(img, *parts):
 
 N = M * SS
 
-# adaptive layers: 108 dp canvas, content inside the central 66 dp (61 %); the shield fills it
-fg_size = 0.66
+# adaptive layers: 108 dp canvas, a launcher shows a circle of 66-72 dp (61-67 %) at most. The shield's
+# upper corners are 0.64 of its height from its middle, so its height must stay under ~0.52 of the canvas
+# for the whole shield to be inside that circle.
+fg_size = 0.50
 fg = down(Image.alpha_composite(drop_shadow(N, fg_size), shield(N, fg_size)), M)
 mono = down(shield(N, fg_size, mono=True), M)
 bg = down(background(N), M)
 
-# legacy / store icon: everything together, the shield bigger
-big = 0.88
+# legacy / store icon: everything together; the round variant is a full circle, so the corners need the
+# same room (0.64 * 0.72 = 0.46 of the icon from the middle, under the 0.5 radius)
+big = 0.72
 legacy = down(Image.alpha_composite(Image.alpha_composite(background(N), drop_shadow(N, big)), shield(N, big)), M)
 
 res = ("app", "android", "app", "src", "main", "res")
