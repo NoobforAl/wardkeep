@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -76,6 +77,28 @@ func ownSDDL(t *testing.T) (sddl, sid string) {
 	return "O:" + me + "D:P(A;OICI;FA;;;" + me + ")(A;OICI;FR;;;S-1-5-32-545)", me
 }
 
+// ownerOf is the owner of path as a SID string. AccessList writes the well-known accounts by their short names
+// (BA, SY, and LA for the local Administrator account, which is what a CI machine's user is), so the text
+// is turned back into a SID before it is compared with anything.
+func ownerOf(t *testing.T, path string) string {
+	t.Helper()
+	got, err := AccessList(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// O:<owner>[G:<group>][D:<access list>]: the owner is what stands before the group or the list.
+	m := regexp.MustCompile(`^O:(.+?)(?:G:|D:|$)`).FindStringSubmatch(got)
+	if m == nil {
+		t.Fatalf("no owner in %s", got)
+	}
+	token := m[1]
+	sid, err := windows.StringToSid(token)
+	if err != nil {
+		t.Fatalf("owner %q of %s is not a SID: %v", token, path, err)
+	}
+	return sid.String()
+}
+
 func TestSecureDirCreatesWithOwnerAndProtectedList(t *testing.T) {
 	sddl, me := ownSDDL(t)
 	dir := filepath.Join(t.TempDir(), "secured")
@@ -86,7 +109,7 @@ func TestSecureDirCreatesWithOwnerAndProtectedList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(got, "O:"+me) || !strings.Contains(got, "D:P") {
+	if ownerOf(t, dir) != me || !strings.Contains(got, "D:P") {
 		t.Errorf("owner or protection missing: %s", got)
 	}
 	// Only our two entries: nothing inherited from the temp directory.
@@ -110,6 +133,11 @@ func TestSecureDirRefusesATrustedOwnerItIsNot(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "preexisting")
 	if err := os.Mkdir(dir, 0o700); err != nil {
 		t.Fatal(err)
+	}
+	// An administrator's token makes Administrators the owner of what it creates (a CI machine's user is one):
+	// that directory is trusted, rightly, and there is no refusal to look for.
+	if owner := ownerOf(t, dir); OwnerTrusted(owner) {
+		t.Skipf("directories made by this account are owned by %s, which is trusted", owner)
 	}
 	before, _ := AccessList(dir)
 	err := SecureDir(dir, RootSDDL)
