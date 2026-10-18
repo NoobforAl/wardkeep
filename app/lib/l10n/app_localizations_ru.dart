@@ -1512,6 +1512,52 @@ class AppLocalizationsRu extends AppLocalizations {
       'В этом тексте нет ни одного подходящего сервера';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return 'Это некорректный JSON: неожиданный символ $found в строке $line, столбец $column.';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return 'Это некорректный JSON: текст обрывается слишком рано, в строке $line, столбец $column. Возможно, не хватает закрывающей скобки или кавычки.';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      'Этот JSON корректен, но в нём нет ни одного прокси-сервера. Используйте клиентскую конфигурацию с исходящим подключением VLESS, VMess, Trojan, Shadowsocks или подобным.';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return 'Этот JSON корректен, но в нём нет ни одного прокси-сервера (есть только $found). Используйте клиентскую конфигурацию с исходящим подключением VLESS, VMess, Trojan, Shadowsocks или подобным.';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return 'Слишком большой объём для импорта (предел — $limit МБ).';
+  }
+
+  @override
+  String get importFileEmpty => 'Файл пуст.';
+
+  @override
+  String get importFileNotText =>
+      'Файл не является текстом, который Wardkeep может прочитать (похоже на двоичный или в неизвестной кодировке). Используйте текстовый файл в UTF-8 или UTF-16.';
+
+  @override
+  String get importFileNoPermission =>
+      'У Wardkeep нет разрешения читать этот файл.';
+
+  @override
+  String get importFileMissing =>
+      'Файл не найден. Возможно, его переместили или удалили.';
+
+  @override
+  String get importDetails => 'Подробности';
+
+  @override
+  String get importJsonNote =>
+      'Подойдёт и JSON-конфигурация (Xray, sing-box, SIP008) или их список — текстом или файлом.';
+
+  @override
   String get ipdbTitle => 'Офлайн-база стран';
 
   @override

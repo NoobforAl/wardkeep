@@ -3,6 +3,7 @@ package control
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/NoobforAl/omnitun/core/importer"
@@ -49,6 +50,55 @@ func TestImportFailuresHaveCodes(t *testing.T) {
 		if e.Code != c.code || e.Args["scheme"] != c.scheme {
 			t.Errorf("%q: %+v (%v)", c.text, e, err)
 		}
+	}
+}
+
+func TestJSONImportFailuresSayWhereAndWhat(t *testing.T) {
+	for _, c := range []struct {
+		name, text, code string
+		args             map[string]string
+	}{
+		{"syntax", "{\n  \"outbounds\": [\n    {\"type\": \"vless\" x}\n  ]\n}", CodeImportJSONSyntax,
+			map[string]string{"line": "3", "column": "22", "found": "'x'"}},
+		{"cut off", `{"outbounds": [`, CodeImportJSONEnd, map[string]string{"line": "1", "column": "16"}},
+		{"no server", `{"outbounds":[{"protocol":"freedom"}]}`, CodeImportJSONNoServer, map[string]string{"found": "outbounds: freedom"}},
+		{"empty list", `[]`, CodeImportJSONNoServer, map[string]string{"found": ""}},
+		{"too large", strings.Repeat("a", importer.MaxTextSize+1), CodeImportTooLarge, map[string]string{"limit": "8"}},
+	} {
+		_, err := importer.Import(c.text)
+		if err == nil {
+			t.Errorf("%s: imported", c.name)
+			continue
+		}
+		e := importError(err)
+		if e.Code != c.code {
+			t.Errorf("%s: code %s, want %s (%v)", c.name, e.Code, c.code, err)
+		}
+		for k, v := range c.args {
+			if e.Args[k] != v {
+				t.Errorf("%s: arg %s = %q, want %q", c.name, k, e.Args[k], v)
+			}
+		}
+	}
+}
+
+func TestImportFailureCarriesTheReasons(t *testing.T) {
+	// a server that is found but wrong: the reason must reach the UI, not only the fact
+	res, err := importer.Import(`{"outbounds": [{"tag": "bad", "protocol": "vless", "settings": {"address": "example.com", "port": 443}}]}`)
+	e := importFailure(err, res)
+	if e.Code != CodeImportNothing || !strings.Contains(e.Args["details"], "bad") {
+		t.Fatalf("%+v (%v)", e, err)
+	}
+	// and no more than the limit
+	many := &importer.Result{}
+	for range 25 {
+		many.Errors = append(many.Errors, "x")
+	}
+	if got := strings.Count(importFailure(err, many).Args["details"], "\n") + 1; got != maxImportDetails {
+		t.Fatalf("%d reasons, want %d", got, maxImportDetails)
+	}
+	if e := importFailure(importer.ErrXrayServer, nil); e.Args != nil {
+		t.Fatalf("no reasons, but args: %+v", e.Args)
 	}
 }
 

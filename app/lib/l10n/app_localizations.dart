@@ -2550,6 +2550,72 @@ abstract class AppLocalizations {
   /// **'No valid server was found in this text'**
   String get importNoServer;
 
+  /// No description provided for @importJsonSyntax.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not valid JSON: unexpected {found} at line {line}, column {column}.'**
+  String importJsonSyntax(String found, int line, int column);
+
+  /// No description provided for @importJsonEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not valid JSON: the text ends too early, at line {line}, column {column}. A closing bracket, brace or quote may be missing.'**
+  String importJsonEnd(int line, int column);
+
+  /// No description provided for @importJsonNoServer.
+  ///
+  /// In en, this message translates to:
+  /// **'This JSON is valid, but it has no proxy server in it. Use a client config with a VLESS, VMess, Trojan, Shadowsocks or similar outbound.'**
+  String get importJsonNoServer;
+
+  /// No description provided for @importJsonNoServerFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This JSON is valid, but it has no proxy server in it (it holds {found}). Use a client config with a VLESS, VMess, Trojan, Shadowsocks or similar outbound.'**
+  String importJsonNoServerFound(String found);
+
+  /// No description provided for @importTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This is too large to import (the limit is {limit} MB).'**
+  String importTooLarge(int limit);
+
+  /// No description provided for @importFileEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is empty.'**
+  String get importFileEmpty;
+
+  /// No description provided for @importFileNotText.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is not text that Wardkeep can read (it looks binary, or it is in an unknown encoding). Use a UTF-8 or UTF-16 text file.'**
+  String get importFileNotText;
+
+  /// No description provided for @importFileNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardkeep is not allowed to read this file.'**
+  String get importFileNoPermission;
+
+  /// No description provided for @importFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The file was not found. It may have been moved or deleted.'**
+  String get importFileMissing;
+
+  /// No description provided for @importDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get importDetails;
+
+  /// No description provided for @importJsonNote.
+  ///
+  /// In en, this message translates to:
+  /// **'A JSON config (Xray, sing-box, SIP008) or a list of them also works, as text or as a file.'**
+  String get importJsonNote;
+
   /// No description provided for @ipdbTitle.
   ///
   /// In en, this message translates to:

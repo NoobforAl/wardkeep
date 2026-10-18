@@ -8,11 +8,6 @@ import (
 	"github.com/NoobforAl/omnitun/core/profile"
 )
 
-// looksLikeJSON reports whether text is a JSON object.
-func looksLikeJSON(text string) bool {
-	return strings.HasPrefix(strings.TrimSpace(text), "{")
-}
-
 type sbTLS struct {
 	Certificate stringList `json:"certificate"`
 	Enabled     bool       `json:"enabled"`

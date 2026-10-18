@@ -3,6 +3,7 @@ package control
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/NoobforAl/omnitun/core/importer"
 	"github.com/NoobforAl/omnitun/core/profile"
@@ -18,11 +19,41 @@ func badRequest(err error) *Error {
 	return &Error{Code: CodeBadRequest, Message: err.Error()}
 }
 
+// maxImportDetails is how many reasons an import failure carries (a list of hundreds would only be noise).
+const maxImportDetails = 10
+
+// importFailure is importError for an import that came back with reasons for the entries that failed: they go
+// along in Args["details"], one per line, so the UI can show why and not only that it failed.
+func importFailure(err error, res *importer.Result) *Error {
+	e := importError(err)
+	if res != nil && len(res.Errors) > 0 {
+		if e.Args == nil {
+			e.Args = map[string]string{}
+		}
+		e.Args["details"] = strings.Join(res.Errors[:min(len(res.Errors), maxImportDetails)], "\n")
+	}
+	return e
+}
+
 // importError is the error reply for text that could not be imported.
 func importError(err error) *Error {
 	e := &Error{Code: CodeImportFailed, Message: err.Error()}
 	var ue *importer.UnsupportedError
+	var je *importer.JSONError
+	var ns *importer.NoServerError
 	switch {
+	case errors.As(err, &je) && je.Found == "":
+		e.Code = CodeImportJSONEnd
+		e.Args = map[string]string{"line": strconv.Itoa(je.Line), "column": strconv.Itoa(je.Col)}
+	case errors.As(err, &je):
+		e.Code = CodeImportJSONSyntax
+		e.Args = map[string]string{"line": strconv.Itoa(je.Line), "column": strconv.Itoa(je.Col), "found": je.Found}
+	case errors.As(err, &ns):
+		e.Code = CodeImportJSONNoServer
+		e.Args = map[string]string{"found": ns.Found}
+	case errors.Is(err, importer.ErrTooLarge):
+		e.Code = CodeImportTooLarge
+		e.Args = map[string]string{"limit": strconv.Itoa(importer.MaxTextSize >> 20)}
 	case errors.Is(err, importer.ErrXrayServer):
 		e.Code = CodeImportXrayServer
 	case errors.Is(err, importer.ErrNoProfiles):

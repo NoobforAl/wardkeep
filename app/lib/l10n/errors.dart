@@ -19,6 +19,11 @@ String? translateCode(AppLocalizations l, String code, Map<String, String> args)
       (args['scheme'] ?? '').isEmpty ? l.importUnsupported : l.importUnsupportedScheme(args['scheme']!),
     'IMPORT_NOTHING' => l.importNoServer,
     'IMPORT_XRAY_SERVER' => l.importXrayServer,
+    'IMPORT_JSON_SYNTAX' => l.importJsonSyntax(args['found'] ?? '', _int(args['line']), _int(args['column'])),
+    'IMPORT_JSON_END' => l.importJsonEnd(_int(args['line']), _int(args['column'])),
+    'IMPORT_JSON_NO_SERVER' =>
+      (args['found'] ?? '').isEmpty ? l.importJsonNoServer : l.importJsonNoServerFound(args['found']!),
+    'IMPORT_TOO_LARGE' => l.importTooLarge(_int(args['limit'], 8)),
     'AUTH_FAILED' => l.subAuthFailed,
     'SUB_HTTP' => l.subHttp(args['status'] ?? ''),
     'SUB_TOO_LARGE' => l.subTooLarge,
@@ -27,6 +32,8 @@ String? translateCode(AppLocalizations l, String code, Map<String, String> args)
     _ => null,
   };
 }
+
+int _int(String? s, [int fallback = 0]) => int.tryParse(s ?? '') ?? fallback;
 
 /// What to tell the user about an error from the core, in their language.
 String describeError(AppLocalizations l, Object e) {

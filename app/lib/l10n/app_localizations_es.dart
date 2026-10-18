@@ -1503,6 +1503,52 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se encontró ningún servidor válido en este texto';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return 'Esto no es un JSON válido: carácter inesperado $found en la línea $line, columna $column.';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return 'Esto no es un JSON válido: el texto termina demasiado pronto, en la línea $line, columna $column. Puede faltar un corchete, una llave o unas comillas de cierre.';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      'Este JSON es válido, pero no contiene ningún servidor proxy. Usa una configuración de cliente con una salida VLESS, VMess, Trojan, Shadowsocks o similar.';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return 'Este JSON es válido, pero no contiene ningún servidor proxy (contiene $found). Usa una configuración de cliente con una salida VLESS, VMess, Trojan, Shadowsocks o similar.';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return 'Es demasiado grande para importarlo (el límite es $limit MB).';
+  }
+
+  @override
+  String get importFileEmpty => 'El archivo está vacío.';
+
+  @override
+  String get importFileNotText =>
+      'El archivo no es texto que Wardkeep pueda leer (parece binario o tiene una codificación desconocida). Usa un archivo de texto UTF-8 o UTF-16.';
+
+  @override
+  String get importFileNoPermission =>
+      'Wardkeep no tiene permiso para leer este archivo.';
+
+  @override
+  String get importFileMissing =>
+      'No se encontró el archivo. Puede haberse movido o eliminado.';
+
+  @override
+  String get importDetails => 'Detalles';
+
+  @override
+  String get importJsonNote =>
+      'También sirve una configuración JSON (Xray, sing-box, SIP008) o una lista de ellas, como texto o como archivo.';
+
+  @override
   String get ipdbTitle => 'Base de datos de países sin conexión';
 
   @override

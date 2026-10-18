@@ -1484,6 +1484,52 @@ class AppLocalizationsTr extends AppLocalizations {
   String get importNoServer => 'Bu metinde geçerli sunucu bulunamadı';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return 'Bu geçerli bir JSON değil: $line. satır, $column. sütunda beklenmeyen $found karakteri.';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return 'Bu geçerli bir JSON değil: metin çok erken bitiyor ($line. satır, $column. sütun). Kapanış parantezi, küme ayracı veya tırnak eksik olabilir.';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      'Bu JSON geçerli, ancak içinde hiçbir proxy sunucusu yok. VLESS, VMess, Trojan, Shadowsocks veya benzeri bir çıkışı olan bir istemci yapılandırması kullanın.';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return 'Bu JSON geçerli, ancak içinde hiçbir proxy sunucusu yok (içinde $found var). VLESS, VMess, Trojan, Shadowsocks veya benzeri bir çıkışı olan bir istemci yapılandırması kullanın.';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return 'İçe aktarmak için çok büyük (sınır $limit MB).';
+  }
+
+  @override
+  String get importFileEmpty => 'Dosya boş.';
+
+  @override
+  String get importFileNotText =>
+      'Dosya, Wardkeep\'in okuyabileceği bir metin değil (ikili görünüyor ya da kodlaması bilinmiyor). UTF-8 veya UTF-16 bir metin dosyası kullanın.';
+
+  @override
+  String get importFileNoPermission =>
+      'Wardkeep\'in bu dosyayı okuma izni yok.';
+
+  @override
+  String get importFileMissing =>
+      'Dosya bulunamadı. Taşınmış veya silinmiş olabilir.';
+
+  @override
+  String get importDetails => 'Ayrıntılar';
+
+  @override
+  String get importJsonNote =>
+      'JSON yapılandırması (Xray, sing-box, SIP008) veya bunların bir listesi de, metin ya da dosya olarak kullanılabilir.';
+
+  @override
   String get ipdbTitle => 'Çevrimdışı ülke veritabanı';
 
   @override

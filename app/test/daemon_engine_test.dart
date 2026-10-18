@@ -150,6 +150,48 @@ void main() {
     expect(await engine.exportLink(torProfile), 'tor://snowflake');
   }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 
+  test('JSON configs import through the daemon, and a failure says where and why', () async {
+    final dir = await Directory.systemTemp.createTemp('omnitun-json');
+    final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
+    addTearDown(() async {
+      engine.dispose();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await dir.delete(recursive: true).catchError((_) => dir);
+    });
+
+    const vless = '{"tag": "one", "protocol": "vless", "settings": {"vnext": [{"address": "203.0.113.7", "port": 443, '
+        '"users": [{"id": "b831381d-6324-4d53-ad4f-8cda48b30811", "encryption": "none"}]}]}, '
+        '"streamSettings": {"network": "ws", "security": "tls", "tlsSettings": {"serverName": "example.com"}}}';
+
+    // a whole config, a lone outbound, and a list with comments and a trailing comma
+    expect((await engine.importText('{"outbounds": [$vless]}')).profiles.single.server, '203.0.113.7');
+    expect((await engine.importText(vless)).profiles.single.name, 'one');
+    final list = await engine.importText('// my servers\n[$vless, /* again */ $vless,]');
+    expect(list.profiles, hasLength(2));
+    expect(list.failure, isNull);
+
+    // not JSON: the line and column, and what is there instead
+    final syntax = await engine.importText('{\n  "outbounds": [\n    {"protocol": "vless" x}\n  ]\n}');
+    expect(syntax.profiles, isEmpty);
+    expect(syntax.failure!.code, 'IMPORT_JSON_SYNTAX');
+    expect(syntax.failure!.args, {'line': '3', 'column': '26', 'found': "'x'"});
+
+    // cut off
+    final cut = await engine.importText('{"outbounds": [');
+    expect(cut.failure!.code, 'IMPORT_JSON_END');
+    expect(cut.failure!.args['line'], '1');
+
+    // valid, but nothing to connect to
+    final none = await engine.importText('{"outbounds": [{"protocol": "freedom"}, {"protocol": "blackhole"}]}');
+    expect(none.failure!.code, 'IMPORT_JSON_NO_SERVER');
+    expect(none.failure!.args['found'], 'outbounds: blackhole, freedom');
+
+    // a server that is there but wrong: the reason for it comes along
+    final bad = await engine.importText('{"outbounds": [{"tag": "bad", "protocol": "vless", "settings": {"address": "example.com", "port": 443}}]}');
+    expect(bad.failure!.code, 'IMPORT_NOTHING');
+    expect(bad.errors.single, contains('bad'));
+  }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
+
   test('a subscription can ask to go through the VPN; without one the core says so', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(() => server.close(force: true));

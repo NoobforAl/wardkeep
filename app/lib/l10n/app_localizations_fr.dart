@@ -1504,6 +1504,52 @@ class AppLocalizationsFr extends AppLocalizations {
   String get importNoServer => 'Aucun serveur valide trouvé dans ce texte';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return 'Ce n\'est pas un JSON valide : caractère inattendu $found à la ligne $line, colonne $column.';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return 'Ce n\'est pas un JSON valide : le texte se termine trop tôt, à la ligne $line, colonne $column. Il manque peut-être un crochet, une accolade ou un guillemet fermant.';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      'Ce JSON est valide, mais il ne contient aucun serveur proxy. Utilisez une configuration client avec une sortie VLESS, VMess, Trojan, Shadowsocks ou similaire.';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return 'Ce JSON est valide, mais il ne contient aucun serveur proxy (il contient $found). Utilisez une configuration client avec une sortie VLESS, VMess, Trojan, Shadowsocks ou similaire.';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return 'C\'est trop volumineux pour être importé (la limite est de $limit Mo).';
+  }
+
+  @override
+  String get importFileEmpty => 'Le fichier est vide.';
+
+  @override
+  String get importFileNotText =>
+      'Le fichier n\'est pas du texte que Wardkeep peut lire (il semble binaire ou dans un encodage inconnu). Utilisez un fichier texte UTF-8 ou UTF-16.';
+
+  @override
+  String get importFileNoPermission =>
+      'Wardkeep n\'a pas le droit de lire ce fichier.';
+
+  @override
+  String get importFileMissing =>
+      'Fichier introuvable. Il a peut-être été déplacé ou supprimé.';
+
+  @override
+  String get importDetails => 'Détails';
+
+  @override
+  String get importJsonNote =>
+      'Une configuration JSON (Xray, sing-box, SIP008) ou une liste de configurations fonctionne aussi, en texte ou en fichier.';
+
+  @override
   String get ipdbTitle => 'Base de données de pays hors ligne';
 
   @override

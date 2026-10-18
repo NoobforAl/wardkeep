@@ -15,6 +15,9 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.charset.CharacterCodingException
+import java.nio.charset.CodingErrorAction
 import java.util.concurrent.Executors
 
 /**
@@ -31,7 +34,12 @@ class MainActivity : FlutterActivity() {
 
     /** A link or config file another app sent us, until Flutter has taken it (see "omnitun/incoming"). */
     private var incoming: String? = null
+
+    /** Why that file could not be read ("empty", "too_large", "not_text", "denied", "missing", "unreadable"). */
+    private var incomingError: String? = null
     private var incomingChannel: MethodChannel? = null
+
+    private class IncomingFailure(val code: String) : Exception(code)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,12 +54,17 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun takeIncoming(intent: Intent?) {
-        val text = incomingText(intent) ?: return
-        incoming = text
+        incomingError = null
+        incoming = try {
+            incomingText(intent) ?: return
+        } catch (e: IncomingFailure) {
+            incomingError = e.code // the app tells the user why, instead of doing nothing
+            null
+        }
         incomingChannel?.invokeMethod("incoming", null) // the app is running: tell it now; else it asks at start
     }
 
-    /** The text a VIEW or SEND intent carries: the link itself, or the contents of the file (up to 2 MB). */
+    /** The text a VIEW or SEND intent carries: the link itself, or the contents of the file (up to 8 MB). */
     private fun incomingText(intent: Intent?): String? {
         intent ?: return null
         return when (intent.action) {
@@ -72,27 +85,66 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun readText(uri: Uri): String? = runCatching {
-        contentResolver.openInputStream(uri)?.use { input ->
-            val out = ByteArrayOutputStream()
-            val buf = ByteArray(8192)
-            while (true) {
-                val n = input.read(buf)
-                if (n < 0) break
-                out.write(buf, 0, n)
-                if (out.size() > MAX_INCOMING) return@runCatching null // not a config file
+    /** The text of a file, or an [IncomingFailure] saying why it cannot be used. */
+    private fun readText(uri: Uri): String {
+        val bytes = try {
+            val input = contentResolver.openInputStream(uri) ?: throw IncomingFailure("unreadable")
+            input.use { stream ->
+                val out = ByteArrayOutputStream()
+                val buf = ByteArray(8192)
+                while (true) {
+                    val n = stream.read(buf)
+                    if (n < 0) break
+                    out.write(buf, 0, n)
+                    if (out.size() > MAX_INCOMING) throw IncomingFailure("too_large") // not a config file
+                }
+                out.toByteArray()
             }
-            out.toString(Charsets.UTF_8.name())
+        } catch (e: IncomingFailure) {
+            throw e
+        } catch (e: SecurityException) {
+            throw IncomingFailure("denied")
+        } catch (e: java.io.FileNotFoundException) {
+            // Android reports a file it will not open for us the same way as one that is not there; the
+            // text of the exception tells them apart ("open failed: EACCES (Permission denied)").
+            val why = e.message.orEmpty()
+            throw IncomingFailure(if (why.contains("EACCES") || why.contains("EPERM") || why.contains("Permission denied")) "denied" else "missing")
+        } catch (e: java.io.IOException) {
+            throw IncomingFailure("unreadable")
         }
-    }.getOrNull()
+        return decodeText(bytes)
+    }
+
+    /** UTF-8 (with or without a byte order mark) or UTF-16 with one; binary data or another encoding is "not_text". */
+    private fun decodeText(bytes: ByteArray): String {
+        if (bytes.isEmpty()) throw IncomingFailure("empty")
+        val bom16 = bytes.size >= 2 &&
+            ((bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte()) || (bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte()))
+        val text = if (bom16) {
+            String(bytes, Charsets.UTF_16) // honours the mark and drops it
+        } else {
+            if (bytes.take(4096).contains(0)) throw IncomingFailure("not_text")
+            try {
+                Charsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(bytes)).toString()
+            } catch (e: CharacterCodingException) {
+                throw IncomingFailure("not_text")
+            }
+        }.removePrefix("﻿")
+        if (text.isBlank()) throw IncomingFailure("empty")
+        return text
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         incomingChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "omnitun/incoming").also { ch ->
             ch.setMethodCallHandler { call, result ->
                 if (call.method == "take") {
-                    result.success(incoming)
+                    result.success(mapOf("text" to incoming, "error" to incomingError))
                     incoming = null
+                    incomingError = null
                 } else {
                     result.notImplemented()
                 }
@@ -214,6 +266,6 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val REQUEST_VPN = 1001
         private const val REQUEST_NOTIFICATIONS = 1002
-        private const val MAX_INCOMING = 2 * 1024 * 1024
+        private const val MAX_INCOMING = 8 * 1024 * 1024 // as much as the core imports (importer.MaxTextSize)
     }
 }

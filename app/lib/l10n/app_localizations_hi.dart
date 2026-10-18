@@ -1480,6 +1480,52 @@ class AppLocalizationsHi extends AppLocalizations {
   String get importNoServer => 'इस टेक्स्ट में कोई मान्य सर्वर नहीं मिला';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return 'यह मान्य JSON नहीं है: पंक्ति $line, कॉलम $column पर अप्रत्याशित वर्ण $found।';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return 'यह मान्य JSON नहीं है: पाठ बहुत जल्दी समाप्त हो जाता है (पंक्ति $line, कॉलम $column)। हो सकता है कोई बंद करने वाला ब्रैकेट, ब्रेस या उद्धरण चिह्न छूट गया हो।';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      'यह JSON मान्य है, लेकिन इसमें कोई प्रॉक्सी सर्वर नहीं है। VLESS, VMess, Trojan, Shadowsocks या इसी तरह के आउटबाउंड वाला क्लाइंट कॉन्फ़िग इस्तेमाल करें।';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return 'यह JSON मान्य है, लेकिन इसमें कोई प्रॉक्सी सर्वर नहीं है (इसमें $found है)। VLESS, VMess, Trojan, Shadowsocks या इसी तरह के आउटबाउंड वाला क्लाइंट कॉन्फ़िग इस्तेमाल करें।';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return 'इसे आयात करने के लिए यह बहुत बड़ा है (सीमा $limit MB है)।';
+  }
+
+  @override
+  String get importFileEmpty => 'फ़ाइल खाली है।';
+
+  @override
+  String get importFileNotText =>
+      'यह फ़ाइल ऐसा टेक्स्ट नहीं है जिसे Wardkeep पढ़ सके (यह बाइनरी लगती है या अज्ञात एन्कोडिंग में है)। UTF-8 या UTF-16 टेक्स्ट फ़ाइल इस्तेमाल करें।';
+
+  @override
+  String get importFileNoPermission =>
+      'Wardkeep को यह फ़ाइल पढ़ने की अनुमति नहीं है।';
+
+  @override
+  String get importFileMissing =>
+      'फ़ाइल नहीं मिली। हो सकता है उसे हटा दिया गया हो या दूसरी जगह ले जाया गया हो।';
+
+  @override
+  String get importDetails => 'विवरण';
+
+  @override
+  String get importJsonNote =>
+      'JSON कॉन्फ़िग (Xray, sing-box, SIP008) या उनकी सूची भी चलती है, टेक्स्ट या फ़ाइल के रूप में।';
+
+  @override
   String get ipdbTitle => 'ऑफ़लाइन देश डेटाबेस';
 
   @override

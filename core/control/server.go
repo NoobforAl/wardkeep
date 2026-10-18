@@ -393,7 +393,7 @@ func (s *Server) dispatch(req Request) (any, error) {
 		}
 		res, err := importer.Import(p.Text)
 		if err != nil {
-			return nil, importError(err)
+			return nil, importFailure(err, res)
 		}
 		return res, nil
 	case "forms":

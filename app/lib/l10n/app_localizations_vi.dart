@@ -1463,6 +1463,51 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không tìm thấy máy chủ hợp lệ trong văn bản này';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return 'Đây không phải JSON hợp lệ: ký tự $found không mong đợi ở dòng $line, cột $column.';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return 'Đây không phải JSON hợp lệ: văn bản kết thúc quá sớm, ở dòng $line, cột $column. Có thể thiếu dấu ngoặc đóng hoặc dấu nháy đóng.';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      'JSON này hợp lệ nhưng không chứa máy chủ proxy nào. Hãy dùng cấu hình máy khách có outbound VLESS, VMess, Trojan, Shadowsocks hoặc tương tự.';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return 'JSON này hợp lệ nhưng không chứa máy chủ proxy nào (nó chứa $found). Hãy dùng cấu hình máy khách có outbound VLESS, VMess, Trojan, Shadowsocks hoặc tương tự.';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return 'Quá lớn để nhập (giới hạn là $limit MB).';
+  }
+
+  @override
+  String get importFileEmpty => 'Tệp trống.';
+
+  @override
+  String get importFileNotText =>
+      'Tệp không phải văn bản mà Wardkeep đọc được (có vẻ là nhị phân hoặc dùng bảng mã không rõ). Hãy dùng tệp văn bản UTF-8 hoặc UTF-16.';
+
+  @override
+  String get importFileNoPermission => 'Wardkeep không được phép đọc tệp này.';
+
+  @override
+  String get importFileMissing =>
+      'Không tìm thấy tệp. Có thể nó đã bị di chuyển hoặc xóa.';
+
+  @override
+  String get importDetails => 'Chi tiết';
+
+  @override
+  String get importJsonNote =>
+      'Cấu hình JSON (Xray, sing-box, SIP008) hoặc danh sách của chúng cũng dùng được, dưới dạng văn bản hoặc tệp.';
+
+  @override
   String get ipdbTitle => 'Cơ sở dữ liệu quốc gia ngoại tuyến';
 
   @override

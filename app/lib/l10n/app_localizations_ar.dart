@@ -1525,6 +1525,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get importNoServer => 'لم يُعثر على أي خادم صالح في هذا النص';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return 'هذا ليس JSON صالحًا: حرف غير متوقع $found في السطر $line، العمود $column.';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return 'هذا ليس JSON صالحًا: ينتهي النص مبكرًا جدًا عند السطر $line، العمود $column. ربما ينقص قوس إغلاق أو أقواس معقوفة أو علامة اقتباس.';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      'ملف JSON هذا صالح، لكنه لا يحتوي على أي خادم وكيل. استخدم إعداد عميل يتضمن مخرجًا من نوع VLESS أو VMess أو Trojan أو Shadowsocks أو ما شابه.';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return 'ملف JSON هذا صالح، لكنه لا يحتوي على أي خادم وكيل (يحتوي على $found). استخدم إعداد عميل يتضمن مخرجًا من نوع VLESS أو VMess أو Trojan أو Shadowsocks أو ما شابه.';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return 'هذا كبير جدًا للاستيراد (الحد الأقصى $limit ميغابايت).';
+  }
+
+  @override
+  String get importFileEmpty => 'الملف فارغ.';
+
+  @override
+  String get importFileNotText =>
+      'الملف ليس نصًا يستطيع Wardkeep قراءته (يبدو ثنائيًا أو بترميز غير معروف). استخدم ملفًا نصيًا بترميز UTF-8 أو UTF-16.';
+
+  @override
+  String get importFileNoPermission =>
+      'لا يملك Wardkeep إذنًا لقراءة هذا الملف.';
+
+  @override
+  String get importFileMissing => 'لم يتم العثور على الملف. ربما نُقل أو حُذف.';
+
+  @override
+  String get importDetails => 'التفاصيل';
+
+  @override
+  String get importJsonNote =>
+      'يمكن أيضًا استخدام إعداد JSON (Xray أو sing-box أو SIP008) أو قائمة منها، نصًا أو ملفًا.';
+
+  @override
   String get ipdbTitle => 'قاعدة بيانات الدول (دون اتصال)';
 
   @override

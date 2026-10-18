@@ -276,7 +276,9 @@ class DaemonEngine implements VpnEngine {
       final errors = [for (final e in (res['errors'] as List? ?? const [])) e as String];
       return ImportResult(profiles, errors);
     } on EngineException catch (e) {
-      return ImportResult(const [], [e.message], failure: e);
+      // The core sends the reasons for the entries that failed one per line; without any, its own message.
+      final details = (e.args['details'] ?? '').split('\n').where((l) => l.isNotEmpty).toList();
+      return ImportResult(const [], details.isEmpty ? [e.message] : details, failure: e);
     }
   }
 

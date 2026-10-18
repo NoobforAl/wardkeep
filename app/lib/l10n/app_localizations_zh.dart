@@ -1424,6 +1424,50 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importNoServer => '在这段文字中没有找到有效的服务器';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return '这不是有效的 JSON：第 $line 行第 $column 列出现意外字符 $found。';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return '这不是有效的 JSON：文本在第 $line 行第 $column 列处过早结束。可能缺少右括号、右花括号或引号。';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      '此 JSON 有效，但其中没有任何代理服务器。请使用包含 VLESS、VMess、Trojan、Shadowsocks 等出站的客户端配置。';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return '此 JSON 有效，但其中没有任何代理服务器（只有 $found）。请使用包含 VLESS、VMess、Trojan、Shadowsocks 等出站的客户端配置。';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return '太大，无法导入（上限为 $limit MB）。';
+  }
+
+  @override
+  String get importFileEmpty => '文件为空。';
+
+  @override
+  String get importFileNotText =>
+      '该文件不是 Wardkeep 能读取的文本（看起来是二进制文件，或编码未知）。请使用 UTF-8 或 UTF-16 文本文件。';
+
+  @override
+  String get importFileNoPermission => 'Wardkeep 无权读取此文件。';
+
+  @override
+  String get importFileMissing => '找不到该文件。它可能已被移动或删除。';
+
+  @override
+  String get importDetails => '详情';
+
+  @override
+  String get importJsonNote =>
+      '也可以使用 JSON 配置（Xray、sing-box、SIP008）或它们的列表，文本或文件均可。';
+
+  @override
   String get ipdbTitle => '离线国家数据库';
 
   @override

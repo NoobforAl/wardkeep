@@ -9,6 +9,8 @@ import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
 import '../../state/subscriptions.dart';
 import '../../state/usage.dart';
+import '../import_file.dart';
+import '../widgets/notice.dart';
 import '../widgets/profile_subtitle.dart';
 import '../widgets/protocol_badge.dart';
 import 'location_screen.dart';
@@ -339,6 +341,12 @@ class _ImportSheet extends ConsumerStatefulWidget {
 class _ImportSheetState extends ConsumerState<_ImportSheet> {
   final _controller = TextEditingController();
   String? _message;
+
+  /// Why entries failed, one line each (shown under the message), as the core words them.
+  List<String> _details = const [];
+
+  /// Whether the message is about an import that worked in part (amber) and not one that failed (red).
+  bool _partial = false;
   bool _busy = false;
 
   @override
@@ -356,11 +364,17 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
     try {
       final file = await FilePicker.pickFile(dialogTitle: context.l10n.openTextFile);
       if (file == null) return;
-      _controller.text = await file.xFile.readAsString();
-      await _import();
+      _controller.text = await readImportFile(file);
     } catch (e) {
-      if (mounted) setState(() => _message = context.l10n.couldNotReadFile('$e'));
+      if (!mounted) return;
+      setState(() {
+        _partial = false;
+        _message = describeFileProblem(context.l10n, e);
+        _details = const [];
+      });
+      return;
     }
+    await _import();
   }
 
   Future<void> _scanQr() async {
@@ -387,8 +401,24 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
       _openSubscription(text);
       return;
     }
-    setState(() => _busy = true);
-    final result = await ref.read(engineProvider).importText(_controller.text);
+    setState(() {
+      _busy = true;
+      _partial = false;
+      _message = null;
+      _details = const [];
+    });
+    final ImportResult result;
+    try {
+      result = await ref.read(engineProvider).importText(_controller.text);
+    } catch (e) {
+      // The core could not be asked at all (it is not running, the connection to it broke): say so.
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _message = context.l10n.importNothing(describeError(context.l10n, e));
+      });
+      return;
+    }
     final added = ref.read(profilesProvider.notifier).addAll(result.profiles);
     if (!mounted) return;
     if (result.profiles.isNotEmpty && result.errors.isEmpty) {
@@ -399,8 +429,16 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
       ));
       return;
     }
+    // What the core says went wrong with each entry: the errors of a partial import, or the reasons that came
+    // along with a failure (without any, the failure's own message is already the message above).
+    final failure = result.failure;
+    final reasons = failure == null
+        ? result.errors
+        : (failure.args['details'] ?? '').split('\n').where((l) => l.isNotEmpty).toList();
     setState(() {
       _busy = false;
+      _partial = result.profiles.isNotEmpty;
+      _details = reasons;
       _message = result.profiles.isEmpty && result.errors.isNotEmpty
           ? context.l10n.importNothing(
               result.failure != null ? describeError(context.l10n, result.failure!) : result.errors.first,
@@ -430,6 +468,8 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
             Text(context.l10n.importTitle, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(context.l10n.importDescription),
+            const SizedBox(height: 4),
+            Text(context.l10n.importJsonNote, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -485,7 +525,20 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
               maxLines: 8,
               decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'vless://…'),
             ),
-            if (_message != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_message!)),
+            // A failure is a red notice on the sheet itself (a snackbar would be hidden behind it); an import
+            // that worked in part is amber.
+            if (_message != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Notice(
+                  message: _message!,
+                  details: _details,
+                  detailsTitle: context.l10n.importDetails,
+                  tone: _partial ? NoticeTone.warning : NoticeTone.error,
+                  messageKey: const Key('importMessage'),
+                  detailsKey: const Key('importDetails'),
+                ),
+              ),
                   ],
                 ),
               ),

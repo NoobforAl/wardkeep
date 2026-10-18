@@ -149,6 +149,7 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
       final shared = await IncomingShare.start(
         (text) => importShared(_navigator, ref, text),
         startup: ref.read(startupSharesProvider),
+        onProblem: (code) => importSharedProblem(_navigator, code),
       );
       // The app's own default configuration (Tor) is there from the first start.
       await ref.read(defaultProfileIdProvider.notifier).ensureTorDefaults();

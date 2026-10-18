@@ -20,7 +20,14 @@ class IncomingShare {
 
   /// Starts listening (Android) and delivers what was waiting at start-up. Returns whether anything was
   /// delivered, so the first-run introduction can step aside for it.
-  static Future<bool> start(Future<void> Function(String text) deliver, {List<String> startup = const []}) async {
+  ///
+  /// A file that could not be read (Android) is not silently dropped: [onProblem] gets the reason's code
+  /// ("empty", "too_large", "not_text", "denied", "missing", "unreadable").
+  static Future<bool> start(
+    Future<void> Function(String text) deliver, {
+    List<String> startup = const [],
+    Future<void> Function(String code)? onProblem,
+  }) async {
     var any = false;
     for (final text in startup) {
       any = true;
@@ -38,14 +45,23 @@ class IncomingShare {
     }
     if (!Platform.isAndroid) return any;
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'incoming') await _take(deliver);
+      if (call.method == 'incoming') await _take(deliver, onProblem);
     });
-    return await _take(deliver) || any;
+    return await _take(deliver, onProblem) || any;
   }
 
-  static Future<bool> _take(Future<void> Function(String text) deliver) async {
+  static Future<bool> _take(
+    Future<void> Function(String text) deliver,
+    Future<void> Function(String code)? onProblem,
+  ) async {
     try {
-      final text = await _channel.invokeMethod<String>('take');
+      final res = await _channel.invokeMapMethod<String, String?>('take');
+      final problem = res?['error'];
+      if (problem != null) {
+        await onProblem?.call(problem);
+        return true;
+      }
+      final text = res?['text'];
       if (text == null || text.trim().isEmpty) return false;
       await deliver(text);
       return true;

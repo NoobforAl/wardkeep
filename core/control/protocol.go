@@ -55,12 +55,16 @@ const (
 
 	// Specific failures of import and subscriptions (the Message is English;
 	// see Error.Args for the numbers a translation needs).
-	CodeImportUnsupported = "IMPORT_UNSUPPORTED" // args: scheme, when the text was a link
-	CodeImportNothing     = "IMPORT_NOTHING"     // no valid server in the text
-	CodeImportXrayServer  = "IMPORT_XRAY_SERVER"
-	CodeSubHTTP           = "SUB_HTTP" // args: status
-	CodeSubTooLarge       = "SUB_TOO_LARGE"
-	CodeSubBadURL         = "SUB_BAD_URL"
+	CodeImportUnsupported  = "IMPORT_UNSUPPORTED" // args: scheme, when the text was a link
+	CodeImportNothing      = "IMPORT_NOTHING"     // no valid server in the text
+	CodeImportXrayServer   = "IMPORT_XRAY_SERVER"
+	CodeImportJSONSyntax   = "IMPORT_JSON_SYNTAX"    // not valid JSON; args: line, column, found (the character, quoted)
+	CodeImportJSONEnd      = "IMPORT_JSON_END"       // JSON that stops too early; args: line, column
+	CodeImportJSONNoServer = "IMPORT_JSON_NO_SERVER" // valid JSON without a proxy server; args: found (what it holds), maybe empty
+	CodeImportTooLarge     = "IMPORT_TOO_LARGE"      // args: limit (megabytes)
+	CodeSubHTTP            = "SUB_HTTP"              // args: status
+	CodeSubTooLarge        = "SUB_TOO_LARGE"
+	CodeSubBadURL          = "SUB_BAD_URL"
 )
 
 // Error is a typed failure.

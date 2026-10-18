@@ -1465,6 +1465,52 @@ class AppLocalizationsId extends AppLocalizations {
   String get importNoServer => 'Tidak ada server valid di teks ini';
 
   @override
+  String importJsonSyntax(String found, int line, int column) {
+    return 'Ini bukan JSON yang valid: karakter $found tidak terduga di baris $line, kolom $column.';
+  }
+
+  @override
+  String importJsonEnd(int line, int column) {
+    return 'Ini bukan JSON yang valid: teks berakhir terlalu cepat, di baris $line, kolom $column. Mungkin ada kurung, kurung kurawal, atau tanda kutip penutup yang kurang.';
+  }
+
+  @override
+  String get importJsonNoServer =>
+      'JSON ini valid, tetapi tidak berisi server proxy. Gunakan konfigurasi klien dengan outbound VLESS, VMess, Trojan, Shadowsocks, atau sejenisnya.';
+
+  @override
+  String importJsonNoServerFound(String found) {
+    return 'JSON ini valid, tetapi tidak berisi server proxy (isinya $found). Gunakan konfigurasi klien dengan outbound VLESS, VMess, Trojan, Shadowsocks, atau sejenisnya.';
+  }
+
+  @override
+  String importTooLarge(int limit) {
+    return 'Ini terlalu besar untuk diimpor (batasnya $limit MB).';
+  }
+
+  @override
+  String get importFileEmpty => 'Berkas kosong.';
+
+  @override
+  String get importFileNotText =>
+      'Berkas ini bukan teks yang dapat dibaca Wardkeep (tampaknya biner atau berenkode tidak dikenal). Gunakan berkas teks UTF-8 atau UTF-16.';
+
+  @override
+  String get importFileNoPermission =>
+      'Wardkeep tidak diizinkan membaca berkas ini.';
+
+  @override
+  String get importFileMissing =>
+      'Berkas tidak ditemukan. Mungkin sudah dipindahkan atau dihapus.';
+
+  @override
+  String get importDetails => 'Detail';
+
+  @override
+  String get importJsonNote =>
+      'Konfigurasi JSON (Xray, sing-box, SIP008) atau daftarnya juga bisa dipakai, sebagai teks atau berkas.';
+
+  @override
   String get ipdbTitle => 'Database negara offline';
 
   @override

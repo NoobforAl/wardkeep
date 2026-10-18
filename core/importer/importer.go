@@ -35,23 +35,21 @@ type Result struct {
 }
 
 // Import detects the format of text and parses every profile it contains.
-// Supported: share links (one per line), base64 subscription bodies and
-// WireGuard/AmneziaWG .conf files.
+// Supported: share links (one per line), base64 subscription bodies, JSON
+// (Xray, sing-box and SIP008 configs, a lone outbound, or a list of them; comments
+// and trailing commas are tolerated), Clash YAML, OpenVPN and WireGuard/AmneziaWG
+// .conf files. Text that is not valid JSON comes back as a *JSONError saying where.
 func Import(text string) (*Result, error) {
+	if len(text) > MaxTextSize {
+		return nil, ErrTooLarge
+	}
 	text = strings.TrimSpace(strings.TrimPrefix(text, "\ufeff"))
+	text = strings.TrimSpace(strings.TrimPrefix(stripFences(text), "\ufeff"))
 	if text == "" {
 		return nil, ErrUnsupported
 	}
 	if looksLikeJSON(text) {
-		switch kindOfJSON(text) {
-		case "sip008":
-			return ImportSIP008(text)
-		case "xray":
-			return ImportXray(text)
-		case "xray-server":
-			return nil, ErrXrayServer
-		}
-		return ImportSingBoxJSON(text)
+		return importJSON(text)
 	}
 	if looksLikeClash(text) {
 		return ImportClash(text)
