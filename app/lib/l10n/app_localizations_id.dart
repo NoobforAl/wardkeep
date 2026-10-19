@@ -133,6 +133,131 @@ class AppLocalizationsId extends AppLocalizations {
   String get torNetwork => 'Jaringan Tor';
 
   @override
+  String get torHopBridge => 'Jembatan';
+
+  @override
+  String get torHopEntry => 'Masuk';
+
+  @override
+  String get torHopRelay => 'Relai';
+
+  @override
+  String get torHopExit => 'Keluar';
+
+  @override
+  String get torHopHidden => 'Tersembunyi';
+
+  @override
+  String get torHopUnknown => 'Tidak diketahui';
+
+  @override
+  String get hopYou => 'Anda';
+
+  @override
+  String get hopYouNote =>
+      'Di sinilah Anda sebenarnya berada. Lalu lintas Anda dimulai dari sini.';
+
+  @override
+  String get hopServer => 'Server';
+
+  @override
+  String get hopServerNote =>
+      'Lalu lintas Anda dikirim terenkripsi ke server ini dan keluar dari sini, sehingga situs web melihat alamatnya, bukan alamat Anda.';
+
+  @override
+  String get hopBridgeNote =>
+      'Lompatan pertama Anda. Jembatan menyembunyikan dari jaringan Anda bahwa Anda memakai Tor. Ia tahu siapa Anda, tetapi tidak tahu ke mana Anda pergi.';
+
+  @override
+  String get hopEntryNote =>
+      'Relai pertama. Ia tahu alamat Anda, tetapi tidak tahu apa yang Anda kunjungi.';
+
+  @override
+  String get hopRelayNote =>
+      'Relai tengah. Ia tidak tahu siapa Anda maupun apa yang Anda kunjungi; ia hanya meneruskan lalu lintas.';
+
+  @override
+  String get hopExitNote =>
+      'Relai terakhir. Ia melihat ke mana Anda pergi, tetapi tidak tahu siapa Anda, dan situs web melihat alamatnya.';
+
+  @override
+  String get hopHiddenNote =>
+      'Lokasi jembatan disembunyikan oleh transportnya, jadi tidak bisa ditampilkan di peta.';
+
+  @override
+  String get hopTransport => 'Transport';
+
+  @override
+  String get hopProtocol => 'Protokol';
+
+  @override
+  String get hopAddress => 'Alamat';
+
+  @override
+  String get hopLatency => 'Latensi';
+
+  @override
+  String get hopExitAddress => 'Alamat keluar';
+
+  @override
+  String get menuNewGroup => 'Grup baru';
+
+  @override
+  String get groupNameHint => 'Nama grup';
+
+  @override
+  String get groupCreate => 'Buat';
+
+  @override
+  String get menuMoveToGroup => 'Pindahkan ke grup';
+
+  @override
+  String get groupMoveTitle => 'Pindahkan ke';
+
+  @override
+  String get menuRenameGroup => 'Ganti nama';
+
+  @override
+  String get menuDeleteGroup => 'Hapus grup';
+
+  @override
+  String get groupDeleteTitle => 'Hapus grup ini?';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'Server di dalamnya tidak dihapus. Server dikembalikan ke $name.';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'Belum ada server. Buka menu server dan pilih Pindahkan ke grup.';
+
+  @override
+  String get menuShareGroupFile => 'Simpan sebagai file teks';
+
+  @override
+  String get menuCopyGroupLinks => 'Salin tautan';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'Tersimpan: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'Tersalin: $servers';
+  }
+
+  @override
+  String get groupNothingToShare =>
+      'Tidak ada server ini yang punya tautan berbagi.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'Dilewati, tanpa tautan berbagi: $servers';
+  }
+
+  @override
   String get emptyTitle => 'Belum ada profil';
 
   @override

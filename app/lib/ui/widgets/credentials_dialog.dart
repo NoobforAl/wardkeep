@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../engine/engine.dart';
@@ -11,7 +12,7 @@ Future<bool> askCredentials(BuildContext context, WidgetRef ref, ProfileInfo pro
   final user = TextEditingController(text: profile.raw['username'] as String? ?? '');
   final pass = TextEditingController(text: profile.raw['password'] as String? ?? '');
   var obscure = true;
-  final ok = await showDialog<bool>(
+  final ok = await showDialog<bool>(animationStyle: softAnimation, 
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(

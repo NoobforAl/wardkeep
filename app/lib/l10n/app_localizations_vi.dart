@@ -133,6 +133,131 @@ class AppLocalizationsVi extends AppLocalizations {
   String get torNetwork => 'Mạng Tor';
 
   @override
+  String get torHopBridge => 'Cầu nối';
+
+  @override
+  String get torHopEntry => 'Vào';
+
+  @override
+  String get torHopRelay => 'Chuyển tiếp';
+
+  @override
+  String get torHopExit => 'Thoát';
+
+  @override
+  String get torHopHidden => 'Ẩn';
+
+  @override
+  String get torHopUnknown => 'Không rõ';
+
+  @override
+  String get hopYou => 'Bạn';
+
+  @override
+  String get hopYouNote =>
+      'Đây là nơi bạn thực sự đang ở. Lưu lượng của bạn bắt đầu từ đây.';
+
+  @override
+  String get hopServer => 'Máy chủ';
+
+  @override
+  String get hopServerNote =>
+      'Lưu lượng của bạn đi được mã hóa tới máy chủ này và thoát ra từ đây, nên các trang web thấy địa chỉ của nó thay vì của bạn.';
+
+  @override
+  String get hopBridgeNote =>
+      'Chặng đầu tiên của bạn. Cầu nối giấu mạng của bạn việc bạn dùng Tor. Nó biết bạn là ai, nhưng không biết bạn đi đâu.';
+
+  @override
+  String get hopEntryNote =>
+      'Rơ-le đầu tiên. Nó biết địa chỉ của bạn, nhưng không biết bạn truy cập gì.';
+
+  @override
+  String get hopRelayNote =>
+      'Rơ-le giữa. Nó không biết bạn là ai cũng như bạn truy cập gì; nó chỉ chuyển tiếp lưu lượng.';
+
+  @override
+  String get hopExitNote =>
+      'Rơ-le cuối. Nó thấy bạn đi đâu, nhưng không biết bạn là ai, và các trang web thấy địa chỉ của nó.';
+
+  @override
+  String get hopHiddenNote =>
+      'Vị trí của cầu nối bị phương thức truyền giấu đi, nên không thể hiển thị trên bản đồ.';
+
+  @override
+  String get hopTransport => 'Phương thức truyền';
+
+  @override
+  String get hopProtocol => 'Giao thức';
+
+  @override
+  String get hopAddress => 'Địa chỉ';
+
+  @override
+  String get hopLatency => 'Độ trễ';
+
+  @override
+  String get hopExitAddress => 'Địa chỉ thoát';
+
+  @override
+  String get menuNewGroup => 'Nhóm mới';
+
+  @override
+  String get groupNameHint => 'Tên nhóm';
+
+  @override
+  String get groupCreate => 'Tạo';
+
+  @override
+  String get menuMoveToGroup => 'Chuyển vào nhóm';
+
+  @override
+  String get groupMoveTitle => 'Chuyển đến';
+
+  @override
+  String get menuRenameGroup => 'Đổi tên';
+
+  @override
+  String get menuDeleteGroup => 'Xóa nhóm';
+
+  @override
+  String get groupDeleteTitle => 'Xóa nhóm này?';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'Máy chủ trong nhóm không bị xóa. Chúng quay về $name.';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'Chưa có máy chủ. Mở menu của một máy chủ và chọn Chuyển vào nhóm.';
+
+  @override
+  String get menuShareGroupFile => 'Lưu thành tệp văn bản';
+
+  @override
+  String get menuCopyGroupLinks => 'Sao chép liên kết';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'Đã lưu: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'Đã sao chép: $servers';
+  }
+
+  @override
+  String get groupNothingToShare =>
+      'Không máy chủ nào trong số này có liên kết chia sẻ.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'Đã bỏ qua, không có liên kết chia sẻ: $servers';
+  }
+
+  @override
   String get emptyTitle => 'Chưa có hồ sơ';
 
   @override

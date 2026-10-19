@@ -263,6 +263,23 @@ class FailoverInfo {
   final DateTime at;
 }
 
+/// One relay of the Tor circuit that carries the traffic.
+class TorHop {
+  const TorHop({required this.role, this.country});
+
+  /// `bridge` or `guard` (the first hop), `middle` or `exit`.
+  final String role;
+
+  /// Upper-case ISO code of where the relay is; null when it is not known (a bridge behind Snowflake).
+  final String? country;
+
+  @override
+  bool operator ==(Object other) => other is TorHop && other.role == role && other.country == country;
+
+  @override
+  int get hashCode => Object.hash(role, country);
+}
+
 class EngineState {
   const EngineState({
     this.status = ConnStatus.disconnected,
@@ -276,6 +293,7 @@ class EngineState {
     this.downTotal = 0,
     this.failover,
     this.progress,
+    this.torPath = const [],
   });
 
   final ConnStatus status;
@@ -298,6 +316,10 @@ class EngineState {
 
   /// Current connection stage; on error, the stage that failed.
   final ConnectProgress? progress;
+
+  /// The Tor circuit the traffic rides, relay by relay (bridge or guard, middle, exit), once known; empty
+  /// for anything but a connected Tor profile.
+  final List<TorHop> torPath;
 
   EngineState copyWith({
     ConnStatus? status,
@@ -322,6 +344,7 @@ class EngineState {
         downTotal: downTotal ?? this.downTotal,
         failover: failover,
         progress: progress,
+        torPath: torPath,
       );
 }
 

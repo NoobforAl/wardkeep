@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -184,13 +185,15 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
         child: ListView(
           padding: withBottomInset(context, const EdgeInsets.fromLTRB(16, 4, 16, 32)),
           children: [
-            if (_saveError != null)
-              Container(
+            SoftAppear(
+              show: _saveError != null,
+              child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: scheme.errorContainer, borderRadius: BorderRadius.circular(12)),
-                child: Text(_saveError!, style: TextStyle(color: scheme.onErrorContainer)),
+                child: Text(_saveError ?? '', style: TextStyle(color: scheme.onErrorContainer)),
               ),
+            ),
             if (profile != null && profile.group != ProfileInfo.defaultGroup)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),

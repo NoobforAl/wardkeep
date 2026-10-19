@@ -133,6 +133,130 @@ class AppLocalizationsUr extends AppLocalizations {
   String get torNetwork => 'Tor نیٹ ورک';
 
   @override
+  String get torHopBridge => 'پل';
+
+  @override
+  String get torHopEntry => 'داخلہ';
+
+  @override
+  String get torHopRelay => 'ریلے';
+
+  @override
+  String get torHopExit => 'اخراج';
+
+  @override
+  String get torHopHidden => 'پوشیدہ';
+
+  @override
+  String get torHopUnknown => 'نامعلوم';
+
+  @override
+  String get hopYou => 'آپ';
+
+  @override
+  String get hopYouNote =>
+      'آپ حقیقت میں یہاں ہیں۔ آپ کی ٹریفک یہیں سے شروع ہوتی ہے۔';
+
+  @override
+  String get hopServer => 'سرور';
+
+  @override
+  String get hopServerNote =>
+      'آپ کی ٹریفک انکرپٹ ہو کر اس سرور تک جاتی ہے اور یہیں سے نکلتی ہے، اس لیے ویب سائٹس آپ کا نہیں بلکہ اس کا پتہ دیکھتی ہیں۔';
+
+  @override
+  String get hopBridgeNote =>
+      'آپ کا پہلا پڑاؤ۔ برج آپ کے نیٹ ورک سے چھپاتا ہے کہ آپ Tor استعمال کر رہے ہیں۔ وہ جانتا ہے کہ آپ کون ہیں، لیکن یہ نہیں کہ آپ کہاں جا رہے ہیں۔';
+
+  @override
+  String get hopEntryNote =>
+      'پہلا ریلے۔ وہ آپ کا پتہ جانتا ہے، لیکن یہ نہیں کہ آپ کیا دیکھتے ہیں۔';
+
+  @override
+  String get hopRelayNote =>
+      'درمیانی ریلے۔ وہ نہ یہ جانتا ہے کہ آپ کون ہیں اور نہ یہ کہ آپ کیا دیکھتے ہیں؛ وہ صرف ٹریفک آگے بڑھاتا ہے۔';
+
+  @override
+  String get hopExitNote =>
+      'آخری ریلے۔ وہ دیکھتا ہے کہ آپ کہاں جا رہے ہیں، لیکن یہ نہیں کہ آپ کون ہیں، اور ویب سائٹس اس کا پتہ دیکھتی ہیں۔';
+
+  @override
+  String get hopHiddenNote =>
+      'برج کی جگہ اس کے ٹرانسپورٹ نے چھپا رکھی ہے، اس لیے اسے نقشے پر نہیں دکھایا جا سکتا۔';
+
+  @override
+  String get hopTransport => 'ٹرانسپورٹ';
+
+  @override
+  String get hopProtocol => 'پروٹوکول';
+
+  @override
+  String get hopAddress => 'پتہ';
+
+  @override
+  String get hopLatency => 'تاخیر';
+
+  @override
+  String get hopExitAddress => 'اخراج کا پتہ';
+
+  @override
+  String get menuNewGroup => 'نیا گروپ';
+
+  @override
+  String get groupNameHint => 'گروپ کا نام';
+
+  @override
+  String get groupCreate => 'بنائیں';
+
+  @override
+  String get menuMoveToGroup => 'گروپ میں منتقل کریں';
+
+  @override
+  String get groupMoveTitle => 'یہاں منتقل کریں';
+
+  @override
+  String get menuRenameGroup => 'نام بدلیں';
+
+  @override
+  String get menuDeleteGroup => 'گروپ حذف کریں';
+
+  @override
+  String get groupDeleteTitle => 'یہ گروپ حذف کریں؟';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'اس کے سرور حذف نہیں ہوں گے۔ وہ $name میں واپس چلے جائیں گے۔';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'ابھی کوئی سرور نہیں۔ کسی سرور کا مینو کھولیں اور «گروپ میں منتقل کریں» چنیں۔';
+
+  @override
+  String get menuShareGroupFile => 'ٹیکسٹ فائل کے طور پر محفوظ کریں';
+
+  @override
+  String get menuCopyGroupLinks => 'لنک کاپی کریں';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'محفوظ ہو گیا: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'کاپی ہو گیا: $servers';
+  }
+
+  @override
+  String get groupNothingToShare => 'ان میں سے کسی سرور کا شیئر لنک نہیں ہے۔';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'شیئر لنک نہ ہونے کی وجہ سے چھوڑے گئے: $servers';
+  }
+
+  @override
   String get emptyTitle => 'ابھی کوئی پروفائل نہیں';
 
   @override

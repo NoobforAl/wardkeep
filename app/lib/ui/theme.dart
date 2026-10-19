@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../engine/engine.dart';
 import '../l10n/app_localizations.dart';
+import 'motion.dart';
 
 /// A dark-fantasy palette, all in cold, muted blues that are easy on the eyes: a night
 /// sky of slate, steel blue for actions, frost for "protected", worn gold for "working".
@@ -161,6 +162,15 @@ ThemeData buildTheme(Brightness brightness) {
       backgroundColor: scheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+    ),
+    // Pages fade and drift in and out (about 450 ms) instead of snapping or zooming over each other.
+    pageTransitionsTheme: PageTransitionsTheme(
+      builders: {
+        for (final p in TargetPlatform.values) p: const FadeForwardsPageTransitionsBuilder(),
+      },
+    ),
+    expansionTileTheme: const ExpansionTileThemeData(
+      expansionAnimationStyle: softAnimation,
     ),
     popupMenuTheme: PopupMenuThemeData(
       color: scheme.surfaceContainerHighest,

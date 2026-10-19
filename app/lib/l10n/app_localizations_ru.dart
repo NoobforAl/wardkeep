@@ -133,6 +133,131 @@ class AppLocalizationsRu extends AppLocalizations {
   String get torNetwork => 'Сеть Tor';
 
   @override
+  String get torHopBridge => 'Мост';
+
+  @override
+  String get torHopEntry => 'Вход';
+
+  @override
+  String get torHopRelay => 'Узел';
+
+  @override
+  String get torHopExit => 'Выход';
+
+  @override
+  String get torHopHidden => 'Скрыто';
+
+  @override
+  String get torHopUnknown => 'Неизвестно';
+
+  @override
+  String get hopYou => 'Вы';
+
+  @override
+  String get hopYouNote =>
+      'Здесь вы находитесь на самом деле. Отсюда начинается ваш трафик.';
+
+  @override
+  String get hopServer => 'Сервер';
+
+  @override
+  String get hopServerNote =>
+      'Ваш трафик идёт в зашифрованном виде до этого сервера и выходит здесь, поэтому сайты видят его адрес, а не ваш.';
+
+  @override
+  String get hopBridgeNote =>
+      'Ваш первый узел. Мост скрывает от вашей сети, что вы пользуетесь Tor. Он знает, кто вы, но не знает, куда вы идёте.';
+
+  @override
+  String get hopEntryNote =>
+      'Первый узел. Он знает ваш адрес, но не знает, что вы посещаете.';
+
+  @override
+  String get hopRelayNote =>
+      'Средний узел. Он не знает ни кто вы, ни что вы посещаете; он лишь передаёт трафик дальше.';
+
+  @override
+  String get hopExitNote =>
+      'Последний узел. Он видит, куда вы идёте, но не знает, кто вы, а сайты видят его адрес.';
+
+  @override
+  String get hopHiddenNote =>
+      'Местоположение моста скрыто его транспортом, поэтому его нельзя показать на карте.';
+
+  @override
+  String get hopTransport => 'Транспорт';
+
+  @override
+  String get hopProtocol => 'Протокол';
+
+  @override
+  String get hopAddress => 'Адрес';
+
+  @override
+  String get hopLatency => 'Задержка';
+
+  @override
+  String get hopExitAddress => 'Адрес выхода';
+
+  @override
+  String get menuNewGroup => 'Новая группа';
+
+  @override
+  String get groupNameHint => 'Название группы';
+
+  @override
+  String get groupCreate => 'Создать';
+
+  @override
+  String get menuMoveToGroup => 'Переместить в группу';
+
+  @override
+  String get groupMoveTitle => 'Переместить в';
+
+  @override
+  String get menuRenameGroup => 'Переименовать';
+
+  @override
+  String get menuDeleteGroup => 'Удалить группу';
+
+  @override
+  String get groupDeleteTitle => 'Удалить эту группу?';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'Её серверы не удаляются. Они вернутся в «$name».';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'Серверов пока нет. Откройте меню сервера и выберите «Переместить в группу».';
+
+  @override
+  String get menuShareGroupFile => 'Сохранить как текстовый файл';
+
+  @override
+  String get menuCopyGroupLinks => 'Копировать ссылки';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'Сохранено: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'Скопировано: $servers';
+  }
+
+  @override
+  String get groupNothingToShare =>
+      'Ни у одного из этих серверов нет ссылки для обмена.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'Пропущены, нет ссылки для обмена: $servers';
+  }
+
+  @override
   String get emptyTitle => 'Профилей пока нет';
 
   @override

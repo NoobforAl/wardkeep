@@ -133,6 +133,131 @@ class AppLocalizationsFr extends AppLocalizations {
   String get torNetwork => 'Réseau Tor';
 
   @override
+  String get torHopBridge => 'Pont';
+
+  @override
+  String get torHopEntry => 'Entrée';
+
+  @override
+  String get torHopRelay => 'Relais';
+
+  @override
+  String get torHopExit => 'Sortie';
+
+  @override
+  String get torHopHidden => 'Masqué';
+
+  @override
+  String get torHopUnknown => 'Inconnu';
+
+  @override
+  String get hopYou => 'Vous';
+
+  @override
+  String get hopYouNote =>
+      'C\'est ici que vous êtes vraiment. Votre trafic part d\'ici.';
+
+  @override
+  String get hopServer => 'Serveur';
+
+  @override
+  String get hopServerNote =>
+      'Votre trafic voyage chiffré jusqu\'à ce serveur et en ressort ici : les sites voient donc son adresse, pas la vôtre.';
+
+  @override
+  String get hopBridgeNote =>
+      'Votre premier saut. Un pont cache à votre réseau que vous utilisez Tor. Il sait qui vous êtes, mais pas où vous allez.';
+
+  @override
+  String get hopEntryNote =>
+      'Le premier relais. Il connaît votre adresse, mais pas ce que vous visitez.';
+
+  @override
+  String get hopRelayNote =>
+      'Le relais intermédiaire. Il ignore qui vous êtes et ce que vous visitez ; il ne fait que transmettre le trafic.';
+
+  @override
+  String get hopExitNote =>
+      'Le dernier relais. Il voit où vous allez, mais pas qui vous êtes, et les sites voient son adresse.';
+
+  @override
+  String get hopHiddenNote =>
+      'L\'emplacement du pont est caché par son transport : il ne peut pas être placé sur la carte.';
+
+  @override
+  String get hopTransport => 'Transport';
+
+  @override
+  String get hopProtocol => 'Protocole';
+
+  @override
+  String get hopAddress => 'Adresse';
+
+  @override
+  String get hopLatency => 'Latence';
+
+  @override
+  String get hopExitAddress => 'Adresse de sortie';
+
+  @override
+  String get menuNewGroup => 'Nouveau groupe';
+
+  @override
+  String get groupNameHint => 'Nom du groupe';
+
+  @override
+  String get groupCreate => 'Créer';
+
+  @override
+  String get menuMoveToGroup => 'Déplacer vers un groupe';
+
+  @override
+  String get groupMoveTitle => 'Déplacer vers';
+
+  @override
+  String get menuRenameGroup => 'Renommer';
+
+  @override
+  String get menuDeleteGroup => 'Supprimer le groupe';
+
+  @override
+  String get groupDeleteTitle => 'Supprimer ce groupe ?';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'Ses serveurs ne sont pas supprimés. Ils retournent dans $name.';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'Aucun serveur pour l\'instant. Ouvrez le menu d\'un serveur et choisissez Déplacer vers un groupe.';
+
+  @override
+  String get menuShareGroupFile => 'Enregistrer en fichier texte';
+
+  @override
+  String get menuCopyGroupLinks => 'Copier les liens';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'Enregistré : $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'Copié : $servers';
+  }
+
+  @override
+  String get groupNothingToShare =>
+      'Aucun de ces serveurs n\'a de lien de partage.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'Ignorés, sans lien de partage : $servers';
+  }
+
+  @override
   String get emptyTitle => 'Aucun profil';
 
   @override

@@ -133,6 +133,128 @@ class AppLocalizationsAr extends AppLocalizations {
   String get torNetwork => 'شبكة Tor';
 
   @override
+  String get torHopBridge => 'جسر';
+
+  @override
+  String get torHopEntry => 'دخول';
+
+  @override
+  String get torHopRelay => 'مرحّل';
+
+  @override
+  String get torHopExit => 'خروج';
+
+  @override
+  String get torHopHidden => 'مخفي';
+
+  @override
+  String get torHopUnknown => 'غير معروف';
+
+  @override
+  String get hopYou => 'أنت';
+
+  @override
+  String get hopYouNote => 'هذا هو مكانك الحقيقي. تبدأ حركة بياناتك من هنا.';
+
+  @override
+  String get hopServer => 'الخادم';
+
+  @override
+  String get hopServerNote =>
+      'تنتقل بياناتك مشفّرة إلى هذا الخادم وتخرج منه، لذلك ترى المواقع عنوانه بدلاً من عنوانك.';
+
+  @override
+  String get hopBridgeNote =>
+      'نقطتك الأولى. يخفي الجسر عن شبكتك أنك تستخدم Tor. يعرف من أنت لكنه لا يعرف إلى أين تذهب.';
+
+  @override
+  String get hopEntryNote => 'أول مرحّل. يعرف عنوانك لكنه لا يعرف ما تزوره.';
+
+  @override
+  String get hopRelayNote =>
+      'المرحّل الأوسط. لا يعرف من أنت ولا ما تزوره؛ فهو يمرّر الحركة فقط.';
+
+  @override
+  String get hopExitNote =>
+      'آخر مرحّل. يرى إلى أين تذهب لكنه لا يعرف من أنت، وترى المواقع عنوانه.';
+
+  @override
+  String get hopHiddenNote =>
+      'موقع الجسر مخفي بواسطة وسيلة النقل، لذا لا يمكن عرضه على الخريطة.';
+
+  @override
+  String get hopTransport => 'وسيلة النقل';
+
+  @override
+  String get hopProtocol => 'البروتوكول';
+
+  @override
+  String get hopAddress => 'العنوان';
+
+  @override
+  String get hopLatency => 'زمن الاستجابة';
+
+  @override
+  String get hopExitAddress => 'عنوان الخروج';
+
+  @override
+  String get menuNewGroup => 'مجموعة جديدة';
+
+  @override
+  String get groupNameHint => 'اسم المجموعة';
+
+  @override
+  String get groupCreate => 'إنشاء';
+
+  @override
+  String get menuMoveToGroup => 'نقل إلى مجموعة';
+
+  @override
+  String get groupMoveTitle => 'نقل إلى';
+
+  @override
+  String get menuRenameGroup => 'إعادة تسمية';
+
+  @override
+  String get menuDeleteGroup => 'حذف المجموعة';
+
+  @override
+  String get groupDeleteTitle => 'حذف هذه المجموعة؟';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'لن تُحذف خوادمها. ستعود إلى $name.';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'لا توجد خوادم بعد. افتح قائمة أي خادم واختر «نقل إلى مجموعة».';
+
+  @override
+  String get menuShareGroupFile => 'حفظ كملف نصي';
+
+  @override
+  String get menuCopyGroupLinks => 'نسخ الروابط';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'تم الحفظ: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'تم النسخ: $servers';
+  }
+
+  @override
+  String get groupNothingToShare => 'لا يوجد رابط مشاركة لأي من هذه الخوادم.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'تم استبعادها لعدم وجود رابط مشاركة: $servers';
+  }
+
+  @override
   String get emptyTitle => 'لا توجد ملفات تعريف بعد';
 
   @override

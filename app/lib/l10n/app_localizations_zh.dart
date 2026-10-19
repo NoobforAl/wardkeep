@@ -133,6 +133,122 @@ class AppLocalizationsZh extends AppLocalizations {
   String get torNetwork => 'Tor 网络';
 
   @override
+  String get torHopBridge => '网桥';
+
+  @override
+  String get torHopEntry => '入口';
+
+  @override
+  String get torHopRelay => '中继';
+
+  @override
+  String get torHopExit => '出口';
+
+  @override
+  String get torHopHidden => '已隐藏';
+
+  @override
+  String get torHopUnknown => '未知';
+
+  @override
+  String get hopYou => '你';
+
+  @override
+  String get hopYouNote => '这是你真实所在的位置。你的流量从这里开始。';
+
+  @override
+  String get hopServer => '服务器';
+
+  @override
+  String get hopServerNote => '你的流量加密后发往此服务器并从这里出去，因此网站看到的是它的地址而不是你的。';
+
+  @override
+  String get hopBridgeNote => '你的第一跳。网桥向你的网络隐藏你在使用 Tor。它知道你是谁，但不知道你要去哪里。';
+
+  @override
+  String get hopEntryNote => '第一个中继。它知道你的地址，但不知道你访问什么。';
+
+  @override
+  String get hopRelayNote => '中间中继。它既不知道你是谁，也不知道你访问什么；只负责转发流量。';
+
+  @override
+  String get hopExitNote => '最后一个中继。它能看到你要去哪里，但不知道你是谁，网站看到的是它的地址。';
+
+  @override
+  String get hopHiddenNote => '网桥的位置被其传输方式隐藏，因此无法显示在地图上。';
+
+  @override
+  String get hopTransport => '传输方式';
+
+  @override
+  String get hopProtocol => '协议';
+
+  @override
+  String get hopAddress => '地址';
+
+  @override
+  String get hopLatency => '延迟';
+
+  @override
+  String get hopExitAddress => '出口地址';
+
+  @override
+  String get menuNewGroup => '新建分组';
+
+  @override
+  String get groupNameHint => '分组名称';
+
+  @override
+  String get groupCreate => '创建';
+
+  @override
+  String get menuMoveToGroup => '移动到分组';
+
+  @override
+  String get groupMoveTitle => '移动到';
+
+  @override
+  String get menuRenameGroup => '重命名';
+
+  @override
+  String get menuDeleteGroup => '删除分组';
+
+  @override
+  String get groupDeleteTitle => '删除此分组？';
+
+  @override
+  String groupDeleteBody(String name) {
+    return '其中的服务器不会被删除，会回到“$name”。';
+  }
+
+  @override
+  String get groupEmptyHint => '还没有服务器。打开某个服务器的菜单，选择“移动到分组”。';
+
+  @override
+  String get menuShareGroupFile => '保存为文本文件';
+
+  @override
+  String get menuCopyGroupLinks => '复制链接';
+
+  @override
+  String groupSavedToast(String servers) {
+    return '已保存：$servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return '已复制：$servers';
+  }
+
+  @override
+  String get groupNothingToShare => '这些服务器都没有分享链接。';
+
+  @override
+  String groupSkipped(String servers) {
+    return '已跳过（没有分享链接）：$servers';
+  }
+
+  @override
   String get emptyTitle => '还没有配置';
 
   @override

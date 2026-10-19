@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
@@ -120,7 +121,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: FilledButton(
                       onPressed: () {
                         if (!last) {
-                          _controller.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+                          _controller.nextPage(duration: soft(context, 450), curve: softCurve);
                           return;
                         }
                         // The last step ends in the thing to do: add a first server.

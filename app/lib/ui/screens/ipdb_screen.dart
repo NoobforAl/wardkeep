@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
@@ -41,7 +42,7 @@ class IpDbScreen extends ConsumerWidget {
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l = context.l10n;
-    final ok = await showDialog<bool>(
+    final ok = await showDialog<bool>(animationStyle: softAnimation, 
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l.ipdbDeleteTitle),

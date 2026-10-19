@@ -133,6 +133,130 @@ class AppLocalizationsEn extends AppLocalizations {
   String get torNetwork => 'Tor network';
 
   @override
+  String get torHopBridge => 'Bridge';
+
+  @override
+  String get torHopEntry => 'Entry';
+
+  @override
+  String get torHopRelay => 'Relay';
+
+  @override
+  String get torHopExit => 'Exit';
+
+  @override
+  String get torHopHidden => 'Hidden';
+
+  @override
+  String get torHopUnknown => 'Unknown';
+
+  @override
+  String get hopYou => 'You';
+
+  @override
+  String get hopYouNote =>
+      'This is where you really are. Your traffic starts here.';
+
+  @override
+  String get hopServer => 'Server';
+
+  @override
+  String get hopServerNote =>
+      'Your traffic travels encrypted to this server and comes out here, so websites see its address instead of yours.';
+
+  @override
+  String get hopBridgeNote =>
+      'Your first hop. A bridge hides from your network that you use Tor. It knows who you are, but not where you go.';
+
+  @override
+  String get hopEntryNote =>
+      'The first relay. It knows your address, but not what you visit.';
+
+  @override
+  String get hopRelayNote =>
+      'The middle relay. It knows neither who you are nor what you visit; it only passes traffic along.';
+
+  @override
+  String get hopExitNote =>
+      'The last relay. It sees where you go, but not who you are, and websites see its address.';
+
+  @override
+  String get hopHiddenNote =>
+      'The bridge\'s location is hidden by its transport, so it cannot be shown on the map.';
+
+  @override
+  String get hopTransport => 'Transport';
+
+  @override
+  String get hopProtocol => 'Protocol';
+
+  @override
+  String get hopAddress => 'Address';
+
+  @override
+  String get hopLatency => 'Latency';
+
+  @override
+  String get hopExitAddress => 'Exit address';
+
+  @override
+  String get menuNewGroup => 'New group';
+
+  @override
+  String get groupNameHint => 'Group name';
+
+  @override
+  String get groupCreate => 'Create';
+
+  @override
+  String get menuMoveToGroup => 'Move to group';
+
+  @override
+  String get groupMoveTitle => 'Move to';
+
+  @override
+  String get menuRenameGroup => 'Rename';
+
+  @override
+  String get menuDeleteGroup => 'Delete group';
+
+  @override
+  String get groupDeleteTitle => 'Delete this group?';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'Its servers are not deleted. They move back to $name.';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'No servers yet. Open a server\'s menu and choose Move to group.';
+
+  @override
+  String get menuShareGroupFile => 'Save as text file';
+
+  @override
+  String get menuCopyGroupLinks => 'Copy links';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'Saved: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'Copied: $servers';
+  }
+
+  @override
+  String get groupNothingToShare => 'None of these servers has a share link.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'Left out, no share link: $servers';
+  }
+
+  @override
   String get emptyTitle => 'No profiles yet';
 
   @override

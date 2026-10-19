@@ -209,6 +209,10 @@ class DaemonEngine implements VpnEngine {
               at: DateTime.parse(f['at'] as String).toLocal(),
             ),
       progress: p == null ? null : ConnectProgress.fromJson(p),
+      torPath: [
+        for (final h in (s['tor_path'] as List<dynamic>? ?? const []))
+          TorHop(role: (h as Map<String, dynamic>)['role'] as String, country: h['country'] as String?),
+      ],
     ));
   }
 

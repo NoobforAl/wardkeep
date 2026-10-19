@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,7 +29,7 @@ List<Widget> networkTiles(BuildContext context, WidgetRef ref, SettingsState s) 
       trailing: const Icon(Icons.edit_outlined),
       enabled: s.tunMode,
       onTap: () async {
-        final value = await showDialog<int>(context: context, builder: (_) => MtuDialog(s.mtu));
+        final value = await showDialog<int>(animationStyle: softAnimation, context: context, builder: (_) => MtuDialog(s.mtu));
         if (value != null) ctrl.update((s) => s.copyWith(mtu: value));
       },
     ),

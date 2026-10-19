@@ -133,6 +133,131 @@ class AppLocalizationsTr extends AppLocalizations {
   String get torNetwork => 'Tor ağı';
 
   @override
+  String get torHopBridge => 'Köprü';
+
+  @override
+  String get torHopEntry => 'Giriş';
+
+  @override
+  String get torHopRelay => 'Aktarıcı';
+
+  @override
+  String get torHopExit => 'Çıkış';
+
+  @override
+  String get torHopHidden => 'Gizli';
+
+  @override
+  String get torHopUnknown => 'Bilinmiyor';
+
+  @override
+  String get hopYou => 'Siz';
+
+  @override
+  String get hopYouNote =>
+      'Gerçekte bulunduğunuz yer burası. Trafiğiniz buradan başlar.';
+
+  @override
+  String get hopServer => 'Sunucu';
+
+  @override
+  String get hopServerNote =>
+      'Trafiğiniz şifreli olarak bu sunucuya gider ve buradan çıkar; bu yüzden web siteleri sizin değil onun adresini görür.';
+
+  @override
+  String get hopBridgeNote =>
+      'İlk atlamanız. Köprü, Tor kullandığınızı ağınızdan gizler. Kim olduğunuzu bilir ama nereye gittiğinizi bilmez.';
+
+  @override
+  String get hopEntryNote =>
+      'İlk aktarıcı. Adresinizi bilir ama ne ziyaret ettiğinizi bilmez.';
+
+  @override
+  String get hopRelayNote =>
+      'Ortadaki aktarıcı. Ne kim olduğunuzu ne de ne ziyaret ettiğinizi bilir; yalnızca trafiği iletir.';
+
+  @override
+  String get hopExitNote =>
+      'Son aktarıcı. Nereye gittiğinizi görür ama kim olduğunuzu bilmez; web siteleri onun adresini görür.';
+
+  @override
+  String get hopHiddenNote =>
+      'Köprünün konumu taşıma yöntemiyle gizlenir, bu yüzden haritada gösterilemez.';
+
+  @override
+  String get hopTransport => 'Taşıma';
+
+  @override
+  String get hopProtocol => 'Protokol';
+
+  @override
+  String get hopAddress => 'Adres';
+
+  @override
+  String get hopLatency => 'Gecikme';
+
+  @override
+  String get hopExitAddress => 'Çıkış adresi';
+
+  @override
+  String get menuNewGroup => 'Yeni grup';
+
+  @override
+  String get groupNameHint => 'Grup adı';
+
+  @override
+  String get groupCreate => 'Oluştur';
+
+  @override
+  String get menuMoveToGroup => 'Gruba taşı';
+
+  @override
+  String get groupMoveTitle => 'Şuraya taşı';
+
+  @override
+  String get menuRenameGroup => 'Yeniden adlandır';
+
+  @override
+  String get menuDeleteGroup => 'Grubu sil';
+
+  @override
+  String get groupDeleteTitle => 'Bu grup silinsin mi?';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'Sunucuları silinmez. $name grubuna geri döner.';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'Henüz sunucu yok. Bir sunucunun menüsünü açıp Gruba taşı\'yı seçin.';
+
+  @override
+  String get menuShareGroupFile => 'Metin dosyası olarak kaydet';
+
+  @override
+  String get menuCopyGroupLinks => 'Bağlantıları kopyala';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'Kaydedildi: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'Kopyalandı: $servers';
+  }
+
+  @override
+  String get groupNothingToShare =>
+      'Bu sunuculardan hiçbirinin paylaşım bağlantısı yok.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'Paylaşım bağlantısı olmadığı için atlandı: $servers';
+  }
+
+  @override
   String get emptyTitle => 'Henüz profil yok';
 
   @override

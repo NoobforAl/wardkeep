@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../engine/engine.dart';
@@ -231,9 +232,16 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
           icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
         ),
       ),
-      if (expanded)
-        for (final p in g.profiles)
-          if (matches(g, p)) _ServerRow(profile: p, selected: choice == p.id, onTap: () => _choose(p.id)),
+      SoftAppear(
+        show: expanded,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final p in g.profiles)
+              if (matches(g, p)) _ServerRow(profile: p, selected: choice == p.id, onTap: () => _choose(p.id)),
+          ],
+        ),
+      ),
     ];
   }
 
@@ -366,7 +374,7 @@ class _ServerRow extends ConsumerWidget {
 /// Lets the user say where a server is. Returns the country code, '' for "guess
 /// again", or null when cancelled.
 Future<String?> pickCountry(BuildContext context, String? current) {
-  return showDialog<String>(context: context, builder: (_) => _CountryDialog(current));
+  return showDialog<String>(animationStyle: softAnimation, context: context, builder: (_) => _CountryDialog(current));
 }
 
 class _CountryDialog extends StatefulWidget {

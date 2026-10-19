@@ -133,6 +133,130 @@ class AppLocalizationsHi extends AppLocalizations {
   String get torNetwork => 'Tor नेटवर्क';
 
   @override
+  String get torHopBridge => 'ब्रिज';
+
+  @override
+  String get torHopEntry => 'एंट्री';
+
+  @override
+  String get torHopRelay => 'रिले';
+
+  @override
+  String get torHopExit => 'एग्ज़िट';
+
+  @override
+  String get torHopHidden => 'छिपा';
+
+  @override
+  String get torHopUnknown => 'अज्ञात';
+
+  @override
+  String get hopYou => 'आप';
+
+  @override
+  String get hopYouNote =>
+      'यहीं आप असल में हैं। आपका ट्रैफ़िक यहीं से शुरू होता है।';
+
+  @override
+  String get hopServer => 'सर्वर';
+
+  @override
+  String get hopServerNote =>
+      'आपका ट्रैफ़िक एन्क्रिप्टेड होकर इस सर्वर तक जाता है और यहीं से निकलता है, इसलिए वेबसाइटें आपका नहीं, इसका पता देखती हैं।';
+
+  @override
+  String get hopBridgeNote =>
+      'आपका पहला पड़ाव। ब्रिज आपके नेटवर्क से छिपाता है कि आप Tor इस्तेमाल कर रहे हैं। यह जानता है कि आप कौन हैं, पर यह नहीं कि आप कहाँ जा रहे हैं।';
+
+  @override
+  String get hopEntryNote =>
+      'पहला रिले। यह आपका पता जानता है, पर यह नहीं कि आप क्या देखते हैं।';
+
+  @override
+  String get hopRelayNote =>
+      'बीच का रिले। यह न जानता है कि आप कौन हैं, न यह कि आप क्या देखते हैं; बस ट्रैफ़िक आगे बढ़ाता है।';
+
+  @override
+  String get hopExitNote =>
+      'आख़िरी रिले। यह देखता है कि आप कहाँ जा रहे हैं, पर यह नहीं कि आप कौन हैं, और वेबसाइटें इसका पता देखती हैं।';
+
+  @override
+  String get hopHiddenNote =>
+      'ब्रिज की जगह उसके ट्रांसपोर्ट ने छिपा रखी है, इसलिए उसे नक़्शे पर नहीं दिखाया जा सकता।';
+
+  @override
+  String get hopTransport => 'ट्रांसपोर्ट';
+
+  @override
+  String get hopProtocol => 'प्रोटोकॉल';
+
+  @override
+  String get hopAddress => 'पता';
+
+  @override
+  String get hopLatency => 'लेटेंसी';
+
+  @override
+  String get hopExitAddress => 'एग्ज़िट का पता';
+
+  @override
+  String get menuNewGroup => 'नया समूह';
+
+  @override
+  String get groupNameHint => 'समूह का नाम';
+
+  @override
+  String get groupCreate => 'बनाएँ';
+
+  @override
+  String get menuMoveToGroup => 'समूह में ले जाएँ';
+
+  @override
+  String get groupMoveTitle => 'यहाँ ले जाएँ';
+
+  @override
+  String get menuRenameGroup => 'नाम बदलें';
+
+  @override
+  String get menuDeleteGroup => 'समूह हटाएँ';
+
+  @override
+  String get groupDeleteTitle => 'यह समूह हटाएँ?';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'इसके सर्वर नहीं हटेंगे। वे $name में लौट जाएँगे।';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'अभी कोई सर्वर नहीं है। किसी सर्वर का मेनू खोलें और «समूह में ले जाएँ» चुनें।';
+
+  @override
+  String get menuShareGroupFile => 'टेक्स्ट फ़ाइल के रूप में सहेजें';
+
+  @override
+  String get menuCopyGroupLinks => 'लिंक कॉपी करें';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'सहेजा गया: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'कॉपी किया गया: $servers';
+  }
+
+  @override
+  String get groupNothingToShare => 'इनमें से किसी सर्वर का शेयर लिंक नहीं है।';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'छोड़े गए, शेयर लिंक नहीं: $servers';
+  }
+
+  @override
   String get emptyTitle => 'अभी कोई प्रोफ़ाइल नहीं';
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
@@ -115,7 +116,7 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
     final s = ref.read(settingsProvider);
     final resolver = dnsEntryForStamp(s.remoteDns);
     final op = resolver == null ? null : dnsOperatorOf(resolver.name);
-    final picked = await showDialog<String>(
+    final picked = await showDialog<String>(animationStyle: softAnimation, 
       context: context,
       builder: (context) => SimpleDialog(
         title: Text(l.dnsRelayChoose),
@@ -273,8 +274,9 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
                   value: anonymized,
                   onChanged: dnscrypt ? _anonymize : null,
                 ),
-                if (anonymized)
-                  ListTile(
+                SoftAppear(
+                  show: anonymized,
+                  child: ListTile(
                     key: const ValueKey('dns-relay'),
                     leading: const Icon(Icons.alt_route_rounded),
                     title: Text(l.dnsRelay),
@@ -287,6 +289,7 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: _chooseRelay,
                   ),
+                ),
               ]),
               Padding(
                 padding: const EdgeInsets.fromLTRB(32, 16, 24, 0),

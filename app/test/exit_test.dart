@@ -52,6 +52,8 @@ void main() {
     await tester.tap(find.text('Connect'));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(seconds: 1)); // the status eases in (one frame starts it, one ends it)
+    await tester.pump(const Duration(seconds: 1));
     expect(engine.asked, 1);
     expect(c.read(exitProvider)?.ip, '203.0.113.77');
     expect(find.text('IP 203.0.x.x'), findsOneWidget);
@@ -67,6 +69,8 @@ void main() {
     await tester.tap(find.text('Disconnect'));
     await tester.pump(const Duration(milliseconds: 400));
     expect(c.read(exitProvider), isNull);
+    await tester.pump(const Duration(seconds: 1)); // the address fades out (one frame starts it, one ends it)
+    await tester.pump(const Duration(seconds: 1));
     expect(find.textContaining('IP 203'), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });

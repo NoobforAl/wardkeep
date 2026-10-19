@@ -41,6 +41,70 @@
   "automaticHint": "Fastest server, switches on failure",
   "anyServerInCountry": "Any server in this country",
   "torNetwork": "Tor network",
+  "torHopBridge": "Bridge",
+  "torHopEntry": "Entry",
+  "torHopRelay": "Relay",
+  "torHopExit": "Exit",
+  "torHopHidden": "Hidden",
+  "torHopUnknown": "Unknown",
+  "hopYou": "You",
+  "hopYouNote": "This is where you really are. Your traffic starts here.",
+  "hopServer": "Server",
+  "hopServerNote": "Your traffic travels encrypted to this server and comes out here, so websites see its address instead of yours.",
+  "hopBridgeNote": "Your first hop. A bridge hides from your network that you use Tor. It knows who you are, but not where you go.",
+  "hopEntryNote": "The first relay. It knows your address, but not what you visit.",
+  "hopRelayNote": "The middle relay. It knows neither who you are nor what you visit; it only passes traffic along.",
+  "hopExitNote": "The last relay. It sees where you go, but not who you are, and websites see its address.",
+  "hopHiddenNote": "The bridge's location is hidden by its transport, so it cannot be shown on the map.",
+  "hopTransport": "Transport",
+  "hopProtocol": "Protocol",
+  "hopAddress": "Address",
+  "hopLatency": "Latency",
+  "hopExitAddress": "Exit address",
+  "menuNewGroup": "New group",
+  "groupNameHint": "Group name",
+  "groupCreate": "Create",
+  "menuMoveToGroup": "Move to group",
+  "groupMoveTitle": "Move to",
+  "menuRenameGroup": "Rename",
+  "menuDeleteGroup": "Delete group",
+  "groupDeleteTitle": "Delete this group?",
+  "groupDeleteBody": "Its servers are not deleted. They move back to {name}.",
+  "@groupDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupEmptyHint": "No servers yet. Open a server's menu and choose Move to group.",
+  "menuShareGroupFile": "Save as text file",
+  "menuCopyGroupLinks": "Copy links",
+  "groupSavedToast": "Saved: {servers}",
+  "@groupSavedToast": {
+    "placeholders": {
+      "servers": {
+        "type": "String"
+      }
+    }
+  },
+  "groupCopiedToast": "Copied: {servers}",
+  "@groupCopiedToast": {
+    "placeholders": {
+      "servers": {
+        "type": "String"
+      }
+    }
+  },
+  "groupNothingToShare": "None of these servers has a share link.",
+  "groupSkipped": "Left out, no share link: {servers}",
+  "@groupSkipped": {
+    "placeholders": {
+      "servers": {
+        "type": "String"
+      }
+    }
+  },
   "emptyTitle": "No profiles yet",
   "emptyHint": "Import a config, link or subscription.",
   "importConfig": "Import config",

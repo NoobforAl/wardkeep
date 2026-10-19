@@ -119,6 +119,20 @@ class ProfilesController extends Notifier<List<ProfileInfo>> {
   void setCredentials(String id, String username, String password) =>
       _save([for (final p in state) p.id == id ? p.withCredentials(username, password) : p]);
 
+  /// Puts a server in [group] (a group of the user's, or [ProfileInfo.defaultGroup]). It keeps its place in the
+  /// list: the order is the failover priority, and moving a server must not change it.
+  void moveTo(String id, String group) {
+    final at = state.indexWhere((p) => p.id == id);
+    if (at < 0 || state[at].group == group) return;
+    final next = [...state];
+    next[at] = state[at].inGroup(group);
+    _save(next);
+  }
+
+  /// Sends the servers of a group of the user's back to the default group (the group is being removed).
+  void ungroup(String group) =>
+      _save([for (final p in state) p.group == group ? p.inGroup(ProfileInfo.defaultGroup) : p]);
+
   void removeGroup(String group) {
     _save(state.where((p) => p.group != group).toList());
     _fixSelection();

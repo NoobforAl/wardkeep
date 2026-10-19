@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/errors.dart';
@@ -152,7 +153,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             onChanged: _busy ? null : (v) => setState(() => _authType = v ?? 'none'),
           ),
           const SizedBox(height: 12),
-          if (_authType == 'basic') ...[
+          SoftAppear(
+            show: _authType == 'basic',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             TextField(
               controller: _username,
               decoration: InputDecoration(labelText: l.subUsername, border: const OutlineInputBorder()),
@@ -171,8 +177,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               ),
             ),
-          ],
-          if (_authType == 'header') ...[
+            ]),
+          ),
+          SoftAppear(
+            show: _authType == 'header',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             TextField(
               controller: _header,
               decoration: InputDecoration(
@@ -182,16 +194,24 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               ),
             ),
             const SizedBox(height: 12),
-          ],
-          if (_authType == 'query') ...[
+            ]),
+          ),
+          SoftAppear(
+            show: _authType == 'query',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             TextField(
               controller: _queryKey,
               decoration: InputDecoration(labelText: l.subParamName, border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
-          ],
-          if (const ['bearer', 'header', 'query'].contains(_authType))
-            TextField(
+            ]),
+          ),
+          SoftAppear(
+            show: const ['bearer', 'header', 'query'].contains(_authType),
+            child: TextField(
               controller: _token,
               obscureText: !_showSecret,
               decoration: InputDecoration(
@@ -203,6 +223,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               ),
             ),
+          ),
           const SizedBox(height: 20),
           DropdownButtonFormField<String>(
             initialValue: _via,
@@ -219,11 +240,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             ],
             onChanged: _busy ? null : (v) => setState(() => _via = v ?? Subscription.defaultVia),
           ),
-          if (_error != null)
-            Padding(
+          SoftAppear(
+            show: _error != null,
+            child: Padding(
               padding: const EdgeInsets.only(top: 16),
-              child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              child: Text(_error ?? '', style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ),
+          ),
         ],
           ),
         ),

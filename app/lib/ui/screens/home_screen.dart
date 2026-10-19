@@ -9,11 +9,13 @@ import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/location.dart';
 import '../../state/providers.dart';
+import '../motion.dart';
 import '../theme.dart';
 import '../widgets/country_flag.dart';
 import '../../state/geo_data.dart';
 import '../widgets/credentials_dialog.dart';
 import '../widgets/earth_globe.dart';
+import '../widgets/hop_info.dart';
 import '../widgets/star_field.dart';
 import 'dns_screen.dart';
 import 'devices_screen.dart';
@@ -49,7 +51,9 @@ class HomeScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: DecoratedBox(
+      body: AnimatedContainer(
+        duration: soft(context, 900),
+        curve: softCurve,
         // A wash of the status colour fading into the page: calm when off, green when safe.
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -70,7 +74,8 @@ class HomeScreen extends ConsumerWidget {
           child: LayoutBuilder(
             builder: (context, box) {
               final g = _Geometry(box, MediaQuery.paddingOf(context).top, MediaQuery.textScalerOf(context),
-                  connected: conn.status == ConnStatus.connected);
+                  connected: conn.status == ConnStatus.connected,
+                  route: conn.status == ConnStatus.connected && conn.torPath.isNotEmpty);
               // The globe and the status sit at fixed places. Where they do not fit (a short screen,
               // a landscape phone, large text) the page scrolls instead of hiding behind the panel.
               final page = SizedBox(
@@ -79,14 +84,20 @@ class HomeScreen extends ConsumerWidget {
                 child: Stack(
                   children: [
                     // The Earth is the picture; the status hangs under it.
-                    Positioned(
+                    // The status block grows when connected, so the globe and the block glide to their
+                    // new places instead of jumping.
+                    AnimatedPositioned(
+                      duration: soft(context, 800),
+                      curve: softCurve,
                       left: g.left,
                       top: g.top,
                       width: g.d,
                       height: g.d,
                       child: _Earth(state: conn),
                     ),
-                    Positioned(
+                    AnimatedPositioned(
+                      duration: soft(context, 800),
+                      curve: softCurve,
                       top: g.contentTop,
                       left: 0,
                       right: 0,
@@ -172,10 +183,10 @@ String? _exitCode(WidgetRef ref, EngineState s) {
 /// Where things sit: the globe and the status block under it form one group, centred (a little
 /// above the middle) between the top bar and the bottom panel.
 class _Geometry {
-  factory _Geometry(BoxConstraints box, double safeTop, TextScaler text, {required bool connected}) {
+  factory _Geometry(BoxConstraints box, double safeTop, TextScaler text, {required bool connected, bool route = false}) {
     // The status block: a title and a chip, or (connected) also the clock and the speed; as large as the text is.
     const topBar = 54.0, minGlobe = 56.0;
-    final status = (connected ? 192.0 : 100.0) * math.min(text.scale(1), 1.6);
+    final status = ((connected ? 192.0 : 100.0) + (route ? _TorRoute.height + 40 : 0)) * math.min(text.scale(1), 1.6);
     final region = box.maxHeight - safeTop - topBar;
     final gap = region < 330 ? 10.0 : 22.0; // on a short screen the globe and its status huddle
     final d = math.max(minGlobe, math.min(math.min(box.maxWidth * 0.74, 400.0), region - gap - status));
@@ -222,15 +233,48 @@ class _Earth extends ConsumerWidget {
       if (primary != null && primary.protocol != 'tor' && !primary.isMesh) exitCode = ref.watch(profileCountryProvider)(primary);
     }
 
-    return EarthBackdrop(
-      home: home,
-      exit: centerOf(exitCode),
-      homeColor: disconnectRed,
-      exitColor: statusColor(state.status, scheme),
-      connecting: state.status == ConnStatus.connecting,
-      connected: state.status == ConnStatus.connected,
-      upBps: state.upBps,
-      downBps: state.downBps,
+    // A Tor circuit: the route runs through its relays (bridge or entry, middle) to the exit relay.
+    final hops = state.status == ConnStatus.connected ? state.torPath : const <TorHop>[];
+    // The relays in between that can be placed on the map, and which hop of the circuit each one is.
+    final viaHop = [
+      for (var i = 0; i < hops.length - 1; i++)
+        if (centerOf(hops[i].country) != null) i,
+    ];
+    final via = [for (final i in viaHop) centerOf(hops[i].country)!];
+    final exitAt = hops.isEmpty ? centerOf(exitCode) : centerOf(hops.last.country);
+
+    // The marker's colour (gold, then teal) melts from one to the next instead of switching.
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: statusColor(state.status, scheme)),
+      duration: soft(context, 900),
+      curve: softCurve,
+      builder: (context, exitColor, _) => EarthBackdrop(
+        home: home,
+        exit: exitAt,
+        via: via,
+        // Touch a dot: what it is, where, and what it does with the traffic.
+        onSpotTap: (spot, index) {
+          switch (spot) {
+            case GlobeSpot.home:
+              showHopInfo(context, ref, HopKind.you);
+            case GlobeSpot.via:
+              final h = hops[viaHop[index]];
+              showHopInfo(context, ref, hopKindOfRole(h.role), country: h.country);
+            case GlobeSpot.exit:
+              if (hops.isEmpty) {
+                showHopInfo(context, ref, HopKind.server);
+              } else {
+                showHopInfo(context, ref, HopKind.exit, country: hops.last.country);
+              }
+          }
+        },
+        homeColor: disconnectRed,
+        exitColor: exitColor ?? statusColor(state.status, scheme),
+        connecting: state.status == ConnStatus.connecting,
+        connected: state.status == ConnStatus.connected,
+        upBps: state.upBps,
+        downBps: state.downBps,
+      ),
     );
   }
 }
@@ -320,60 +364,173 @@ class _HeroState extends ConsumerState<_Hero> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          SoftText(
             connected && place != null ? context.l10n.connectedTo(place) : statusLabel(context.l10n, s.status),
             style: text.titleLarge?.copyWith(color: color),
             textAlign: TextAlign.center,
           ),
           // While connecting: the step, and a slim bar with the real progress.
-          if (s.status == ConnStatus.connecting && progress != null) ...[
-            const SizedBox(height: 8),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                [progressDetail(context.l10n, progress) ?? stageLabel(context.l10n, progress.stage), ?progress.profile]
-                    .join(' · '),
-                key: ValueKey('${progress.stage}${progress.profile}${progress.detail}'),
-                style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
+          SoftAppear(
+            show: s.status == ConnStatus.connecting && progress != null,
+            child: progress == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: SoftText(
+                      [
+                        progressDetail(context.l10n, progress) ??
+                            stageLabel(context.l10n, progress.stage),
+                        ?progress.profile,
+                      ].join(' · '),
+                      ms: 350,
+                      style: text.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+          ),
           // Not connected: where you are right now.
-          if (idle && homeCode != null) ...[
-            const SizedBox(height: 14),
-            _ExitChip(code: homeCode, tor: false, title: context.countryName(homeCode), accent: disconnectRed),
-          ],
-          if (connected && active != null) ...[
-            const SizedBox(height: 16),
-            _ExitChip(
-              code: code,
-              tor: tor,
-              mesh: mesh,
-              title: active.name,
-              ip: mesh ? null : exit?.ip,
-              accent: color,
-              // A mesh profile opens the list of its devices.
-              onDevices: mesh
-                  ? () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DevicesScreen()))
-                  : null,
-            ),
-            const DnsLine(),
-          ],
-          if (connected && s.connectedSince != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              _elapsed(s.connectedSince!),
-              style: text.titleLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-            const SizedBox(height: 10),
-            _TrafficRow(up: s.upBps, down: s.downBps),
-          ],
+          SoftAppear(
+            show: idle && homeCode != null,
+            child: homeCode == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: _ExitChip(
+                      code: homeCode,
+                      tor: false,
+                      title: context.countryName(homeCode),
+                      accent: disconnectRed,
+                    ),
+                  ),
+          ),
+          SoftAppear(
+            show: connected && active != null,
+            ms: 700,
+            child: active == null
+                ? const SizedBox.shrink()
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 16),
+                      _ExitChip(
+                        code: code,
+                        tor: tor,
+                        mesh: mesh,
+                        title: active.name,
+                        ip: mesh ? null : exit?.ip,
+                        accent: color,
+                        // A mesh profile opens the list of its devices.
+                        onDevices: mesh
+                            ? () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const DevicesScreen(),
+                                ),
+                              )
+                            : null,
+                      ),
+                      const DnsLine(),
+                    ],
+                  ),
+          ),
+          // A Tor circuit: where its three relays are.
+          SoftAppear(
+            show: connected && tor && s.torPath.isNotEmpty,
+            ms: 700,
+            child: s.torPath.isEmpty
+                ? const SizedBox.shrink()
+                : Padding(padding: const EdgeInsets.only(top: 12), child: _TorRoute(hops: s.torPath)),
+          ),
+          SoftAppear(
+            show: connected && s.connectedSince != null,
+            ms: 700,
+            child: s.connectedSince == null
+                ? const SizedBox.shrink()
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 16),
+                      Text(
+                        _elapsed(s.connectedSince!),
+                        style: text.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _TrafficRow(up: s.upBps, down: s.downBps),
+                    ],
+                  ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// The relays of a Tor circuit in order, side by side: a flag over its role and the country it is in. Three
+/// columns that always fit one line, however narrow the screen; touch one for what it is and what it knows.
+class _TorRoute extends ConsumerWidget {
+  const _TorRoute({required this.hops});
+
+  final List<TorHop> hops;
+
+  /// How tall the row is (for the room the page leaves for it).
+  static const height = 70.0;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final l = context.l10n;
+    Widget hop(TorHop h) {
+      final kind = hopKindOfRole(h.role);
+      // A bridge behind Snowflake or a front has no place to show: it is hidden, not unknown.
+      final place = h.country == null
+          ? (kind == HopKind.bridge ? l.torHopHidden : l.torHopUnknown)
+          : context.countryName(h.country!);
+      return InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => showHopInfo(context, ref, kind, country: h.country),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CountryFlag(h.country, size: 30, icon: hopIcon(kind), label: '${hopLabel(l, kind)}: $place'),
+              const SizedBox(height: 4),
+              Text(
+                hopLabel(l, kind),
+                style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                place,
+                style: text.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: scheme.onSurface),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < hops.length; i++) ...[
+          if (i > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 9),
+              child: Icon(Icons.arrow_forward_rounded, size: 16, color: scheme.onSurfaceVariant),
+            ),
+          Expanded(child: hop(hops[i])),
+        ],
+      ],
     );
   }
 }
@@ -573,15 +730,19 @@ class _BottomPanel extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (state.status == ConnStatus.error && state.error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Text(
-                localizedError(context.l10n, state) ?? state.error!,
-                style: text.bodyMedium?.copyWith(color: scheme.error),
-                textAlign: TextAlign.center,
-              ),
-            ),
+          SoftAppear(
+            show: state.status == ConnStatus.error && state.error != null,
+            child: state.error == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Text(
+                      localizedError(context.l10n, state) ?? state.error!,
+                      style: text.bodyMedium?.copyWith(color: scheme.error),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+          ),
           if (plan == null)
             _EmptyHint(onImport: () => showImportSheet(context, ref))
           else ...[
@@ -688,68 +849,103 @@ class _MainButton extends StatelessWidget {
       _ButtonKind.cancel => (scheme.surfaceContainerHighest, scheme.onSurface),
     };
     final p = progress;
-    return Opacity(
+    final d = soft(context, 500);
+    // Connect, cancel and disconnect melt into one another: the gradient fades, the tint and the text
+    // colour glide.
+    return AnimatedOpacity(
       opacity: onPressed == null ? 0.5 : 1,
-      child: Material(
-        color: fill ?? Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: fill == null
-                ? const LinearGradient(
-                    colors: [brandIndigo, brandViolet],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  )
-                : null,
+      duration: d,
+      child: TweenAnimationBuilder<Color?>(
+        tween: ColorTween(end: fg),
+        duration: d,
+        curve: softCurve,
+        builder: (context, fgNow, _) => TweenAnimationBuilder<Color?>(
+          tween: ColorTween(
+            end: fill ?? scheme.surfaceContainerHighest.withValues(alpha: 0),
           ),
-          child: Stack(
-            children: [
-              if (p != null)
-                Positioned.fill(
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(end: p / 100),
-                      duration: const Duration(milliseconds: 450),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, _) => FractionallySizedBox(
-                        key: const Key('connect-progress'),
-                        widthFactor: value.clamp(0.0, 1.0),
-                        heightFactor: 1,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                brandIndigo.withValues(alpha: 0.55),
-                                brandViolet.withValues(alpha: 0.55),
-                              ],
-                            ),
+          duration: d,
+          curve: softCurve,
+          builder: (context, fillNow, _) => TweenAnimationBuilder<double>(
+            tween: Tween(end: fill == null ? 1 : 0),
+            duration: d,
+            curve: softCurve,
+            builder: (context, goNow, _) =>
+                _buttonBody(context, fillNow, fgNow ?? fg, goNow, p),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buttonBody(
+    BuildContext context,
+    Color? fill,
+    Color fg,
+    double go,
+    int? p,
+  ) {
+    return Material(
+      color: fill ?? Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: go == 0
+              ? null
+              : LinearGradient(
+                  colors: [
+                    brandIndigo.withValues(alpha: go),
+                    brandViolet.withValues(alpha: go),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+        ),
+        child: Stack(
+          children: [
+            if (p != null)
+              Positioned.fill(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(end: p / 100),
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) => FractionallySizedBox(
+                      key: const Key('connect-progress'),
+                      widthFactor: value.clamp(0.0, 1.0),
+                      heightFactor: 1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              brandIndigo.withValues(alpha: 0.55),
+                              brandViolet.withValues(alpha: 0.55),
+                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              InkWell(
-                onTap: onPressed,
-                child: SizedBox(
-                  height: 48,
-                  child: Center(
-                    child: Text(
-                      p == null ? label : '$label · $p%',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: fg,
-                        fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+              ),
+            InkWell(
+              onTap: onPressed,
+              child: SizedBox(
+                height: 48,
+                child: Center(
+                  child: Text(
+                    p == null ? label : '$label · $p%',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -8,6 +8,9 @@ class MockEngine implements VpnEngine {
   MockEngine({this.connectDelay = const Duration(milliseconds: 1200)});
 
   final Duration connectDelay;
+
+  /// The Tor circuit a connected Tor profile reports (for tests and the preview).
+  List<TorHop> torPath = const [];
   final _states = StreamController<EngineState>.broadcast();
   final _logs = StreamController<String>.broadcast();
   final _rng = Random();
@@ -53,6 +56,7 @@ class MockEngine implements VpnEngine {
       activeProfileId: profile.id,
       connectedSince: DateTime.now(),
       progress: ConnectProgress('connected', 100, profile: profile.name),
+      torPath: profile.protocol == 'tor' ? torPath : const [],
     ));
     _log('connected, health probe ok');
     _traffic?.cancel();

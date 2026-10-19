@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -224,7 +225,7 @@ Future<void> _openVpnSettings(BuildContext context) async {
 /// The language of the app: the system's, or one of the translations (each shown in its own language).
 Future<void> _pickLanguage(BuildContext context, WidgetRef ref, String current) async {
   final l = context.l10n;
-  final picked = await showDialog<String>(
+  final picked = await showDialog<String>(animationStyle: softAnimation, 
     context: context,
     builder: (context) => SimpleDialog(
       title: Text(l.language),

@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../engine/engine.dart';
 import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
+import '../../state/groups.dart';
 import '../../state/providers.dart';
 import '../../state/subscriptions.dart';
 import '../../state/usage.dart';
@@ -27,6 +31,7 @@ class ProfilesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profiles = ref.watch(profilesProvider);
     final subs = ref.watch(subscriptionsProvider);
+    final groups = ref.watch(groupsProvider);
     final selected = ref.watch(selectedProfileIdProvider);
     ref.watch(formsProvider); // loads the editors, so Edit appears in the menus
     final manual = profiles.where((p) => p.group == ProfileInfo.defaultGroup).toList();
@@ -48,12 +53,15 @@ class ProfilesScreen extends ConsumerWidget {
           PopupMenuButton<String>(
             tooltip: context.l10n.tooltipMore,
             onSelected: (v) async {
-              if (v == 'restore_tor') {
+              if (v == 'new_group') {
+                final name = await _askGroupName(context, context.l10n.menuNewGroup, '', context.l10n.groupCreate);
+                if (name != null) ref.read(groupsProvider.notifier).create(name);
+              } else if (v == 'restore_tor') {
                 await ref.read(defaultProfileIdProvider.notifier).ensureTorDefaults(force: true);
               } else if (v == 'delete_all') {
                 final l = context.l10n;
                 final messenger = ScaffoldMessenger.of(context);
-                final sure = await showDialog<bool>(
+                final sure = await showDialog<bool>(animationStyle: softAnimation, 
                   context: context,
                   builder: (context) => AlertDialog(
                     title: Text(l.deleteAllTitle),
@@ -75,6 +83,7 @@ class ProfilesScreen extends ConsumerWidget {
               }
             },
             itemBuilder: (_) => [
+              PopupMenuItem(value: 'new_group', child: Text(context.l10n.menuNewGroup)),
               PopupMenuItem(
                 value: 'delete_all',
                 enabled: profiles.any((p) => p.protocol != 'tor') || subs.isNotEmpty,
@@ -106,6 +115,21 @@ class ProfilesScreen extends ConsumerWidget {
                 if (manual.isNotEmpty) ...[
                   SliverToBoxAdapter(child: _GroupTitle(context.l10n.myProfiles)),
                   _GroupList(group: ProfileInfo.defaultGroup, profiles: manual, selectedId: selected),
+                ],
+                for (final g in groups) ...[
+                  SliverToBoxAdapter(child: _UserGroupHeader(g, profiles.where((p) => p.group == g.id).toList())),
+                  if (profiles.any((p) => p.group == g.id))
+                    _GroupList(group: g.id, profiles: profiles.where((p) => p.group == g.id).toList(), selectedId: selected)
+                  else
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                        child: Text(
+                          context.l10n.groupEmptyHint,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                      ),
+                    ),
                 ],
                 for (final sub in subs) ...[
                   SliverToBoxAdapter(child: _SubscriptionHeader(sub)),
@@ -191,6 +215,7 @@ class _GroupList extends ConsumerWidget {
                         ref.read(defaultProfileIdProvider.notifier).set(p.id);
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.defaultSetToast(p.name))));
                       }
+                      if (v == 'move') _moveToGroup(context, ref, p);
                       if (v == 'credentials') askCredentials(context, ref, p);
                       if (v == 'usage') ref.read(profileUsageProvider.notifier).reset(p.id);
                     },
@@ -201,6 +226,7 @@ class _GroupList extends ConsumerWidget {
                           child: Text(p.protocol == 'tor' ? context.l10n.menuBridgeSettings : context.l10n.menuEditServer),
                         ),
                       PopupMenuItem(value: 'share', child: Text(context.l10n.menuShare)),
+                      PopupMenuItem(value: 'move', child: Text(context.l10n.menuMoveToGroup)),
                       if (p.id != defaultId) PopupMenuItem(value: 'default', child: Text(context.l10n.menuSetDefault)),
                       if (p.needsCredentials)
                         PopupMenuItem(value: 'credentials', child: Text(context.l10n.menuCredentials)),
@@ -216,6 +242,182 @@ class _GroupList extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Asks for a group's name; null when cancelled or left empty.
+Future<String?> _askGroupName(BuildContext context, String title, String initial, String action) {
+  final controller = TextEditingController(text: initial);
+  return showDialog<String>(
+    animationStyle: softAnimation,
+    context: context,
+    builder: (context) {
+      final l = context.l10n;
+      void done() {
+        final t = controller.text.trim();
+        Navigator.pop(context, t.isEmpty ? null : t);
+      }
+
+      return AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 40,
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(labelText: l.groupNameHint),
+          onSubmitted: (_) => done(),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l.actionCancel)),
+          FilledButton(onPressed: done, child: Text(action)),
+        ],
+      );
+    },
+  );
+}
+
+/// Moves a server to one of the user's groups, to a new one, or back to "My servers".
+Future<void> _moveToGroup(BuildContext context, WidgetRef ref, ProfileInfo p) async {
+  final l = context.l10n;
+  const fresh = '\u0000new';
+  final groups = ref.read(groupsProvider);
+  final pick = await showDialog<String>(
+    animationStyle: softAnimation,
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(l.groupMoveTitle),
+      children: [
+        if (p.group != ProfileInfo.defaultGroup)
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, ProfileInfo.defaultGroup),
+            child: Text(l.myProfiles),
+          ),
+        for (final g in groups)
+          if (g.id != p.group)
+            SimpleDialogOption(onPressed: () => Navigator.pop(context, g.id), child: Text(g.name, overflow: TextOverflow.ellipsis)),
+        SimpleDialogOption(
+          onPressed: () => Navigator.pop(context, fresh),
+          child: Row(children: [const Icon(Icons.add, size: 18), const SizedBox(width: 8), Text(l.menuNewGroup)]),
+        ),
+      ],
+    ),
+  );
+  if (pick == null || !context.mounted) return;
+  var target = pick;
+  if (pick == fresh) {
+    final name = await _askGroupName(context, l.menuNewGroup, '', l.groupCreate);
+    if (name == null) return;
+    target = ref.read(groupsProvider.notifier).create(name).id;
+  }
+  ref.read(profilesProvider.notifier).moveTo(p.id, target);
+}
+
+/// A group of the user's: its name and what can be done with it as a whole.
+class _UserGroupHeader extends ConsumerWidget {
+  const _UserGroupHeader(this.group, this.members);
+
+  final ProfileGroup group;
+  final List<ProfileInfo> members;
+
+  /// The share links of the members, and the names of those that have none (OpenVPN travels as a file).
+  Future<(List<String>, List<String>)> _links(WidgetRef ref) async {
+    final engine = ref.read(engineProvider);
+    final links = <String>[], skipped = <String>[];
+    for (final p in members) {
+      try {
+        links.add(await engine.exportLink(p));
+      } catch (_) {
+        skipped.add(p.name);
+      }
+    }
+    return (links, skipped);
+  }
+
+  Future<void> _share(BuildContext context, WidgetRef ref, {required bool toFile}) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final (links, skipped) = await _links(ref);
+    if (links.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l.groupNothingToShare)));
+      return;
+    }
+    final text = groupFileText(group.name, links);
+    if (toFile) {
+      Uri? saved;
+      try {
+        saved = await FilePicker.saveFile(
+          fileName: groupFileName(group.name),
+          bytes: Uint8List.fromList(utf8.encode(text)),
+          mimeType: 'text/plain',
+          dialogTitle: l.menuShareGroupFile,
+          type: FileType.custom,
+          allowedExtensions: const ['txt'],
+        );
+      } catch (e) {
+        messenger.showSnackBar(SnackBar(content: Text(describeFileProblem(l, e))));
+        return;
+      }
+      if (saved == null) return; // cancelled
+      messenger.showSnackBar(SnackBar(content: Text(l.groupSavedToast(l.serversCount(links.length)))));
+    } else {
+      await Clipboard.setData(ClipboardData(text: text));
+      messenger.showSnackBar(SnackBar(content: Text(l.groupCopiedToast(l.serversCount(links.length)))));
+    }
+    if (skipped.isNotEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l.groupSkipped(skipped.join(', ')))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 4, 4),
+      child: Row(
+        children: [
+          Icon(Icons.folder_outlined, size: 18, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(child: Text(group.name, style: theme.textTheme.titleSmall, overflow: TextOverflow.ellipsis)),
+          Text(l.serversCount(members.length), style: theme.textTheme.bodySmall),
+          PopupMenuButton<String>(
+            tooltip: l.tooltipMore,
+            onSelected: (v) async {
+              switch (v) {
+                case 'file':
+                  await _share(context, ref, toFile: true);
+                case 'copy':
+                  await _share(context, ref, toFile: false);
+                case 'rename':
+                  final name = await _askGroupName(context, l.menuRenameGroup, group.name, l.actionSave);
+                  if (name != null) ref.read(groupsProvider.notifier).rename(group.id, name);
+                case 'delete':
+                  final sure = await showDialog<bool>(
+                    animationStyle: softAnimation,
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(l.groupDeleteTitle),
+                      content: Text(l.groupDeleteBody(l.myProfiles)),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.actionCancel)),
+                        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l.menuDeleteGroup)),
+                      ],
+                    ),
+                  );
+                  if (sure == true) ref.read(groupsProvider.notifier).remove(group.id);
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'file', enabled: members.isNotEmpty, child: Text(l.menuShareGroupFile)),
+              PopupMenuItem(value: 'copy', enabled: members.isNotEmpty, child: Text(l.menuCopyGroupLinks)),
+              PopupMenuItem(value: 'rename', child: Text(l.menuRenameGroup)),
+              PopupMenuItem(value: 'delete', child: Text(l.menuDeleteGroup)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -325,6 +527,7 @@ class _SubscriptionHeader extends ConsumerWidget {
 Future<void> showImportSheet(BuildContext context, WidgetRef ref) {
   return showModalBottomSheet<void>(
     context: context,
+    sheetAnimationStyle: softAnimation,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (context) => const _ImportSheet(),
@@ -419,7 +622,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
       });
       return;
     }
-    final added = ref.read(profilesProvider.notifier).addAll(result.profiles);
+    final added = ref.read(profilesProvider.notifier).addAll(ref.read(groupsProvider.notifier).place(_controller.text, result.profiles));
     if (!mounted) return;
     if (result.profiles.isNotEmpty && result.errors.isEmpty) {
       Navigator.of(context).pop();

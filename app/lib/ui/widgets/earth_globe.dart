@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -50,6 +51,7 @@ class _Scene {
     required this.lon,
     this.home,
     this.exit,
+    this.via = const [],
     this.homeAlpha = 0,
     this.exitAlpha = 0,
     required this.homeColor,
@@ -60,6 +62,12 @@ class _Scene {
   final double lat, lon;
   final (double, double)? home, exit;
 
+  /// Places the route passes between [home] and [exit] (the middle relays of a Tor circuit), in order.
+  final List<(double, double)> via;
+
+  /// Where the route goes, in order: you, the places in between, the exit (whichever of them are known).
+  List<(double, double)> get route => [?home, ...via, ?exit];
+
   /// How visible each marker is (0-1).
   final double homeAlpha, exitAlpha;
   final Color homeColor, exitColor;
@@ -69,6 +77,7 @@ class _Scene {
       lon == o.lon &&
       home == o.home &&
       exit == o.exit &&
+      listEquals(via, o.via) &&
       homeAlpha == o.homeAlpha &&
       exitAlpha == o.exitAlpha &&
       homeColor == o.homeColor &&
@@ -80,6 +89,19 @@ class _Scene {
     lon: lon + dLon,
     home: home,
     exit: exit,
+    via: via,
+    homeAlpha: homeAlpha,
+    exitAlpha: exitAlpha,
+    homeColor: homeColor,
+    exitColor: exitColor,
+  );
+
+  _Scene withVia(List<(double, double)> via) => _Scene(
+    lat: lat,
+    lon: lon,
+    home: home,
+    exit: exit,
+    via: via,
     homeAlpha: homeAlpha,
     exitAlpha: exitAlpha,
     homeColor: homeColor,
@@ -91,6 +113,7 @@ class _Scene {
     lon: lon,
     home: home,
     exit: exit,
+    via: via,
     homeAlpha: homeAlpha,
     exitAlpha: exitAlpha,
     homeColor: homeColor,
@@ -103,12 +126,17 @@ class _Scene {
     lon: a.lon + (b.lon - a.lon) * t,
     home: b.home ?? a.home,
     exit: b.exit ?? a.exit,
+    via: b.exit == null ? a.via : b.via,
     homeAlpha: a.homeAlpha + (b.homeAlpha - a.homeAlpha) * t,
     exitAlpha: a.exitAlpha + (b.exitAlpha - a.exitAlpha) * t,
     homeColor: Color.lerp(a.homeColor, b.homeColor, t)!,
     exitColor: Color.lerp(a.exitColor, b.exitColor, t)!,
   );
 }
+
+/// Which dot of the route was touched: where you are, a place in between (its number in [EarthBackdrop.via]),
+/// or the exit.
+enum GlobeSpot { home, via, exit }
 
 /// A dotted Earth behind the home screen, in the manner of Mullvad's: it shows where you
 /// are while unprotected, and on connecting it flies (zooming out on the way) to where you
@@ -124,6 +152,8 @@ class EarthBackdrop extends StatefulWidget {
     super.key,
     this.home,
     this.exit,
+    this.via = const [],
+    this.onSpotTap,
     required this.homeColor,
     required this.exitColor,
     this.connecting = false,
@@ -134,6 +164,14 @@ class EarthBackdrop extends StatefulWidget {
 
   /// (latitude, longitude) of where you are, and of the exit; null when not known / not connecting.
   final (double, double)? home, exit;
+
+  /// The places the route passes between you and the exit, in order (a Tor circuit's bridge or guard and
+  /// middle relay); each is marked and the arc runs through them.
+  final List<(double, double)> via;
+
+  /// Called when a dot on the route is tapped (not when the Earth is dragged): which one, and for
+  /// [GlobeSpot.via] its number in [via].
+  final void Function(GlobeSpot spot, int index)? onSpotTap;
   final Color homeColor, exitColor;
 
   /// While connecting, a packet runs from you to the exit and rings spread from the marker; while
@@ -251,6 +289,8 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   Duration get flowPeriod => flowRunning ? _flowPeriod : Duration.zero;
   double _radius = 150;
   double _moved = 0; // how far the finger has gone since it touched, in pixels
+  Offset _tapAt = Offset.zero; // where the finger touched
+  Size _size = Size.zero; // the size of the Earth's box
 
   /// How much the user has zoomed in or out (1 = as it comes), by pinching or with the wheel.
   double _userZoom = 1, _zoomStart = 1;
@@ -323,6 +363,7 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   }
 
   void _scaleStart(ScaleStartDetails d) {
+    _tapAt = d.localFocalPoint;
     _coast.stop();
     _recentring = false;
     _speedLat = _speedLon = 0;
@@ -359,6 +400,12 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
       _lastTap = null;
       return;
     }
+    final hit = _spotAt(_tapAt);
+    if (hit != null) {
+      _lastTap = null;
+      widget.onSpotTap?.call(hit.$1, hit.$2);
+      return;
+    }
     final now = DateTime.now(), last = _lastTap;
     if (last != null && now.difference(last) < const Duration(milliseconds: 350)) {
       _lastTap = null;
@@ -366,6 +413,32 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     } else {
       _lastTap = now;
     }
+  }
+
+  /// The dot of the route nearest to [at] (within a finger's width), if any is on the visible side.
+  (GlobeSpot, int)? _spotAt(Offset at) {
+    if (widget.onSpotTap == null || _size.isEmpty) return null;
+    final scene = _shown();
+    final pr = _Projection(scene, _size, _zoom());
+    (GlobeSpot, int)? best;
+    var bestDistance = 34.0;
+    void test(GlobeSpot spot, int i, (double, double)? place, double alpha) {
+      if (place == null || alpha < 0.3) return;
+      final u = _Projection.unit(place.$1, place.$2);
+      final (p, z) = pr.project(u[0], u[1], u[2]);
+      final dist = (p - at).distance;
+      if (z > 0.05 && dist < bestDistance) {
+        bestDistance = dist;
+        best = (spot, i);
+      }
+    }
+
+    test(GlobeSpot.home, 0, scene.home, scene.homeAlpha);
+    for (var i = 0; i < scene.via.length; i++) {
+      test(GlobeSpot.via, i, scene.via[i], scene.exitAlpha);
+    }
+    test(GlobeSpot.exit, 0, scene.exit, scene.exitAlpha);
+    return best;
   }
 
   /// The mouse wheel zooms, a notch at a time.
@@ -393,6 +466,7 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
       lon: focus == null ? previousLon : previousLon + ((focus.$2 - previousLon + 540) % 360) - 180,
       home: home,
       exit: exit,
+      via: widget.via,
       // Once there is an exit, where you are fades back and the exit takes over.
       homeAlpha: home == null ? 0 : (exit == null ? 1 : 0.55),
       exitAlpha: exit == null ? 0 : 1,
@@ -432,6 +506,10 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
       _from = now;
       _to = _target(now.lon);
       _fly.forward(from: 0);
+    } else if (!listEquals(oldWidget.via, widget.via)) {
+      // Only the way there changed (a new Tor circuit to the same exit): no flight, the arc just bends.
+      _from = _from.withVia(widget.via);
+      _to = _to.withVia(widget.via);
     } else if (oldWidget.homeColor != widget.homeColor || oldWidget.exitColor != widget.exitColor) {
       // Only a colour changed (the exit turns from "connecting" to "connected"): no new flight.
       _from = _from.withColors(widget.homeColor, widget.exitColor);
@@ -456,6 +534,7 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     return LayoutBuilder(
       builder: (context, box) {
         _radius = math.max(40.0, box.biggest.shortestSide / 2);
+        _size = box.biggest;
         return Listener(
           onPointerSignal: _wheel,
           // The button sits beside the gesture area, not in it: the gesture area takes every touch.
@@ -682,6 +761,23 @@ class _Projection {
   return ([k1 * h[0] + k2 * e[0], k1 * h[1] + k2 * e[1], k1 * h[2] + k2 * e[2]], lift);
 }
 
+/// The points of a route (you, the places in between, the exit) as unit vectors with their lift above the
+/// surface: [steps] samples per leg, a leg's end shared with the next leg's start. Legs too short to bend are
+/// left out; null when nothing is left to draw.
+List<(List<double>, double)>? _routeSamples(List<(double, double)> route, int steps) {
+  if (route.length < 2) return null;
+  final out = <(List<double>, double)>[];
+  for (var i = 0; i + 1 < route.length; i++) {
+    final h = _Projection.unit(route[i].$1, route[i].$2), e = _Projection.unit(route[i + 1].$1, route[i + 1].$2);
+    final omega = math.acos((h[0] * e[0] + h[1] * e[1] + h[2] * e[2]).clamp(-1.0, 1.0));
+    if (omega < 0.02) continue;
+    for (var k = out.isEmpty ? 0 : 1; k <= steps; k++) {
+      out.add(_arcAt(h, e, omega, k / steps));
+    }
+  }
+  return out.length < 2 ? null : out;
+}
+
 class _GlobePainter extends CustomPainter {
   _GlobePainter({
     required this.scene,
@@ -772,16 +868,15 @@ class _GlobePainter extends CustomPainter {
     final home = scene.home, exit = scene.exit;
     final s = (r / 360).clamp(0.6, 1.2);
 
-    // The path between where you are and where you exit: a dotted arc rising above the surface.
+    // The path between where you are and where you exit, through the places in between: a dotted arc
+    // rising above the surface.
     if (home != null && exit != null) {
       final a = math.min(scene.homeAlpha, scene.exitAlpha);
-      final h = unit(home.$1, home.$2), e = unit(exit.$1, exit.$2);
-      final omega = math.acos((h[0] * e[0] + h[1] * e[1] + h[2] * e[2]).clamp(-1.0, 1.0));
-      if (a > 0.01 && omega > 0.02) {
+      final samples = a > 0.01 ? _routeSamples(scene.route, 56) : null;
+      if (samples != null) {
         final paint = Paint()..color = scene.exitColor.withValues(alpha: 0.8 * a);
-        const steps = 56;
-        for (var i = 0; i <= steps; i += 2) {
-          final (v, lift) = _arcAt(h, e, omega, i / steps);
+        for (var i = 0; i < samples.length; i += 2) {
+          final (v, lift) = samples[i];
           final (p, z) = project(v[0], v[1], v[2], lift);
           if (z > 0) canvas.drawCircle(p, 1.7 * s, paint);
         }
@@ -816,6 +911,10 @@ class _GlobePainter extends CustomPainter {
 
     // Where you are (smaller once you are somewhere else), then where you exit.
     mark(home, scene.homeAlpha, scene.homeColor, exit == null ? 1 : 0.7);
+    // The relays in between, smaller: stops on the way.
+    for (final at in scene.via) {
+      mark(at, scene.exitAlpha, scene.exitColor, 0.55);
+    }
     mark(exit, scene.exitAlpha, scene.exitColor, 1);
   }
 
@@ -967,17 +1066,14 @@ class _Arc {
   final Path path;
 
   static _Arc? build(_Scene scene, Size size, double zoom) {
-    final home = scene.home, exit = scene.exit;
-    if (home == null || exit == null) return null;
-    final h = _Projection.unit(home.$1, home.$2), e = _Projection.unit(exit.$1, exit.$2);
-    final omega = math.acos((h[0] * e[0] + h[1] * e[1] + h[2] * e[2]).clamp(-1.0, 1.0));
-    if (omega < 0.02) return null;
+    if (scene.home == null || scene.exit == null) return null;
+    final samples = _routeSamples(scene.route, steps);
+    if (samples == null) return null;
     final pr = _Projection(scene, size, zoom);
     final points = <Offset?>[];
     final path = Path();
     var pen = false;
-    for (var i = 0; i <= steps; i++) {
-      final (v, k) = _arcAt(h, e, omega, i / steps);
+    for (final (v, k) in samples) {
       final (p, z) = pr.project(v[0], v[1], v[2], k);
       if (z <= 0) {
         points.add(null);
@@ -997,8 +1093,9 @@ class _Arc {
 
   /// The point at [u] along the arc (0 at you, 1 at the exit); null where it is behind the Earth.
   Offset? at(double u) {
-    final x = u.clamp(0.0, 1.0) * steps;
-    final i = math.min(x.floor(), steps - 1);
+    final n = points.length - 1;
+    final x = u.clamp(0.0, 1.0) * n;
+    final i = math.min(x.floor(), n - 1);
     final a = points[i], b = points[i + 1];
     if (a == null || b == null) return null;
     return Offset.lerp(a, b, x - i);

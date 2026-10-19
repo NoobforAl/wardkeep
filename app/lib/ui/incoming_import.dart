@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/errors.dart';
 import '../l10n/l10n.dart';
+import '../state/groups.dart';
 import '../state/providers.dart';
 import 'import_file.dart';
 import 'screens/subscription_screen.dart';
@@ -43,7 +44,7 @@ Future<void> importShared(GlobalKey<NavigatorState> navigator, WidgetRef ref, St
 
   try {
     final result = await ref.read(engineProvider).importText(text);
-    final added = ref.read(profilesProvider.notifier).addAll(result.profiles);
+    final added = ref.read(profilesProvider.notifier).addAll(ref.read(groupsProvider.notifier).place(text, result.profiles));
     if (!context.mounted) return;
     // The first thing that went wrong with an entry, after the headline: "bad: no user id".
     final failure = result.failure;

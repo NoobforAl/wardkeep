@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../motion.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -55,7 +56,7 @@ class BypassScreen extends ConsumerWidget {
   }
 
   Future<void> _fromUrl(BuildContext context) async {
-    final url = await showDialog<String>(context: context, builder: (_) => const _UrlDialog());
+    final url = await showDialog<String>(animationStyle: softAnimation, context: context, builder: (_) => const _UrlDialog());
     if (url == null || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     final l = context.l10n;
@@ -369,6 +370,12 @@ class _BypassEditScreenState extends ConsumerState<BypassEditScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              SoftAppear(
+                show: _checkError != null || report != null,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               if (_checkError != null)
                 Text(_checkError!, style: TextStyle(color: scheme.error))
               else if (report != null) ...[
@@ -392,6 +399,9 @@ class _BypassEditScreenState extends ConsumerState<BypassEditScreen> {
                   if (report.issues.length > 8) Text('  ${context.l10n.bypassMoreIssues(report.issues.length - 8)}'),
                 ],
               ],
+                  ],
+                ),
+              ),
             ],
           ),
         ),

@@ -366,6 +366,222 @@ abstract class AppLocalizations {
   /// **'Tor network'**
   String get torNetwork;
 
+  /// No description provided for @torHopBridge.
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge'**
+  String get torHopBridge;
+
+  /// No description provided for @torHopEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry'**
+  String get torHopEntry;
+
+  /// No description provided for @torHopRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay'**
+  String get torHopRelay;
+
+  /// No description provided for @torHopExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get torHopExit;
+
+  /// No description provided for @torHopHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get torHopHidden;
+
+  /// No description provided for @torHopUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get torHopUnknown;
+
+  /// No description provided for @hopYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get hopYou;
+
+  /// No description provided for @hopYouNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This is where you really are. Your traffic starts here.'**
+  String get hopYouNote;
+
+  /// No description provided for @hopServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get hopServer;
+
+  /// No description provided for @hopServerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your traffic travels encrypted to this server and comes out here, so websites see its address instead of yours.'**
+  String get hopServerNote;
+
+  /// No description provided for @hopBridgeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first hop. A bridge hides from your network that you use Tor. It knows who you are, but not where you go.'**
+  String get hopBridgeNote;
+
+  /// No description provided for @hopEntryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The first relay. It knows your address, but not what you visit.'**
+  String get hopEntryNote;
+
+  /// No description provided for @hopRelayNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The middle relay. It knows neither who you are nor what you visit; it only passes traffic along.'**
+  String get hopRelayNote;
+
+  /// No description provided for @hopExitNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The last relay. It sees where you go, but not who you are, and websites see its address.'**
+  String get hopExitNote;
+
+  /// No description provided for @hopHiddenNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The bridge\'s location is hidden by its transport, so it cannot be shown on the map.'**
+  String get hopHiddenNote;
+
+  /// No description provided for @hopTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get hopTransport;
+
+  /// No description provided for @hopProtocol.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get hopProtocol;
+
+  /// No description provided for @hopAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get hopAddress;
+
+  /// No description provided for @hopLatency.
+  ///
+  /// In en, this message translates to:
+  /// **'Latency'**
+  String get hopLatency;
+
+  /// No description provided for @hopExitAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit address'**
+  String get hopExitAddress;
+
+  /// No description provided for @menuNewGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get menuNewGroup;
+
+  /// No description provided for @groupNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupNameHint;
+
+  /// No description provided for @groupCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get groupCreate;
+
+  /// No description provided for @menuMoveToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to group'**
+  String get menuMoveToGroup;
+
+  /// No description provided for @groupMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to'**
+  String get groupMoveTitle;
+
+  /// No description provided for @menuRenameGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get menuRenameGroup;
+
+  /// No description provided for @menuDeleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get menuDeleteGroup;
+
+  /// No description provided for @groupDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this group?'**
+  String get groupDeleteTitle;
+
+  /// No description provided for @groupDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its servers are not deleted. They move back to {name}.'**
+  String groupDeleteBody(String name);
+
+  /// No description provided for @groupEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No servers yet. Open a server\'s menu and choose Move to group.'**
+  String get groupEmptyHint;
+
+  /// No description provided for @menuShareGroupFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as text file'**
+  String get menuShareGroupFile;
+
+  /// No description provided for @menuCopyGroupLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy links'**
+  String get menuCopyGroupLinks;
+
+  /// No description provided for @groupSavedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved: {servers}'**
+  String groupSavedToast(String servers);
+
+  /// No description provided for @groupCopiedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied: {servers}'**
+  String groupCopiedToast(String servers);
+
+  /// No description provided for @groupNothingToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'None of these servers has a share link.'**
+  String get groupNothingToShare;
+
+  /// No description provided for @groupSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Left out, no share link: {servers}'**
+  String groupSkipped(String servers);
+
   /// No description provided for @emptyTitle.
   ///
   /// In en, this message translates to:

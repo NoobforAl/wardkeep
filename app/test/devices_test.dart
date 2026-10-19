@@ -61,6 +61,8 @@ Future<void> _connectAndOpenDevices(WidgetTester tester) async {
   await tester.tap(find.text('Connect'));
   await tester.pump(const Duration(milliseconds: 100));
   await tester.pump(const Duration(milliseconds: 100));
+  await tester.pump(const Duration(seconds: 1)); // the status eases in (one frame starts it, one ends it)
+  await tester.pump(const Duration(seconds: 1));
   await tester.tap(find.text('My devices'));
   await tester.pumpAndSettle();
 }
@@ -120,6 +122,8 @@ void main() {
     await tester.tap(find.text('Connect'));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(seconds: 1)); // the status eases in (one frame starts it, one ends it)
+    await tester.pump(const Duration(seconds: 1));
     expect(find.text('Home mesh'), findsOneWidget);
     expect(find.text('My devices'), findsOneWidget);
 

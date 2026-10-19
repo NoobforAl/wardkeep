@@ -133,6 +133,130 @@ class AppLocalizationsEs extends AppLocalizations {
   String get torNetwork => 'Red Tor';
 
   @override
+  String get torHopBridge => 'Puente';
+
+  @override
+  String get torHopEntry => 'Entrada';
+
+  @override
+  String get torHopRelay => 'Relé';
+
+  @override
+  String get torHopExit => 'Salida';
+
+  @override
+  String get torHopHidden => 'Oculto';
+
+  @override
+  String get torHopUnknown => 'Desconocido';
+
+  @override
+  String get hopYou => 'Tú';
+
+  @override
+  String get hopYouNote => 'Aquí estás realmente. Tu tráfico empieza aquí.';
+
+  @override
+  String get hopServer => 'Servidor';
+
+  @override
+  String get hopServerNote =>
+      'Tu tráfico viaja cifrado hasta este servidor y sale por aquí, así que los sitios web ven su dirección en lugar de la tuya.';
+
+  @override
+  String get hopBridgeNote =>
+      'Tu primer salto. Un puente oculta a tu red que usas Tor. Sabe quién eres, pero no adónde vas.';
+
+  @override
+  String get hopEntryNote =>
+      'El primer relé. Conoce tu dirección, pero no lo que visitas.';
+
+  @override
+  String get hopRelayNote =>
+      'El relé intermedio. No sabe quién eres ni qué visitas; solo reenvía el tráfico.';
+
+  @override
+  String get hopExitNote =>
+      'El último relé. Ve adónde vas, pero no quién eres, y los sitios web ven su dirección.';
+
+  @override
+  String get hopHiddenNote =>
+      'La ubicación del puente está oculta por su transporte, así que no se puede mostrar en el mapa.';
+
+  @override
+  String get hopTransport => 'Transporte';
+
+  @override
+  String get hopProtocol => 'Protocolo';
+
+  @override
+  String get hopAddress => 'Dirección';
+
+  @override
+  String get hopLatency => 'Latencia';
+
+  @override
+  String get hopExitAddress => 'Dirección de salida';
+
+  @override
+  String get menuNewGroup => 'Grupo nuevo';
+
+  @override
+  String get groupNameHint => 'Nombre del grupo';
+
+  @override
+  String get groupCreate => 'Crear';
+
+  @override
+  String get menuMoveToGroup => 'Mover a un grupo';
+
+  @override
+  String get groupMoveTitle => 'Mover a';
+
+  @override
+  String get menuRenameGroup => 'Renombrar';
+
+  @override
+  String get menuDeleteGroup => 'Eliminar grupo';
+
+  @override
+  String get groupDeleteTitle => '¿Eliminar este grupo?';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'Sus servidores no se eliminan. Vuelven a $name.';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'Aún no hay servidores. Abre el menú de un servidor y elige Mover a un grupo.';
+
+  @override
+  String get menuShareGroupFile => 'Guardar como archivo de texto';
+
+  @override
+  String get menuCopyGroupLinks => 'Copiar enlaces';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'Guardado: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'Copiado: $servers';
+  }
+
+  @override
+  String get groupNothingToShare =>
+      'Ninguno de estos servidores tiene enlace para compartir.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'Omitidos, sin enlace para compartir: $servers';
+  }
+
+  @override
   String get emptyTitle => 'Aún no hay perfiles';
 
   @override

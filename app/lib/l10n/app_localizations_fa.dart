@@ -133,6 +133,131 @@ class AppLocalizationsFa extends AppLocalizations {
   String get torNetwork => 'شبکه Tor';
 
   @override
+  String get torHopBridge => 'پل';
+
+  @override
+  String get torHopEntry => 'ورودی';
+
+  @override
+  String get torHopRelay => 'رله';
+
+  @override
+  String get torHopExit => 'خروجی';
+
+  @override
+  String get torHopHidden => 'پنهان';
+
+  @override
+  String get torHopUnknown => 'نامشخص';
+
+  @override
+  String get hopYou => 'شما';
+
+  @override
+  String get hopYouNote =>
+      'اینجا جای واقعی شماست. ترافیک شما از همین‌جا شروع می‌شود.';
+
+  @override
+  String get hopServer => 'سرور';
+
+  @override
+  String get hopServerNote =>
+      'ترافیک شما رمزگذاری‌شده به این سرور می‌رود و از اینجا خارج می‌شود، پس وب‌سایت‌ها نشانی آن را می‌بینند نه نشانی شما را.';
+
+  @override
+  String get hopBridgeNote =>
+      'اولین جهش شما. پل از شبکه‌تان پنهان می‌کند که از Tor استفاده می‌کنید. می‌داند شما کیستید، اما نمی‌داند به کجا می‌روید.';
+
+  @override
+  String get hopEntryNote =>
+      'اولین رله. نشانی شما را می‌داند، اما نمی‌داند چه چیزی را می‌بینید.';
+
+  @override
+  String get hopRelayNote =>
+      'رلهٔ میانی. نه می‌داند شما کیستید و نه اینکه چه می‌بینید؛ فقط ترافیک را عبور می‌دهد.';
+
+  @override
+  String get hopExitNote =>
+      'آخرین رله. می‌بیند به کجا می‌روید، اما نمی‌داند شما کیستید، و وب‌سایت‌ها نشانی آن را می‌بینند.';
+
+  @override
+  String get hopHiddenNote =>
+      'مکان پل را شیوهٔ انتقال آن پنهان کرده، پس روی نقشه نشان داده نمی‌شود.';
+
+  @override
+  String get hopTransport => 'شیوهٔ انتقال';
+
+  @override
+  String get hopProtocol => 'پروتکل';
+
+  @override
+  String get hopAddress => 'نشانی';
+
+  @override
+  String get hopLatency => 'تأخیر';
+
+  @override
+  String get hopExitAddress => 'نشانی خروج';
+
+  @override
+  String get menuNewGroup => 'گروه جدید';
+
+  @override
+  String get groupNameHint => 'نام گروه';
+
+  @override
+  String get groupCreate => 'ایجاد';
+
+  @override
+  String get menuMoveToGroup => 'انتقال به گروه';
+
+  @override
+  String get groupMoveTitle => 'انتقال به';
+
+  @override
+  String get menuRenameGroup => 'تغییر نام';
+
+  @override
+  String get menuDeleteGroup => 'حذف گروه';
+
+  @override
+  String get groupDeleteTitle => 'این گروه حذف شود؟';
+
+  @override
+  String groupDeleteBody(String name) {
+    return 'سرورهای آن حذف نمی‌شوند و به «$name» برمی‌گردند.';
+  }
+
+  @override
+  String get groupEmptyHint =>
+      'هنوز سروری نیست. منوی یک سرور را باز کنید و «انتقال به گروه» را بزنید.';
+
+  @override
+  String get menuShareGroupFile => 'ذخیره به‌صورت فایل متنی';
+
+  @override
+  String get menuCopyGroupLinks => 'کپی پیوندها';
+
+  @override
+  String groupSavedToast(String servers) {
+    return 'ذخیره شد: $servers';
+  }
+
+  @override
+  String groupCopiedToast(String servers) {
+    return 'کپی شد: $servers';
+  }
+
+  @override
+  String get groupNothingToShare =>
+      'هیچ‌کدام از این سرورها پیوند اشتراک‌گذاری ندارند.';
+
+  @override
+  String groupSkipped(String servers) {
+    return 'کنار گذاشته شد، بدون پیوند اشتراک‌گذاری: $servers';
+  }
+
+  @override
   String get emptyTitle => 'هنوز پروفایلی نیست';
 
   @override
