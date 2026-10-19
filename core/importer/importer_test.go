@@ -210,7 +210,7 @@ func TestImportTorBridges(t *testing.T) {
 	if p.Protocol != "tor" || len(p.Tor.Bridges) != 2 || p.Tor.Bridges[0][:5] != "obfs4" {
 		t.Fatalf("profile = %+v", p)
 	}
-	for link, kind := range map[string]string{"tor://": "", "tor://snowflake": "snowflake", "tor://obfs4/": "obfs4"} {
+	for link, kind := range map[string]string{"tor://": "", "tor://snowflake": "snowflake", "tor://obfs4/": "obfs4", "tor://meek": "meek"} {
 		p, err := ParseLink(link)
 		if err != nil || p.Protocol != "tor" || p.Tor.Builtin != kind {
 			t.Errorf("%s: %+v %v", link, p, err)

@@ -234,7 +234,7 @@ func (p *Profile) Validate() error {
 		return fmt.Errorf("profile %q: missing protocol", p.Name)
 	}
 	if p.Protocol == Tor {
-		return nil
+		return validateTor(p)
 	}
 	if p.Protocol == Tailscale {
 		if p.Password == "" {

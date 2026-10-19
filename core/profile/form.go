@@ -730,7 +730,7 @@ func protocolFields(protocol string) ([]Field, bool) {
 					return &o.Builtin
 				}
 				return nil
-			}, choices("", "snowflake", "obfs4"), help("Empty connects to Tor directly, or uses the bridge lines below")),
+			}, choices("", "snowflake", "obfs4", "meek"), help("Empty connects to Tor directly, or uses the bridge lines below")),
 			list("tor.bridges", "Bridge lines", func(p *Profile, c bool) *[]string {
 				if o := torOf(p, c); o != nil {
 					return &o.Bridges

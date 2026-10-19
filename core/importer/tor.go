@@ -2,6 +2,7 @@ package importer
 
 import (
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 var torTransports = []string{"obfs4", "webtunnel", "snowflake", "meek_lite"}
 
 // torBuiltinKinds are the built-in bridge sets a tor:// link can name.
-var torBuiltinKinds = []string{"obfs4", "snowflake"}
+var torBuiltinKinds = []string{"obfs4", "snowflake", "meek"}
 
 // bridgeLine returns line without a torrc "Bridge " prefix and reports whether
 // it looks like a Tor bridge line: "<transport> <addr> ..." or a plain
@@ -62,22 +63,40 @@ func parseBridgeLines(text string) *profile.Profile {
 	return p
 }
 
-// parseTorLink parses tor:// (direct), tor://obfs4 and tor://snowflake
-// (Tor Browser's built-in bridges).
+// parseTorLink parses tor:// (direct), tor://obfs4, tor://snowflake and tor://meek (Tor Browser's built-in
+// bridges), and the same with the user's own bridges: tor://?bridge=<bridge line>&bridge=<another>. A fragment
+// is the profile's name.
 func parseTorLink(link string) (*profile.Profile, error) {
 	_, rest, _ := strings.Cut(link, "://")
+	rest, name, _ := strings.Cut(rest, "#")
+	rest, rawQuery, _ := strings.Cut(rest, "?")
 	kind := strings.ToLower(strings.Trim(rest, "/ "))
 	p := &profile.Profile{Name: "Tor", Protocol: profile.Tor, Tor: &profile.TorOpts{}}
 	if kind != "" {
-		ok := false
-		for _, k := range torBuiltinKinds {
-			ok = ok || k == kind
-		}
-		if !ok {
-			return nil, fmt.Errorf("unknown Tor bridge kind %q (use obfs4 or snowflake)", kind)
+		if !slices.Contains(torBuiltinKinds, kind) {
+			return nil, fmt.Errorf("unknown Tor bridge kind %q (use obfs4, snowflake or meek)", kind)
 		}
 		p.Tor.Builtin = kind
 		p.Name = "Tor (" + kind + ")"
+	}
+	if rawQuery != "" {
+		q, err := url.ParseQuery(rawQuery)
+		if err != nil {
+			return nil, fmt.Errorf("bad Tor link: %v", err)
+		}
+		for _, b := range q["bridge"] {
+			line, ok := bridgeLine(b)
+			if !ok {
+				return nil, fmt.Errorf("not a bridge line: %q", truncate(b, 48))
+			}
+			p.Tor.Bridges = append(p.Tor.Bridges, line)
+		}
+		if len(p.Tor.Bridges) > 0 && kind == "" {
+			p.Name = "Tor (custom bridges)"
+		}
+	}
+	if name, err := url.PathUnescape(name); err == nil && strings.TrimSpace(name) != "" {
+		p.Name = strings.TrimSpace(name)
 	}
 	return p, nil
 }

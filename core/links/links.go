@@ -350,14 +350,25 @@ func sstp(p *profile.Profile) string {
 	return build("sstp", userinfo, hostPort(p), "", q, p.Name)
 }
 
+// tor is one line, so a Tor profile with the user's own bridges can sit in a list of links (a shared group).
 func tor(p *profile.Profile) string {
-	if p.Tor != nil && p.Tor.Builtin != "" {
-		return "tor://" + p.Tor.Builtin
+	kind, bridges := "", []string(nil)
+	if p.Tor != nil {
+		kind, bridges = p.Tor.Builtin, p.Tor.Bridges
 	}
-	if p.Tor != nil && len(p.Tor.Bridges) > 0 {
-		return strings.Join(p.Tor.Bridges, "\n")
+	q := &query{}
+	for _, b := range bridges {
+		q.add("bridge", b)
 	}
-	return "tor://"
+	// The name a link without one would get back: no need to carry it.
+	name := p.Name
+	switch {
+	case kind != "" && name == "Tor ("+kind+")",
+		kind == "" && len(bridges) == 0 && name == "Tor",
+		kind == "" && len(bridges) > 0 && name == "Tor (custom bridges)":
+		name = ""
+	}
+	return build("tor", "", kind, "", q, name)
 }
 
 func orDefault(s, d string) string {
