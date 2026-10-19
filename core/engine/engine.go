@@ -62,6 +62,15 @@ type State struct {
 	Progress *Progress `json:"progress,omitempty"`
 	// ProfileName is the display name of Selected ("auto" for the auto group).
 	ProfileName string `json:"profile_name,omitempty"`
+	// TorPath is the Tor circuit the traffic rides, relay by relay (bridge or guard, middle, exit), once
+	// known; empty for anything but a running Tor profile.
+	TorPath []TorHop `json:"tor_path,omitempty"`
+}
+
+// TorHop is one relay of the Tor circuit: its role and, when known, the country it is in.
+type TorHop struct {
+	Role    string `json:"role"`
+	Country string `json:"country,omitempty"`
 }
 
 // Config sets up an engine.
@@ -181,6 +190,10 @@ func (e *Engine) setState(s State) {
 			s.Failover = &f
 		}
 		e.carryFailover = nil
+	}
+	// The Tor circuit belongs to the running Tor profile, whichever code replaces the state.
+	if s.Status == StatusRunning && e.torRun != nil && len(s.TorPath) == 0 {
+		s.TorPath = e.torRun.path
 	}
 	s.ErrorCode = ""
 	if s.Status == StatusError {

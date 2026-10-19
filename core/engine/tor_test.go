@@ -2,11 +2,13 @@ package engine
 
 import (
 	"context"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/omnitun/core/tor"
 )
 
 const testFingerprint = "D9A82D2F9C2F65A18407B1D2B764F130847F8B5D"
@@ -171,5 +173,46 @@ func TestStagePercentsIncrease(t *testing.T) {
 	}
 	if last != 100 {
 		t.Fatalf("connected is at %d, not 100", last)
+	}
+}
+
+func TestTorPathIsShownWhileTheTunnelRuns(t *testing.T) {
+	var last State
+	e := New(Config{OnState: func(s State) { last = s }})
+	run := &torRun{}
+	e.mu.Lock()
+	e.torRun = run
+	e.setState(State{Status: StatusStarting})
+	e.mu.Unlock()
+
+	// A circuit reported while Tor is still being tested is kept, not shown.
+	e.torPath(run, []tor.Hop{{Role: "bridge", Country: "DE"}, {Role: "middle"}, {Role: "exit", Country: "NL"}})
+	if len(last.TorPath) != 0 {
+		t.Fatalf("shown before the tunnel runs: %+v", last.TorPath)
+	}
+	// Once running, whatever replaces the state still carries it.
+	e.mu.Lock()
+	e.setState(State{Status: StatusRunning, UpBps: 5})
+	e.mu.Unlock()
+	want := []TorHop{{Role: "bridge", Country: "DE"}, {Role: "middle"}, {Role: "exit", Country: "NL"}}
+	if !reflect.DeepEqual(last.TorPath, want) {
+		t.Fatalf("running state has path %+v, want %+v", last.TorPath, want)
+	}
+	// A new circuit replaces it at once.
+	e.torPath(run, []tor.Hop{{Role: "guard", Country: "FR"}, {Role: "middle", Country: "SE"}, {Role: "exit", Country: "CH"}})
+	if got := last.TorPath; len(got) != 3 || got[0].Country != "FR" || got[2].Country != "CH" {
+		t.Fatalf("new circuit not shown: %+v", got)
+	}
+	// Another run's report, or none running, changes nothing.
+	e.torPath(&torRun{}, []tor.Hop{{Role: "exit", Country: "US"}})
+	if last.TorPath[2].Country != "CH" {
+		t.Fatalf("a stale run's circuit was shown: %+v", last.TorPath)
+	}
+	e.mu.Lock()
+	e.torRun = nil
+	e.setState(State{Status: StatusRunning})
+	e.mu.Unlock()
+	if len(last.TorPath) != 0 {
+		t.Fatalf("path outlived the Tor profile: %+v", last.TorPath)
 	}
 }

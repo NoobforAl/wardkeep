@@ -6,20 +6,26 @@
 //!   {"event":"listening","socks":"127.0.0.1:PORT"}
 //!   {"event":"bootstrap","percent":42,"status":"..."}
 //!   {"event":"ready"}
+//!   {"event":"path","hops":[{"role":"guard","country":"DE"},{"role":"middle","country":"FR"},{"role":"exit","country":"NL"}]}
+//!     (the circuit the traffic rides, whenever it changes: roles and countries only)
 //!   {"event":"error","message":"..."}
 //! The process exits when stdin closes, so it never outlives the core.
 
-use std::sync::Arc;
+use std::net::IpAddr;
+use std::sync::{Arc, Mutex};
 
 use anyhow::Context;
 use arti_client::config::pt::TransportConfigBuilder;
 use arti_client::config::{BoolOrAuto, BridgeConfigBuilder, TorClientConfigBuilder};
 use arti_client::{HasKind, TorClient, TorClientConfig};
 use futures::StreamExt;
-use omnitun_tor::{args, socks};
+use omnitun_tor::{args, path, socks};
 use serde_json::json;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
+use tor_geoip::GeoipDb;
+use tor_linkspec::{ChanTarget, ChannelMethod, PtTargetAddr};
+use tor_proto::client::stream::ClientStreamCtrl;
 use tor_rtcompat::PreferredRuntime;
 
 fn emit(v: serde_json::Value) {
@@ -53,13 +59,64 @@ fn config(a: &args::Args) -> anyhow::Result<TorClientConfig> {
     Ok(b.build()?)
 }
 
-async fn serve(client: Arc<TorClient<PreferredRuntime>>, mut conn: TcpStream) {
+/// What the connections share: the client, and what is needed to describe the circuit they ride.
+struct Shared {
+    client: Arc<TorClient<PreferredRuntime>>,
+    geoip: Arc<GeoipDb>,
+    /// The first hop is a bridge, not a guard.
+    bridged: bool,
+    /// The countries of the path last reported, so a circuit is announced once, not per connection.
+    last: Mutex<Vec<Option<String>>>,
+}
+
+/// The country of a relay (or bridge): from its address, else from the address of the bridge behind its
+/// pluggable transport. Unknown (None) for a fronted bridge such as Snowflake: it has no real address.
+fn hop_country(db: &GeoipDb, hop: &impl ChanTarget) -> Option<String> {
+    let mut ips: Vec<IpAddr> = hop.addrs().map(|a| a.ip()).collect();
+    if ips.is_empty() {
+        if let ChannelMethod::Pluggable(pt) = hop.chan_method() {
+            if let PtTargetAddr::IpPort(sa) = pt.addr() {
+                ips.push(sa.ip());
+            }
+        }
+    }
+    db.lookup_country_code_multi(ips)
+        .map(|c| c.get().to_string())
+        .filter(|c| c != "??")
+}
+
+/// Tells the core which relays a stream's circuit uses, when that is not what was last told.
+fn report_path(sh: &Shared, stream: &arti_client::DataStream) {
+    let Some(tunnel) = stream.client_stream_ctrl().and_then(|c| c.tunnel()) else {
+        return;
+    };
+    // A client tunnel is one circuit; take its path.
+    let Some(circuit) = tunnel.all_paths().into_iter().next() else {
+        return;
+    };
+    let countries: Vec<Option<String>> = circuit
+        .iter()
+        .map(|h| h.as_chan_target().and_then(|t| hop_country(&sh.geoip, t)))
+        .collect();
+    if countries.is_empty() {
+        return;
+    }
+    let mut last = sh.last.lock().unwrap();
+    if *last != countries {
+        emit(path::event(&countries, sh.bridged));
+        *last = countries;
+    }
+}
+
+async fn serve(sh: Arc<Shared>, mut conn: TcpStream) {
+    let client = &sh.client;
     let target = match socks::handshake(&mut conn).await {
         Ok(t) => t,
         Err(_) => return,
     };
     match client.connect((target.host.as_str(), target.port)).await {
         Ok(mut stream) => {
+            report_path(&sh, &stream);
             if socks::send_reply(&mut conn, socks::reply::SUCCEEDED)
                 .await
                 .is_err()
@@ -109,10 +166,15 @@ async fn run(a: args::Args) -> anyhow::Result<()> {
     client.bootstrap().await.context("bootstrap")?;
     emit(json!({"event": "ready"}));
 
+    let shared = Arc::new(Shared {
+        client,
+        geoip: GeoipDb::new_embedded(),
+        bridged: !a.bridges.is_empty(),
+        last: Mutex::new(Vec::new()),
+    });
     loop {
         let (conn, _) = listener.accept().await?;
-        let client = client.clone();
-        tokio::spawn(serve(client, conn));
+        tokio::spawn(serve(shared.clone(), conn));
     }
 }
 

@@ -20,6 +20,10 @@ arti-client = { version = "0.47", default-features = false, features = [
 tor-rtcompat = { version = "0.47", default-features = false, features = ["tokio", "rustls"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "io-std", "time", "sync"] }
 futures = "0.3"
+# The circuit a stream rides (relay by relay) and the country of each relay, for the globe.
+tor-proto = { version = "0.47", default-features = false, features = ["stream-ctrl"] }
+tor-linkspec = "0.47"
+tor-geoip = { version = "0.47", features = ["embedded-db"] }
 anyhow = "1"
 serde_json = "1"
 # Arti's TLS needs a process-wide crypto provider; ring cross-compiles to Android easily.

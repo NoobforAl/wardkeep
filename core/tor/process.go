@@ -16,6 +16,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -32,6 +33,9 @@ type Config struct {
 	Dial DialFunc
 	// OnBootstrap receives bootstrap progress (0-100) and Arti's description.
 	OnBootstrap func(percent int, status string)
+	// OnPath receives the circuit the traffic rides whenever it changes: the relays in order, each with
+	// its role and (when known) country.
+	OnPath func(path []Hop)
 	// Logf receives Arti's warnings.
 	Logf func(format string, args ...any)
 }
@@ -50,6 +54,15 @@ type Process struct {
 	err   error
 }
 
+// Hop is one relay of a Tor circuit.
+type Hop struct {
+	// Role is "bridge" or "guard" (the first hop), "middle" or "exit".
+	Role string `json:"role"`
+	// Country is the upper-case ISO code of where the relay is; empty when unknown (a bridge behind
+	// Snowflake or a front has no real address).
+	Country string `json:"country"`
+}
+
 type event struct {
 	Event   string `json:"event"`
 	Socks   string `json:"socks"`
@@ -57,6 +70,10 @@ type event struct {
 	Status  string `json:"status"`
 	Blocked string `json:"blocked"`
 	Message string `json:"message"`
+	Hops    []struct {
+		Role    string  `json:"role"`
+		Country *string `json:"country"`
+	} `json:"hops"`
 }
 
 // FindBinary locates omnitun-tor: $OMNITUN_TOR_BIN, then next to the running
@@ -155,6 +172,17 @@ func Start(cfg Config) (*Process, error) {
 						status += " (" + ev.Blocked + ")"
 					}
 					cfg.OnBootstrap(ev.Percent, status)
+				}
+			case "path":
+				if cfg.OnPath != nil && len(ev.Hops) > 0 {
+					path := make([]Hop, len(ev.Hops))
+					for i, h := range ev.Hops {
+						path[i].Role = h.Role
+						if h.Country != nil {
+							path[i].Country = strings.ToUpper(*h.Country)
+						}
+					}
+					cfg.OnPath(path)
 				}
 			case "ready":
 				p.ready <- nil

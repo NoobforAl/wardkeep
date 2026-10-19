@@ -29,6 +29,8 @@ type torRun struct {
 	opts     singbox.Options
 	cancel   context.CancelFunc
 	proc     *tor.Process
+	// path is the circuit the traffic rides, as last reported by Tor (guarded by Engine.mu).
+	path []TorHop
 }
 
 func (r *torRun) stop() {
@@ -211,7 +213,8 @@ func (e *Engine) startTorOnce(ctx context.Context, run *torRun, dir string, brid
 		OnBootstrap: func(percent int, status string) {
 			e.torProgress(run, name, percent*9/10, Progress{DetailCode: DetailTorBootstrap})
 		},
-		Logf: func(format string, args ...any) { e.logf("warn", format, args...) },
+		OnPath: func(path []tor.Hop) { e.torPath(run, path) },
+		Logf:   func(format string, args ...any) { e.logf("warn", format, args...) },
 	})
 	if err != nil {
 		return nil, err
@@ -225,6 +228,25 @@ func (e *Engine) startTorOnce(ctx context.Context, run *torRun, dir string, brid
 		return nil, err
 	}
 	return proc, nil
+}
+
+// torPath records the circuit Tor reports and, while the tunnel runs, shows it in the state.
+func (e *Engine) torPath(run *torRun, path []tor.Hop) {
+	hops := make([]TorHop, len(path))
+	for i, h := range path {
+		hops[i] = TorHop{Role: h.Role, Country: h.Country}
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.torRun != run {
+		return
+	}
+	run.path = hops
+	if e.state.Status == StatusRunning {
+		s := e.state
+		s.TorPath = hops
+		e.setState(s)
+	}
 }
 
 // watchTor ends the tunnel when the Tor process dies while connected.

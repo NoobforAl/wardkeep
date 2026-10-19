@@ -67,6 +67,7 @@ func TestLiveTor(t *testing.T) {
 	if kind != "direct" {
 		bridges = Builtin(kind)
 	}
+	pathCh := make(chan []Hop, 8)
 	dir := os.Getenv("OMNITUN_LIVE_TOR_DATA")
 	if dir == "" {
 		dir = t.TempDir()
@@ -74,7 +75,11 @@ func TestLiveTor(t *testing.T) {
 	p, err := Start(Config{
 		DataDir: dir, Bridges: bridges,
 		OnBootstrap: func(pct int, status string) { t.Logf("bootstrap %d%%: %s", pct, status) },
-		Logf:        t.Logf,
+		OnPath: func(path []Hop) {
+			t.Logf("circuit: %+v", path)
+			pathCh <- path
+		},
+		Logf: t.Logf,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -101,6 +106,15 @@ func TestLiveTor(t *testing.T) {
 		t.Fatalf("not via Tor: %s", body)
 	}
 	t.Logf("Tor exit %s", r.IP)
+	// The request rode a circuit, and Tor said which relays it has: three hops, the last the exit.
+	select {
+	case path := <-pathCh:
+		if len(path) < 3 || path[len(path)-1].Role != "exit" {
+			t.Fatalf("circuit %+v: want at least three hops ending in the exit", path)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("Tor did not report the circuit")
+	}
 }
 
 func TestTransportLogKeepsOnlyProblems(t *testing.T) {
