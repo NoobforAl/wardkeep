@@ -270,10 +270,11 @@ class _WideBodyState extends State<_WideBody> {
           // A new Navigator for each destination: choosing one in the rail goes back to its first page.
           child: _PageNavigator(
             key: ValueKey(_page),
+            // A function: this build runs every second, and a route made here and not used would never be disposed.
             first: switch (_page) {
-              1 => AppRoute<void>(builder: (_) => const ProfilesScreen()),
-              2 => AppRoute<void>(builder: (_) => const SettingsScreen()),
-              _ => MaterialPageRoute<void>(builder: (_) => _ConnectionPage(scheme: scheme)),
+              1 => () => AppRoute<void>(builder: (_) => const ProfilesScreen()),
+              2 => () => AppRoute<void>(builder: (_) => const SettingsScreen()),
+              _ => () => MaterialPageRoute<void>(builder: (_) => _ConnectionPage(scheme: scheme)),
             },
           ),
         ),
@@ -286,7 +287,8 @@ class _WideBodyState extends State<_WideBody> {
 class _PageNavigator extends StatefulWidget {
   const _PageNavigator({super.key, required this.first});
 
-  final Route<void> first;
+  /// Makes the page the Navigator starts with; called once.
+  final Route<void> Function() first;
 
   @override
   State<_PageNavigator> createState() => _PageNavigatorState();
@@ -302,7 +304,7 @@ class _PageNavigatorState extends State<_PageNavigator> {
         bindings: {const SingleActivator(LogicalKeyboardKey.escape): () => _key.currentState?.maybePop()},
         child: Focus(
           autofocus: true,
-          child: Navigator(key: _key, onGenerateRoute: (_) => widget.first),
+          child: Navigator(key: _key, onGenerateRoute: (_) => widget.first()),
         ),
       ),
     );

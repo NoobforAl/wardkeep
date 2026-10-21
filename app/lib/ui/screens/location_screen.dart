@@ -20,12 +20,15 @@ import '../layout.dart';
 
 /// Measures every profile's latency, for the dots and for Auto.
 Future<void> testAllLatencies(WidgetRef ref) async {
+  // Read everything before the first await: the user may leave the screen while the tests run, and
+  // a ref cannot be used once its widget is gone. The notifier outlives the screen.
   final engine = ref.read(engineProvider);
   final profiles = ref.read(profilesProvider);
+  final results = ref.read(profilesProvider.notifier);
   await Future.wait(
     profiles.map((p) async {
       final ms = await engine.testLatency(p);
-      ref.read(profilesProvider.notifier).setLatency(p.id, ms);
+      results.setLatency(p.id, ms);
     }),
   );
 }

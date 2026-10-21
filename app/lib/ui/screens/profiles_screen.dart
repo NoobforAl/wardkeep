@@ -249,34 +249,56 @@ class _GroupList extends ConsumerWidget {
 
 /// Asks for a group's name; null when cancelled or left empty.
 Future<String?> _askGroupName(BuildContext context, String title, String initial, String action) {
-  final controller = TextEditingController(text: initial);
   return showDialog<String>(
     animationStyle: softAnimation,
     context: context,
-    builder: (context) {
-      final l = context.l10n;
-      void done() {
-        final t = controller.text.trim();
-        Navigator.pop(context, t.isEmpty ? null : t);
-      }
-
-      return AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 40,
-          textInputAction: TextInputAction.done,
-          decoration: InputDecoration(labelText: l.groupNameHint),
-          onSubmitted: (_) => done(),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l.actionCancel)),
-          FilledButton(onPressed: done, child: Text(action)),
-        ],
-      );
-    },
+    builder: (_) => _GroupNameDialog(title: title, initial: initial, action: action),
   );
+}
+
+/// The dialog owns its text controller, so it is disposed once the dialog has left the screen.
+class _GroupNameDialog extends StatefulWidget {
+  const _GroupNameDialog({required this.title, required this.initial, required this.action});
+
+  final String title, initial, action;
+
+  @override
+  State<_GroupNameDialog> createState() => _GroupNameDialogState();
+}
+
+class _GroupNameDialogState extends State<_GroupNameDialog> {
+  late final _controller = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _done() {
+    final t = _controller.text.trim();
+    Navigator.pop(context, t.isEmpty ? null : t);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return AlertDialog(
+      title: Text(widget.title),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLength: 40,
+        textInputAction: TextInputAction.done,
+        decoration: InputDecoration(labelText: l.groupNameHint),
+        onSubmitted: (_) => _done(),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l.actionCancel)),
+        FilledButton(onPressed: _done, child: Text(widget.action)),
+      ],
+    );
+  }
 }
 
 /// Moves a server to one of the user's groups, to a new one, or back to "My servers".

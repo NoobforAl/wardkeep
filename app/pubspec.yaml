@@ -51,6 +51,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Frame times of the real app in profile mode: see integration_test/perf_test.dart.
+  integration_test:
+    sdk: flutter
+  flutter_driver:
+    sdk: flutter
+  vm_service: ^15.4.0
+  # Reports widgets, controllers and notifiers a test creates and never disposes: see test/flutter_test_config.dart.
+  leak_tracker_flutter_testing: ^3.0.10
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

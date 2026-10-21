@@ -148,6 +148,7 @@ void main() {
 
     testWidgets('it turns inside a page that scrolls, and the page still scrolls elsewhere', (tester) async {
       final controller = ScrollController();
+      addTearDown(controller.dispose);
       await tester.pumpWidget(MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
