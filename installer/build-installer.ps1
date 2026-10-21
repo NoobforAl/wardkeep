@@ -4,7 +4,7 @@ Builds the per-user installer (wardkeep.iss) with Inno Setup.
   powershell -File installer\build-installer.ps1 -Version 0.1.0 -SourceDir dist\app -OutputDir dist
   powershell -File installer\build-installer.ps1 -Version 0.1.0 -SourceDir dist\app -OutputDir dist -Pfx cert.pfx
 
-Writes <OutputDir>\omnitun-<Version>-windows-x64-setup.exe. -Version is the name used in the file name
+Writes <OutputDir>\wardkeep-<Version>-windows-x64-setup.exe. -Version is the name used in the file name
 (0.1.0, 0.2.0-rc1, dev-abc1234); the numbers for Windows are taken from it (x.y.z, else 0.0.0).
 -SourceDir is the Flutter release folder with omnitun-svc.exe next to omnitun.exe.
 
@@ -55,6 +55,6 @@ if ($Pfx) {
 }
 & $iscc @iscArgs
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed (exit code $LASTEXITCODE)" }
-$setup = Join-Path (Resolve-Path $OutputDir).Path "omnitun-$Version-windows-x64-setup.exe"
+$setup = Join-Path (Resolve-Path $OutputDir).Path "wardkeep-$Version-windows-x64-setup.exe"
 if (-not (Test-Path $setup)) { throw "$setup was not written" }
 Write-Host "built $setup"

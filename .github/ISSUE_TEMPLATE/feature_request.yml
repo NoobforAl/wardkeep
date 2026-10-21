@@ -1,0 +1,46 @@
+name: Feature request
+description: An idea for Wardkeep
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Wardkeep is a small beta project, so an idea is most useful when it starts from a problem you have.
+        A change that would weaken what the app promises (that traffic goes through the tunnel, that DNS does not leak,
+        that secrets stay on the device) will not be accepted, however it is asked for.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The problem or the situation, not the solution yet.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What do you do now, or what else did you consider?
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which platform?
+      multiple: true
+      options:
+        - Android
+        - Windows
+        - Linux (desktop app)
+        - Server (omnitun-server)
+        - All of them
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before sending
+      options:
+        - label: I searched the existing issues and did not find this idea.
+          required: true

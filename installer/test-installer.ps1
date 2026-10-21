@@ -3,7 +3,7 @@ Tries the installer: installs it silently into a folder of your choice, checks t
 entries, uninstalls it silently and checks that everything is gone again. Everything is per-user (no
 administrator rights); the registry entries are the ones listed in wardkeep.iss.
 
-  powershell -File installer\test-installer.ps1 -Setup dist\omnitun-0.1.0-windows-x64-setup.exe -Dir C:\scratch\wardkeep
+  powershell -File installer\test-installer.ps1 -Setup dist\wardkeep-0.1.0-windows-x64-setup.exe -Dir C:\scratch\wardkeep
 
 The links Wardkeep claims (vless://, ...) are claimed for real while it is installed, so the script refuses
 to run if one of them is already registered for you or a Run entry named Wardkeep exists (it would

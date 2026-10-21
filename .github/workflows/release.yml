@@ -1,0 +1,537 @@
+name: Release
+
+# The release pipeline: the Android APK and the installers for Windows and Linux.
+#
+#   a tag (0.1.0, v0.1.0, 0.2.0-rc1)  →  check, build, sign and publish a GitHub Release (always a pre-release while the app is beta)
+#   "Run workflow" on any branch       →  the same, without publishing: the files stay as run artifacts, to see that they build
+#
+# To release:  git tag 0.1.0 && git push origin 0.1.0
+#
+#   checks ─┐                                       (ci.yml: Go, Rust, Flutter tests, lint, license check)
+#   prepare ┴─▶ android-tor ┐
+#               android-core ┴─▶ android ────────────────────────┐
+#               core-windows ┐                                    │
+#               app-windows  ┴─▶ package-windows (signs, installer, tries it) ─┼─▶ publish
+#               core-linux   ┐                                    │
+#               app-linux    ┴─▶ package-linux (installer, tries it) ──────────┘
+#
+# Nothing is built until the checks and the preparation pass, and nothing is published until every build and every
+# installer test has passed: a failure anywhere stops what comes after it, and no release is ever half there.
+# Independent work runs side by side (the Rust and Go parts of the Android app, the Windows and Linux builds), and
+# every job restores the caches of its toolchain.
+#
+# The files of a release (the names carry the version, 0.2.0-rc1 or dev-abc1234 for a manual run):
+#   wardkeep-<version>.apk                      Android 10+, every ABI in one file (signed with the release key)
+#   wardkeep-<version>-windows-x64-setup.exe    per-user installer (installer/wardkeep.iss, Inno Setup)
+#   wardkeep-<version>-linux-x64-setup.sh       per-user installer (installer/linux), run with sh
+#   SHA256SUMS                                  checksums of the three
+# There is no portable build: the Windows and Linux installers install for the current user only (no administrator
+# rights, no root) and come with an uninstaller. The app is built on Ubuntu 22.04 so that it runs on that and newer.
+#
+# Signing:
+#   Android  the release key in these repository secrets (made by scripts/android-keystore.sh, uploaded by
+#            scripts/android-github-secrets.sh); a tag without them fails at the start, a release is never signed
+#            with a debug key. A manual run is signed with the debug key and is only for trying.
+#              ANDROID_KEYSTORE_BASE64    the keystore file, base64
+#              ANDROID_KEYSTORE_PASSWORD  its password (the key has the same one, alias omnitun)
+#              ANDROID_KEY_PASSWORD       the key password
+#            Keep the keystore and .env backed up: an update of an installed app must be signed with the same key.
+#   Windows  omnitun.exe, omnitun-svc.exe, the setup file and its uninstaller, only if the repository has the secrets
+#            WINDOWS_CERT_PFX_BASE64 (the .pfx file, base64) and WINDOWS_CERT_PASSWORD; without them the files are
+#            unsigned and SmartScreen warns on the first start.
+#
+# Every action is pinned to a full commit SHA (a moved tag cannot run new code with the signing secrets); Dependabot
+# (.github/dependabot.yml) proposes updates. The jobs that run code from dependencies (flutter pub, gradle, cargo,
+# go build) hold no token that can write; the Windows certificate is only in package-windows, which runs nothing from
+# dependencies; only "publish", which runs nothing but the GitHub CLI on the finished files, can write to the release.
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+*"
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.47.7"
+  # The Cronet library of the core (NaiveProxy) needs the linker of NDK 29; the one on the runner image (27) is too old.
+  NDK_VERSION: "29.0.14206865"
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  # The version of this build, and, for a tag, a look at the signing secrets: a missing secret stops the run now,
+  # not after forty minutes of building.
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      name: ${{ steps.version.outputs.name }}
+      core: ${{ steps.version.outputs.core }}
+      number: ${{ steps.version.outputs.number }}
+    steps:
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VER="${GITHUB_REF_NAME#v}"      # 0.1.0 or 0.2.0-rc1
+          else
+            VER="dev-${GITHUB_SHA:0:7}"
+          fi
+          CORE="${VER%%-*}"                 # 0.2.0
+          if [[ "$CORE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            IFS=. read -r MA MI PA <<< "$CORE"
+            # The build number must grow with every release: 0.1.0 -> 100, 1.2.3 -> 10203
+            NUM=$((MA * 10000 + MI * 100 + PA))
+          else
+            CORE="0.0.0"; NUM=1
+          fi
+          { echo "name=$VER"; echo "core=$CORE"; echo "number=$NUM"; } >> "$GITHUB_OUTPUT"
+          echo "release $VER (name $CORE, build number $NUM)"
+
+      - name: Android signing secrets are present
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          for v in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then
+              echo "::error::the repository secret for $v is missing (scripts/android-github-secrets.sh sets them)"
+              exit 1
+            fi
+          done
+
+  # ---------------------------------------------------------------- Android
+
+  # The Tor client (Rust, Arti), one library per ABI.
+  android-tor:
+    needs: [checks, prepare]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-10-17)
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: tor
+
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        with:
+          tool: cargo-ndk
+
+      - name: Android NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+      - name: Tor client (all ABIs)
+        run: bash scripts/build-android-tor.sh arm64-v8a armeabi-v7a x86_64
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: android-tor
+          path: app/android/app/src/main/jniLibs
+          if-no-files-found: error
+          retention-days: 1
+
+  # The Go core as an Android library (gomobile).
+  android-core:
+    needs: [checks, prepare]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+
+      - name: Android NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+      - name: Go core (gomobile)
+        run: bash scripts/build-android-core.sh
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: android-core
+          path: app/android/app/libs
+          if-no-files-found: error
+          retention-days: 1
+
+  # The app: one APK for every ABI, signed with the release key on a tag.
+  android:
+    needs: [prepare, android-tor, android-core]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: android-tor
+          path: app/android/app/src/main/jniLibs
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: android-core
+          path: app/android/app/libs
+
+      # Only a tag is signed with the release key; a manual run falls back to the debug key (build.gradle.kts).
+      - name: Release signing key
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > app/android/omnitun-release.jks
+          printf 'storeFile=omnitun-release.jks\nstorePassword=%s\nkeyAlias=omnitun\nkeyPassword=%s\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" > app/android/key.properties
+
+      - name: Build the APK
+        working-directory: app
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter build apk --release \
+            --build-name="${{ needs.prepare.outputs.core }}" \
+            --build-number="${{ needs.prepare.outputs.number }}"
+
+      - name: Name the file, check the signature, checksum
+        working-directory: app/build/app/outputs/flutter-apk
+        env:
+          VER: ${{ needs.prepare.outputs.name }}
+        run: |
+          mv app-release.apk "wardkeep-$VER.apk"
+          APKSIGNER="$(find "$ANDROID_HOME"/build-tools -name apksigner | sort -V | tail -1)"
+          "$APKSIGNER" verify --print-certs "wardkeep-$VER.apk" | grep -i "SHA-256 digest" | head -1
+          sha256sum "wardkeep-$VER.apk"
+
+      - name: Remove the signing key
+        if: always()
+        run: rm -f app/android/omnitun-release.jks app/android/key.properties
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-android
+          path: app/build/app/outputs/flutter-apk/wardkeep-*.apk
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------- Windows
+
+  core-windows:
+    needs: [checks, prepare]
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+      - name: Core (omnitun-svc.exe)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          ./scripts/go.ps1 build -trimpath -o out/omnitun-svc.exe ./cmd/omnitun-svc
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: core-windows
+          path: out/omnitun-svc.exe
+          if-no-files-found: error
+          retention-days: 1
+
+  app-windows:
+    needs: [checks, prepare]
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: App
+        working-directory: app
+        shell: pwsh
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter build windows --release --build-name ${{ needs.prepare.outputs.core }} --build-number ${{ needs.prepare.outputs.number }}
+      # Unsigned: package-windows signs it (it is the only job that holds the certificate).
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: app-windows
+          path: app/build/windows/x64/runner/Release
+          if-no-files-found: error
+          retention-days: 1
+
+  # Puts the app and the core together, signs (if there is a certificate), builds the installer, tries it on this
+  # throw-away machine, and makes the checksums.
+  package-windows:
+    needs: [prepare, app-windows, core-windows]
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      VER: ${{ needs.prepare.outputs.name }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: app-windows
+          path: dist/app
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: core-windows
+          path: dist/app
+
+      # Without both secrets (forks, manual runs, no certificate yet) this step ends cleanly and the files stay unsigned.
+      - name: Code-signing certificate
+        id: cert
+        env:
+          WINDOWS_CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          if (-not $env:WINDOWS_CERT_PFX_BASE64 -or -not $env:WINDOWS_CERT_PASSWORD) {
+            'No signing certificate in the repository secrets: the files will not be signed.'
+            'signed=false' >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERT_PFX_BASE64))
+          "pfx=$pfx" >> $env:GITHUB_OUTPUT
+          'signed=true' >> $env:GITHUB_OUTPUT
+          'The files will be signed.'
+
+      # Before the installer is built: it then holds the signed programs.
+      - name: Sign omnitun.exe and omnitun-svc.exe
+        if: steps.cert.outputs.signed == 'true'
+        env:
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          ./installer/sign.ps1 -Pfx '${{ steps.cert.outputs.pfx }}' -Files dist/app/omnitun.exe, dist/app/omnitun-svc.exe
+          Get-AuthenticodeSignature dist/app/omnitun.exe, dist/app/omnitun-svc.exe | Format-Table Status, Path
+
+      - name: Installer
+        env:
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+          PFX: ${{ steps.cert.outputs.pfx }}
+        run: |
+          Get-ChildItem dist/app | Format-Table Name, Length
+          if ($env:PFX) {
+            ./installer/build-installer.ps1 -Version $env:VER -SourceDir dist/app -OutputDir dist -Pfx $env:PFX
+          } else {
+            ./installer/build-installer.ps1 -Version $env:VER -SourceDir dist/app -OutputDir dist
+          }
+
+      - name: Remove the certificate file
+        if: always() && steps.cert.outputs.pfx != ''
+        run: Remove-Item -Force '${{ steps.cert.outputs.pfx }}' -ErrorAction SilentlyContinue
+
+      # Install silently, look at the files and the registry entries, uninstall, and see that everything (but the
+      # user's data, unless it is asked for) is gone.
+      - name: Try the installer
+        run: |
+          ./installer/test-installer.ps1 -Setup "dist/wardkeep-$env:VER-windows-x64-setup.exe" -Dir "$env:RUNNER_TEMP/wardkeep-try/Wardkeep"
+          ./installer/test-installer.ps1 -Setup "dist/wardkeep-$env:VER-windows-x64-setup.exe" -Dir "$env:RUNNER_TEMP/wardkeep-try2/Wardkeep" -DeleteDataCheck
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-windows
+          path: dist/wardkeep-*-windows-x64-setup.exe
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------- Linux
+
+  core-linux:
+    needs: [checks, prepare]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+      - name: Core (omnitun-svc)
+        run: |
+          TAGS="with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_acme,badlinkname,tfogo_checklinkname0"
+          CGO_ENABLED=0 go build -tags "$TAGS" -trimpath -ldflags "-s -w -checklinkname=0" -o out/omnitun-svc ./cmd/omnitun-svc
+          file out/omnitun-svc
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: core-linux
+          path: out/omnitun-svc
+          if-no-files-found: error
+          retention-days: 1
+
+  # Ubuntu 22.04: the app links to the glibc and GTK of the machine that builds it, so the oldest image keeps it
+  # running on the widest range of systems.
+  app-linux:
+    needs: [checks, prepare]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Build tools and libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends clang cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev liblzma-dev
+      - name: App
+        working-directory: app
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter build linux --release --build-name ${{ needs.prepare.outputs.core }} --build-number ${{ needs.prepare.outputs.number }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: app-linux
+          path: app/build/linux/x64/release/bundle
+          if-no-files-found: error
+          retention-days: 1
+
+  package-linux:
+    needs: [prepare, app-linux, core-linux]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    env:
+      VER: ${{ needs.prepare.outputs.name }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: app-linux
+          path: bundle
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: core-linux
+          path: bundle
+
+      # The libraries the app needs when it runs, so that the test below can check the bundle finds all of them.
+      - name: Runtime libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libgtk-3-0 libayatana-appindicator3-1 xdg-utils desktop-file-utils
+
+      - name: Installer
+        run: |
+          chmod +x bundle/omnitun bundle/omnitun-svc # artifacts do not keep the executable bit
+          bash installer/linux/build-installer.sh "$VER" bundle dist
+
+      # Install into a throw-away home folder, look at the files, update, uninstall, and see that nothing is left.
+      - name: Try the installer
+        run: bash installer/linux/test-installer.sh "dist/wardkeep-$VER-linux-x64-setup.sh"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-linux
+          path: dist/wardkeep-*-linux-x64-setup.sh
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------- Publish
+
+  # The only job that can write to the repository. It runs nothing but the GitHub CLI on the files the jobs above
+  # built, and only when every one of them passed.
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [prepare, android, package-windows, package-linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # to create the release
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/release-notes.md
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: files
+
+      - name: Checksums
+        working-directory: files
+        run: |
+          ls -l
+          sha256sum wardkeep-* | tee SHA256SUMS
+
+      - name: Publish the release
+        working-directory: files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          VER: ${{ needs.prepare.outputs.name }}
+        run: |
+          FILES=("wardkeep-$VER.apk" "wardkeep-$VER-windows-x64-setup.exe" "wardkeep-$VER-linux-x64-setup.sh" SHA256SUMS)
+          for f in "${FILES[@]}"; do [ -f "$f" ] || { echo "::error::$f was not built"; exit 1; }; done
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            # a run that was started again: replace the files
+            gh release upload "$TAG" "${FILES[@]}" --clobber
+          else
+            # Beta: every release is a pre-release, and the notes start with the beta and AI notice.
+            gh release create "$TAG" --title "Wardkeep $VER" --prerelease --verify-tag \
+              --notes-file ../.github/release-notes.md --generate-notes "${FILES[@]}"
+          fi

@@ -4,7 +4,7 @@ Signs files with a code-signing certificate (Authenticode, SHA-256, timestamped)
   $env:WINDOWS_CERT_PASSWORD = '...'
   powershell -File installer\sign.ps1 -Pfx cert.pfx -Files dist\app\omnitun.exe, dist\app\omnitun-svc.exe
 
-The password comes from the environment, never from the command line. Used by .github/workflows/windows.yml
+The password comes from the environment, never from the command line. Used by .github/workflows/release.yml
 (for the two programs, and by the installer script as its SignTool for the setup file and the uninstaller,
 see build-installer.ps1). Exits with an error if a file could not be signed.
 #>

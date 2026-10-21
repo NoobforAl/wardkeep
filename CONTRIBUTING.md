@@ -38,7 +38,7 @@ make fix
 
 Formats and auto-fixes the Go, Dart and Rust code, then re-lints. Run it last, before committing.
 
-CI runs the same things (Go on Linux and Windows, Rust, Flutter, and a license check of every dependency that
+CI runs the same things (Go on Windows, Rust, Flutter, and a license check of every dependency that
 ships). It is the **second** check, not the first: a red CI on a pull request that was never run locally wastes a
 reviewer's attention on something the author could have seen in a minute.
 

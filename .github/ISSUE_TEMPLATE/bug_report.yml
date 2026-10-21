@@ -1,0 +1,79 @@
+name: Bug report
+description: Something in Wardkeep (the app, the core or the server) does not work as it should
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Wardkeep is beta software, so reports like this one are how it gets better.
+
+        **A traffic or DNS leak, or a vulnerability, is not for this form:** report it privately (see "Security problem or traffic leak" on the previous page).
+        **If you cannot connect to a server**, the "Connection problem" form asks for what is needed.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where does it happen?
+      options:
+        - Android
+        - Windows
+        - Linux (desktop app)
+        - Server (omnitun-server)
+        - More than one
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "The release you installed, for example `0.3.0-beta3` (Android: Settings → Apps → Wardkeep). Or the commit, if you built it yourself."
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: Android version and phone model, Windows 10 or 11, or the Linux distribution and desktop.
+      placeholder: Android 14, Pixel 7
+  - type: dropdown
+    id: install
+    attributes:
+      label: How was it installed?
+      options:
+        - APK from a release
+        - Windows installer from a release
+        - Linux installer from a release
+        - Built from source
+        - Not sure
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: And what did you expect instead? A screenshot helps.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The app's log (the Logs button on the main screen) or the server's output, if it shows the problem. **Remove passwords, UUIDs, keys, tokens and server addresses first.**
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before sending
+      options:
+        - label: I searched the existing issues and did not find this one.
+          required: true
+        - label: I removed passwords, keys, tokens and server addresses from everything I pasted.
+          required: true

@@ -1,0 +1,89 @@
+name: Connection problem
+description: A server, subscription or protocol does not connect, or is slow or unstable
+title: "[Connection] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Connection problems depend on the server and on the network, so this form asks for both.
+        **Never paste the full link or config of a server: it holds its password or key.** Describe it instead.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where does it happen?
+      options:
+        - Android
+        - Windows
+        - Linux (desktop app)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: For example `0.3.0-beta3`.
+    validations:
+      required: true
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: Protocol
+      options:
+        - VLESS (Reality, TLS, ...)
+        - VMess
+        - Trojan
+        - Shadowsocks
+        - Hysteria / Hysteria2
+        - TUIC
+        - AnyTLS / ShadowTLS / NaiveProxy
+        - WireGuard / AmneziaWG
+        - OpenVPN
+        - SSTP / IKEv2
+        - Tor (bridges, meek, ...)
+        - Subscription link
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: server
+    attributes:
+      label: The server
+      description: Transport and security (`tcp`, `ws`, `grpc`, `reality`, ...), the port, and whether the server is yours or from a provider. Leave out the address, the password and the key.
+  - type: dropdown
+    id: other-client
+    attributes:
+      label: Does it work in another client with the same server?
+      description: For example v2rayN, v2rayNG, sing-box, NekoBox or the official client of the protocol.
+      options:
+        - Yes, it works there
+        - No, it fails there too
+        - I did not try
+    validations:
+      required: true
+  - type: input
+    id: network
+    attributes:
+      label: Network
+      description: Mobile data or Wi-Fi, and the country and provider if you know that something filters it.
+      placeholder: Mobile data, Iran, MCI
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens?
+      description: Does it fail to connect, connect and then carry nothing, drop after a while? What does the app say?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The app's log from the failed connection (the Logs button on the main screen). **Remove passwords, UUIDs, keys and server addresses first.**
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before sending
+      options:
+        - label: I removed passwords, keys, tokens and server addresses from everything I pasted.
+          required: true

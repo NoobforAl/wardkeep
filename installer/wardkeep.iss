@@ -11,7 +11,7 @@
 ;   OutputDir       where the setup .exe is written (default ..\dist)
 ;   MutexName       the single-instance mutex of the app (only a test changes it, to run next to a real copy)
 ;   Signed          when given, the installer and its uninstaller are signed with the tool that ISCC was
-;                   told about with /Ssign=... (see .github/workflows/windows.yml)
+;                   told about with /Ssign=... (see .github/workflows/release.yml)
 ;
 ; What it does, all for the current user:
 ;   * copies the app to %LOCALAPPDATA%\Programs\Wardkeep (the folder can be changed, and /DIR= works);
@@ -57,7 +57,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir={#OutputDir}
-OutputBaseFilename=omnitun-{#AppVersionName}-windows-x64-setup
+OutputBaseFilename=wardkeep-{#AppVersionName}-windows-x64-setup
 SetupIconFile=..\app\windows\runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\{#ExeName}
 UninstallDisplayName={#AppName}

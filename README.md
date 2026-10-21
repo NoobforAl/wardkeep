@@ -18,15 +18,23 @@ Android is the first-class client; the Windows app runs in proxy mode. The app i
 
 ## Download
 
-Releases ship one file: **`wardkeep-<version>.apk`**, a single signed Android APK (Android 10 or newer) that works
-on every phone. There is no download for Windows or any other system; build those yourself (see below). Check the
-file against `SHA256SUMS` on the release page.
+Every release (GitHub, Releases) has three files, each with its checksum in `SHA256SUMS`:
+
+| File | For |
+|---|---|
+| `wardkeep-<version>.apk` | Android 10 or newer; one signed APK for every phone |
+| `wardkeep-<version>-windows-x64-setup.exe` | Windows 10 or 11, 64-bit; installs for the current user (no administrator rights) |
+| `wardkeep-<version>-linux-x64-setup.sh` | Linux, 64-bit, glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36, ...) with GTK 3; installs for the current user (no root), run it with `sh` |
+
+There is no portable build and no system-wide package: the two desktop files are installers that put everything in
+your own folders and come with an uninstaller (see [the app guide](docs/app.md)). The Linux app has been built and its
+installer tested by CI, but not yet tried by hand on a real desktop.
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `app/` | Flutter client (Android, Windows; iOS/macOS/Linux scaffolded) |
+| `app/` | Flutter client (Android, Windows, Linux; iOS/macOS scaffolded) |
 | `core/profile` | Protocol-neutral profile model |
 | `core/importer` | Share links, base64 subscriptions, Clash / sing-box / Xray JSON, WireGuard/AmneziaWG `.conf`, OpenVPN `.ovpn`, Tor bridges |
 | `core/links`, `core/profile` | Profiles back into share links; the profile editor's forms (16 protocols) |

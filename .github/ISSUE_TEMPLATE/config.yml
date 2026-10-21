@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security problem or traffic leak (private)
+    url: https://github.com/NoobforAl/wardkeep/security/advisories/new
+    about: A vulnerability, or traffic or DNS that leaves outside the tunnel. Please report it privately here, not in a public issue.

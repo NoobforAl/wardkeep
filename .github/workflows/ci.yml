@@ -1,21 +1,45 @@
 name: CI
 
+# The checks: tests, lint and the license check. Nothing is built or published here.
+#
+#   push to main, pull request  →  run the checks
+#   release.yml                 →  runs the same checks first (workflow_call) and builds nothing unless they all pass
+#
+# The jobs are independent and run side by side; the slowest one (Go on Windows) sets the time. Every job restores
+# the caches of its toolchain (Go modules and build cache, Flutter SDK and pub cache, Cargo), so a run after a small
+# change only compiles what changed. A new push to a pull request cancels the older run of that pull request.
+#
+# The Go code is tested on Windows only: the Linux run used to fail on TestEndToEndHysteria (a Hysteria 1 transfer that
+# times out on GitHub's Linux machines and passes on Windows, cause not found). The Linux-only server parts have their
+# own manual workflow, docker-e2e.yml.
+#
+# Every action is pinned to a full commit SHA; Dependabot (.github/dependabot.yml) proposes updates.
+
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:
 
-# Windows and Android are what is built and released for now (the Android app is tested by the Flutter job and
-# built by android.yml). The Go code is tested on Windows only: the Linux run used to fail on
-# TestEndToEndHysteria (a Hysteria 1 transfer that times out on GitHub's Linux machines and passes on Windows,
-# cause not found), and nothing is shipped for Linux. The Linux-only server parts have their own manual
-# workflow, docker-e2e.yml.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.47.7"
+
 jobs:
   go:
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
       - run: ./scripts/go.ps1 vet ./...
@@ -25,23 +49,35 @@ jobs:
 
   rust:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-10-17)
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: tor
       - run: cargo test
         working-directory: tor
 
   flutter:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: app
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
-      - run: flutter pub get
+          cache: true
+      # pubspec.lock is the truth: a pubspec.yaml that disagrees with it fails here, not on somebody's machine.
+      - run: flutter pub get --enforce-lockfile
       - run: flutter analyze
       - run: flutter test
 
@@ -49,21 +85,26 @@ jobs:
   # the generated notices are kept as an artifact for releases.
   notices:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: subosito/flutter-action@v2
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-10-17)
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
+          cache: true
       - run: flutter pub get
         working-directory: app
       - run: go mod download
       - run: python3 scripts/gen-notices.py --check
       - run: python3 scripts/gen-notices.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: third-party-notices
           path: THIRD_PARTY_NOTICES.md

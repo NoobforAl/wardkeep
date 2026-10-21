@@ -3,8 +3,10 @@ Type=Application
 Name=Wardkeep
 Comment=VPN, proxy and Tor client
 Exec=omnitun %U
-Icon=omnitun
+Icon=dev.omnitun.app
+StartupWMClass=omnitun
 Terminal=false
 Categories=Network;Security;
 # The system offers Wardkeep for these: VPN config files and share links (vless://, trojan://, ...).
-MimeType=application/x-openvpn-profile;application/x-wireguard-profile;application/json;application/x-yaml;text/plain;x-scheme-handler/vless;x-scheme-handler/vmess;x-scheme-handler/trojan;x-scheme-handler/ss;x-scheme-handler/hysteria2;x-scheme-handler/hy2;x-scheme-handler/hysteria;x-scheme-handler/tuic;x-scheme-handler/wireguard;x-scheme-handler/awg;x-scheme-handler/anytls;x-scheme-handler/sstp;x-scheme-handler/ikev2;x-scheme-handler/nordvpn;x-scheme-handler/naive+https;
+# installer/linux does not use this line when it is told not to register them (--no-links).
+MimeType=application/x-openvpn-profile;application/x-wireguard-profile;application/json;application/x-yaml;text/plain;x-scheme-handler/vless;x-scheme-handler/vmess;x-scheme-handler/trojan;x-scheme-handler/ss;x-scheme-handler/hysteria2;x-scheme-handler/hy2;x-scheme-handler/hysteria;x-scheme-handler/tuic;x-scheme-handler/wireguard;x-scheme-handler/awg;x-scheme-handler/anytls;x-scheme-handler/sstp;x-scheme-handler/ikev2;x-scheme-handler/nordvpn;x-scheme-handler/naive+https;x-scheme-handler/wardkeep;
