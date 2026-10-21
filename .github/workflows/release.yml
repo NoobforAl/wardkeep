@@ -144,7 +144,7 @@ jobs:
       - name: Tor client (all ABIs)
         run: bash scripts/build-android-tor.sh arm64-v8a armeabi-v7a x86_64
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-tor
           path: app/android/app/src/main/jniLibs
@@ -179,7 +179,7 @@ jobs:
       - name: Go core (gomobile)
         run: bash scripts/build-android-core.sh
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-core
           path: app/android/app/libs
@@ -251,7 +251,7 @@ jobs:
         if: always()
         run: rm -f app/android/omnitun-release.jks app/android/key.properties
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-android
           path: app/build/app/outputs/flutter-apk/wardkeep-*.apk
@@ -275,7 +275,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force out | Out-Null
           ./scripts/go.ps1 build -trimpath -o out/omnitun-svc.exe ./cmd/omnitun-svc
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: core-windows
           path: out/omnitun-svc.exe
@@ -302,7 +302,7 @@ jobs:
           flutter pub get --enforce-lockfile
           flutter build windows --release --build-name ${{ needs.prepare.outputs.core }} --build-number ${{ needs.prepare.outputs.number }}
       # Unsigned: package-windows signs it (it is the only job that holds the certificate).
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: app-windows
           path: app/build/windows/x64/runner/Release
@@ -384,7 +384,7 @@ jobs:
           ./installer/test-installer.ps1 -Setup "dist/wardkeep-$env:VER-windows-x64-setup.exe" -Dir "$env:RUNNER_TEMP/wardkeep-try/Wardkeep"
           ./installer/test-installer.ps1 -Setup "dist/wardkeep-$env:VER-windows-x64-setup.exe" -Dir "$env:RUNNER_TEMP/wardkeep-try2/Wardkeep" -DeleteDataCheck
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-windows
           path: dist/wardkeep-*-windows-x64-setup.exe
@@ -408,7 +408,7 @@ jobs:
           TAGS="with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_acme,badlinkname,tfogo_checklinkname0"
           CGO_ENABLED=0 go build -tags "$TAGS" -trimpath -ldflags "-s -w -checklinkname=0" -o out/omnitun-svc ./cmd/omnitun-svc
           file out/omnitun-svc
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: core-linux
           path: out/omnitun-svc
@@ -439,7 +439,7 @@ jobs:
         run: |
           flutter pub get --enforce-lockfile
           flutter build linux --release --build-name ${{ needs.prepare.outputs.core }} --build-number ${{ needs.prepare.outputs.number }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: app-linux
           path: app/build/linux/x64/release/bundle
@@ -481,7 +481,7 @@ jobs:
       - name: Try the installer
         run: bash installer/linux/test-installer.sh "dist/wardkeep-$VER-linux-x64-setup.sh"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-linux
           path: dist/wardkeep-*-linux-x64-setup.sh
