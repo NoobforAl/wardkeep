@@ -1,6 +1,7 @@
 //! A minimal SOCKS5 server (no auth, CONNECT only) — all the Go core needs.
 
 use std::net::{Ipv4Addr, Ipv6Addr};
+use std::time::Duration;
 
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
@@ -17,6 +18,25 @@ pub mod reply {
     pub const GENERAL_FAILURE: u8 = 0x01;
     pub const HOST_UNREACHABLE: u8 = 0x04;
     pub const COMMAND_NOT_SUPPORTED: u8 = 0x07;
+}
+
+/// How long a client has to send its greeting and CONNECT request. A local
+/// program that connects and says nothing must not keep a task (and a socket) forever.
+pub const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// `handshake`, giving up with `TimedOut` after `limit`.
+pub async fn handshake_within<S: AsyncRead + AsyncWrite + Unpin>(
+    s: &mut S,
+    limit: Duration,
+) -> std::io::Result<Target> {
+    tokio::time::timeout(limit, handshake(s))
+        .await
+        .unwrap_or_else(|_| {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::TimedOut,
+                "SOCKS handshake timed out",
+            ))
+        })
 }
 
 /// Reads the greeting and the CONNECT request. On an unsupported request it
@@ -102,6 +122,47 @@ mod tests {
                 port: 443
             }
         );
+    }
+
+    #[tokio::test]
+    async fn silent_client_times_out() {
+        // The client connects and never sends a byte.
+        let (_client, mut server) = tokio::io::duplex(256);
+        let err = handshake_within(&mut server, Duration::from_millis(50))
+            .await
+            .unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::TimedOut);
+    }
+
+    #[tokio::test]
+    async fn stalled_halfway_times_out() {
+        // The greeting arrives, the request never does.
+        let (mut client, mut server) = tokio::io::duplex(256);
+        let task =
+            tokio::spawn(
+                async move { handshake_within(&mut server, Duration::from_millis(100)).await },
+            );
+        client.write_all(&[5, 1, 0]).await.unwrap();
+        let mut resp = [0u8; 2];
+        client.read_exact(&mut resp).await.unwrap();
+        assert_eq!(resp, [5, 0]);
+        let err = task.await.unwrap().unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::TimedOut);
+    }
+
+    #[tokio::test]
+    async fn prompt_client_is_not_cut_off() {
+        let (mut client, mut server) = tokio::io::duplex(256);
+        let task =
+            tokio::spawn(async move { handshake_within(&mut server, HANDSHAKE_TIMEOUT).await });
+        client.write_all(&[5, 1, 0]).await.unwrap();
+        let mut resp = [0u8; 2];
+        client.read_exact(&mut resp).await.unwrap();
+        let mut req = vec![5, 1, 0, 1, 127, 0, 0, 1];
+        req.extend_from_slice(&80u16.to_be_bytes());
+        client.write_all(&req).await.unwrap();
+        let t = task.await.unwrap().unwrap();
+        assert_eq!((t.host.as_str(), t.port), ("127.0.0.1", 80));
     }
 
     #[tokio::test]

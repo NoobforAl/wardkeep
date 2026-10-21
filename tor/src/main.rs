@@ -23,10 +23,30 @@ use omnitun_tor::{args, path, socks};
 use serde_json::json;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::Semaphore;
 use tor_geoip::GeoipDb;
 use tor_linkspec::{ChanTarget, ChannelMethod, PtTargetAddr};
 use tor_proto::client::stream::ClientStreamCtrl;
 use tor_rtcompat::PreferredRuntime;
+
+/// Connections served at once (each is two sockets, two buffers and an Arti stream).
+const MAX_CONNECTIONS: usize = 2048;
+
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
+/// The heap profiler, kept here so every exit can drop it: dhat writes its file when it drops,
+/// and `process::exit` would skip that.
+#[cfg(feature = "dhat-heap")]
+static PROFILER: Mutex<Option<dhat::Profiler>> = Mutex::new(None);
+
+/// Ends the process.
+fn finish(code: i32) -> ! {
+    #[cfg(feature = "dhat-heap")]
+    drop(PROFILER.lock().unwrap().take());
+    std::process::exit(code)
+}
 
 fn emit(v: serde_json::Value) {
     // One line per event; stdout is line-buffered by the core's reader.
@@ -110,7 +130,7 @@ fn report_path(sh: &Shared, stream: &arti_client::DataStream) {
 
 async fn serve(sh: Arc<Shared>, mut conn: TcpStream) {
     let client = &sh.client;
-    let target = match socks::handshake(&mut conn).await {
+    let target = match socks::handshake_within(&mut conn, socks::HANDSHAKE_TIMEOUT).await {
         Ok(t) => t,
         Err(_) => return,
     };
@@ -172,14 +192,26 @@ async fn run(a: args::Args) -> anyhow::Result<()> {
         bridged: !a.bridges.is_empty(),
         last: Mutex::new(Vec::new()),
     });
+    // Past this many open connections the port stops accepting until one ends, so
+    // a runaway local program cannot grow the task and socket count without bound.
+    let slots = Arc::new(Semaphore::new(MAX_CONNECTIONS));
     loop {
+        let permit = slots.clone().acquire_owned().await?;
         let (conn, _) = listener.accept().await?;
-        tokio::spawn(serve(shared.clone(), conn));
+        let sh = shared.clone();
+        tokio::spawn(async move {
+            serve(sh, conn).await;
+            drop(permit);
+        });
     }
 }
 
 #[tokio::main]
 async fn main() {
+    #[cfg(feature = "dhat-heap")]
+    {
+        *PROFILER.lock().unwrap() = Some(dhat::Profiler::new_heap());
+    }
     let _ = rustls::crypto::ring::default_provider().install_default();
     // Arti's logs go to stderr (RUST_LOG overrides the default "warn").
     tracing_subscriber::fmt()
@@ -195,7 +227,7 @@ async fn main() {
         Ok(a) => a,
         Err(e) => {
             emit(json!({"event": "error", "message": e}));
-            std::process::exit(2);
+            finish(2);
         }
     };
     // Exit when the core goes away (stdin closes).
@@ -207,11 +239,11 @@ async fn main() {
                 break;
             }
         }
-        std::process::exit(0);
+        finish(0);
     });
     if let Err(e) = run(a).await {
         emit(json!({"event": "error", "message": format!("{e:#}")}));
         let _ = tokio::io::stdout().flush().await;
-        std::process::exit(1);
+        finish(1);
     }
 }

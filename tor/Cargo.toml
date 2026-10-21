@@ -29,6 +29,13 @@ serde_json = "1"
 # Arti's TLS needs a process-wide crypto provider; ring cross-compiles to Android easily.
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "ansi"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+# Only with --features dhat-heap: a heap profiler for finding what allocates and what grows.
+dhat = { version = "0.3", optional = true }
+
+# Heap profiling: cargo build --profile profiling --features dhat-heap, run it, and when it
+# exits it writes dhat-heap.json (open it at https://nnethercote.github.io/dh_view/dh_view.html).
+[features]
+dhat-heap = ["dep:dhat"]
 
 [profile.release]
 opt-level = "s"
@@ -36,6 +43,14 @@ lto = true
 codegen-units = 1
 strip = true
 panic = "abort"
+
+# For flame graphs and heap profiles: the release build with speed instead of size, and symbols kept.
+#   cargo build --profile profiling   (binary in target/profiling/)
+[profile.profiling]
+inherits = "release"
+opt-level = 3
+strip = false
+debug = 1
 
 # Debug builds of Arti's crypto are far too slow to verify a consensus.
 [profile.dev.package."*"]
