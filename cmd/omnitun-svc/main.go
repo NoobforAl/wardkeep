@@ -17,6 +17,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -24,6 +25,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+
+	"github.com/NoobforAl/omnitun/core/pprofsrv"
 )
 
 func defaultDir() string {
@@ -55,11 +58,21 @@ func runPerUser(args []string) int {
 	parentPID := fs.Int("parent-pid", 0, "exit when this process exits (0 = don't watch)")
 	grace := fs.Duration("grace", 5*time.Second, "how long the tunnel survives without a connected UI")
 	cleanup := fs.Bool("cleanup", false, "first remove leftovers of a crashed run (needs administrator rights; never use it next to the service)")
+	pprofAddr := fs.String("pprof", "", "serve Go runtime profiles on this loopback address, e.g. 127.0.0.1:6060 (off by default)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
 
 	logger := log.New(os.Stderr, "omnitun-svc: ", log.LstdFlags)
+	if *pprofAddr != "" {
+		ln, err := pprofsrv.Listen(*pprofAddr)
+		if err != nil {
+			logger.Print(err)
+			return 2
+		}
+		// The process exit ends it; nothing needs to wait for it.
+		go pprofsrv.ServeListener(context.Background(), ln, logger.Printf)
+	}
 	if *cleanup {
 		runCleanup(logger.Printf)
 	}

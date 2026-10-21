@@ -134,26 +134,72 @@ func Tail(dir string, n int) ([]string, error) {
 	if n <= 0 {
 		return []string{}, nil
 	}
-	var lines []string
-	for _, name := range []string{fileName + ".1", fileName} {
-		data, err := os.ReadFile(filepath.Join(dir, name))
+	lines := []string{}
+	for _, name := range []string{fileName, fileName + ".1"} { // newest first
+		part, err := tailFile(filepath.Join(dir, name), n-len(lines))
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
 			return nil, err
 		}
-		sc := bufio.NewScanner(bytes.NewReader(data))
-		sc.Buffer(make([]byte, 64<<10), 1<<20)
-		for sc.Scan() {
-			lines = append(lines, clean(sc.Text(), false)) // also covers a log written by something else
+		lines = append(part, lines...)
+		if len(lines) >= n {
+			break
 		}
+	}
+	return lines, nil
+}
+
+// tailFile returns the last n lines of the file, read from its end so the cost
+// is that of the lines asked for, not of a log that rotates at several MB.
+func tailFile(path string, n int) ([]string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	fi, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	var (
+		buf   []byte
+		pos   = fi.Size()
+		chunk = int64(64 << 10)
+	)
+	for pos > 0 {
+		step := min(chunk, pos)
+		pos -= step
+		block := make([]byte, step+int64(len(buf)))
+		if _, err := f.ReadAt(block[:step], pos); err != nil && err != io.EOF {
+			return nil, err
+		}
+		copy(block[step:], buf)
+		buf = block
+		// n lines need n+1 line breaks before them (the one ending the previous
+		// line), not counting one that ends the file.
+		if bytes.Count(bytes.TrimSuffix(buf, []byte{'\n'}), []byte{'\n'}) > n {
+			break
+		}
+		chunk *= 2
+	}
+	if pos > 0 { // the first line of buf is a piece of a longer one
+		if i := bytes.IndexByte(buf, '\n'); i >= 0 {
+			buf = buf[i+1:]
+		}
+	}
+	var lines []string
+	sc := bufio.NewScanner(bytes.NewReader(buf))
+	sc.Buffer(make([]byte, 64<<10), 1<<20)
+	for sc.Scan() {
+		lines = append(lines, sc.Text())
 	}
 	if len(lines) > n {
 		lines = lines[len(lines)-n:]
 	}
-	if lines == nil {
-		lines = []string{}
+	for i, l := range lines {
+		lines[i] = clean(l, false) // also covers a log written by something else
 	}
 	return lines, nil
 }

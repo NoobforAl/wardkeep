@@ -16,7 +16,7 @@ import (
 	"github.com/NoobforAl/omnitun/core/subscription"
 )
 
-func newTestServer(t *testing.T, cfg ServerConfig) (*Server, string) {
+func newTestServer(t testing.TB, cfg ServerConfig) (*Server, string) {
 	t.Helper()
 	cfg.DataDir = t.TempDir()
 	cfg.SkipHandshake = true // example.com servers are unreachable

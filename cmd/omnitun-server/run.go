@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/NoobforAl/omnitun/core/pprofsrv"
 	"github.com/NoobforAl/omnitun/server/api"
 	"github.com/NoobforAl/omnitun/server/install"
 	"github.com/NoobforAl/omnitun/server/manager"
@@ -26,13 +28,23 @@ import (
 )
 
 func newRunCmd(o *options) *cobra.Command {
-	return &cobra.Command{
+	var pprofAddr string
+	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Start the server (reloads when users change); serves the web API if enabled",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			m := o.manager()
 			logger := log.New(os.Stderr, "omnitun-server: ", log.LstdFlags)
+			// Checked before the server starts, so a typo does not leave it half up.
+			var pprofLn net.Listener
+			if pprofAddr != "" {
+				var err error
+				if pprofLn, err = pprofsrv.Listen(pprofAddr); err != nil {
+					return err
+				}
+				defer pprofLn.Close()
+			}
 			srv := runtime.New(m.Store, logger.Printf)
 			if err := srv.Start(); err != nil {
 				return err
@@ -41,6 +53,13 @@ func newRunCmd(o *options) *cobra.Command {
 			defer stop()
 			var wg sync.WaitGroup
 			wg.Go(func() { ; srv.Watch(ctx) })
+			if pprofLn != nil {
+				wg.Go(func() {
+					if err := pprofsrv.ServeListener(ctx, pprofLn, logger.Printf); err != nil {
+						logger.Printf("pprof stopped: %v", err)
+					}
+				})
+			}
 
 			if a, err := m.API(); err == nil && a.Enabled {
 				handler := api.New(api.Options{Manager: m, Token: liveToken(m), Reload: srv.Reload})
@@ -56,6 +75,8 @@ func newRunCmd(o *options) *cobra.Command {
 			return srv.Close()
 		},
 	}
+	cmd.Flags().StringVar(&pprofAddr, "pprof", "", "serve Go runtime profiles on this loopback address, e.g. 127.0.0.1:6060 (off by default)")
+	return cmd
 }
 
 // apiTLS is the HTTPS configuration of the web API (nil for plain HTTP): the
