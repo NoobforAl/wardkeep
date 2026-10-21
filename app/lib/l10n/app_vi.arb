@@ -490,6 +490,8 @@
   "windowMaximize": "Phóng to",
   "windowRestore": "Khôi phục",
   "windowClose": "Đóng",
+  "windowFullScreen": "Toàn màn hình",
+  "windowExitFullScreen": "Thoát toàn màn hình",
   "globeRecenter": "Căn giữa Trái Đất",
   "bypassCountriesZoneIntro": "Mỗi quốc gia được chọn sẽ tải dải địa chỉ của mình (vài kilobyte). Cơ sở dữ liệu ngoại tuyến đầy đủ chính xác hơn và không cần tải thêm.",
   "bypassCountriesDownloading": "Đang tải xuống…",

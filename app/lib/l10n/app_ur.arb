@@ -490,6 +490,8 @@
   "windowMaximize": "بڑا کریں",
   "windowRestore": "بحال کریں",
   "windowClose": "بند کریں",
+  "windowFullScreen": "مکمل اسکرین",
+  "windowExitFullScreen": "مکمل اسکرین سے باہر نکلیں",
   "globeRecenter": "زمین کو مرکز میں لائیں",
   "bypassCountriesZoneIntro": "آپ جس ملک پر ٹک کرتے ہیں اس کی ایڈریس رینجز ڈاؤن لوڈ ہوتی ہیں (چند کلوبائٹس)۔ مکمل آف لائن ڈیٹابیس زیادہ درست ہے اور اس کے لیے ڈاؤن لوڈ کی ضرورت نہیں۔",
   "bypassCountriesDownloading": "ڈاؤن لوڈ ہو رہا ہے…",

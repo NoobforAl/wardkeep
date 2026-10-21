@@ -490,6 +490,8 @@
   "windowMaximize": "बड़ा करें",
   "windowRestore": "पहले जैसा करें",
   "windowClose": "बंद करें",
+  "windowFullScreen": "पूर्ण स्क्रीन",
+  "windowExitFullScreen": "पूर्ण स्क्रीन से बाहर निकलें",
   "globeRecenter": "पृथ्वी को केंद्र में लाएँ",
   "bypassCountriesZoneIntro": "आप जिस भी देश पर टिक करते हैं, उसकी एड्रेस रेंज डाउनलोड होती है (कुछ किलोबाइट)। पूरा ऑफ़लाइन डेटाबेस अधिक सटीक है और उसे डाउनलोड नहीं करना पड़ता।",
   "bypassCountriesDownloading": "डाउनलोड हो रहा है…",

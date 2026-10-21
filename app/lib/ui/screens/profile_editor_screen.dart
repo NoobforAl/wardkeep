@@ -13,6 +13,7 @@ import '../insets.dart';
 import '../widgets/country_flag.dart';
 import 'location_screen.dart';
 import 'qr_scan_screen.dart';
+import '../layout.dart';
 
 /// Step one of adding a server by hand: which protocol.
 class NewServerScreen extends ConsumerWidget {
@@ -40,7 +41,7 @@ class NewServerScreen extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
                   final added = await Navigator.of(context)
-                      .push<ProfileInfo>(MaterialPageRoute(builder: (_) => ProfileEditorScreen(protocol: f.protocol)));
+                      .push<ProfileInfo>(AppRoute(builder: (_) => ProfileEditorScreen(protocol: f.protocol)));
                   if (added != null && context.mounted) Navigator.of(context).pop();
                 },
               ),
@@ -344,7 +345,7 @@ class _FillButtons extends StatelessWidget {
             TextButton.icon(
               onPressed: () async {
                 final text = await Navigator.of(context)
-                    .push<String>(MaterialPageRoute(builder: (_) => const QrScanScreen()));
+                    .push<String>(AppRoute(builder: (_) => const QrScanScreen()));
                 if (text != null) _add(text);
               },
               icon: const Icon(Icons.qr_code_scanner),

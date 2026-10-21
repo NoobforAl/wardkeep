@@ -1792,6 +1792,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get windowClose => 'بند کریں';
 
   @override
+  String get windowFullScreen => 'مکمل اسکرین';
+
+  @override
+  String get windowExitFullScreen => 'مکمل اسکرین سے باہر نکلیں';
+
+  @override
   String get globeRecenter => 'زمین کو مرکز میں لائیں';
 
   @override

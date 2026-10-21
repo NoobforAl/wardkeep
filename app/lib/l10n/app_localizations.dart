@@ -3060,6 +3060,18 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get windowClose;
 
+  /// No description provided for @windowFullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Full screen'**
+  String get windowFullScreen;
+
+  /// No description provided for @windowExitFullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit full screen'**
+  String get windowExitFullScreen;
+
   /// No description provided for @globeRecenter.
   ///
   /// In en, this message translates to:

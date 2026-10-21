@@ -490,6 +490,8 @@
   "windowMaximize": "Büyüt",
   "windowRestore": "Geri yükle",
   "windowClose": "Kapat",
+  "windowFullScreen": "Tam ekran",
+  "windowExitFullScreen": "Tam ekrandan çık",
   "globeRecenter": "Dünya'yı ortala",
   "bypassCountriesZoneIntro": "İşaretlediğiniz her ülke, adres aralıklarını indirir (birkaç kilobayt). Tam çevrimdışı veritabanı daha kesindir ve indirme gerektirmez.",
   "bypassCountriesDownloading": "İndiriliyor…",

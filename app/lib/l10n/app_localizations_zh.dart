@@ -1720,6 +1720,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get windowClose => '关闭';
 
   @override
+  String get windowFullScreen => '全屏';
+
+  @override
+  String get windowExitFullScreen => '退出全屏';
+
+  @override
   String get globeRecenter => '还原地球';
 
   @override

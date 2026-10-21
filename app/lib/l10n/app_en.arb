@@ -1066,6 +1066,8 @@
   "windowMaximize": "Maximize",
   "windowRestore": "Restore",
   "windowClose": "Close",
+  "windowFullScreen": "Full screen",
+  "windowExitFullScreen": "Exit full screen",
   "globeRecenter": "Centre the Earth",
   "bypassCountriesZoneIntro": "Each country you tick downloads its address ranges (a few kilobytes). The full offline database is more exact and needs no download.",
   "bypassCountriesDownloading": "Downloading…",

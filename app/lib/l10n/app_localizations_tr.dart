@@ -1794,6 +1794,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get windowClose => 'Kapat';
 
   @override
+  String get windowFullScreen => 'Tam ekran';
+
+  @override
+  String get windowExitFullScreen => 'Tam ekrandan çık';
+
+  @override
   String get globeRecenter => 'Dünya\'yı ortala';
 
   @override

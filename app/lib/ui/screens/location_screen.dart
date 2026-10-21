@@ -16,6 +16,7 @@ import 'profile_editor_screen.dart';
 import 'profiles_screen.dart';
 import 'share_screen.dart';
 import 'subscription_screen.dart';
+import '../layout.dart';
 
 /// Measures every profile's latency, for the dots and for Auto.
 Future<void> testAllLatencies(WidgetRef ref) async {
@@ -120,11 +121,11 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
                 case 'import':
                   showImportSheet(context, ref);
                 case 'new':
-                  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NewServerScreen()));
+                  Navigator.of(context).push(AppRoute<void>(builder: (_) => const NewServerScreen()));
                 case 'subscription':
-                  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SubscriptionScreen()));
+                  Navigator.of(context).push(AppRoute<void>(builder: (_) => const SubscriptionScreen()));
                 case 'manage':
-                  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ProfilesScreen()));
+                  Navigator.of(context).push(AppRoute<void>(builder: (_) => const ProfilesScreen()));
               }
             },
             itemBuilder: (_) => [
@@ -333,9 +334,9 @@ class _ServerRow extends ConsumerWidget {
             onSelected: (v) async {
               switch (v) {
                 case 'edit':
-                  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ProfileEditorScreen(profile: p)));
+                  Navigator.of(context).push(AppRoute<void>(builder: (_) => ProfileEditorScreen(profile: p)));
                 case 'share':
-                  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ShareScreen(profile: p)));
+                  Navigator.of(context).push(AppRoute<void>(builder: (_) => ShareScreen(profile: p)));
                 case 'country':
                   final code = await pickCountry(context, ref.read(profileCountryProvider)(p));
                   if (code != null) ref.read(countryOverridesProvider.notifier).set(p.id, code == '' ? null : code);

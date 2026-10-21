@@ -10,18 +10,18 @@ void main() {
   const laptop = Rect.fromLTWH(0, 0, 1366, 720); // 768 p minus the task bar
   const second = Rect.fromLTWH(-1920, 0, 1536, 816); // a monitor to the left of the primary
 
-  test('opens tall and slim in the middle of the primary monitor, sized from it', () {
+  test('opens wide, in the middle of the primary monitor, sized from it', () {
     for (final d in [fullHd, qhd, laptop]) {
       final b = openingBounds(displays: [d]);
-      expect(b.width, inInclusiveRange(420, 560), reason: '$d');
-      expect(b.height, inInclusiveRange(minWindowSize.height, 880), reason: '$d');
+      expect(b.width, inInclusiveRange(980, 1240), reason: '$d');
+      expect(b.height, inInclusiveRange(600, 800), reason: '$d');
       expect(d.contains(b.topLeft) && d.contains(b.bottomRight), isTrue, reason: 'on the monitor: $b on $d');
       expect((b.center - d.center).distance, lessThan(1), reason: 'centred: $b on $d');
     }
     // A bigger monitor gives a bigger window, up to a limit; a small one a smaller window.
     expect(openingBounds(displays: [qhd]).height, greaterThan(openingBounds(displays: [laptop]).height));
-    expect(openingBounds(displays: [qhd]).height, 880);
-    expect(openingBounds(displays: [laptop]).height, closeTo(720 * 0.88, 1));
+    expect(openingBounds(displays: [qhd]).height, 800);
+    expect(openingBounds(displays: [laptop]).height, 600);
   });
 
   test('a tiny monitor still gets a window that fits on it', () {

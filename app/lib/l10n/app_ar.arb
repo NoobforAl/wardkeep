@@ -497,6 +497,8 @@
   "windowMaximize": "تكبير",
   "windowRestore": "استعادة",
   "windowClose": "إغلاق",
+  "windowFullScreen": "ملء الشاشة",
+  "windowExitFullScreen": "الخروج من ملء الشاشة",
   "globeRecenter": "إرجاع الأرض",
   "bypassCountriesZoneIntro": "ينزّل كل بلد تختاره نطاقات عناوينه (بضعة كيلوبايت). قاعدة البيانات الكاملة دون اتصال أدق ولا تحتاج إلى تنزيل.",
   "bypassCountriesDownloading": "جارٍ التنزيل…",

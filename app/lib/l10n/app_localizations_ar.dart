@@ -1831,6 +1831,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get windowClose => 'إغلاق';
 
   @override
+  String get windowFullScreen => 'ملء الشاشة';
+
+  @override
+  String get windowExitFullScreen => 'الخروج من ملء الشاشة';
+
+  @override
   String get globeRecenter => 'إرجاع الأرض';
 
   @override

@@ -1822,6 +1822,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get windowClose => 'Закрыть';
 
   @override
+  String get windowFullScreen => 'Полный экран';
+
+  @override
+  String get windowExitFullScreen => 'Выйти из полноэкранного режима';
+
+  @override
   String get globeRecenter => 'Вернуть Землю';
 
   @override

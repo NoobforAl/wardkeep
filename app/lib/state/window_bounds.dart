@@ -1,16 +1,16 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-/// The smallest the window can be made: the app's one column still fits (it is tested down to
+/// The smallest the window can be made: the phone layout's one column still fits (it is tested down to
 /// 320 x 568 on a phone).
 const minWindowSize = Size(360, 560);
 
 /// Where and how big the desktop window opens, in logical pixels.
 ///
 /// [displays] are the usable areas of the monitors (the work area, without the task bar), the
-/// primary one first. [saved] is where the user left the window last time, if they did. The app is one
-/// narrow column, so the window opens tall and slim, sized from the monitor instead of a fixed size:
-/// about 88 % of the height (between 560 and 880) and about 60 % of that wide (between 420 and 560),
+/// primary one first. [saved] is where the user left the window last time, if they did. A new window
+/// is wide enough for the computer layout (side column and globe, see `wideBreakpoint`), sized from the
+/// monitor: about 60 % of its width (between 980 and 1240) and 80 % of its height (between 600 and 800),
 /// in the middle of the primary monitor. A saved window comes back where it was, unless that is no
 /// longer on any monitor (it was on one that is unplugged) or is smaller than the minimum.
 Rect openingBounds({required List<Rect> displays, Rect? saved}) {
@@ -27,8 +27,8 @@ Rect openingBounds({required List<Rect> displays, Rect? saved}) {
       }
     }
   }
-  final h = math.min(primary.height, (primary.height * 0.88).clamp(minWindowSize.height, 880.0));
-  final w = math.min(primary.width, (h * 0.6).clamp(420.0, 560.0));
+  final h = math.min(primary.height, (primary.height * 0.8).clamp(600.0, 800.0));
+  final w = math.min(primary.width, (primary.width * 0.6).clamp(980.0, 1240.0));
   return Rect.fromLTWH(primary.left + (primary.width - w) / 2, primary.top + (primary.height - h) / 2, w, h);
 }
 

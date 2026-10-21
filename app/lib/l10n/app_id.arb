@@ -490,6 +490,8 @@
   "windowMaximize": "Maksimalkan",
   "windowRestore": "Pulihkan",
   "windowClose": "Tutup",
+  "windowFullScreen": "Layar penuh",
+  "windowExitFullScreen": "Keluar dari layar penuh",
   "globeRecenter": "Pusatkan Bumi",
   "bypassCountriesZoneIntro": "Setiap negara yang dicentang mengunduh rentang alamatnya (beberapa kilobyte). Database offline lengkap lebih akurat dan tidak perlu unduhan.",
   "bypassCountriesDownloading": "Mengunduh…",

@@ -490,6 +490,8 @@
   "windowMaximize": "Agrandir",
   "windowRestore": "Restaurer",
   "windowClose": "Fermer",
+  "windowFullScreen": "Plein écran",
+  "windowExitFullScreen": "Quitter le plein écran",
   "globeRecenter": "Centrer la Terre",
   "bypassCountriesZoneIntro": "Chaque pays coché télécharge ses plages d’adresses (quelques kilo-octets). La base de données hors ligne complète est plus précise et ne demande aucun téléchargement.",
   "bypassCountriesDownloading": "Téléchargement…",

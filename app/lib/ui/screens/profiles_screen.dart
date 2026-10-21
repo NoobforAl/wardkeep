@@ -23,6 +23,7 @@ import 'qr_scan_screen.dart';
 import 'share_screen.dart';
 import 'subscription_screen.dart';
 import '../widgets/credentials_dialog.dart';
+import '../layout.dart';
 
 class ProfilesScreen extends ConsumerWidget {
   const ProfilesScreen({super.key});
@@ -42,7 +43,7 @@ class ProfilesScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: context.l10n.addSubscriptionTooltip,
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SubscriptionScreen())),
+            onPressed: () => Navigator.of(context).push(AppRoute(builder: (_) => const SubscriptionScreen())),
             icon: const Icon(Icons.add_link),
           ),
           IconButton(
@@ -205,10 +206,10 @@ class _GroupList extends ConsumerWidget {
                     tooltip: context.l10n.tooltipMore,
                     onSelected: (v) {
                       if (v == 'edit') {
-                        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ProfileEditorScreen(profile: p)));
+                        Navigator.of(context).push(AppRoute<void>(builder: (_) => ProfileEditorScreen(profile: p)));
                       }
                       if (v == 'share') {
-                        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ShareScreen(profile: p)));
+                        Navigator.of(context).push(AppRoute<void>(builder: (_) => ShareScreen(profile: p)));
                       }
                       if (v == 'delete') ref.read(profilesProvider.notifier).remove(p.id);
                       if (v == 'default') {
@@ -476,7 +477,7 @@ class _SubscriptionHeader extends ConsumerWidget {
               PopupMenuButton<String>(
                 onSelected: (v) {
                   if (v == 'edit') {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SubscriptionScreen(existing: sub)));
+                    Navigator.of(context).push(AppRoute(builder: (_) => SubscriptionScreen(existing: sub)));
                   } else if (v == 'delete') {
                     ref.read(subscriptionsProvider.notifier).remove(sub.id);
                   }
@@ -582,7 +583,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
 
   Future<void> _scanQr() async {
     final text = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => const QrScanScreen()),
+      AppRoute(builder: (_) => const QrScanScreen()),
     );
     if (text == null || !mounted) return;
     _controller.text = text;
@@ -593,7 +594,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
   void _openSubscription([String url = '']) {
     final navigator = Navigator.of(context);
     navigator.pop();
-    navigator.push(MaterialPageRoute(builder: (_) => SubscriptionScreen(initialUrl: url)));
+    navigator.push(AppRoute(builder: (_) => SubscriptionScreen(initialUrl: url)));
   }
 
   Future<void> _import() async {

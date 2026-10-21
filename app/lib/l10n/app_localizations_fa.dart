@@ -1788,6 +1788,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get windowClose => 'بستن';
 
   @override
+  String get windowFullScreen => 'تمام‌صفحه';
+
+  @override
+  String get windowExitFullScreen => 'خروج از تمام‌صفحه';
+
+  @override
   String get globeRecenter => 'برگرداندن زمین';
 
   @override

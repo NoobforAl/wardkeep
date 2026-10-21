@@ -53,12 +53,91 @@ void main() {
     );
   });
 
-  Widget app({Brightness brightness = Brightness.dark}) => MaterialApp(
+  Widget app({Brightness brightness = Brightness.dark, WindowControls? controls}) => MaterialApp(
     theme: buildTheme(brightness),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: const Scaffold(body: WindowFrame(child: Center(child: Text('page')))),
+    home: Scaffold(body: WindowFrame(controls: controls, child: const Center(child: Text('page')))),
   );
+
+  test('each system gets its own buttons', () {
+    expect(windowControlsFor(TargetPlatform.windows), WindowControls.windows);
+    expect(windowControlsFor(TargetPlatform.macOS), WindowControls.mac);
+    expect(windowControlsFor(TargetPlatform.linux), WindowControls.linux);
+    expect(windowControlsFor(TargetPlatform.android), WindowControls.windows);
+  });
+
+  group('macOS: traffic lights', () {
+    // The three lights, left to right, found by their names.
+    Finder light(String name) => find.bySemanticsLabel(name);
+
+    testWidgets('are on the left in order close, minimize, full screen; the title is in the middle', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app(controls: WindowControls.mac));
+      await tester.pumpAndSettle();
+      final close = tester.getCenter(light('Close')), minimize = tester.getCenter(light('Minimize'));
+      final full = tester.getCenter(light('Full screen'));
+      expect(close.dx < minimize.dx && minimize.dx < full.dx, isTrue, reason: '$close $minimize $full');
+      expect(full.dx, lessThan(100), reason: 'at the left edge');
+      expect(find.byIcon(Icons.crop_square_rounded), findsNothing, reason: 'no Windows buttons');
+      expect((tester.getCenter(find.text('Wardkeep')).dx - 400).abs(), lessThan(1), reason: 'title centred');
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('show their symbols under the pointer, and do what they say', (tester) async {
+      await tester.pumpWidget(app(controls: WindowControls.mac));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.close_rounded), findsNothing, reason: 'plain until the pointer is over them');
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(tester.getCenter(light('Close')));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.remove_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.open_in_full_rounded), findsOneWidget);
+
+      await tester.tap(light('Minimize'));
+      await tester.pumpAndSettle();
+      expect(calls, contains('minimize'));
+      await tester.tap(light('Full screen'));
+      await tester.pumpAndSettle();
+      expect(calls, contains('setFullScreen'));
+      await tester.tap(light('Close'));
+      await tester.pumpAndSettle();
+      expect(calls, contains('close'));
+    });
+
+    testWidgets('the window keeps its own edges: no resize grips', (tester) async {
+      await tester.pumpWidget(app(controls: WindowControls.mac));
+      await tester.pumpAndSettle();
+      final cursors = [
+        for (final r in tester.widgetList<MouseRegion>(find.byType(MouseRegion))) r.cursor,
+      ];
+      expect(cursors.where((c) => c == SystemMouseCursors.resizeLeftRight || c == SystemMouseCursors.resizeUpDown), isEmpty);
+    });
+  });
+
+  group('Linux: round buttons', () {
+    testWidgets('are on the right, and minimize, maximize and close', (tester) async {
+      await tester.pumpWidget(app(controls: WindowControls.linux));
+      await tester.pumpAndSettle();
+      final min = tester.getCenter(find.byIcon(Icons.remove_rounded)).dx;
+      final max = tester.getCenter(find.byIcon(Icons.crop_square_rounded)).dx;
+      final close = tester.getCenter(find.byIcon(Icons.close_rounded)).dx;
+      expect(min < max && max < close, isTrue);
+      expect(min, greaterThan(400), reason: 'on the right');
+
+      await tester.tap(find.byIcon(Icons.remove_rounded));
+      await tester.tap(find.byIcon(Icons.crop_square_rounded));
+      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.pumpAndSettle();
+      expect(calls, containsAll(['minimize', 'maximize', 'close']));
+      expect(tester.takeException(), isNull);
+    });
+  });
 
   testWidgets('shows minimize, maximize and close above the page, in the app\'s colours', (tester) async {
     await tester.pumpWidget(app());

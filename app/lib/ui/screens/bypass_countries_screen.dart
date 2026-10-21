@@ -10,6 +10,7 @@ import '../../state/providers.dart';
 import '../insets.dart';
 import '../widgets/country_flag.dart';
 import 'ipdb_screen.dart';
+import '../layout.dart';
 
 /// Chooses the countries whose address ranges go around the VPN. A country's ranges come from the
 /// offline country database when it is installed, and otherwise from a small list downloaded for each
@@ -122,7 +123,7 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
                             OutlinedButton(
                               onPressed: () => Navigator.of(
                                 context,
-                              ).push(MaterialPageRoute<void>(builder: (_) => const IpDbScreen())),
+                              ).push(AppRoute<void>(builder: (_) => const IpDbScreen())),
                               child: Text(l.bypassCountriesGetDb),
                             ),
                           ],

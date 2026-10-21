@@ -8,6 +8,7 @@ import '../state/providers.dart';
 import 'import_file.dart';
 import 'screens/subscription_screen.dart';
 import 'widgets/notice.dart';
+import 'layout.dart';
 
 /// Tells the user why a file another app sent could not be read ([code] is the Android side's reason), in a
 /// red notification.
@@ -38,7 +39,7 @@ Future<void> importShared(GlobalKey<NavigatorState> navigator, WidgetRef ref, St
 
   // A single http(s) or nordvpn:// URL is a subscription, not a config.
   if (!text.contains('\n') && RegExp(r'^(https?|nordvpn)://\S+$').hasMatch(text)) {
-    navigator.currentState?.push(MaterialPageRoute<void>(builder: (_) => SubscriptionScreen(initialUrl: text)));
+    navigator.currentState?.push(AppRoute<void>(builder: (_) => SubscriptionScreen(initialUrl: text)));
     return;
   }
 

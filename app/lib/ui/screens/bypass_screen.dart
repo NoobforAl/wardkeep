@@ -17,6 +17,7 @@ import '../../state/ipdb_state.dart';
 import '../../state/providers.dart';
 import '../insets.dart';
 import 'bypass_countries_screen.dart';
+import '../layout.dart';
 
 /// Lists of domains, addresses and ranges that go around the VPN (or, in
 /// "only these" mode, the only ones that use it).
@@ -25,7 +26,7 @@ class BypassScreen extends ConsumerWidget {
 
   void _edit(BuildContext context, {BypassList? list, String text = '', String name = ''}) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      AppRoute<void>(
         builder: (_) => BypassEditScreen(existing: list, initialText: text, initialName: name),
       ),
     );
@@ -135,7 +136,7 @@ class BypassScreen extends ConsumerWidget {
                 subtitle: Text(_countriesSummary(context, ref)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const BypassCountriesScreen()),
+                  AppRoute<void>(builder: (_) => const BypassCountriesScreen()),
                 ),
               ),
               const Divider(height: 16),

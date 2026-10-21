@@ -17,6 +17,7 @@ import 'network_tiles.dart';
 import 'notices_screen.dart';
 import 'profiles_screen.dart';
 import 'split_tunnel_screen.dart';
+import '../layout.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -27,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
     final s = ref.watch(settingsProvider);
     final ctrl = ref.read(settingsProvider.notifier);
     final bypassEntries = ref.watch(bypassListsProvider).where((b) => b.enabled).fold<int>(0, (n, b) => n + b.entries);
-    void open(Widget page) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+    void open(Widget page) => Navigator.of(context).push(AppRoute<void>(builder: (_) => page));
     return Scaffold(
       appBar: AppBar(title: Text(l.settingsTitle)),
       body: Center(

@@ -1787,6 +1787,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get windowClose => 'Close';
 
   @override
+  String get windowFullScreen => 'Full screen';
+
+  @override
+  String get windowExitFullScreen => 'Exit full screen';
+
+  @override
   String get globeRecenter => 'Centre the Earth';
 
   @override

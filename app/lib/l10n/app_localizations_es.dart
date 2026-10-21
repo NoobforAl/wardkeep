@@ -1813,6 +1813,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get windowClose => 'Cerrar';
 
   @override
+  String get windowFullScreen => 'Pantalla completa';
+
+  @override
+  String get windowExitFullScreen => 'Salir de pantalla completa';
+
+  @override
   String get globeRecenter => 'Centrar la Tierra';
 
   @override

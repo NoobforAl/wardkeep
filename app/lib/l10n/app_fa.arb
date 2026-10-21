@@ -497,6 +497,8 @@
   "windowMaximize": "بزرگ‌کردن",
   "windowRestore": "بازگردانی",
   "windowClose": "بستن",
+  "windowFullScreen": "تمام‌صفحه",
+  "windowExitFullScreen": "خروج از تمام‌صفحه",
   "globeRecenter": "برگرداندن زمین",
   "bypassCountriesZoneIntro": "برای هر کشوری که انتخاب می‌کنید بازه‌های نشانی‌اش دانلود می‌شود (چند کیلوبایت). پایگاه‌داده کامل آفلاین دقیق‌تر است و به دانلود نیاز ندارد.",
   "bypassCountriesDownloading": "در حال دانلود…",

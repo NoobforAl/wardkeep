@@ -1789,6 +1789,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get windowClose => 'बंद करें';
 
   @override
+  String get windowFullScreen => 'पूर्ण स्क्रीन';
+
+  @override
+  String get windowExitFullScreen => 'पूर्ण स्क्रीन से बाहर निकलें';
+
+  @override
   String get globeRecenter => 'पृथ्वी को केंद्र में लाएँ';
 
   @override

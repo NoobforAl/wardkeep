@@ -1810,6 +1810,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get windowClose => 'Fechar';
 
   @override
+  String get windowFullScreen => 'Tela cheia';
+
+  @override
+  String get windowExitFullScreen => 'Sair da tela cheia';
+
+  @override
   String get globeRecenter => 'Centralizar a Terra';
 
   @override

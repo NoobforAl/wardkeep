@@ -20,6 +20,7 @@ import 'ui/screens/profiles_screen.dart';
 import 'ui/theme.dart';
 import 'ui/tray.dart';
 import 'ui/widgets/window_frame.dart';
+import 'ui/layout.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,12 +35,12 @@ Future<void> main(List<String> args) async {
   ));
 }
 
-/// On Windows the system's title bar (its own minimize, maximize and close buttons, in the system's
-/// colours) is replaced by the app's own, drawn by [WindowFrame], and the window is sized from the
+/// On a computer (Windows, macOS, Linux) the system's title bar (its own minimize, maximize and close buttons,
+/// in the system's colours) is replaced by the app's own, drawn by [WindowFrame] with that system's buttons, and the window is sized from the
 /// monitor instead of a fixed size, can be resized by every edge, and opens where it was left. If the
 /// window cannot be set up the system's bar and size stay, so the app is never left without them.
 Future<void> _setUpWindow(AppStore store) async {
-  if (kIsWeb || !Platform.isWindows) return;
+  if (kIsWeb || !(Platform.isWindows || Platform.isMacOS || Platform.isLinux)) return;
   try {
     await windowManager.ensureInitialized();
     final bounds = openingBounds(
@@ -168,7 +169,7 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
     final navigator = _navigator.currentState;
     if (navigator == null) return;
     final addServer = await navigator.push<bool>(
-      MaterialPageRoute(fullscreenDialog: true, builder: (_) => const OnboardingScreen()),
+      AppRoute(fullscreenDialog: true, builder: (_) => const OnboardingScreen()),
     );
     final overlay = _navigator.currentState?.overlay;
     if (addServer == true && overlay != null && overlay.mounted) showImportSheet(overlay.context, ref);

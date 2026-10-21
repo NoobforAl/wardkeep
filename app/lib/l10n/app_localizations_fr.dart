@@ -1815,6 +1815,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get windowClose => 'Fermer';
 
   @override
+  String get windowFullScreen => 'Plein écran';
+
+  @override
+  String get windowExitFullScreen => 'Quitter le plein écran';
+
+  @override
   String get globeRecenter => 'Centrer la Terre';
 
   @override

@@ -497,6 +497,8 @@
   "windowMaximize": "Развернуть",
   "windowRestore": "Восстановить",
   "windowClose": "Закрыть",
+  "windowFullScreen": "Полный экран",
+  "windowExitFullScreen": "Выйти из полноэкранного режима",
   "globeRecenter": "Вернуть Землю",
   "bypassCountriesZoneIntro": "Для каждой отмеченной страны скачиваются её диапазоны адресов (несколько килобайт). Полная офлайн-база точнее и не требует загрузки.",
   "bypassCountriesDownloading": "Загрузка…",

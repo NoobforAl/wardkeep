@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../engine/engine.dart';
@@ -9,6 +10,7 @@ import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/location.dart';
 import '../../state/providers.dart';
+import '../layout.dart';
 import '../motion.dart';
 import '../theme.dart';
 import '../widgets/country_flag.dart';
@@ -50,6 +52,7 @@ class HomeScreen extends ConsumerWidget {
       );
     });
 
+    final wide = isWide(context);
     return Scaffold(
       body: AnimatedContainer(
         duration: soft(context, 900),
@@ -73,6 +76,7 @@ class HomeScreen extends ConsumerWidget {
           painter: const StarFieldPainter(),
           child: LayoutBuilder(
             builder: (context, box) {
+              if (wide) return _WideBody(scheme: scheme);
               final g = _Geometry(box, MediaQuery.paddingOf(context).top, MediaQuery.textScalerOf(context),
                   connected: conn.status == ConnStatus.connected,
                   route: conn.status == ConnStatus.connected && conn.torPath.isNotEmpty);
@@ -133,7 +137,9 @@ class HomeScreen extends ConsumerWidget {
       ),
       // In the footer slot so that toasts appear above the panel, not over the button.
       // It is not navigation: nothing here switches pages.
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar: wide
+          ? null
+          : SafeArea(
         child: Center(
           heightFactor: 1,
           child: ConstrainedBox(
@@ -205,6 +211,155 @@ class _Geometry {
 
   /// Below the globe: nothing is written on the Earth.
   double get contentTop => top + d + _gap;
+}
+
+/// The computer layout: a rail of destinations on the left (the connection, the servers, the settings, so
+/// the settings need no button to find) and, beside it, the page. The page has a Navigator of its own, so a
+/// page opened from it (the list of locations, an editor) fills that part and the rail stays in view.
+/// The connection page is a column of controls beside the Earth, as large as the window allows.
+class _WideBody extends StatefulWidget {
+  const _WideBody({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  State<_WideBody> createState() => _WideBodyState();
+}
+
+class _WideBodyState extends State<_WideBody> {
+  /// 0 the connection, 1 the servers, 2 the settings.
+  int _page = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = widget.scheme;
+    return Row(
+      children: [
+        NavigationRail(
+          selectedIndex: _page,
+          onDestinationSelected: (i) => setState(() => _page = i),
+          labelType: NavigationRailLabelType.all,
+          minWidth: 88,
+          groupAlignment: -1,
+          backgroundColor: scheme.surface.withValues(alpha: 0.8),
+          leading: Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 20),
+            child: Tooltip(message: l.appName, child: Icon(Icons.shield_rounded, color: scheme.primary, size: 28)),
+          ),
+          destinations: [
+            NavigationRailDestination(
+              icon: const Icon(Icons.public_outlined),
+              selectedIcon: const Icon(Icons.public_rounded),
+              label: Text(l.buttonConnect),
+            ),
+            NavigationRailDestination(
+              icon: const Icon(Icons.dns_outlined),
+              selectedIcon: const Icon(Icons.dns_rounded),
+              label: Text(l.settingsServers),
+            ),
+            NavigationRailDestination(
+              icon: const Icon(Icons.tune_outlined),
+              selectedIcon: const Icon(Icons.tune_rounded),
+              label: Text(l.settingsTitle),
+            ),
+          ],
+        ),
+        VerticalDivider(width: 1, color: scheme.outlineVariant),
+        Expanded(
+          // A new Navigator for each destination: choosing one in the rail goes back to its first page.
+          child: _PageNavigator(
+            key: ValueKey(_page),
+            first: switch (_page) {
+              1 => AppRoute<void>(builder: (_) => const ProfilesScreen()),
+              2 => AppRoute<void>(builder: (_) => const SettingsScreen()),
+              _ => MaterialPageRoute<void>(builder: (_) => _ConnectionPage(scheme: scheme)),
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Navigator of the content beside the rail. Escape goes back a page.
+class _PageNavigator extends StatefulWidget {
+  const _PageNavigator({super.key, required this.first});
+
+  final Route<void> first;
+
+  @override
+  State<_PageNavigator> createState() => _PageNavigatorState();
+}
+
+class _PageNavigatorState extends State<_PageNavigator> {
+  final _key = GlobalKey<NavigatorState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShellScope(
+      child: CallbackShortcuts(
+        bindings: {const SingleActivator(LogicalKeyboardKey.escape): () => _key.currentState?.maybePop()},
+        child: Focus(
+          autofocus: true,
+          child: Navigator(key: _key, onGenerateRoute: (_) => widget.first),
+        ),
+      ),
+    );
+  }
+}
+
+/// The connection on a computer: the status, where to connect and the button in a column, the Earth beside it.
+class _ConnectionPage extends ConsumerWidget {
+  const _ConnectionPage({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(connectionProvider);
+    return LayoutBuilder(
+      builder: (context, box) {
+        // The column grows a little with the window; the column and the Earth are one group in the middle.
+        final side = (box.maxWidth * 0.3).clamp(400.0, 480.0);
+        final d = math.max(180.0, math.min(math.min(box.maxWidth - side - 72, box.maxHeight * 0.88), 1100.0));
+        return Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: side,
+                height: box.maxHeight,
+                child: LayoutBuilder(
+                  builder: (context, col) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: col.maxHeight),
+                      // The status and the card to connect from are one group in the middle of the column.
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _Hero(state: state),
+                              const SizedBox(height: 28),
+                              _BottomPanel(state: state, scheme: scheme, floating: true),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 24),
+              SizedBox(width: d, height: d, child: _Earth(state: state)),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// The Earth. Not connected: it shows where you really are (red). Connecting and connected:
@@ -284,20 +439,22 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 8, 0),
-      child: Row(
-        children: [
-          const Spacer(),
-          IconButton(
-            tooltip: context.l10n.tooltipSettings,
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
-            ),
-            icon: const Icon(Icons.tune_rounded),
-          ),
-        ],
-      ),
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(20, 10, 8, 0),
+      child: Row(children: [Spacer(), _SettingsButton()]),
+    );
+  }
+}
+
+class _SettingsButton extends StatelessWidget {
+  const _SettingsButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: context.l10n.tooltipSettings,
+      onPressed: () => Navigator.of(context).push(AppRoute<void>(builder: (_) => const SettingsScreen())),
+      icon: const Icon(Icons.tune_rounded),
     );
   }
 }
@@ -424,7 +581,7 @@ class _HeroState extends ConsumerState<_Hero> {
                         // A mesh profile opens the list of its devices.
                         onDevices: mesh
                             ? () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
+                                AppRoute<void>(
                                   builder: (_) => const DevicesScreen(),
                                 ),
                               )
@@ -675,10 +832,13 @@ class _TrafficRow extends StatelessWidget {
 
 /// Where you connect to, and the button.
 class _BottomPanel extends ConsumerWidget {
-  const _BottomPanel({required this.state, required this.scheme});
+  const _BottomPanel({required this.state, required this.scheme, this.floating = false});
 
   final EngineState state;
   final ColorScheme scheme;
+
+  /// A card of its own (the computer layout's side column) instead of a sheet rising from the bottom edge.
+  final bool floating;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -722,8 +882,8 @@ class _BottomPanel extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border(top: BorderSide(color: scheme.outlineVariant)),
+        borderRadius: floating ? BorderRadius.circular(24) : const BorderRadius.vertical(top: Radius.circular(32)),
+        border: floating ? Border.all(color: scheme.outlineVariant) : Border(top: BorderSide(color: scheme.outlineVariant)),
       ),
       padding: EdgeInsets.fromLTRB(16, compact ? 10 : 14, 16, compact ? 10 : 14),
       child: Column(
@@ -752,7 +912,7 @@ class _BottomPanel extends ConsumerWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(18),
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
+                  AppRoute<void>(
                     builder: (_) => const LocationScreen(),
                   ),
                 ),

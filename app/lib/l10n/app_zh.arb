@@ -497,6 +497,8 @@
   "windowMaximize": "最大化",
   "windowRestore": "还原",
   "windowClose": "关闭",
+  "windowFullScreen": "全屏",
+  "windowExitFullScreen": "退出全屏",
   "globeRecenter": "还原地球",
   "bypassCountriesZoneIntro": "勾选的每个国家会下载其地址范围（几千字节）。完整的离线数据库更精确，且无需下载。",
   "bypassCountriesDownloading": "正在下载…",

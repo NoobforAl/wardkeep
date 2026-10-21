@@ -1775,6 +1775,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get windowClose => 'Tutup';
 
   @override
+  String get windowFullScreen => 'Layar penuh';
+
+  @override
+  String get windowExitFullScreen => 'Keluar dari layar penuh';
+
+  @override
   String get globeRecenter => 'Pusatkan Bumi';
 
   @override

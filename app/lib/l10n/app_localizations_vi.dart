@@ -1772,6 +1772,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get windowClose => 'Đóng';
 
   @override
+  String get windowFullScreen => 'Toàn màn hình';
+
+  @override
+  String get windowExitFullScreen => 'Thoát toàn màn hình';
+
+  @override
   String get globeRecenter => 'Căn giữa Trái Đất';
 
   @override

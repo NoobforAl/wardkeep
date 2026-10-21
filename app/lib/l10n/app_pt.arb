@@ -490,6 +490,8 @@
   "windowMaximize": "Maximizar",
   "windowRestore": "Restaurar",
   "windowClose": "Fechar",
+  "windowFullScreen": "Tela cheia",
+  "windowExitFullScreen": "Sair da tela cheia",
   "globeRecenter": "Centralizar a Terra",
   "bypassCountriesZoneIntro": "Cada país marcado baixa seus intervalos de endereços (alguns quilobytes). O banco de dados offline completo é mais exato e não precisa de download.",
   "bypassCountriesDownloading": "Baixando…",

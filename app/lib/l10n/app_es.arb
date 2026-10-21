@@ -490,6 +490,8 @@
   "windowMaximize": "Maximizar",
   "windowRestore": "Restaurar",
   "windowClose": "Cerrar",
+  "windowFullScreen": "Pantalla completa",
+  "windowExitFullScreen": "Salir de pantalla completa",
   "globeRecenter": "Centrar la Tierra",
   "bypassCountriesZoneIntro": "Cada país que marcas descarga sus rangos de direcciones (unos pocos kilobytes). La base de datos completa sin conexión es más exacta y no necesita descarga.",
   "bypassCountriesDownloading": "Descargando…",
