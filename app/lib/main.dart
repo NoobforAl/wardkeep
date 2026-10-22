@@ -19,6 +19,7 @@ import 'ui/screens/onboarding_screen.dart';
 import 'ui/screens/profiles_screen.dart';
 import 'ui/theme.dart';
 import 'ui/tray.dart';
+import 'ui/widgets/splash.dart';
 import 'ui/widgets/window_frame.dart';
 import 'ui/layout.dart';
 
@@ -193,7 +194,11 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       onGenerateTitle: (context) => context.l10n.appName,
-      builder: (context, child) => customTitleBar ? WindowFrame(child: child!) : child!,
+      builder: (context, child) {
+        final framed = customTitleBar ? WindowFrame(child: child!) : child!;
+        // The phone opens on the loading screen with the whole shield; a computer shows its window ready.
+        return Platform.isAndroid ? SplashCover(child: framed) : framed;
+      },
       home: const HomeScreen(),
     );
   }

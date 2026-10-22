@@ -292,9 +292,10 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   Offset _tapAt = Offset.zero; // where the finger touched
   Size _size = Size.zero; // the size of the Earth's box
 
-  /// How much the user has zoomed in or out (1 = as it comes), by pinching or with the wheel.
+  /// How much the user has zoomed in or out (1 = as it comes), by pinching or with the wheel. Not much
+  /// further in than the Earth's own box: a bigger globe only covers the page around it.
   double _userZoom = 1, _zoomStart = 1;
-  static const _minZoom = 0.6, _maxZoom = 2.2;
+  static const _minZoom = 0.6, _maxZoom = 1.5;
 
   /// The user's zoom (for tests).
   @visibleForTesting
@@ -550,6 +551,9 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
                 ..onEnd = _scaleEnd,
             ),
           },
+          // Zoomed in, the Earth stays inside its box instead of drawing over the page around it.
+          child: ClipRect(
+          clipBehavior: _userZoom > 1 ? Clip.hardEdge : Clip.none,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -593,6 +597,7 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
                   ),
                 ),
             ],
+          ),
           ),
           ),
           // Back to the place the Earth is showing; there only once it has been turned or zoomed.

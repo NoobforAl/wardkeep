@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The ground of the loading screen: the app's own (surface in buildTheme), so the Flutter one follows on without a jump. -->
+    <color name="splash_background">#FFE6EAF0</color>
+</resources>

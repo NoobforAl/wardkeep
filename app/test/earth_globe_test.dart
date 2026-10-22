@@ -385,11 +385,13 @@ void zoomTests() {
       await a.moveBy(const Offset(-30, 0));
       await b.moveBy(const Offset(30, 0));
       await tester.pump();
-      expect(state(tester).userZoom, greaterThan(1.5), reason: 'the fingers went from 60 to 120 apart');
+      expect(state(tester).userZoom, 1.5, reason: 'the fingers went from 60 to 120 apart: twice, held at the limit');
       await a.moveBy(const Offset(-400, 0));
       await b.moveBy(const Offset(400, 0));
       await tester.pump();
-      expect(state(tester).userZoom, lessThanOrEqualTo(2.2), reason: 'the zoom has a limit');
+      expect(state(tester).userZoom, lessThanOrEqualTo(1.5), reason: 'the zoom has a limit');
+      Clip clip() => tester.widget<ClipRect>(find.descendant(of: find.byType(EarthBackdrop), matching: find.byType(ClipRect)).first).clipBehavior;
+      expect(clip(), Clip.hardEdge, reason: 'zoomed in, the Earth does not draw over the page around it');
       await a.up();
       await b.up();
       await tester.pumpAndSettle();
@@ -399,7 +401,7 @@ void zoomTests() {
       await c.moveBy(const Offset(90, 0));
       await d.moveBy(const Offset(-90, 0));
       await tester.pump();
-      expect(state(tester).userZoom, lessThan(2.2));
+      expect(state(tester).userZoom, lessThan(1.5));
       await c.up();
       await d.up();
       await tester.pumpAndSettle();
@@ -418,7 +420,7 @@ void zoomTests() {
         await tester.sendEventToBinding(mouse.scroll(const Offset(0, -300)));
       }
       await tester.pump();
-      expect(state(tester).userZoom, lessThanOrEqualTo(2.2));
+      expect(state(tester).userZoom, lessThanOrEqualTo(1.5));
       for (var i = 0; i < 40; i++) {
         await tester.sendEventToBinding(mouse.scroll(const Offset(0, 300)));
       }

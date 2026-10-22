@@ -306,3 +306,7 @@ save(master, "docs", "icon.png")
 ico = os.path.join(ROOT, "app", "windows", "runner", "resources", "app_icon.ico")
 master.save(ico, format="ICO", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
 print("wrote ico")
+
+# the loading screen's shield: the whole shield alone on a transparent ground, filling its square
+splash = down(Image.alpha_composite(drop_shadow(N, 0.9), shield(N, 0.9)), 512)
+save(splash, "app", "assets", "shield.png")
