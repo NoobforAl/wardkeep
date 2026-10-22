@@ -14,7 +14,7 @@ import (
 func TestClientChurnDoesNotLeak(t *testing.T) {
 	s, addr := newTestServer(t, ServerConfig{Grace: -1})
 	round := func(n int) {
-		for i := 0; i < n; i++ {
+		for range n {
 			c, err := Dial(t.Context(), addr, s.Token())
 			if err != nil {
 				t.Fatal(err)
@@ -47,7 +47,7 @@ func TestRequestBurstDoesNotLeak(t *testing.T) {
 	defer c.Close()
 	burst := func(n, workers int) {
 		var wg sync.WaitGroup
-		for w := 0; w < workers; w++ {
+		for range workers {
 			wg.Go(func() {
 				for i := 0; i < n/workers; i++ {
 					if err := c.Call(t.Context(), "state", nil, nil); err != nil {

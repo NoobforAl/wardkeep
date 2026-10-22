@@ -10,7 +10,7 @@ func fill(b *testing.B, dir string) {
 	b.Helper()
 	l := Open(dir)
 	defer l.Close()
-	for i := 0; i < 40000; i++ {
+	for i := range 40000 {
 		l.Write("info", fmt.Sprintf("inbound/trojan[%d]: connection from 203.0.113.%d:%d", i%7, i%250, 1024+i%60000))
 	}
 }

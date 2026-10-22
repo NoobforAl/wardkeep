@@ -72,12 +72,12 @@ func TestStartStopDoesNotLeak(t *testing.T) {
 			t.Fatalf("cycle %d: stop: %v", i, err)
 		}
 	}
-	for i := 0; i < 5; i++ { // warm-up: first use allocates caches that stay
+	for i := range 5 { // warm-up: first use allocates caches that stay
 		cycle(i)
 	}
 	before := leakcheck.Take(3 * time.Second)
 	n := cycles(20)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		cycle(i)
 	}
 	after := leakcheck.Take(5 * time.Second)
@@ -94,7 +94,7 @@ func TestStartStopWithSlowStateCallback(t *testing.T) {
 	}})
 	start := time.Now()
 	n := cycles(12)
-	for i := 0; i < n; i++ {
+	for range n {
 		if err := e.Start(profiles[:1], singbox.Options{ListenPort: freePort(t), LogLevel: "error"}); err != nil {
 			t.Fatal(err)
 		}
