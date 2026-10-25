@@ -125,6 +125,34 @@ void main() {
     expect(first.id, anyOf('h', 'v')); // the order put a Hysteria 2 or VLESS profile first
   });
 
+  test('the time of the last verified answer goes back to the core, so an older one is refused', () async {
+    engine.next = [_p('a', 'trojan')];
+    engine.info = const SubscriptionInfo(verified: true, signedAt: 1000);
+    await c.read(subscriptionsProvider.notifier).add(url: 'https://p.example/sub', publicKey: _keyStd);
+    final sub = c.read(subscriptionsProvider).single;
+    expect(sub.info.signedAt, 1000);
+    expect(sub.toRequest()['not_before'], 1000);
+
+    await c.read(subscriptionsProvider.notifier).refresh(sub.id);
+    expect(engine.lastRequest!['not_before'], 1000);
+
+    // Without a key the time means nothing and is not sent.
+    expect(sub.copyWith(publicKey: '').toRequest().containsKey('not_before'), isFalse);
+
+    // After "older than the last one accepted" the user starts over: the check forgets the time and the error.
+    c.read(subscriptionsProvider.notifier).forgetSignature(sub.id);
+    final fresh = c.read(subscriptionsProvider).single;
+    expect(fresh.info.signedAt, 0);
+    expect(fresh.info.verified, isFalse);
+    expect(fresh.info.title, sub.info.title); // the figures stay
+    expect(fresh.toRequest().containsKey('not_before'), isFalse);
+
+    // The time survives a restart.
+    c.dispose();
+    c = make();
+    expect(c.read(subscriptionsProvider).single.info.signedAt, 0);
+  });
+
   test('the answer says whether it was verified, and what the provider asks for', () {
     final info = SubscriptionInfo.fromJson({
       'verified': true,

@@ -2164,4 +2164,8 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get subBadSignature =>
       'Aboneliğin imzası yanlış: yolda değiştirilmiş olabilir ya da anahtar eski';
+
+  @override
+  String get subStale =>
+      'Bu yanıt en son kabul edilenden eski, bu yüzden reddedildi. Sağlayıcı eski bir yedeği geri yüklediyse aboneliği düzenleyip yeniden kaydedin.';
 }

@@ -597,5 +597,6 @@
   "subBackupHelp": "Um por linha. Tentados em ordem quando o primeiro não responde",
   "subErrKey": "A chave de assinatura não é uma chave pública válida",
   "subUnsigned": "A lista não está assinada digitalmente, mas há uma chave de assinatura, então foi recusada",
-  "subBadSignature": "A assinatura digital da lista está errada: ela pode ter sido alterada no caminho, ou a chave é antiga"
+  "subBadSignature": "A assinatura digital da lista está errada: ela pode ter sido alterada no caminho, ou a chave é antiga",
+  "subStale": "Esta resposta é mais antiga que a última aceita, por isso foi recusada. Se o provedor restaurou um backup antigo, edite a lista e salve de novo."
 }

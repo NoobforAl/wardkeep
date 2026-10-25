@@ -2145,4 +2145,8 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get subBadSignature =>
       'Tanda tangan langganan salah: mungkin diubah di jalan, atau kuncinya lama';
+
+  @override
+  String get subStale =>
+      'Jawaban ini lebih lama dari yang terakhir diterima, jadi ditolak. Jika penyedia memulihkan cadangan lama, ubah langganan lalu simpan lagi.';
 }

@@ -2056,4 +2056,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get subBadSignature => '订阅的签名不正确：可能在传输中被修改，或密钥已过期';
+
+  @override
+  String get subStale => '此响应比上次接受的更旧，因此被拒绝。如果提供商恢复了旧备份，请编辑订阅并重新保存。';
 }

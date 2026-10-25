@@ -67,6 +67,7 @@ const (
 	CodeSubBadURL          = "SUB_BAD_URL"
 	CodeSubUnsigned        = "SUB_UNSIGNED"      // a signing key is set and the answer is not signed
 	CodeSubBadSignature    = "SUB_BAD_SIGNATURE" // the signature does not fit the answer and the key
+	CodeSubStale           = "SUB_STALE"         // a signed answer older than the last one accepted (a replay)
 	CodeSubBadKey          = "SUB_BAD_KEY"       // the signing key is not a valid public key
 )
 

@@ -597,5 +597,6 @@
   "subBackupHelp": "Une par ligne. Essayées dans l'ordre quand la première est injoignable",
   "subErrKey": "La clé de signature n'est pas une clé publique valide",
   "subUnsigned": "L'abonnement n'est pas signé alors qu'une clé de signature est définie ; il a été refusé",
-  "subBadSignature": "La signature de l'abonnement est fausse : il a pu être modifié en chemin, ou la clé est ancienne"
+  "subBadSignature": "La signature de l'abonnement est fausse : il a pu être modifié en chemin, ou la clé est ancienne",
+  "subStale": "Cette réponse est plus ancienne que la dernière acceptée, elle a donc été refusée. Si le fournisseur a restauré une ancienne sauvegarde, modifiez l'abonnement et enregistrez-le de nouveau."
 }

@@ -85,6 +85,8 @@ func subscriptionError(err error) *Error {
 		e.Code = CodeSubUnsigned
 	case errors.Is(err, subscription.ErrBadSignature):
 		e.Code = CodeSubBadSignature
+	case errors.Is(err, subscription.ErrStale):
+		e.Code = CodeSubStale
 	case errors.Is(err, subscription.ErrBadKey):
 		e.Code = CodeSubBadKey
 	}

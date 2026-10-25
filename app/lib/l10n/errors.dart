@@ -30,6 +30,7 @@ String? translateCode(AppLocalizations l, String code, Map<String, String> args)
     'SUB_BAD_URL' => l.subBadUrl,
     'SUB_UNSIGNED' => l.subUnsigned,
     'SUB_BAD_SIGNATURE' => l.subBadSignature,
+    'SUB_STALE' => l.subStale,
     'SUB_BAD_KEY' => l.subErrKey,
     'MESH_FAILED' => l.errMeshExit,
     _ => null,

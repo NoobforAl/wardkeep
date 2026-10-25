@@ -2187,4 +2187,8 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get subBadSignature =>
       'La firma de la suscripción es incorrecta: puede haberse cambiado por el camino, o la clave es antigua';
+
+  @override
+  String get subStale =>
+      'Esta respuesta es más antigua que la última aceptada, así que se rechazó. Si el proveedor restauró una copia antigua, edita la suscripción y guárdala de nuevo.';
 }

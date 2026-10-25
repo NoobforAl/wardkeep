@@ -2184,4 +2184,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get subBadSignature =>
       'A assinatura digital da lista está errada: ela pode ter sido alterada no caminho, ou a chave é antiga';
+
+  @override
+  String get subStale =>
+      'Esta resposta é mais antiga que a última aceita, por isso foi recusada. Se o provedor restaurou um backup antigo, edite a lista e salve de novo.';
 }

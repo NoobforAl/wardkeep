@@ -2162,4 +2162,8 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get subBadSignature =>
       'رکنیت کا دستخط غلط ہے: ہو سکتا ہے راستے میں بدلی گئی ہو، یا کلید پرانی ہو';
+
+  @override
+  String get subStale =>
+      'یہ جواب آخری قبول شدہ جواب سے پرانا ہے، اس لیے مسترد کیا گیا۔ اگر فراہم کنندہ نے پرانا بیک اپ بحال کیا ہے تو رکنیت میں ترمیم کریں اور دوبارہ محفوظ کریں۔';
 }

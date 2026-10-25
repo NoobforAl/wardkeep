@@ -597,5 +597,6 @@
   "subBackupHelp": "Her satıra bir tane. İlkine ulaşılamazsa sırayla denenir",
   "subErrKey": "İmza anahtarı geçerli bir genel anahtar değil",
   "subUnsigned": "Abonelik imzalı değil ama bir imza anahtarı ayarlı, bu yüzden reddedildi",
-  "subBadSignature": "Aboneliğin imzası yanlış: yolda değiştirilmiş olabilir ya da anahtar eski"
+  "subBadSignature": "Aboneliğin imzası yanlış: yolda değiştirilmiş olabilir ya da anahtar eski",
+  "subStale": "Bu yanıt en son kabul edilenden eski, bu yüzden reddedildi. Sağlayıcı eski bir yedeği geri yüklediyse aboneliği düzenleyip yeniden kaydedin."
 }

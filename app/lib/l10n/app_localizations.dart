@@ -3707,6 +3707,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The subscription\'s signature is wrong: it may have been changed on the way, or the key is old'**
   String get subBadSignature;
+
+  /// A signed subscription answer older than the last one accepted
+  ///
+  /// In en, this message translates to:
+  /// **'This answer is older than the last one accepted, so it was refused. If the provider restored an old backup, edit the subscription and save it again.'**
+  String get subStale;
 }
 
 class _AppLocalizationsDelegate

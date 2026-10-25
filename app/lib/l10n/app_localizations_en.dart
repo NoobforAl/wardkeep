@@ -2156,4 +2156,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subBadSignature =>
       'The subscription\'s signature is wrong: it may have been changed on the way, or the key is old';
+
+  @override
+  String get subStale =>
+      'This answer is older than the last one accepted, so it was refused. If the provider restored an old backup, edit the subscription and save it again.';
 }

@@ -42,12 +42,18 @@ func TestSubscriptionIsSigned(t *testing.T) {
 			if rec.Code != 200 {
 				t.Fatalf("status %d", rec.Code)
 			}
-			if err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header()); err != nil {
+			asked := "/" + path + "/" + token + strings.SplitN(target, "?", 2)[0]
+			at, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), asked)
+			if err != nil || at == 0 {
 				t.Fatalf("the answer does not verify: %v", err)
 			}
 			body := append([]byte("x"), rec.Body.Bytes()...)
-			if err := subscription.Verify(pub, body, rec.Header()); err == nil {
+			if _, err := subscription.Verify(pub, body, rec.Header(), asked); err == nil {
 				t.Fatal("a changed body should not verify")
+			}
+			// Served as another user's (a different path), it does not verify either.
+			if _, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), "/"+path+"/another-token"+strings.SplitN(target, "?", 2)[0]); err == nil {
+				t.Fatal("an answer for one path must not verify for another")
 			}
 		})
 	}
@@ -72,13 +78,19 @@ func TestSubscriptionProtocolOrderIsSigned(t *testing.T) {
 	if got := rec.Header().Get("Protocol-Order-Ir"); got != "hysteria2" {
 		t.Fatalf("Protocol-Order-IR = %q", got)
 	}
-	if err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header()); err != nil {
+	asked := "/" + path + "/" + token
+	if _, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), asked); err != nil {
 		t.Fatalf("the answer does not verify: %v", err)
 	}
-	// Changing the order on the way breaks the signature.
+	// Changing the order, or the usage the user sees, on the way breaks the signature.
 	rec.Header().Set("Protocol-Order", "trojan")
-	if err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header()); err == nil {
+	if _, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), asked); err == nil {
 		t.Fatal("a changed order should not verify")
+	}
+	rec.Header().Set("Protocol-Order", "vless,hysteria2")
+	rec.Header().Set("Subscription-Userinfo", "upload=0; download=0; total=999999999999")
+	if _, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), asked); err == nil {
+		t.Fatal("changed usage figures should not verify")
 	}
 }
 

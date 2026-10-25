@@ -2159,4 +2159,8 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get subBadSignature =>
       'امضای اشتراک نادرست است: ممکن است در مسیر تغییر کرده باشد، یا کلید قدیمی است';
+
+  @override
+  String get subStale =>
+      'این پاسخ از آخرین پاسخ پذیرفته‌شده قدیمی‌تر است، پس رد شد. اگر ارائه‌دهنده نسخه پشتیبان قدیمی را بازگردانده، اشتراک را ویرایش و دوباره ذخیره کنید.';
 }

@@ -367,8 +367,23 @@ class SubscriptionInfo {
     this.updateIntervalHours = 0,
     this.title = '',
     this.verified = false,
+    this.signedAt = 0,
     this.protocolOrder = const {},
   });
+
+  /// When the verified answer was signed (Unix seconds), 0 when it was not verified. The next answer must not
+  /// be older, or it is a replay.
+  final int signedAt;
+
+  /// The same figures with nothing verified: used when the provider's key changes or its clock was set back.
+  SubscriptionInfo unsigned() => SubscriptionInfo(
+        upload: upload,
+        download: download,
+        total: total,
+        expire: expire,
+        updateIntervalHours: updateIntervalHours,
+        title: title,
+      );
 
   /// The answer carried a valid signature from the provider's key.
   final bool verified;
@@ -397,6 +412,7 @@ class SubscriptionInfo {
       updateIntervalHours: (j['update_interval_hours'] as num?)?.toInt() ?? 0,
       title: j['title'] as String? ?? '',
       verified: j['verified'] as bool? ?? false,
+      signedAt: (j['signed_at'] as num?)?.toInt() ?? 0,
       protocolOrder: {
         for (final e in (j['protocol_order'] as Map? ?? const {}).entries)
           '${e.key}': [for (final p in (e.value as List? ?? const [])) '$p'],
@@ -412,6 +428,7 @@ class SubscriptionInfo {
         'update_interval_hours': updateIntervalHours,
         'title': title,
         if (verified) 'verified': true,
+        if (signedAt > 0) 'signed_at': signedAt,
         if (protocolOrder.isNotEmpty) 'protocol_order': protocolOrder,
       };
 }

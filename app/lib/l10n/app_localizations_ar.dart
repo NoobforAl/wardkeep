@@ -2198,4 +2198,8 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get subBadSignature =>
       'توقيع الاشتراك خاطئ: ربما تغيّر في الطريق أو أن المفتاح قديم';
+
+  @override
+  String get subStale =>
+      'هذا الرد أقدم من آخر رد مقبول، لذا رُفض. إذا استعاد المزوّد نسخة احتياطية قديمة فعدّل الاشتراك واحفظه من جديد.';
 }

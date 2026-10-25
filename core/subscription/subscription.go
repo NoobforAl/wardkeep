@@ -67,6 +67,9 @@ type Request struct {
 	// PublicKey is the provider's signing key (base64 Ed25519). When it is set the answer must carry a valid
 	// signature (see signature.go), or the fetch fails: a list that was changed on the way is not used.
 	PublicKey string `json:"public_key,omitempty"`
+	// NotBefore is when the last answer the client accepted was signed (Info.SignedAt). An answer signed earlier is
+	// refused (ErrStale): an old list that someone kept and plays back. Zero accepts any.
+	NotBefore int64 `json:"not_before,omitempty"`
 }
 
 // Dialer opens a connection; Fetch's default is the system's.
@@ -84,6 +87,8 @@ type Info struct {
 	Title               string `json:"title,omitempty"`
 	// Verified is set when the answer's signature was checked against the request's key.
 	Verified bool `json:"verified,omitempty"`
+	// SignedAt is when the verified answer was signed (Unix seconds); 0 when it was not verified.
+	SignedAt int64 `json:"signed_at,omitempty"`
 	// ProtocolOrder is the order the provider asks protocols to be tried in: the default under "", and each
 	// country under its code. It is read only from a verified answer, so it cannot be changed on the way.
 	ProtocolOrder map[string][]string `json:"protocol_order,omitempty"`
@@ -201,10 +206,21 @@ func FetchVia(ctx context.Context, req Request, rootCAs *x509.CertPool, dial Dia
 		if err != nil {
 			return nil, err
 		}
-		if err := Verify(key, body, resp.Header); err != nil {
+		path := u.Path
+		if resp.Request != nil && resp.Request.URL != nil {
+			path = resp.Request.URL.Path // after any redirect: the answer must be for the address it came from
+		}
+		if path == "" {
+			path = "/" // what a request for a bare host asks for
+		}
+		signedAt, err := Verify(key, body, resp.Header, path)
+		if err != nil {
 			return nil, err
 		}
-		info.Verified = true
+		if signedAt < req.NotBefore {
+			return nil, ErrStale
+		}
+		info.Verified, info.SignedAt = true, signedAt
 	} else {
 		info.ProtocolOrder = nil // an unsigned answer cannot ask for a reordering
 	}

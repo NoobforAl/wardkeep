@@ -597,5 +597,6 @@
   "subBackupHelp": "Una por línea. Se prueban en orden si no se llega a la primera",
   "subErrKey": "La clave de firma no es una clave pública válida",
   "subUnsigned": "La suscripción no está firmada, pero hay una clave de firma, así que se rechazó",
-  "subBadSignature": "La firma de la suscripción es incorrecta: puede haberse cambiado por el camino, o la clave es antigua"
+  "subBadSignature": "La firma de la suscripción es incorrecta: puede haberse cambiado por el camino, o la clave es antigua",
+  "subStale": "Esta respuesta es más antigua que la última aceptada, así que se rechazó. Si el proveedor restauró una copia antigua, edita la suscripción y guárdala de nuevo."
 }

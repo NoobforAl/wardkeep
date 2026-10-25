@@ -120,14 +120,17 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         );
       } else {
         final (link, linkKey) = Subscription.splitKey(_url.text.trim());
+        final key = _key.text.trim().isNotEmpty ? _key.text.trim() : linkKey;
         ctrl.update(existing.copyWith(
           name: _name.text.trim(),
           url: link,
           auth: _auth,
           via: _via,
           fallbackUrls: _backupUrls,
-          publicKey: _key.text.trim().isNotEmpty ? _key.text.trim() : linkKey,
+          publicKey: key,
         ));
+        // A new key, or a save after "older than the last one accepted", starts the replay check over.
+        if (key != existing.publicKey || existing.lastErrorCode == 'SUB_STALE') ctrl.forgetSignature(existing.id);
         count = await ctrl.refresh(existing.id);
       }
       if (!mounted) return;

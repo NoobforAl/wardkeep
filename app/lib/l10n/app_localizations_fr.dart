@@ -2191,4 +2191,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get subBadSignature =>
       'La signature de l\'abonnement est fausse : il a pu être modifié en chemin, ou la clé est ancienne';
+
+  @override
+  String get subStale =>
+      'Cette réponse est plus ancienne que la dernière acceptée, elle a donc été refusée. Si le fournisseur a restauré une ancienne sauvegarde, modifiez l\'abonnement et enregistrez-le de nouveau.';
 }

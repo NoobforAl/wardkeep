@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/NoobforAl/omnitun/core/subscription"
 )
@@ -25,7 +26,7 @@ func TestSubscribeBackupAddresses(t *testing.T) {
 	key := base64.StdEncoding.EncodeToString(pub)
 
 	signed := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set(subscription.SignatureHeader, subscription.Sign(priv, []byte(fallbackBody), w.Header()))
+		subscription.Sign(priv, []byte(fallbackBody), w.Header(), r.URL.Path, time.Now())
 		w.Write([]byte(fallbackBody))
 	}))
 	defer signed.Close()
@@ -67,6 +68,12 @@ func TestSubscribeBackupAddresses(t *testing.T) {
 	err = c.Call(t.Context(), "subscribe", subscription.Request{URL: signed.URL, PublicKey: base64.StdEncoding.EncodeToString(make([]byte, 32))}, nil)
 	if !errors.As(err, &ce) || ce.Code != CodeSubBadSignature {
 		t.Fatalf("another provider's key: %v", err)
+	}
+
+	// A key that has seen a later answer refuses this one as a replay; the error says so.
+	err = c.Call(t.Context(), "subscribe", subscription.Request{URL: signed.URL, PublicKey: key, NotBefore: time.Now().Add(time.Hour).Unix()}, nil)
+	if !errors.As(err, &ce) || ce.Code != CodeSubStale {
+		t.Fatalf("a replayed answer: %v", err)
 	}
 
 	err = c.Call(t.Context(), "subscribe", subscription.Request{URL: signed.URL, PublicKey: "nonsense"}, nil)

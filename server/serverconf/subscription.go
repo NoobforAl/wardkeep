@@ -118,7 +118,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 			}
 			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", name))
 			w.Header().Set("Cache-Control", "no-store")
-			writeSigned(w, st, []byte(text))
+			writeSigned(w, r, st, []byte(text))
 			return
 		}
 		info := ""
@@ -146,7 +146,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
-			writeSigned(w, st, body)
+			writeSigned(w, r, st, body)
 			return
 		}
 		var lines []string
@@ -154,7 +154,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 			lines = append(lines, l.URL)
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		writeSigned(w, st, []byte(base64.StdEncoding.EncodeToString([]byte(strings.Join(lines, "\n")))))
+		writeSigned(w, r, st, []byte(base64.StdEncoding.EncodeToString([]byte(strings.Join(lines, "\n")))))
 	})
 }
 
@@ -171,11 +171,13 @@ func setProtocolOrder(h http.Header, st *store.State) {
 	}
 }
 
-// writeSigned writes body with an X-Signature header (made over the body and the order headers already set), so a
-// client that has the public key can tell an answer that was changed on the way. Without a key it writes the body as it is.
-func writeSigned(w http.ResponseWriter, st *store.State, body []byte) {
+// writeSigned writes body signed for the path that was asked for, so a client that has the public key can tell an
+// answer that was changed on the way, taken from another address or user, or played back later. The signature covers
+// the metadata and protocol-order headers already set, so they are set before this is called. Without a key it
+// writes the body as it is.
+func writeSigned(w http.ResponseWriter, r *http.Request, st *store.State, body []byte) {
 	if key, ok := st.Server.Subscription.SigningPrivate(); ok {
-		w.Header().Set(subscription.SignatureHeader, subscription.Sign(key, body, w.Header()))
+		subscription.Sign(key, body, w.Header(), r.URL.Path, time.Now())
 	}
 	w.Write(body)
 }

@@ -7,26 +7,44 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
-// A signed subscription carries the header "X-Signature: ed25519=<base64>". The signature is made over the body,
-// a zero byte, and the protocol-order headers in OrderText form, so neither the list nor the order the provider
-// asks for can be changed without the provider's key. A client that has the key refuses anything else.
+// A signed subscription carries "X-Signature: ed25519=<base64>" and "X-Signature-Time: <unix seconds>". The
+// signature is made over one message (see signedMessage) that binds the answer to:
+//
+//   - the path it was asked for, so one user's answer cannot be served as another's;
+//   - the time it was signed, so a client can refuse an answer older than the last it accepted (a replayed old list);
+//   - the metadata headers the client shows and acts on (usage, expiry, title, refresh interval, protocol order);
+//   - the body.
+//
+// A client that has the key refuses anything that does not verify. The time is only compared with the last answer
+// the client accepted, never with its own clock, so a phone with a wrong clock still works.
 const (
 	// SignatureHeader is the header the signature is in.
 	SignatureHeader = "X-Signature"
-	signaturePrefix = "ed25519="
-	// OrderHeader names the protocol order: "Protocol-Order: vless-reality,hysteria2", and per country
-	// "Protocol-Order-IR: hysteria2,vless-reality" (the country is an ISO 3166 code).
+	// SignatureTimeHeader is when the answer was signed (Unix seconds).
+	SignatureTimeHeader = "X-Signature-Time"
+	signaturePrefix     = "ed25519="
+	messageTag          = "wardkeep-subscription-v1"
+	// OrderHeader names the protocol order: "Protocol-Order: vless,hysteria2", and per country
+	// "Protocol-Order-IR: hysteria2,vless" (the country is an ISO 3166 code).
 	OrderHeader = "Protocol-Order"
 )
+
+// signedMeta are the metadata headers (besides the protocol order) that parseInfo reads and the signature covers.
+var signedMeta = []string{"Profile-Title", "Profile-Update-Interval", "Subscription-Userinfo"}
 
 // ErrUnsigned is returned when a key is set but the answer carries no signature.
 var ErrUnsigned = errors.New("the subscription is not signed")
 
 // ErrBadSignature is returned when the signature does not belong to the answer and the key.
 var ErrBadSignature = errors.New("the subscription's signature is wrong")
+
+// ErrStale is returned for a correctly signed answer that is older than one already accepted: a replayed list.
+var ErrStale = errors.New("the subscription is older than the last one accepted")
 
 // ErrBadKey is returned for a signing key that is not a base64 Ed25519 public key.
 var ErrBadKey = errors.New("the signing key is not a valid public key")
@@ -42,24 +60,42 @@ func ParseKey(s string) (ed25519.PublicKey, error) {
 	return nil, ErrBadKey
 }
 
+func isOrderHeader(canon string) bool {
+	return canon == OrderHeader || strings.HasPrefix(canon, OrderHeader+"-")
+}
+
 // OrderText is the protocol-order headers of h in one canonical text: a line "Name: a,b" for each, sorted by
-// name, items lower-cased and trimmed. It is part of what is signed.
+// name, items lower-cased and trimmed.
 func OrderText(h http.Header) string {
 	var lines []string
 	for name, vals := range h {
 		canon := http.CanonicalHeaderKey(name)
-		if canon != OrderHeader && !strings.HasPrefix(canon, OrderHeader+"-") {
+		if !isOrderHeader(canon) {
 			continue
 		}
-		items := normalizeOrder(strings.Join(vals, ","))
-		if len(items) > 0 {
+		if items := normalizeOrder(strings.Join(vals, ",")); len(items) > 0 {
 			lines = append(lines, canon+": "+strings.Join(items, ","))
 		}
 	}
-	sort.Strings(lines)
+	return canonicalLines(lines)
+}
+
+// metaText is the signed metadata headers (not the order) as "Name: value" lines, sorted.
+func metaText(h http.Header) string {
+	var lines []string
+	for _, name := range signedMeta {
+		if v := strings.TrimSpace(h.Get(name)); v != "" {
+			lines = append(lines, name+": "+v)
+		}
+	}
+	return canonicalLines(lines)
+}
+
+func canonicalLines(lines []string) string {
 	if len(lines) == 0 {
 		return ""
 	}
+	sort.Strings(lines)
 	return strings.Join(lines, "\n") + "\n"
 }
 
@@ -73,36 +109,47 @@ func normalizeOrder(s string) []string {
 	return out
 }
 
-func signedMessage(body []byte, h http.Header) []byte {
-	msg := make([]byte, 0, len(body)+64)
-	msg = append(msg, body...)
+// signedMessage is what the signature is made over: a version tag, the request path, the time, the metadata and
+// order headers, a zero byte, and the body.
+func signedMessage(body []byte, h http.Header, path string, signedAt int64) []byte {
+	head := messageTag + "\n" + path + "\n" + strconv.FormatInt(signedAt, 10) + "\n" + metaText(h) + OrderText(h)
+	msg := make([]byte, 0, len(head)+1+len(body))
+	msg = append(msg, head...)
 	msg = append(msg, 0)
-	return append(msg, OrderText(h)...)
+	return append(msg, body...)
 }
 
-// Sign returns the value of the X-Signature header for body and the headers h that carry the protocol order.
-func Sign(priv ed25519.PrivateKey, body []byte, h http.Header) string {
-	return signaturePrefix + base64.StdEncoding.EncodeToString(ed25519.Sign(priv, signedMessage(body, h)))
+// Sign signs an answer for the request path and sets X-Signature and X-Signature-Time on h, which must already
+// carry the metadata and protocol-order headers (they are part of what is signed).
+func Sign(priv ed25519.PrivateKey, body []byte, h http.Header, path string, now time.Time) {
+	at := now.Unix()
+	h.Set(SignatureTimeHeader, strconv.FormatInt(at, 10))
+	h.Set(SignatureHeader, signaturePrefix+base64.StdEncoding.EncodeToString(ed25519.Sign(priv, signedMessage(body, h, path, at))))
 }
 
-// Verify checks the signature in h against body and key.
-func Verify(pub ed25519.PublicKey, body []byte, h http.Header) error {
+// Verify checks the signature in h against body, the path that was asked for and the key. It returns when the
+// answer was signed.
+func Verify(pub ed25519.PublicKey, body []byte, h http.Header, path string) (signedAt int64, err error) {
 	v := strings.TrimSpace(h.Get(SignatureHeader))
 	if v == "" {
-		return ErrUnsigned
+		return 0, ErrUnsigned
 	}
 	enc, ok := strings.CutPrefix(v, signaturePrefix)
 	if !ok {
-		return fmt.Errorf("%w: unknown signature type", ErrBadSignature)
+		return 0, fmt.Errorf("%w: unknown signature type", ErrBadSignature)
 	}
 	sig, err := base64.StdEncoding.DecodeString(strings.TrimSpace(enc))
 	if err != nil || len(sig) != ed25519.SignatureSize {
-		return ErrBadSignature
+		return 0, ErrBadSignature
 	}
-	if !ed25519.Verify(pub, signedMessage(body, h), sig) {
-		return ErrBadSignature
+	signedAt, err = strconv.ParseInt(strings.TrimSpace(h.Get(SignatureTimeHeader)), 10, 64)
+	if err != nil || signedAt <= 0 {
+		return 0, fmt.Errorf("%w: no signing time", ErrBadSignature)
 	}
-	return nil
+	if !ed25519.Verify(pub, signedMessage(body, h, path, signedAt), sig) {
+		return 0, ErrBadSignature
+	}
+	return signedAt, nil
 }
 
 // protocolOrders reads the order headers: the default under "" and each country under its upper-case code.

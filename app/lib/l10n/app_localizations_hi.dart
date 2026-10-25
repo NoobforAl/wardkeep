@@ -2160,4 +2160,8 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get subBadSignature =>
       'सदस्यता का हस्ताक्षर गलत है: रास्ते में बदला गया हो सकता है, या कुंजी पुरानी है';
+
+  @override
+  String get subStale =>
+      'यह जवाब पिछले स्वीकार किए गए जवाब से पुराना है, इसलिए अस्वीकार किया गया। यदि प्रदाता ने पुराना बैकअप बहाल किया है, तो सदस्यता संपादित करें और फिर से सहेजें।';
 }

@@ -597,5 +597,6 @@
   "subBackupHelp": "Satu per baris. Dicoba berurutan jika yang pertama tidak bisa dijangkau",
   "subErrKey": "Kunci tanda tangan bukan kunci publik yang sah",
   "subUnsigned": "Langganan tidak bertanda tangan, tetapi kunci tanda tangan sudah diatur, jadi ditolak",
-  "subBadSignature": "Tanda tangan langganan salah: mungkin diubah di jalan, atau kuncinya lama"
+  "subBadSignature": "Tanda tangan langganan salah: mungkin diubah di jalan, atau kuncinya lama",
+  "subStale": "Jawaban ini lebih lama dari yang terakhir diterima, jadi ditolak. Jika penyedia memulihkan cadangan lama, ubah langganan lalu simpan lagi."
 }

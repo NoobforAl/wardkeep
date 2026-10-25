@@ -2193,4 +2193,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get subBadSignature =>
       'Подпись подписки неверна: её могли изменить по пути, или ключ устарел';
+
+  @override
+  String get subStale =>
+      'Этот ответ старше последнего принятого, поэтому он отклонён. Если провайдер восстановил старую копию, откройте подписку и сохраните её снова.';
 }

@@ -129,6 +129,8 @@ class Subscription {
         if (via != 'direct') 'via': via,
         if (fallbackUrls.isNotEmpty) 'fallback_urls': fallbackUrls,
         if (publicKey.isNotEmpty) 'public_key': publicKey,
+        // An answer signed before the last accepted one is a replay of an old list.
+        if (publicKey.isNotEmpty && info.signedAt > 0) 'not_before': info.signedAt,
       };
 
   Subscription copyWith({
@@ -317,6 +319,13 @@ class SubscriptionsController extends Notifier<List<Subscription>> {
   }
 
   void update(Subscription sub) => _put(sub);
+
+  /// Starts the signature check over: the next answer is accepted whatever its time (the provider changed its
+  /// key, or restored an old backup, which made its answers look older than the last one).
+  void forgetSignature(String id) {
+    final sub = state.where((s) => s.id == id).firstOrNull;
+    if (sub != null) _put(sub.copyWith(info: sub.info.unsigned(), clearError: true));
+  }
 
   void remove(String id) {
     _save(state.where((s) => s.id != id).toList());

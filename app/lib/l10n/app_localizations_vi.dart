@@ -2143,4 +2143,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get subBadSignature =>
       'Chữ ký của gói đăng ký sai: có thể đã bị sửa trên đường hoặc khóa đã cũ';
+
+  @override
+  String get subStale =>
+      'Phản hồi này cũ hơn phản hồi được chấp nhận gần nhất nên bị từ chối. Nếu nhà cung cấp khôi phục bản sao lưu cũ, hãy sửa gói đăng ký và lưu lại.';
 }
