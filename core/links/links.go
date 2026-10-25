@@ -149,6 +149,24 @@ func transportQuery(q *query, tr *profile.Transport) {
 	q.add("serviceName", tr.ServiceName)
 }
 
+// muxQuery writes the multiplexing parameters: mux=<protocol>, muxpad=1, muxconn, muxmin, muxmax.
+func muxQuery(q *query, m *profile.Mux) {
+	if !m.Enabled() {
+		return
+	}
+	q.add("mux", m.Protocol)
+	q.addFlag("muxpad", m.Padding)
+	if m.MaxConnections > 0 {
+		q.add("muxconn", strconv.Itoa(m.MaxConnections))
+	}
+	if m.MinStreams > 0 {
+		q.add("muxmin", strconv.Itoa(m.MinStreams))
+	}
+	if m.MaxStreams > 0 {
+		q.add("muxmax", strconv.Itoa(m.MaxStreams))
+	}
+}
+
 func vless(p *profile.Profile) string {
 	q := &query{}
 	transportQuery(q, p.Transport)
@@ -156,6 +174,7 @@ func vless(p *profile.Profile) string {
 	if p.TLS == nil || !p.TLS.Enabled {
 		q.add("flow", p.Flow)
 	}
+	muxQuery(q, p.Multiplex)
 	return build("vless", url.PathEscape(p.UUID), hostPort(p), "", q, p.Name)
 }
 
@@ -165,6 +184,7 @@ func trojan(p *profile.Profile) string {
 		transportQuery(q, p.Transport)
 	}
 	tlsQuery(q, p.TLS, "")
+	muxQuery(q, p.Multiplex)
 	return build("trojan", url.PathEscape(p.Password), hostPort(p), "", q, p.Name)
 }
 
@@ -185,6 +205,17 @@ func vmess(p *profile.Profile) (string, error) {
 	if t := p.TLS; t != nil && t.Enabled {
 		v["tls"], v["sni"], v["fp"], v["alpn"] = "tls", t.ServerName, t.Fingerprint, strings.Join(t.ALPN, ",")
 	}
+	if m := p.Multiplex; m.Enabled() {
+		v["mux"] = m.Protocol
+		if m.Padding {
+			v["muxpad"] = "1"
+		}
+		for k, n := range map[string]int{"muxconn": m.MaxConnections, "muxmin": m.MinStreams, "muxmax": m.MaxStreams} {
+			if n > 0 {
+				v[k] = strconv.Itoa(n)
+			}
+		}
+	}
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return "", err
@@ -202,6 +233,7 @@ func shadowsocks(p *profile.Profile) string {
 		}
 		q.add("plugin", plugin)
 	}
+	muxQuery(q, p.Multiplex)
 	return build("ss", userinfo, hostPort(p), "", q, p.Name)
 }
 

@@ -2107,4 +2107,29 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'هذه القائمة غير موقّعة، لذا لا يمكن اكتشاف تغييرها.';
+
+  @override
+  String get choiceOff => 'إيقاف';
+
+  @override
+  String get flMultiplexing => 'تعدد الإرسال';
+
+  @override
+  String get flMuxPadding => 'حشو تعدد الإرسال';
+
+  @override
+  String get flMuxMaxConnections => 'أقصى عدد اتصالات';
+
+  @override
+  String get flMuxMinStreams => 'أقل عدد تدفقات لكل اتصال';
+
+  @override
+  String get flMuxMaxStreams => 'أكثر عدد تدفقات لكل اتصال';
+
+  @override
+  String get hpMultiplexing =>
+      'اتصالات كثيرة عبر اتصال واحد؛ يجب أن يسمح الخادم بذلك. لا يعمل مع flow في VLESS';
+
+  @override
+  String get hpMuxMaxStreams => 'بدلًا من الخيارين أعلاه';
 }

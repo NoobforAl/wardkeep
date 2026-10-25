@@ -24,6 +24,13 @@ func init() {
 	}
 }
 
+// allowMultiplex lets clients put many streams on one connection (the client's "multiplexing" setting). It
+// costs a server nothing when no client asks for it. VLESS-Reality does not offer it: its users have the
+// xtls-rprx-vision flow, which a multiplexing client cannot use.
+func allowMultiplex(in obj) {
+	in["multiplex"] = obj{"enabled": true}
+}
+
 // base is the inbound every protocol starts from.
 func base(key string, port int) obj {
 	return obj{"tag": key, "listen": "::", "listen_port": port}
@@ -95,7 +102,9 @@ func ssInbound(env Env, tag string, port int, accts []Account) obj {
 }
 
 func (shadowsocks) Inbounds(env Env, port int, accts []Account) Config {
-	return Config{Inbounds: []obj{ssInbound(env, "shadowsocks", port, accts)}}
+	in := ssInbound(env, "shadowsocks", port, accts)
+	allowMultiplex(in)
+	return Config{Inbounds: []obj{in}}
 }
 
 func (s shadowsocks) Profile(env Env, port int, u Account) (*profile.Profile, error) {
@@ -122,6 +131,7 @@ func (trojan) Inbounds(env Env, port int, accts []Account) Config {
 	in["type"] = "trojan"
 	in["users"] = users(accts, func(a Account) obj { return obj{"name": a.Name, "password": a.Password} })
 	in["tls"] = tlsBlock(env, nil)
+	allowMultiplex(in)
 	return Config{Inbounds: []obj{in}}
 }
 

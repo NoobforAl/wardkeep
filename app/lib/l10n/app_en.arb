@@ -1330,5 +1330,37 @@
   "wnSubUnsigned": "This list is not signed, so a changed list cannot be detected.",
   "@wnSubUnsigned": {
     "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "choiceOff": "Off",
+  "@choiceOff": {
+    "description": "The empty choice of a setting that can be switched off"
+  },
+  "flMultiplexing": "Multiplexing",
+  "@flMultiplexing": {
+    "description": "Editor text for the multiplexing setting"
+  },
+  "flMuxPadding": "Multiplexing padding",
+  "@flMuxPadding": {
+    "description": "Editor text for the multiplexing setting"
+  },
+  "flMuxMaxConnections": "Most connections",
+  "@flMuxMaxConnections": {
+    "description": "Editor text for the multiplexing setting"
+  },
+  "flMuxMinStreams": "Fewest streams per connection",
+  "@flMuxMinStreams": {
+    "description": "Editor text for the multiplexing setting"
+  },
+  "flMuxMaxStreams": "Most streams per connection",
+  "@flMuxMaxStreams": {
+    "description": "Editor text for the multiplexing setting"
+  },
+  "hpMultiplexing": "Many connections over one; the server must allow it. Not with the VLESS flow",
+  "@hpMultiplexing": {
+    "description": "Editor text for the multiplexing setting"
+  },
+  "hpMuxMaxStreams": "Instead of the two above",
+  "@hpMuxMaxStreams": {
+    "description": "Editor text for the multiplexing setting"
   }
 }

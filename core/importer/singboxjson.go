@@ -23,6 +23,15 @@ type sbTLS struct {
 	} `json:"reality"`
 }
 
+type sbMux struct {
+	Enabled        bool   `json:"enabled"`
+	Protocol       string `json:"protocol"`
+	MaxConnections int    `json:"max_connections"`
+	MinStreams     int    `json:"min_streams"`
+	MaxStreams     int    `json:"max_streams"`
+	Padding        bool   `json:"padding"`
+}
+
 type sbTransport struct {
 	Type        string            `json:"type"`
 	Path        string            `json:"path"`
@@ -59,6 +68,7 @@ type sbOutbound struct {
 	PluginOpts   string            `json:"plugin_opts"`
 	TLS          *sbTLS            `json:"tls"`
 	Transport    *sbTransport      `json:"transport"`
+	Multiplex    *sbMux            `json:"multiplex"`
 	Obfs         *struct {
 		Type     string `json:"type"`
 		Password string `json:"password"`
@@ -237,6 +247,10 @@ func sbToProfile(o sbOutbound) (*profile.Profile, error) {
 		}
 	default:
 		return nil, fmt.Errorf("unsupported outbound type %q", o.Type)
+	}
+	if m := o.Multiplex; m != nil && m.Enabled {
+		attachMux(p, &profile.Mux{Protocol: firstNonEmpty(m.Protocol, "smux"), MaxConnections: m.MaxConnections,
+			MinStreams: m.MinStreams, MaxStreams: m.MaxStreams, Padding: m.Padding})
 	}
 	return p, nil
 }

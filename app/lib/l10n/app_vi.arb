@@ -569,5 +569,13 @@
   "wnFragmentSide": "Chia nhỏ bắt tay giúp chống một số bộ lọc, có thể hỏng ở nơi khác và thêm độ trễ.",
   "wnEchServer": "Cần máy chủ hỗ trợ ECH. Nếu không, kết nối sẽ thất bại.",
   "wnWgChain": "WireGuard bên trong proxy: nếu proxy chậm, đường hầm có thể bị kẹt. Proxy phải truyền được UDP.",
-  "wnSubUnsigned": "Danh sách này không được ký, nên không thể phát hiện nếu nó bị thay đổi."
+  "wnSubUnsigned": "Danh sách này không được ký, nên không thể phát hiện nếu nó bị thay đổi.",
+  "choiceOff": "Tắt",
+  "flMultiplexing": "Ghép kênh",
+  "flMuxPadding": "Đệm ghép kênh",
+  "flMuxMaxConnections": "Số kết nối tối đa",
+  "flMuxMinStreams": "Số luồng tối thiểu mỗi kết nối",
+  "flMuxMaxStreams": "Số luồng tối đa mỗi kết nối",
+  "hpMultiplexing": "Nhiều kết nối trong một; máy chủ phải cho phép. Không dùng với flow của VLESS",
+  "hpMuxMaxStreams": "Thay cho hai mục trên"
 }

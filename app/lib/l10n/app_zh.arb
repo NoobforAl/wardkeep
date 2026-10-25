@@ -576,5 +576,13 @@
   "wnFragmentSide": "分片握手能对付某些过滤，但在另一些网络上可能失效，并增加延迟。",
   "wnEchServer": "需要支持 ECH 的服务器，否则连接会失败。",
   "wnWgChain": "WireGuard 在代理内部运行：代理慢时隧道可能卡住。代理必须能传输 UDP。",
-  "wnSubUnsigned": "此列表未签名，因此无法发现列表被篡改。"
+  "wnSubUnsigned": "此列表未签名，因此无法发现列表被篡改。",
+  "choiceOff": "关闭",
+  "flMultiplexing": "多路复用",
+  "flMuxPadding": "多路复用填充",
+  "flMuxMaxConnections": "最大连接数",
+  "flMuxMinStreams": "每个连接的最少流数",
+  "flMuxMaxStreams": "每个连接的最多流数",
+  "hpMultiplexing": "多个连接合并为一个；服务器必须允许。不能与 VLESS 的 flow 同时使用",
+  "hpMuxMaxStreams": "代替上面两项"
 }

@@ -2065,4 +2065,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'This list is not signed, so a changed list cannot be detected.';
+
+  @override
+  String get choiceOff => 'Off';
+
+  @override
+  String get flMultiplexing => 'Multiplexing';
+
+  @override
+  String get flMuxPadding => 'Multiplexing padding';
+
+  @override
+  String get flMuxMaxConnections => 'Most connections';
+
+  @override
+  String get flMuxMinStreams => 'Fewest streams per connection';
+
+  @override
+  String get flMuxMaxStreams => 'Most streams per connection';
+
+  @override
+  String get hpMultiplexing =>
+      'Many connections over one; the server must allow it. Not with the VLESS flow';
+
+  @override
+  String get hpMuxMaxStreams => 'Instead of the two above';
 }

@@ -2097,4 +2097,29 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'Cette liste n\'est pas signée : une modification ne peut pas être détectée.';
+
+  @override
+  String get choiceOff => 'Désactivé';
+
+  @override
+  String get flMultiplexing => 'Multiplexage';
+
+  @override
+  String get flMuxPadding => 'Remplissage du multiplexage';
+
+  @override
+  String get flMuxMaxConnections => 'Connexions maximum';
+
+  @override
+  String get flMuxMinStreams => 'Flux minimum par connexion';
+
+  @override
+  String get flMuxMaxStreams => 'Flux maximum par connexion';
+
+  @override
+  String get hpMultiplexing =>
+      'Plusieurs connexions en une ; le serveur doit l\'autoriser. Pas avec le flow VLESS';
+
+  @override
+  String get hpMuxMaxStreams => 'À la place des deux précédents';
 }

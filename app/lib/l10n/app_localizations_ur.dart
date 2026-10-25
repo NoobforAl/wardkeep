@@ -2071,4 +2071,29 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'یہ فہرست دستخط شدہ نہیں ہے، اس لیے تبدیلی کا پتا نہیں چل سکتا۔';
+
+  @override
+  String get choiceOff => 'بند';
+
+  @override
+  String get flMultiplexing => 'ملٹی پلیکسنگ';
+
+  @override
+  String get flMuxPadding => 'ملٹی پلیکسنگ پیڈنگ';
+
+  @override
+  String get flMuxMaxConnections => 'زیادہ سے زیادہ کنکشن';
+
+  @override
+  String get flMuxMinStreams => 'فی کنکشن کم از کم اسٹریمز';
+
+  @override
+  String get flMuxMaxStreams => 'فی کنکشن زیادہ سے زیادہ اسٹریمز';
+
+  @override
+  String get hpMultiplexing =>
+      'کئی کنکشن ایک میں؛ سرور کو اجازت دینی ہوگی۔ VLESS flow کے ساتھ نہیں';
+
+  @override
+  String get hpMuxMaxStreams => 'اوپر کے دونوں کی جگہ';
 }

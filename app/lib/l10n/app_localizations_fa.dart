@@ -2067,4 +2067,29 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'این فهرست امضا نشده است، پس تغییر آن قابل تشخیص نیست.';
+
+  @override
+  String get choiceOff => 'خاموش';
+
+  @override
+  String get flMultiplexing => 'چندگانه‌سازی';
+
+  @override
+  String get flMuxPadding => 'پدینگ چندگانه‌سازی';
+
+  @override
+  String get flMuxMaxConnections => 'بیشترین اتصال';
+
+  @override
+  String get flMuxMinStreams => 'کمترین جریان در هر اتصال';
+
+  @override
+  String get flMuxMaxStreams => 'بیشترین جریان در هر اتصال';
+
+  @override
+  String get hpMultiplexing =>
+      'چند اتصال روی یک اتصال؛ سرور باید اجازه دهد. با flow در VLESS کار نمی‌کند';
+
+  @override
+  String get hpMuxMaxStreams => 'به‌جای دو مورد بالا';
 }

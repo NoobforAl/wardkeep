@@ -451,6 +451,7 @@ func convertProfile(p *profile.Profile, tag string) (out obj, isEndpoint bool, e
 		}
 		addTLS(base, p.TLS)
 		addTransport(base, p.Transport)
+		addMultiplex(base, p.Multiplex)
 	case profile.VMess:
 		base["type"] = "vmess"
 		base["uuid"] = p.UUID
@@ -458,15 +459,18 @@ func convertProfile(p *profile.Profile, tag string) (out obj, isEndpoint bool, e
 		base["alter_id"] = p.AlterID
 		addTLS(base, p.TLS)
 		addTransport(base, p.Transport)
+		addMultiplex(base, p.Multiplex)
 	case profile.Trojan:
 		base["type"] = "trojan"
 		base["password"] = p.Password
 		addTLS(base, p.TLS)
 		addTransport(base, p.Transport)
+		addMultiplex(base, p.Multiplex)
 	case profile.Shadowsocks:
 		base["type"] = "shadowsocks"
 		base["method"] = p.Method
 		base["password"] = p.Password
+		addMultiplex(base, p.Multiplex)
 		switch p.Plugin {
 		case "":
 		case "shadow-tls":
@@ -597,6 +601,27 @@ func convertProfile(p *profile.Profile, tag string) (out obj, isEndpoint bool, e
 		return nil, false, nil, fmt.Errorf("protocol %q is not supported by the sing-box engine", p.Protocol)
 	}
 	return base, false, extras, nil
+}
+
+// addMultiplex turns on sing-box's multiplexing for an outbound.
+func addMultiplex(out obj, m *profile.Mux) {
+	if !m.Enabled() {
+		return
+	}
+	mux := obj{"enabled": true, "protocol": m.Protocol}
+	if m.MaxConnections > 0 {
+		mux["max_connections"] = m.MaxConnections
+	}
+	if m.MinStreams > 0 {
+		mux["min_streams"] = m.MinStreams
+	}
+	if m.MaxStreams > 0 {
+		mux["max_streams"] = m.MaxStreams
+	}
+	if m.Padding {
+		mux["padding"] = true
+	}
+	out["multiplex"] = mux
 }
 
 // shadowTLSOutbound is the ShadowTLS layer under a Shadowsocks profile whose

@@ -2052,4 +2052,29 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'Danh sách này không được ký, nên không thể phát hiện nếu nó bị thay đổi.';
+
+  @override
+  String get choiceOff => 'Tắt';
+
+  @override
+  String get flMultiplexing => 'Ghép kênh';
+
+  @override
+  String get flMuxPadding => 'Đệm ghép kênh';
+
+  @override
+  String get flMuxMaxConnections => 'Số kết nối tối đa';
+
+  @override
+  String get flMuxMinStreams => 'Số luồng tối thiểu mỗi kết nối';
+
+  @override
+  String get flMuxMaxStreams => 'Số luồng tối đa mỗi kết nối';
+
+  @override
+  String get hpMultiplexing =>
+      'Nhiều kết nối trong một; máy chủ phải cho phép. Không dùng với flow của VLESS';
+
+  @override
+  String get hpMuxMaxStreams => 'Thay cho hai mục trên';
 }

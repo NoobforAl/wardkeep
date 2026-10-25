@@ -119,6 +119,9 @@
         "listen": "::",
         "listen_port": 8388,
         "method": "2022-blake3-aes-128-gcm",
+        "multiplex": {
+          "enabled": true
+        },
         "password": "c2VydmVyLWtleS0xMjM0NQ==",
         "tag": "shadowsocks",
         "type": "shadowsocks",
@@ -132,6 +135,9 @@
       {
         "listen": "::",
         "listen_port": 8443,
+        "multiplex": {
+          "enabled": true
+        },
         "tag": "trojan",
         "tls": {
           "certificate_path": "$DIR/tls.crt",

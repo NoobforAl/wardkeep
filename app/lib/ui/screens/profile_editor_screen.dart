@@ -314,6 +314,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
         _ => c,
       };
     }
+    if (f.key == 'mux.protocol') return c.isEmpty ? l.choiceOff : c;
     return c.isEmpty ? l.choiceDefault : c;
   }
 }

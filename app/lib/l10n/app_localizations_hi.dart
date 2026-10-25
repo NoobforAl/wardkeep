@@ -2068,4 +2068,29 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'यह सूची हस्ताक्षरित नहीं है, इसलिए बदलाव का पता नहीं चल सकता।';
+
+  @override
+  String get choiceOff => 'बंद';
+
+  @override
+  String get flMultiplexing => 'मल्टीप्लेक्सिंग';
+
+  @override
+  String get flMuxPadding => 'मल्टीप्लेक्सिंग पैडिंग';
+
+  @override
+  String get flMuxMaxConnections => 'अधिकतम कनेक्शन';
+
+  @override
+  String get flMuxMinStreams => 'प्रति कनेक्शन न्यूनतम स्ट्रीम';
+
+  @override
+  String get flMuxMaxStreams => 'प्रति कनेक्शन अधिकतम स्ट्रीम';
+
+  @override
+  String get hpMultiplexing =>
+      'कई कनेक्शन एक में; सर्वर को अनुमति देनी होगी। VLESS flow के साथ नहीं';
+
+  @override
+  String get hpMuxMaxStreams => 'ऊपर के दो के बदले';
 }

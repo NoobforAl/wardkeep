@@ -266,6 +266,50 @@ func wgList(sel func(*WG) *[]string) listPtr {
 	}
 }
 
+func muxOf(p *Profile, create bool) *Mux {
+	if p.Multiplex == nil && create {
+		p.Multiplex = &Mux{}
+	}
+	return p.Multiplex
+}
+
+func muxStr(sel func(*Mux) *string) strPtr {
+	return func(p *Profile, create bool) *string {
+		if m := muxOf(p, create); m != nil {
+			return sel(m)
+		}
+		return nil
+	}
+}
+
+func muxInt(sel func(*Mux) *int) intPtr {
+	return func(p *Profile, create bool) *int {
+		if m := muxOf(p, create); m != nil {
+			return sel(m)
+		}
+		return nil
+	}
+}
+
+// muxFields is the multiplexing section of the editors that support it.
+func muxFields() []Field {
+	return []Field{
+		text("mux.protocol", "Multiplexing", muxStr(func(m *Mux) *string { return &m.Protocol }), advanced,
+			choices(append([]string{""}, MuxProtocols...)...), warn(wMux),
+			help("Many connections over one; the server must allow it. Not with the VLESS flow")),
+		toggle("mux.padding", "Multiplexing padding", func(p *Profile, c bool) *bool {
+			if m := muxOf(p, c); m != nil {
+				return &m.Padding
+			}
+			return nil
+		}, advanced),
+		number("mux.max_connections", "Most connections", muxInt(func(m *Mux) *int { return &m.MaxConnections }), advanced),
+		number("mux.min_streams", "Fewest streams per connection", muxInt(func(m *Mux) *int { return &m.MinStreams }), advanced),
+		number("mux.max_streams", "Most streams per connection", muxInt(func(m *Mux) *int { return &m.MaxStreams }), advanced,
+			help("Instead of the two above")),
+	}
+}
+
 func hy2Of(p *Profile, create bool) *Hy2 {
 	if p.Hysteria2 == nil && create {
 		p.Hysteria2 = &Hy2{}
@@ -602,24 +646,28 @@ func protocolFields(protocol string) ([]Field, bool) {
 		fs := []Field{uuid(),
 			text("flow", "Flow", func(p *Profile, _ bool) *string { return &p.Flow }, choices("", "xtls-rprx-vision"), advanced)}
 		fs = append(fs, tlsFields(true, true)...)
-		return append(fs, transportFields()...), true
+		fs = append(fs, transportFields()...)
+		return append(fs, muxFields()...), true
 	case VMess:
 		fs := []Field{uuid(),
 			text("method", "Encryption", func(p *Profile, _ bool) *string { return &p.Method }, choices("auto", "aes-128-gcm", "chacha20-poly1305", "none", "zero"), def("auto")),
 			number("alter_id", "Alter id", func(p *Profile, _ bool) *int { return &p.AlterID }, advanced)}
 		fs = append(fs, tlsFields(true, false)...)
-		return append(fs, transportFields()...), true
+		fs = append(fs, transportFields()...)
+		return append(fs, muxFields()...), true
 	case Trojan:
 		fs := []Field{password(required)}
 		fs = append(fs, tlsFields(true, false)...)
-		return append(fs, transportFields()...), true
+		fs = append(fs, transportFields()...)
+		return append(fs, muxFields()...), true
 	case Shadowsocks:
-		return []Field{
+		fs := []Field{
 			text("method", "Cipher", func(p *Profile, _ bool) *string { return &p.Method }, required, choices(ssMethods...), def("2022-blake3-aes-128-gcm")),
 			password(required),
 			text("plugin", "Plugin", func(p *Profile, _ bool) *string { return &p.Plugin }, advanced, help("For example shadow-tls or v2ray-plugin")),
 			text("plugin_opts", "Plugin options", func(p *Profile, _ bool) *string { return &p.PluginOpts }, advanced),
-		}, true
+		}
+		return append(fs, muxFields()...), true
 	case Hysteria2, Hysteria:
 		fs := []Field{password(required),
 			text("hysteria.obfs", "Obfuscation", hy2Str(func(h *Hy2) *string { return &h.Obfs }), advanced,
@@ -866,6 +914,9 @@ func (p *Profile) Apply(values map[string]string) error {
 		if err := f.set(p, v); err != nil {
 			return err
 		}
+	}
+	if p.Multiplex != nil && !p.Multiplex.Enabled() {
+		p.Multiplex = nil
 	}
 	return nil
 }

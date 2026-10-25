@@ -2072,4 +2072,29 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'Bu liste imzalı değil, bu yüzden değiştirilmesi fark edilemez.';
+
+  @override
+  String get choiceOff => 'Kapalı';
+
+  @override
+  String get flMultiplexing => 'Çoğullama';
+
+  @override
+  String get flMuxPadding => 'Çoğullama dolgusu';
+
+  @override
+  String get flMuxMaxConnections => 'En çok bağlantı';
+
+  @override
+  String get flMuxMinStreams => 'Bağlantı başına en az akış';
+
+  @override
+  String get flMuxMaxStreams => 'Bağlantı başına en çok akış';
+
+  @override
+  String get hpMultiplexing =>
+      'Birçok bağlantı tek bağlantıda; sunucu buna izin vermeli. VLESS flow ile olmaz';
+
+  @override
+  String get hpMuxMaxStreams => 'Yukarıdaki ikisinin yerine';
 }

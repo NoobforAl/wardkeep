@@ -569,5 +569,13 @@
   "wnFragmentSide": "Memecah handshake membantu melawan beberapa filter, bisa gagal di yang lain, dan menambah jeda.",
   "wnEchServer": "Perlu server yang mendukung ECH. Jika tidak, koneksi gagal.",
   "wnWgChain": "WireGuard di dalam proxy: jika proxy lambat, terowongan bisa macet. Proxy harus membawa UDP.",
-  "wnSubUnsigned": "Daftar ini tidak bertanda tangan, jadi perubahan tidak bisa dideteksi."
+  "wnSubUnsigned": "Daftar ini tidak bertanda tangan, jadi perubahan tidak bisa dideteksi.",
+  "choiceOff": "Mati",
+  "flMultiplexing": "Multipleks",
+  "flMuxPadding": "Padding multipleks",
+  "flMuxMaxConnections": "Koneksi terbanyak",
+  "flMuxMinStreams": "Aliran paling sedikit per koneksi",
+  "flMuxMaxStreams": "Aliran terbanyak per koneksi",
+  "hpMultiplexing": "Banyak koneksi dalam satu; server harus mengizinkannya. Tidak dengan flow VLESS",
+  "hpMuxMaxStreams": "Sebagai pengganti dua di atas"
 }

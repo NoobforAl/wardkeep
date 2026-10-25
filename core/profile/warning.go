@@ -117,4 +117,8 @@ func WarningsFor(p *Profile) []Warning {
 }
 
 // warningsFromOptions is where the optional settings report themselves.
-func warningsFromOptions(p *Profile, add func(Warning)) {}
+func warningsFromOptions(p *Profile, add func(Warning)) {
+	if p.Multiplex.Enabled() {
+		add(wMux)
+	}
+}

@@ -2091,4 +2091,29 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'Esta lista não é assinada, então uma alteração não pode ser detectada.';
+
+  @override
+  String get choiceOff => 'Desligado';
+
+  @override
+  String get flMultiplexing => 'Multiplexação';
+
+  @override
+  String get flMuxPadding => 'Preenchimento da multiplexação';
+
+  @override
+  String get flMuxMaxConnections => 'Máximo de conexões';
+
+  @override
+  String get flMuxMinStreams => 'Mínimo de fluxos por conexão';
+
+  @override
+  String get flMuxMaxStreams => 'Máximo de fluxos por conexão';
+
+  @override
+  String get hpMultiplexing =>
+      'Várias conexões em uma; o servidor precisa permitir. Não com o flow do VLESS';
+
+  @override
+  String get hpMuxMaxStreams => 'No lugar dos dois acima';
 }

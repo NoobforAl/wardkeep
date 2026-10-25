@@ -569,5 +569,13 @@
   "wnFragmentSide": "Fragmenter la poignée de main aide contre certains filtres, peut échouer sur d'autres et ajoute du délai.",
   "wnEchServer": "Nécessite un serveur compatible ECH. Sinon la connexion échoue.",
   "wnWgChain": "WireGuard dans un proxy : si le proxy est lent, le tunnel peut se bloquer. Le proxy doit transporter l'UDP.",
-  "wnSubUnsigned": "Cette liste n'est pas signée : une modification ne peut pas être détectée."
+  "wnSubUnsigned": "Cette liste n'est pas signée : une modification ne peut pas être détectée.",
+  "choiceOff": "Désactivé",
+  "flMultiplexing": "Multiplexage",
+  "flMuxPadding": "Remplissage du multiplexage",
+  "flMuxMaxConnections": "Connexions maximum",
+  "flMuxMinStreams": "Flux minimum par connexion",
+  "flMuxMaxStreams": "Flux maximum par connexion",
+  "hpMultiplexing": "Plusieurs connexions en une ; le serveur doit l'autoriser. Pas avec le flow VLESS",
+  "hpMuxMaxStreams": "À la place des deux précédents"
 }

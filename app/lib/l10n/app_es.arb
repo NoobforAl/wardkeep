@@ -569,5 +569,13 @@
   "wnFragmentSide": "Fragmentar el saludo ayuda contra algunos filtros, puede fallar en otros y añade retardo.",
   "wnEchServer": "Necesita un servidor compatible con ECH. Si no, la conexión falla.",
   "wnWgChain": "WireGuard dentro de un proxy: si el proxy es lento, el túnel puede atascarse. El proxy debe transportar UDP.",
-  "wnSubUnsigned": "Esta lista no está firmada, así que no se puede detectar si la cambian."
+  "wnSubUnsigned": "Esta lista no está firmada, así que no se puede detectar si la cambian.",
+  "choiceOff": "Desactivado",
+  "flMultiplexing": "Multiplexación",
+  "flMuxPadding": "Relleno de la multiplexación",
+  "flMuxMaxConnections": "Máximo de conexiones",
+  "flMuxMinStreams": "Mínimo de flujos por conexión",
+  "flMuxMaxStreams": "Máximo de flujos por conexión",
+  "hpMultiplexing": "Muchas conexiones en una; el servidor debe permitirlo. No con el flow de VLESS",
+  "hpMuxMaxStreams": "En lugar de los dos anteriores"
 }

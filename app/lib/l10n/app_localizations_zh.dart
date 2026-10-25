@@ -1972,4 +1972,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get wnSubUnsigned => '此列表未签名，因此无法发现列表被篡改。';
+
+  @override
+  String get choiceOff => '关闭';
+
+  @override
+  String get flMultiplexing => '多路复用';
+
+  @override
+  String get flMuxPadding => '多路复用填充';
+
+  @override
+  String get flMuxMaxConnections => '最大连接数';
+
+  @override
+  String get flMuxMinStreams => '每个连接的最少流数';
+
+  @override
+  String get flMuxMaxStreams => '每个连接的最多流数';
+
+  @override
+  String get hpMultiplexing => '多个连接合并为一个；服务器必须允许。不能与 VLESS 的 flow 同时使用';
+
+  @override
+  String get hpMuxMaxStreams => '代替上面两项';
 }

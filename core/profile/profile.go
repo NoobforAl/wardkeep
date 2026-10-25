@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 )
 
 // ErrNeedsCredentials means the profile needs a username and password before connecting.
@@ -63,6 +64,8 @@ type Profile struct {
 	Tailscale  *TailscaleOpts `json:"tailscale,omitempty"`
 	Plugin     string         `json:"plugin,omitempty"` // shadowsocks SIP003 plugin
 	PluginOpts string         `json:"plugin_opts,omitempty"`
+	// Multiplex carries many connections over one (VLESS, VMess, Trojan, Shadowsocks).
+	Multiplex *Mux `json:"multiplex,omitempty"`
 
 	// Source is the original link or file text the profile came from.
 	Source string `json:"source,omitempty"`
@@ -86,6 +89,25 @@ type Reality struct {
 	PublicKey string `json:"public_key"`
 	ShortID   string `json:"short_id,omitempty"`
 }
+
+// Mux is sing-box's multiplexing: many streams over few connections, so a page
+// that opens thirty connections costs one handshake. The server has to allow it.
+// A Mux with no Protocol is off.
+type Mux struct {
+	// Protocol is "smux", "yamux" or "h2mux".
+	Protocol       string `json:"protocol,omitempty"`
+	MaxConnections int    `json:"max_connections,omitempty"`
+	MinStreams     int    `json:"min_streams,omitempty"`
+	// MaxStreams cannot be combined with MaxConnections or MinStreams.
+	MaxStreams int  `json:"max_streams,omitempty"`
+	Padding    bool `json:"padding,omitempty"`
+}
+
+// MuxProtocols are the multiplexing protocols sing-box speaks.
+var MuxProtocols = []string{"smux", "yamux", "h2mux"}
+
+// Enabled reports whether multiplexing is on.
+func (m *Mux) Enabled() bool { return m != nil && m.Protocol != "" }
 
 // Transport is the V2Ray-style transport layer (ws, grpc, http, httpupgrade).
 type Transport struct {
@@ -254,6 +276,9 @@ func (p *Profile) Validate() error {
 	if p.Port <= 0 || p.Port > 65535 {
 		return fmt.Errorf("profile %q: invalid port %d", p.Name, p.Port)
 	}
+	if err := p.validateMux(); err != nil {
+		return err
+	}
 	switch p.Protocol {
 	case VLESS, VMess:
 		if p.UUID == "" {
@@ -315,6 +340,31 @@ func (p *Profile) Validate() error {
 		if len(p.WireGuard.Address) == 0 {
 			return fmt.Errorf("profile %q: missing wireguard address", p.Name)
 		}
+	}
+	return nil
+}
+
+func (p *Profile) validateMux() error {
+	m := p.Multiplex
+	if !m.Enabled() {
+		return nil
+	}
+	switch p.Protocol {
+	case VLESS, VMess, Trojan, Shadowsocks:
+	default:
+		return fmt.Errorf("profile %q: multiplexing is not available for %s", p.Name, p.Protocol)
+	}
+	if !slices.Contains(MuxProtocols, m.Protocol) {
+		return fmt.Errorf("profile %q: unknown multiplexing protocol %q (use smux, yamux or h2mux)", p.Name, m.Protocol)
+	}
+	if m.MaxConnections < 0 || m.MinStreams < 0 || m.MaxStreams < 0 {
+		return fmt.Errorf("profile %q: multiplexing numbers cannot be negative", p.Name)
+	}
+	if m.MaxStreams > 0 && (m.MaxConnections > 0 || m.MinStreams > 0) {
+		return fmt.Errorf("profile %q: the most streams cannot be combined with the most connections or the fewest streams", p.Name)
+	}
+	if p.Protocol == VLESS && p.Flow != "" {
+		return fmt.Errorf("profile %q: multiplexing cannot be used with the VLESS flow %q", p.Name, p.Flow)
 	}
 	return nil
 }

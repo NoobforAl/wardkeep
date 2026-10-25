@@ -8,6 +8,11 @@ import 'app_localizations.dart';
 String formLabel(AppLocalizations l, String english) {
   return switch (english) {
     'Name' => l.flName,
+    'Multiplexing' => l.flMultiplexing,
+    'Multiplexing padding' => l.flMuxPadding,
+    'Most connections' => l.flMuxMaxConnections,
+    'Fewest streams per connection' => l.flMuxMinStreams,
+    'Most streams per connection' => l.flMuxMaxStreams,
     'Server' => l.flServer,
     'Port' => l.flPort,
     'Password' => l.flPassword,
@@ -85,6 +90,8 @@ String formHelp(AppLocalizations l, String english) {
     'authorized_keys format; empty accepts any key' => l.hpAuthorizedKeys,
     'Carry IKE and ESP over TCP for networks that block UDP' => l.hpIkeTcp,
     'Defaults to the server address' => l.hpDefaultsToServer,
+    'Many connections over one; the server must allow it. Not with the VLESS flow' => l.hpMultiplexing,
+    'Instead of the two above' => l.hpMuxMaxStreams,
     'Empty connects to Tor directly, or uses the bridge lines below' => l.hpTorBridges,
     'For example 10.8.0.2/32' => l.hpExampleAddress,
     'For example shadow-tls or v2ray-plugin' => l.hpExamplePlugin,

@@ -2102,4 +2102,29 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'Этот список не подписан, поэтому подмену списка не обнаружить.';
+
+  @override
+  String get choiceOff => 'Выкл.';
+
+  @override
+  String get flMultiplexing => 'Мультиплексирование';
+
+  @override
+  String get flMuxPadding => 'Заполнение при мультиплексировании';
+
+  @override
+  String get flMuxMaxConnections => 'Макс. соединений';
+
+  @override
+  String get flMuxMinStreams => 'Мин. потоков в соединении';
+
+  @override
+  String get flMuxMaxStreams => 'Макс. потоков в соединении';
+
+  @override
+  String get hpMultiplexing =>
+      'Много соединений в одном; сервер должен это разрешать. Не работает с flow VLESS';
+
+  @override
+  String get hpMuxMaxStreams => 'Вместо двух предыдущих';
 }

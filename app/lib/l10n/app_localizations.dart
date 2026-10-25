@@ -3539,6 +3539,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This list is not signed, so a changed list cannot be detected.'**
   String get wnSubUnsigned;
+
+  /// The empty choice of a setting that can be switched off
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get choiceOff;
+
+  /// Editor text for the multiplexing setting
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplexing'**
+  String get flMultiplexing;
+
+  /// Editor text for the multiplexing setting
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplexing padding'**
+  String get flMuxPadding;
+
+  /// Editor text for the multiplexing setting
+  ///
+  /// In en, this message translates to:
+  /// **'Most connections'**
+  String get flMuxMaxConnections;
+
+  /// Editor text for the multiplexing setting
+  ///
+  /// In en, this message translates to:
+  /// **'Fewest streams per connection'**
+  String get flMuxMinStreams;
+
+  /// Editor text for the multiplexing setting
+  ///
+  /// In en, this message translates to:
+  /// **'Most streams per connection'**
+  String get flMuxMaxStreams;
+
+  /// Editor text for the multiplexing setting
+  ///
+  /// In en, this message translates to:
+  /// **'Many connections over one; the server must allow it. Not with the VLESS flow'**
+  String get hpMultiplexing;
+
+  /// Editor text for the multiplexing setting
+  ///
+  /// In en, this message translates to:
+  /// **'Instead of the two above'**
+  String get hpMuxMaxStreams;
 }
 
 class _AppLocalizationsDelegate

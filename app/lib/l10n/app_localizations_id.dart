@@ -2053,4 +2053,29 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get wnSubUnsigned =>
       'Daftar ini tidak bertanda tangan, jadi perubahan tidak bisa dideteksi.';
+
+  @override
+  String get choiceOff => 'Mati';
+
+  @override
+  String get flMultiplexing => 'Multipleks';
+
+  @override
+  String get flMuxPadding => 'Padding multipleks';
+
+  @override
+  String get flMuxMaxConnections => 'Koneksi terbanyak';
+
+  @override
+  String get flMuxMinStreams => 'Aliran paling sedikit per koneksi';
+
+  @override
+  String get flMuxMaxStreams => 'Aliran terbanyak per koneksi';
+
+  @override
+  String get hpMultiplexing =>
+      'Banyak koneksi dalam satu; server harus mengizinkannya. Tidak dengan flow VLESS';
+
+  @override
+  String get hpMuxMaxStreams => 'Sebagai pengganti dua di atas';
 }

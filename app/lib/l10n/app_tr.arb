@@ -569,5 +569,13 @@
   "wnFragmentSide": "El sıkışmayı parçalamak bazı filtrelere karşı yardımcı olur, bazılarında bozulabilir ve gecikme ekler.",
   "wnEchServer": "ECH destekleyen bir sunucu gerekir. Aksi halde bağlantı başarısız olur.",
   "wnWgChain": "Bir proxy içinde WireGuard: proxy yavaşsa tünel takılabilir. Proxy UDP taşımalıdır.",
-  "wnSubUnsigned": "Bu liste imzalı değil, bu yüzden değiştirilmesi fark edilemez."
+  "wnSubUnsigned": "Bu liste imzalı değil, bu yüzden değiştirilmesi fark edilemez.",
+  "choiceOff": "Kapalı",
+  "flMultiplexing": "Çoğullama",
+  "flMuxPadding": "Çoğullama dolgusu",
+  "flMuxMaxConnections": "En çok bağlantı",
+  "flMuxMinStreams": "Bağlantı başına en az akış",
+  "flMuxMaxStreams": "Bağlantı başına en çok akış",
+  "hpMultiplexing": "Birçok bağlantı tek bağlantıda; sunucu buna izin vermeli. VLESS flow ile olmaz",
+  "hpMuxMaxStreams": "Yukarıdaki ikisinin yerine"
 }

@@ -283,5 +283,9 @@ func clashToProfile(cp clashProxy) (*profile.Profile, error) {
 	default:
 		return nil, fmt.Errorf("unsupported proxy type %q", typ)
 	}
+	if sm := cp.sub("smux"); sm.boolean("enabled") {
+		attachMux(p, &profile.Mux{Protocol: firstNonEmpty(sm.str("protocol"), "smux"), MaxConnections: sm.num("max-connections"),
+			MinStreams: sm.num("min-streams"), MaxStreams: sm.num("max-streams"), Padding: sm.boolean("padding")})
+	}
 	return p, nil
 }

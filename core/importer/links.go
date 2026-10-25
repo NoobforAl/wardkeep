@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -78,6 +79,42 @@ func tlsFromQuery(q url.Values, defaultOn bool) *profile.TLS {
 	return t
 }
 
+// muxFrom reads the multiplexing parameters of a link (see links.muxQuery); get returns "" for a missing one.
+func muxFrom(get func(string) string) *profile.Mux {
+	proto := get("mux")
+	if proto == "" {
+		return nil
+	}
+	m := &profile.Mux{Protocol: proto, Padding: truthy(get("muxpad"))}
+	m.MaxConnections, _ = strconv.Atoi(get("muxconn"))
+	m.MinStreams, _ = strconv.Atoi(get("muxmin"))
+	m.MaxStreams, _ = strconv.Atoi(get("muxmax"))
+	return m
+}
+
+// attachMux sets a profile's multiplexing when it is usable for the protocol. An import should keep the server
+// and lose the multiplexing, never the other way round, so what the protocol cannot do is dropped quietly.
+func attachMux(p *profile.Profile, m *profile.Mux) {
+	if !m.Enabled() || !slices.Contains(profile.MuxProtocols, m.Protocol) {
+		return
+	}
+	switch p.Protocol {
+	case profile.VLESS:
+		if p.Flow != "" {
+			return
+		}
+	case profile.VMess, profile.Trojan, profile.Shadowsocks:
+	default:
+		return
+	}
+	c := *m
+	c.MaxConnections, c.MinStreams, c.MaxStreams = max(c.MaxConnections, 0), max(c.MinStreams, 0), max(c.MaxStreams, 0)
+	if c.MaxStreams > 0 {
+		c.MaxConnections, c.MinStreams = 0, 0
+	}
+	p.Multiplex = &c
+}
+
 func transportFromQuery(q url.Values) *profile.Transport {
 	typ := q.Get("type")
 	switch typ {
@@ -113,7 +150,7 @@ func parseVLESS(link string) (*profile.Profile, error) {
 		return nil, err
 	}
 	q := u.Query()
-	return &profile.Profile{
+	p := &profile.Profile{
 		Name:      fragmentName(u),
 		Protocol:  profile.VLESS,
 		Server:    host,
@@ -122,7 +159,9 @@ func parseVLESS(link string) (*profile.Profile, error) {
 		Flow:      q.Get("flow"),
 		TLS:       tlsFromQuery(q, false),
 		Transport: transportFromQuery(q),
-	}, nil
+	}
+	attachMux(p, muxFrom(q.Get))
+	return p, nil
 }
 
 // trojan://password@host:port?sni=..&type=ws#name — TLS is on by default.
@@ -132,7 +171,7 @@ func parseTrojan(link string) (*profile.Profile, error) {
 		return nil, err
 	}
 	q := u.Query()
-	return &profile.Profile{
+	p := &profile.Profile{
 		Name:      fragmentName(u),
 		Protocol:  profile.Trojan,
 		Server:    host,
@@ -140,7 +179,9 @@ func parseTrojan(link string) (*profile.Profile, error) {
 		Password:  u.User.Username(),
 		TLS:       tlsFromQuery(q, true),
 		Transport: transportFromQuery(q),
-	}, nil
+	}
+	attachMux(p, muxFrom(q.Get))
+	return p, nil
 }
 
 // vmess://base64(json) in the v2rayN format.
@@ -192,6 +233,7 @@ func parseVMess(link string) (*profile.Profile, error) {
 	q.Set("headerType", str("type"))
 	q.Set("serviceName", str("path"))
 	p.Transport = transportFromQuery(q)
+	attachMux(p, muxFrom(str))
 	return p, nil
 }
 
@@ -239,6 +281,7 @@ func parseShadowsocks(link string) (*profile.Profile, error) {
 	if plugin := u.Query().Get("plugin"); plugin != "" {
 		p.Plugin, p.PluginOpts, _ = strings.Cut(plugin, ";")
 	}
+	attachMux(p, muxFrom(u.Query().Get))
 	return p, nil
 }
 

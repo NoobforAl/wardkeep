@@ -569,5 +569,13 @@
   "wnFragmentSide": "Fragmentar o handshake ajuda contra alguns filtros, pode falhar em outros e acrescenta atraso.",
   "wnEchServer": "Precisa de um servidor com suporte a ECH. Caso contrário, a conexão falha.",
   "wnWgChain": "WireGuard dentro de um proxy: se o proxy for lento, o túnel pode travar. O proxy precisa transportar UDP.",
-  "wnSubUnsigned": "Esta lista não é assinada, então uma alteração não pode ser detectada."
+  "wnSubUnsigned": "Esta lista não é assinada, então uma alteração não pode ser detectada.",
+  "choiceOff": "Desligado",
+  "flMultiplexing": "Multiplexação",
+  "flMuxPadding": "Preenchimento da multiplexação",
+  "flMuxMaxConnections": "Máximo de conexões",
+  "flMuxMinStreams": "Mínimo de fluxos por conexão",
+  "flMuxMaxStreams": "Máximo de fluxos por conexão",
+  "hpMultiplexing": "Várias conexões em uma; o servidor precisa permitir. Não com o flow do VLESS",
+  "hpMuxMaxStreams": "No lugar dos dois acima"
 }
