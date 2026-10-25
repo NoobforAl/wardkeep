@@ -86,7 +86,7 @@ func TestEndToEndWireGuardThroughProxy(t *testing.T) {
 	// The WireGuard server; what the tunnel asks for at 203.0.113.10:80 is the web page.
 	srvPriv, srvPub := wgKeys(t)
 	cliPriv, cliPub := wgKeys(t)
-	wgPort := freePort(t)
+	wgPort := freeUDPPort(t) // it is a UDP socket: a port free for TCP may not be for UDP (Windows runners)
 	startBox(t, map[string]any{
 		"log": map[string]any{"level": "error"},
 		"endpoints": []any{map[string]any{
