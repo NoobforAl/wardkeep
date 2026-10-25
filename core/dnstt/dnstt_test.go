@@ -232,3 +232,35 @@ func TestScanFindsTheWorkingResolvers(t *testing.T) {
 		t.Error("no domain should be refused")
 	}
 }
+
+// A resolver that takes the connection and then says nothing, as a middlebox can on a mobile network, must
+// not hold a scan past its time: found on a phone, where a scan never ended.
+func TestScanEndsWhenAResolverAcceptsAndStaysSilent(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	go func() {
+		for {
+			c, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			defer c.Close() // never answers
+		}
+	}()
+	key := strings.Repeat("ab", 32)
+	for _, r := range []string{"tls://" + ln.Addr().String()} {
+		start := time.Now()
+		ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+		res, _ := Scan(ctx, Config{Domain: zone, PubKey: key}, []string{r}, Options{}, 1, time.Second)
+		cancel()
+		if d := time.Since(start); d > 3*time.Second {
+			t.Fatalf("the scan of %s took %v: a silent resolver held it", r, d)
+		}
+		if len(res) != 1 || res[0].Ms != 0 || res[0].Err == "" {
+			t.Fatalf("a silent resolver should fail, got %+v", res)
+		}
+	}
+}

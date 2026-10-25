@@ -35,9 +35,13 @@ type TLSPacketConn struct {
 // server at addr as a DNS over TLS resolver. It maintains a TLS connection to
 // the resolver, reconnecting as necessary. It closes the connection if any
 // reconnection attempt fails.
-func NewTLSPacketConn(addr string, dialTLSContext func(ctx context.Context, network, addr string) (net.Conn, error)) (*TLSPacketConn, error) {
+func NewTLSPacketConn(first context.Context, addr string, dialTLSContext func(ctx context.Context, network, addr string) (net.Conn, error)) (*TLSPacketConn, error) {
 	dial := func() (net.Conn, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), dialTimeout)
+		parent := context.Background()
+		if first != nil {
+			parent, first = first, nil // the first dial is the caller's, and ends with the caller's context
+		}
+		ctx, cancel := context.WithTimeout(parent, dialTimeout)
 		defer cancel()
 		return dialTLSContext(ctx, "tcp", addr)
 	}

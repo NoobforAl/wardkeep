@@ -91,7 +91,7 @@ func utlsDialContext(ctx context.Context, network, addr string, config *utls.Con
 	// will use the normal crypto/tls fingerprint. If a Write happens first,
 	// it will use the selected fingerprint as expected.
 	// https://github.com/refraction-networking/utls/issues/75
-	err = uconn.Handshake()
+	err = uconn.HandshakeContext(ctx)
 	if err != nil {
 		uconn.Close()
 		return nil, err

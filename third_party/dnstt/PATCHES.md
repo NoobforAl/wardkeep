@@ -39,3 +39,7 @@ The wire format is upstream's, byte for byte: a client of this package works wit
    now closes the socket, waits for `recvLoop`, then closes the channel, and closes its
    `QueuePacketConn`.
 8. `noise/noise_test.go`: `t.Fatal` in a goroutine → `t.Error` (go vet refuses it).
+9. A resolver that accepts the connection and then answers nothing (a middlebox that swallows the TLS
+   handshake) held `Probe` and `Open` forever: `utlsDialContext` ran `Handshake()` with no context
+   (`HandshakeContext(ctx)` now), and `NewTLSPacketConn` made its first dial from
+   `context.Background()` (it takes the caller's context for that dial; redials still use their own).

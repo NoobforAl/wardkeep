@@ -199,7 +199,7 @@ func (cfg Config) transport(ctx context.Context) (net.Addr, net.PacketConn, erro
 			}
 			return c, nil
 		}
-		pconn, err := NewTLSPacketConn(u.Host, dialTLS)
+		pconn, err := NewTLSPacketConn(ctx, u.Host, dialTLS)
 		return turbotunnel.DummyAddr{}, pconn, err
 	default: // https
 		var rt http.RoundTripper
