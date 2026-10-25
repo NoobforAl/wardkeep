@@ -56,10 +56,45 @@ Countries come from what you set ("Set country" in a server's menu or in its edi
   * **When it fails, the sheet says why** (and stays open so the text can be fixed): not valid JSON, with the line, column and character where it stops making sense, or the text ending too early; valid JSON with no proxy server in it, saying what it does hold (`outbounds: direct, block`); a server that is there but wrong, with the reason for each one listed under the message; a file that is empty, binary, in an unknown encoding, too large, missing, or one Wardkeep may not read. A file another app sends (Android "Open with" or "Share") gets the same messages.
 * **Add a server by hand**: pick the protocol; the form is checked by the same core that connects, and its messages are shown as they are.
 * **Add a subscription**: URL, optional authentication (none, Basic, Bearer, a custom header, a token in the URL) and how to download it: directly, **directly or through the VPN if the provider is blocked**, or always through the VPN. Usage and expiry from the provider are shown, and it refreshes on the provider's interval.
+  * **Signed subscriptions.** A provider that signs its subscription (a Wardkeep server does) gives a link ending in `#pk=<key>`; paste it as it is and the key is taken from it, or type the key in **Signing key**. From then on every answer must carry a valid signature, or it is refused (*not signed*, *the signature is wrong*): a list changed on the way, or served from another address or user's, does not pass, and neither does an old answer played back (*older than the last one accepted*; if the provider restored an old backup, open the subscription and save it again). A signed subscription is marked **Signed**. A signed subscription does not follow redirects: use the final address. With no key nothing is checked, and the form says so.
+  * **Backup addresses.** More addresses of the same subscription, one per line, tried in order when the first cannot be reached (a blocked name, a moved server). They face the same signature check, and must keep the same path.
+  * **Protocol order.** A provider can ask for protocols to be tried in an order, for everyone or for one country (the phone's region setting decides which one applies). It counts only on a signed answer.
 
 A server's menu: **Edit**, **Share link or QR** (scan it on another device), **Set country**, **Delete**. Editing a server that came from a subscription is overwritten the next time the subscription refreshes. **Manage servers** (Settings, or the **+** menu) is where you reorder servers (failover order), manage subscriptions and delete.
 
+Under **More options** the editors of VLESS, VMess, Trojan, AnyTLS and Shadowsocks hold settings that help on a hostile network:
+
+* **Multiplexing** (VLESS, VMess, Trojan, Shadowsocks; smux, yamux or h2mux): many connections over one, so a page that opens thirty costs one handshake. The server has to allow it (a Wardkeep server does for Trojan and Shadowsocks, not for VLESS-Reality, whose users have the `xtls-rprx-vision` flow, which cannot be multiplexed). On a bad link it can slow every connection at once.
+* **Fragment the TLS handshake** and **Fragment the TLS records** (VLESS, VMess, Trojan, AnyTLS): split the first packet (or its TLS record), so a filter that reads the server name from it does not see it whole. It helps against some filters, can break on others and adds delay.
+* **Encrypted Client Hello (ECH)** (VLESS without Reality, VMess, Trojan, AnyTLS): hides the server name inside the handshake. It needs a server that supports it, and its configuration (PEM) or a DNS record that publishes it.
+* **Through a proxy** (WireGuard): a share link of a proxy (VLESS, VMess, Trojan, Shadowsocks, Hysteria 2 or TUIC) that carries the WireGuard packets, for networks that block UDP. The proxy has to pass UDP; if it is slow the tunnel can stall.
+
 For Tor, **Bridge settings** is the editor: no bridge, Snowflake, obfs4 or your own bridge lines (paste, file, QR). Where Tor is blocked, Snowflake worked on the test phone; the built-in obfs4 bridges did not.
+
+## Warnings
+
+Protocols and settings that are easy to recognise, unsafe or slow say so: a note in the protocol list, an amber box at the top of the editor (a setting's own note shows only while it is on) and on the share screen. A warning never stops you from saving. What they mean:
+
+| Warning | It is shown for |
+|---|---|
+| The server's certificate is not checked | *Skip certificate check* (except SSTP, whose password exchange proves the server) |
+| Not wrapped in TLS | VLESS, VMess or Trojan with security *none* |
+| An older protocol, easy to recognise | VMess: VLESS with Reality is better |
+| Looks like random bytes | Shadowsocks without a plugin such as shadow-tls: some networks block that pattern |
+| Deprecated | Hysteria 1: use Hysteria 2 |
+| Easy to identify, often blocked on strict networks | WireGuard, OpenVPN, IKEv2, SSTP; SSH tunnels likewise |
+| Slow, TCP only, visible DNS volume | the DNS tunnel; and *anyone with the link can use the server* when it has no login |
+| Fragmenting, ECH, multiplexing, WireGuard through a proxy | a short note on what each costs |
+
+## DNS tunnel
+
+For networks where nothing but DNS gets out. Connections travel inside DNS queries to a resolver, which asks the tunnel server's zone (the protocol is [dnstt](https://www.bamsoftware.com/software/dnstt/)). It is slow (usually well under 1 Mbit/s), TCP only, and the volume of DNS queries is visible to whoever watches the network: **use it when nothing else works**.
+
+* **Add** it with *Add a server by hand → DNS tunnel*, or import a `dnstt://<server key>@<domain>?resolver=...&user=...&pass=...` link (a Wardkeep server prints one per user). The fields are the tunnel domain, the server's key (64 hex digits), the resolvers (`udp://IP:port`, `tls://host:port`, `https://host/path`), and the login of the server's upstream.
+* **Resolvers** are tried in order; the first few are tried at once, and when none answers the next ones are. A session that ends is retried through the same resolver first. A UDP resolver has to be an IP address, so no name is looked up outside the tunnel's own sockets.
+* **Find working resolvers** (under the resolvers field) tests the tunnel through well-known public resolvers, a few of which answer inside Iran, and fills the field with the ones that work, the fastest first. It refuses while the VPN is on (it would measure the VPN): disconnect first.
+* It runs only when you pick it, like Tor: **Automatic** never chooses it, no country is guessed for it, and it never falls back to another server. The **kill switch** does not support it yet.
+* Its own connections to the resolver leave through the network directly and never through the VPN they carry.
 
 ## Bypass lists
 
@@ -122,6 +157,10 @@ While connected, the home screen shows one more line under the server, `DNS: DNS
 | The username or password was rejected | edit the server and check them (OpenVPN, SSTP, IKEv2) |
 | No internet connection | the device itself is offline; nothing is wrong with the server |
 | Tor did not finish connecting | this network blocks Tor; use a Snowflake bridge |
+| The subscription is not signed (a signing key is set) | the provider's answer has no signature; check the key, or ask the provider |
+| The subscription's signature is wrong | the list was changed on the way, or the key is an old one |
+| Older than the last one accepted | an old copy was served, or the provider restored a backup: save the subscription again to start over |
+| Disconnect first (resolver scan) | the scan has to use the network directly, not through the VPN |
 
 ## Privacy
 

@@ -41,6 +41,7 @@ omnitun-server init --host vpn.example.com --protocols vless-reality,trojan,hyst
 | SSTP | 8448/tcp | **Linux, root or `CAP_NET_ADMIN`**; off by default |
 | IKEv2/IPsec | 4500/udp (+ 500/udp, TCP 4500) | **Linux, root or `CAP_NET_ADMIN`**; off by default; the server proves itself with its certificate, users sign in with EAP-MSCHAPv2 |
 | AmneziaWG | 51821/udp | **Linux, root or `CAP_NET_ADMIN`**; off by default; random obfuscation parameters per server; AmneziaWG 2.0 by default, 1.x on request (see below) |
+| DNS tunnel | 53/udp | for users on networks where only DNS gets out; slow; off by default, needs `dnstt domain` first and two DNS records; see *DNS tunnel* below |
 | DNSCrypt resolver | 5443/tcp+udp | not a way to connect: a DNS resolver for the tunnel's users; off by default, needs `dnscrypt listen <tunnel address>` first; see *DNSCrypt resolver* below |
 
 ```sh
@@ -78,6 +79,24 @@ sysctl -w net.ipv6.conf.all.forwarding=1               # the host must forward I
 
 With it on, every user gets a second, unique-local address in **WireGuard** (`fd30:0:0:1::/64`), **AmneziaWG** (`fd31:0:0:1::/64`), **OpenVPN** (`fd18:0:0:1::/64` UDP, `fd19:0:0:1::/64` TCP) and **IKEv2/IPsec** (`fd10:10:10::/64`); the address is derived from the user's IPv4 tunnel address, nothing more is stored. The server forwards and masquerades it (nftables `ip6` table, or `ip6tables`) with the same narrow policy as IPv4: the internet only, not client-to-client or the host's private networks (`fc00::/7`, `fe80::/10`, `::1`). IPv6 traffic is counted for the user like IPv4. **SSTP cannot carry IPv6.** The users' configs and links change (an extra address), so they import them again. If the host gets its own IPv6 address from a router advertisement, `forwarding=1` also switches that off unless `net.ipv6.conf.all.accept_ra=2` is set.
 
+### DNS tunnel (optional)
+
+Users on a network that lets DNS through and blocks everything else can still connect, inside DNS queries ([dnstt](https://www.bamsoftware.com/software/dnstt/): Noise over KCP over DNS). It is slow, TCP only and the volume of queries is visible, so it is a last resort, off until asked for. It uses dnstt's wire format unchanged, so stock dnstt tools should talk to it (not tried here).
+
+```sh
+omnitun-server dnstt domain t.example.com   # the zone to delegate; prints the two DNS records to create
+omnitun-server proto enable dnstt           # answers UDP port 53 (open it in the firewall)
+omnitun-server dnstt status                 # the key and the records again
+omnitun-server link alice                   # the user's dnstt:// link: domain, key and login
+omnitun-server dnstt rotate-key             # a new key: every user needs a new link
+```
+
+* **DNS records.** At the provider of `example.com`: an `NS` record for `t.example.com` naming a host (`tns.example.com`) and an `A` record for that host with this server's address. `dnstt domain` prints them; check with `dig NS t.example.com`.
+* **Port 53 must be free.** On Ubuntu `systemd-resolved` listens on `127.0.0.53:53` and may need `DNSStubListener=no` in `/etc/systemd/resolved.conf`. If the port cannot be bound the server says so in its log and everything else keeps running. Binding port 53 needs no root with the service unit `omnitun-server install` writes (`CAP_NET_BIND_SERVICE`).
+* **Users.** The tunnel hands each connection to a SOCKS5 inbound of sing-box that listens on `127.0.0.1:5300` and asks for the user's name and password, so users, quotas, expiry and the traffic counts work as for the other protocols. Nothing but the DNS port is reachable from outside.
+* **Keys.** `init` makes the server's key pair; the public half is in every link. `rotate-key` makes a new one (restart the server).
+* **Not tried** against real recursive resolvers or a real delegated zone; tested with the client and the server over loopback, and with a real client engine and a real server runtime.
+
 ### DNSCrypt resolver (optional)
 
 `dnscrypt` (5443, TCP and UDP) is not a way to connect: it is a DNS resolver for your users, encrypted and authenticated with [DNSCrypt](https://www.dnscrypt.org/), so the VPN's DNS is private and under your control. It is **off by default**, and it is **never open to the internet**: it does not start until you name the one address it listens on, it answers only the VPN's clients, and it asks a public resolver unless you choose otherwise.
@@ -111,6 +130,23 @@ omnitun-server user disable alice
 omnitun-server user reset alice            # new credentials; the old links stop working
 omnitun-server link alice --ovpn udp       # the OpenVPN config file
 ```
+
+### Signed subscriptions
+
+Every subscription answer is signed with the server's Ed25519 key (header `X-Signature: ed25519=<base64>`, with `X-Signature-Time`). The public key is at the end of the link `omnitun-server link <user>` prints, after `#pk=`: a fragment, so it never reaches the server. Wardkeep reads it from there and from then on refuses an answer that was changed on the way, served for another address or user, or played back from before the last one it accepted. A client that does not know the key sees an ordinary subscription.
+
+```sh
+omnitun-server subscription status                       # the public key and the protocol order
+omnitun-server subscription order vless,hysteria2        # clients try these first, for everyone
+omnitun-server subscription order --country IR hysteria2,vless
+omnitun-server subscription order --country IR           # clear one country's order
+omnitun-server subscription rotate-key                   # new key: every user needs the new link
+```
+
+* **What is signed:** a version tag, the request target as sent (path and query), the time, the usage / expiry / title / interval headers, the protocol-order headers, and the body, so a changed usage bar or order fails too. A client with the key follows no redirect, and keeps the time of the last answer it accepted and refuses an older one (no clock is compared, so a phone with a wrong clock works). If you restore an old backup of the server, clients refuse its answers until the user opens the subscription in the app and saves it again.
+* **Protocol order** names client protocols (`vless`, `hysteria2`, `trojan`, `shadowsocks`, `wireguard`, …). It orders the user's servers (the failover order) and counts only on a signed answer; the phone's region setting picks the country's own list over the general one.
+* **Backup addresses** are set in the app. They must serve the same path, because the path is signed. Put the subscription behind a plain proxy (a CDN that keeps the path) and it still verifies.
+* **Limits.** A credential sent in a header (Basic or Bearer) is not part of what is signed, so a provider that signs should give each user their own address, as this server does with a token in the path.
 
 A user's subscription URL carries the usage, quota and expiry in the standard `Subscription-Userinfo` header, so apps like Wardkeep show them. The monthly quota is counted per UTC calendar month and **blocks** the user (their connections are dropped) until the month rolls over or you raise it. `user usage <name> --reset` clears the count.
 
