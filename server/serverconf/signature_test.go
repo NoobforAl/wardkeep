@@ -42,7 +42,7 @@ func TestSubscriptionIsSigned(t *testing.T) {
 			if rec.Code != 200 {
 				t.Fatalf("status %d", rec.Code)
 			}
-			asked := "/" + path + "/" + token + strings.SplitN(target, "?", 2)[0]
+			asked := "/" + path + "/" + token + target
 			at, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), asked)
 			if err != nil || at == 0 {
 				t.Fatalf("the answer does not verify: %v", err)
@@ -52,7 +52,7 @@ func TestSubscriptionIsSigned(t *testing.T) {
 				t.Fatal("a changed body should not verify")
 			}
 			// Served as another user's (a different path), it does not verify either.
-			if _, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), "/"+path+"/another-token"+strings.SplitN(target, "?", 2)[0]); err == nil {
+			if _, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), "/"+path+"/another-token"+target); err == nil {
 				t.Fatal("an answer for one path must not verify for another")
 			}
 		})
@@ -78,7 +78,7 @@ func TestSubscriptionProtocolOrderIsSigned(t *testing.T) {
 	if got := rec.Header().Get("Protocol-Order-Ir"); got != "hysteria2" {
 		t.Fatalf("Protocol-Order-IR = %q", got)
 	}
-	asked := "/" + path + "/" + token
+	asked := "/" + path + "/" + token + "?format=base64"
 	if _, err := subscription.Verify(pub, rec.Body.Bytes(), rec.Header(), asked); err != nil {
 		t.Fatalf("the answer does not verify: %v", err)
 	}

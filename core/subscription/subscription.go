@@ -180,6 +180,11 @@ func FetchVia(ctx context.Context, req Request, rootCAs *x509.CertPool, dial Dia
 	}
 
 	client := &http.Client{Transport: transportFor(rootCAs, dial), Timeout: 30 * time.Second}
+	if req.PublicKey != "" {
+		// A signed answer is checked against the address that was asked; one reached through a redirect was made
+		// for another address (another user's, say) and must not pass for this one.
+		client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	}
 	defer client.CloseIdleConnections()
 	resp, err := client.Do(httpReq)
 	if err != nil {
@@ -206,14 +211,8 @@ func FetchVia(ctx context.Context, req Request, rootCAs *x509.CertPool, dial Dia
 		if err != nil {
 			return nil, err
 		}
-		path := u.Path
-		if resp.Request != nil && resp.Request.URL != nil {
-			path = resp.Request.URL.Path // after any redirect: the answer must be for the address it came from
-		}
-		if path == "" {
-			path = "/" // what a request for a bare host asks for
-		}
-		signedAt, err := Verify(key, body, resp.Header, path)
+		// What the client asked for, with the query it sent (the token of a query-authenticated subscription is in it).
+		signedAt, err := Verify(key, body, resp.Header, httpReq.URL.RequestURI())
 		if err != nil {
 			return nil, err
 		}

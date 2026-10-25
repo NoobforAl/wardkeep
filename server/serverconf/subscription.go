@@ -171,13 +171,13 @@ func setProtocolOrder(h http.Header, st *store.State) {
 	}
 }
 
-// writeSigned writes body signed for the path that was asked for, so a client that has the public key can tell an
+// writeSigned writes body signed for the request target that was asked for (path and query), so a client that has the public key can tell an
 // answer that was changed on the way, taken from another address or user, or played back later. The signature covers
 // the metadata and protocol-order headers already set, so they are set before this is called. Without a key it
 // writes the body as it is.
 func writeSigned(w http.ResponseWriter, r *http.Request, st *store.State, body []byte) {
 	if key, ok := st.Server.Subscription.SigningPrivate(); ok {
-		subscription.Sign(key, body, w.Header(), r.URL.Path, time.Now())
+		subscription.Sign(key, body, w.Header(), r.URL.RequestURI(), time.Now())
 	}
 	w.Write(body)
 }

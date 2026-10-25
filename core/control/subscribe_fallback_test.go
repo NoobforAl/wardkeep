@@ -26,7 +26,7 @@ func TestSubscribeBackupAddresses(t *testing.T) {
 	key := base64.StdEncoding.EncodeToString(pub)
 
 	signed := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		subscription.Sign(priv, []byte(fallbackBody), w.Header(), r.URL.Path, time.Now())
+		subscription.Sign(priv, []byte(fallbackBody), w.Header(), r.URL.RequestURI(), time.Now())
 		w.Write([]byte(fallbackBody))
 	}))
 	defer signed.Close()

@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-// signedServer answers with the test links, signed by priv (none: unsigned) for the path signPath (empty: the one
-// asked for). tamper runs after signing and may change the headers and the body.
-func signedServer(t *testing.T, priv ed25519.PrivateKey, headers map[string]string, signPath string, tamper func(h http.Header, body []byte) []byte) *httptest.Server {
+// signedServer answers with the test links, signed by priv (none: unsigned) for the request target signTarget
+// (empty: the one asked for). tamper runs after signing and may change the headers and the body.
+func signedServer(t *testing.T, priv ed25519.PrivateKey, headers map[string]string, signTarget string, tamper func(h http.Header, body []byte) []byte) *httptest.Server {
 	t.Helper()
 	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body := []byte(base64.StdEncoding.EncodeToString([]byte(links)))
@@ -21,11 +21,11 @@ func signedServer(t *testing.T, priv ed25519.PrivateKey, headers map[string]stri
 			w.Header().Set(k, v)
 		}
 		if priv != nil {
-			path := signPath
-			if path == "" {
-				path = r.URL.Path
+			target := signTarget
+			if target == "" {
+				target = r.URL.RequestURI()
 			}
-			Sign(priv, body, w.Header(), path, time.Now())
+			Sign(priv, body, w.Header(), target, time.Now())
 		}
 		if tamper != nil {
 			body = tamper(w.Header(), body)
@@ -123,6 +123,34 @@ func TestSignedSubscription(t *testing.T) {
 		srv := signedServer(t, priv, nil, "/sub/someone-else", nil)
 		if _, err := fetchWith(t, srv, pub, 0); !errors.Is(err, ErrBadSignature) {
 			t.Fatalf("an answer signed for another path must not verify: %v", err)
+		}
+	})
+	t.Run("a token in the query is part of what is signed", func(t *testing.T) {
+		srv := signedServer(t, priv, nil, "/sub/abc?token=alice", nil)
+		pool := srv.Client().Transport.(*http.Transport).TLSClientConfig.RootCAs
+		ask := func(token string) error {
+			_, err := Fetch(t.Context(), Request{URL: srv.URL + "/sub/abc", PublicKey: pub,
+				Auth: Auth{Type: AuthQuery, QueryKey: "token", Token: token}}, pool)
+			return err
+		}
+		if err := ask("alice"); err != nil {
+			t.Fatalf("the answer made for alice's request: %v", err)
+		}
+		if err := ask("bob"); !errors.Is(err, ErrBadSignature) {
+			t.Fatalf("alice's answer served to bob must not verify: %v", err)
+		}
+	})
+	t.Run("a redirect is not followed, so another address's answer cannot stand in", func(t *testing.T) {
+		other := signedServer(t, priv, nil, "", nil) // a valid answer, for its own address
+		redirect := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, other.URL+"/sub/abc", http.StatusFound)
+		}))
+		t.Cleanup(redirect.Close)
+		pool := redirect.Client().Transport.(*http.Transport).TLSClientConfig.RootCAs
+		_, err := Fetch(t.Context(), Request{URL: redirect.URL + "/sub/abc", PublicKey: pub}, pool)
+		var he *HTTPError
+		if !errors.As(err, &he) || he.Status != http.StatusFound {
+			t.Fatalf("a signed subscription must not follow a redirect: %v", err)
 		}
 	})
 	t.Run("no signing time", func(t *testing.T) {
