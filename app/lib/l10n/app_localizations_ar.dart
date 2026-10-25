@@ -2163,4 +2163,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'الافتراضي هو اسم الخادم';
+
+  @override
+  String get flWgVia => 'عبر وكيل (رابط المشاركة)';
+
+  @override
+  String get hpWgVia =>
+      'ينقل WireGuard داخل هذا الوكيل للشبكات التي تحجب UDP. يجب أن ينقل الوكيل UDP';
 }

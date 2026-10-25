@@ -2158,4 +2158,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'По умолчанию — имя сервера';
+
+  @override
+  String get flWgVia => 'Через прокси (ссылка)';
+
+  @override
+  String get hpWgVia =>
+      'Пропускает WireGuard внутри этого прокси, для сетей, блокирующих UDP. Прокси должен передавать UDP';
 }

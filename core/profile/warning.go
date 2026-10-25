@@ -121,6 +121,9 @@ func warningsFromOptions(p *Profile, add func(Warning)) {
 	if p.Multiplex.Enabled() {
 		add(wMux)
 	}
+	if w := p.WireGuard; w != nil && w.Via != "" {
+		add(wWGChain)
+	}
 	if t := p.TLS; t != nil {
 		if t.Fragment || t.RecordFragment {
 			add(wFragment)

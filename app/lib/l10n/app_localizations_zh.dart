@@ -2026,4 +2026,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hpEchQueryName => '默认为服务器名称';
+
+  @override
+  String get flWgVia => '通过代理（分享链接）';
+
+  @override
+  String get hpWgVia => '在此代理内传输 WireGuard，适用于封锁 UDP 的网络。代理必须能传输 UDP';
 }

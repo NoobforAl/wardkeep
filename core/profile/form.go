@@ -257,6 +257,10 @@ func wgStr(sel func(*WG) *string) strPtr {
 	}
 }
 
+func wgStrField(key, label string, sel func(*WG) *string, opts ...func(*Field)) Field {
+	return text(key, label, wgStr(sel), opts...)
+}
+
 func wgList(sel func(*WG) *[]string) listPtr {
 	return func(p *Profile, create bool) *[]string {
 		if w := wgOf(p, create); w != nil {
@@ -672,6 +676,10 @@ func wireguardFields(amneziaToo bool) []Field {
 			return nil
 		}, advanced),
 		reserved(),
+	}
+	if !amneziaToo {
+		fs = append(fs, wgStrField("wireguard.via", "Through a proxy (share link)", func(w *WG) *string { return &w.Via }, advanced, warn(wWGChain),
+			help("Carries WireGuard inside this proxy, for networks that block UDP. The proxy must pass UDP")))
 	}
 	if amneziaToo {
 		fs = append(fs,

@@ -8,6 +8,7 @@ import 'app_localizations.dart';
 String formLabel(AppLocalizations l, String english) {
   return switch (english) {
     'Name' => l.flName,
+    'Through a proxy (share link)' => l.flWgVia,
     'Fragment the TLS handshake' => l.flTlsFragment,
     'Fragment the TLS records' => l.flTlsRecordFragment,
     'Encrypted Client Hello (ECH)' => l.flEch,
@@ -95,6 +96,7 @@ String formHelp(AppLocalizations l, String english) {
     'authorized_keys format; empty accepts any key' => l.hpAuthorizedKeys,
     'Carry IKE and ESP over TCP for networks that block UDP' => l.hpIkeTcp,
     'Defaults to the server address' => l.hpDefaultsToServer,
+    'Carries WireGuard inside this proxy, for networks that block UDP. The proxy must pass UDP' => l.hpWgVia,
     'Splits the first packet so a filter cannot read the server name' => l.hpTlsFragment,
     'Splits the records instead of the packets' => l.hpTlsRecordFragment,
     'Hides the server name; needs a server that supports it' => l.hpEch,

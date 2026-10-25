@@ -3647,6 +3647,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Defaults to the server name'**
   String get hpEchQueryName;
+
+  /// Editor text for WireGuard through a proxy
+  ///
+  /// In en, this message translates to:
+  /// **'Through a proxy (share link)'**
+  String get flWgVia;
+
+  /// Editor text for WireGuard through a proxy
+  ///
+  /// In en, this message translates to:
+  /// **'Carries WireGuard inside this proxy, for networks that block UDP. The proxy must pass UDP'**
+  String get hpWgVia;
 }
 
 class _AppLocalizationsDelegate

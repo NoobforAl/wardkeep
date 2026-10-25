@@ -587,5 +587,7 @@
   "hpTlsRecordFragment": "Memecah rekaman, bukan paket",
   "hpEch": "Menyembunyikan nama server; perlu server yang mendukungnya",
   "hpEchConfig": "Jika kosong, dicari di DNS",
-  "hpEchQueryName": "Bawaan: nama server"
+  "hpEchQueryName": "Bawaan: nama server",
+  "flWgVia": "Lewat proxy (tautan)",
+  "hpWgVia": "Membawa WireGuard di dalam proxy ini, untuk jaringan yang memblokir UDP. Proxy harus meneruskan UDP"
 }

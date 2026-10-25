@@ -185,9 +185,15 @@ type WG struct {
 	MTU           int      `json:"mtu,omitempty"`
 	Reserved      []int    `json:"reserved,omitempty"`
 	Keepalive     int      `json:"keepalive,omitempty"`
+	// Via is the share link of a proxy that carries the WireGuard packets (WireGuard over TCP, for networks that
+	// block UDP). The proxy has to pass UDP. WireGuard only, not AmneziaWG.
+	Via string `json:"via,omitempty"`
 	// Amnezia holds AmneziaWG obfuscation parameters (Jc, Jmin, Jmax, S1, S2, H1-H4).
 	Amnezia map[string]string `json:"amnezia,omitempty"`
 }
+
+// ViaSchemes are the link schemes of the proxies that can carry WireGuard: the ones that pass UDP.
+var ViaSchemes = []string{"vless", "vmess", "trojan", "ss", "hysteria2", "hy2", "tuic"}
 
 // IKEv2Opts holds IKEv2/IPsec settings for the OS's IKEv2 client.
 // Username/Password are used for EAP (MSCHAPv2) authentication.
@@ -399,6 +405,15 @@ func (p *Profile) Validate() error {
 		}
 		if len(p.WireGuard.Address) == 0 {
 			return fmt.Errorf("profile %q: missing wireguard address", p.Name)
+		}
+		if via := strings.TrimSpace(p.WireGuard.Via); via != "" {
+			scheme, _, _ := strings.Cut(via, "://")
+			if p.Protocol == AmneziaWG {
+				return fmt.Errorf("profile %q: AmneziaWG cannot be sent through a proxy", p.Name)
+			}
+			if !slices.Contains(ViaSchemes, strings.ToLower(scheme)) {
+				return fmt.Errorf("profile %q: WireGuard can go through a VLESS, VMess, Trojan, Shadowsocks, Hysteria 2 or TUIC link, not %q", p.Name, scheme)
+			}
 		}
 	}
 	return nil

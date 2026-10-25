@@ -35,7 +35,7 @@ var formSamples = map[string]map[string]string{
 	profile.Naive: {"server": "vpn.example.com", "username": "u", "password": "p"},
 	profile.SSH:   {"server": "vpn.example.com", "username": "u", "password": "p"},
 	profile.WireGuard: {"server": "203.0.113.5", "private_key": wgPriv, "peer_public_key": wgPub, "address": "10.8.0.2/32",
-		"dns": "1.1.1.1, 8.8.8.8", "mtu": "1380", "keepalive": "25"},
+		"dns": "1.1.1.1, 8.8.8.8", "mtu": "1380", "keepalive": "25", "wireguard.via": "trojan://pw@proxy.example.com:443?security=tls#p"},
 	profile.AmneziaWG: {"server": "203.0.113.5", "port": "51821", "private_key": wgPriv, "peer_public_key": wgPub, "address": "10.31.0.2/32",
 		"amnezia.jc": "4", "amnezia.jmin": "40", "amnezia.jmax": "70", "amnezia.s1": "15", "amnezia.s2": "20",
 		"amnezia.h1": "11", "amnezia.h2": "12", "amnezia.h3": "13", "amnezia.h4": "14", "amnezia.i1": "<b 0xc0ff><r 16>"},

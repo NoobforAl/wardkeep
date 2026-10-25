@@ -1402,5 +1402,13 @@
   "hpEchQueryName": "Defaults to the server name",
   "@hpEchQueryName": {
     "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "flWgVia": "Through a proxy (share link)",
+  "@flWgVia": {
+    "description": "Editor text for WireGuard through a proxy"
+  },
+  "hpWgVia": "Carries WireGuard inside this proxy, for networks that block UDP. The proxy must pass UDP",
+  "@hpWgVia": {
+    "description": "Editor text for WireGuard through a proxy"
   }
 }

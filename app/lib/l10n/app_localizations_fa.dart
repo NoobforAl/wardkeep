@@ -2124,4 +2124,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'پیش‌فرض نام سرور است';
+
+  @override
+  String get flWgVia => 'از طریق یک پروکسی (پیوند اشتراک)';
+
+  @override
+  String get hpWgVia =>
+      'WireGuard را درون این پروکسی می‌برد، برای شبکه‌هایی که UDP را می‌بندند. پروکسی باید UDP را عبور دهد';
 }

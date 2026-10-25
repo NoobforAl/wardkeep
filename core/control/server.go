@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -415,6 +416,9 @@ func (s *Server) dispatch(req Request) (any, error) {
 		} else {
 			built, err = profile.FromValues(p.Protocol, p.Values)
 		}
+		if err == nil {
+			err = checkVia(built)
+		}
 		if err != nil {
 			return nil, badRequest(err)
 		}
@@ -598,4 +602,16 @@ func (s *Server) rootPool() *x509.CertPool {
 		s.pool = store.Pool()
 	}
 	return s.pool
+}
+
+// checkVia reads the proxy under a WireGuard profile, so the editor can say what is wrong with it at once
+// instead of when the tunnel is started.
+func checkVia(p *profile.Profile) error {
+	if p.WireGuard == nil || strings.TrimSpace(p.WireGuard.Via) == "" {
+		return nil
+	}
+	if _, err := importer.ParseLink(strings.TrimSpace(p.WireGuard.Via)); err != nil {
+		return fmt.Errorf("the proxy under WireGuard: %w", err)
+	}
+	return nil
 }

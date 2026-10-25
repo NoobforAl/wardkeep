@@ -2108,4 +2108,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'Mặc định là tên máy chủ';
+
+  @override
+  String get flWgVia => 'Qua một proxy (liên kết chia sẻ)';
+
+  @override
+  String get hpWgVia =>
+      'Mang WireGuard bên trong proxy này, cho các mạng chặn UDP. Proxy phải cho UDP đi qua';
 }

@@ -594,5 +594,7 @@
   "hpTlsRecordFragment": "拆分记录而不是数据包",
   "hpEch": "隐藏服务器名称；需要服务器支持",
   "hpEchConfig": "留空则通过 DNS 查询",
-  "hpEchQueryName": "默认为服务器名称"
+  "hpEchQueryName": "默认为服务器名称",
+  "flWgVia": "通过代理（分享链接）",
+  "hpWgVia": "在此代理内传输 WireGuard，适用于封锁 UDP 的网络。代理必须能传输 UDP"
 }

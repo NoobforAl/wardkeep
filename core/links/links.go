@@ -457,6 +457,9 @@ func wireguard(p *profile.Profile) (string, error) {
 	if g.Keepalive > 0 {
 		q.add("keepalive", strconv.Itoa(g.Keepalive))
 	}
+	if p.Protocol == profile.WireGuard {
+		q.add("via", g.Via)
+	}
 	if len(g.Reserved) > 0 {
 		parts := make([]string, len(g.Reserved))
 		for i, r := range g.Reserved {

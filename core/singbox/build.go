@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/NoobforAl/omnitun/core/importer"
 	"github.com/NoobforAl/omnitun/core/profile"
 )
 
@@ -589,7 +590,8 @@ func convertProfile(p *profile.Profile, tag string) (out obj, isEndpoint bool, e
 			}
 		}
 	case profile.WireGuard:
-		return wireguardEndpoint(p), true, nil, nil
+		ep, extras, err := wireguardEndpoint(p, tag)
+		return ep, true, extras, err
 	case profile.OpenVPN:
 		ep, err := openvpnEndpoint(p)
 		return ep, true, nil, err
@@ -659,7 +661,9 @@ func shadowTLSOutbound(p *profile.Profile, tag string) (obj, error) {
 	return out, nil
 }
 
-func wireguardEndpoint(p *profile.Profile) obj {
+// wireguardEndpoint is the WireGuard endpoint. With a proxy under it (WireGuard.Via), the proxy's outbound comes
+// back as an extra and the endpoint detours through it.
+func wireguardEndpoint(p *profile.Profile, tag string) (obj, []obj, error) {
 	wg := p.WireGuard
 	allowed := wg.AllowedIPs
 	if len(allowed) == 0 {
@@ -689,7 +693,28 @@ func wireguardEndpoint(p *profile.Profile) obj {
 	if wg.MTU > 0 {
 		ep["mtu"] = wg.MTU
 	}
-	return ep
+	var extras []obj
+	if via := strings.TrimSpace(wg.Via); via != "" {
+		pv, err := importer.ParseLink(via)
+		if err != nil {
+			return nil, nil, fmt.Errorf("the proxy under WireGuard: %w", err)
+		}
+		if !slices.Contains(profile.ViaSchemes, strings.ToLower(strings.SplitN(via, "://", 2)[0])) {
+			return nil, nil, fmt.Errorf("the proxy under WireGuard: %s cannot carry UDP", pv.Protocol)
+		}
+		viaTag := tag + "-via"
+		out, isEndpoint, more, err := convertProfile(pv, viaTag)
+		if err != nil {
+			return nil, nil, fmt.Errorf("the proxy under WireGuard: %w", err)
+		}
+		if isEndpoint {
+			return nil, nil, fmt.Errorf("the proxy under WireGuard cannot be %s", pv.Protocol)
+		}
+		out["tag"] = viaTag
+		extras = append(more, out)
+		ep["detour"] = viaTag
+	}
+	return ep, extras, nil
 }
 
 // openvpnEndpoint maps an OpenVPN profile to sing-box's openvpn-client endpoint.

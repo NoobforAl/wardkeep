@@ -2129,4 +2129,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'Varsayılan sunucu adıdır';
+
+  @override
+  String get flWgVia => 'Bir proxy üzerinden (paylaşım bağlantısı)';
+
+  @override
+  String get hpWgVia =>
+      'UDP\'yi engelleyen ağlar için WireGuard\'ı bu proxy\'nin içinde taşır. Proxy UDP geçirmelidir';
 }

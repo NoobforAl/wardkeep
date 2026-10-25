@@ -2127,4 +2127,11 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'طے شدہ سرور کا نام ہے';
+
+  @override
+  String get flWgVia => 'پراکسی کے ذریعے (شیئر لنک)';
+
+  @override
+  String get hpWgVia =>
+      'UDP روکنے والے نیٹ ورکس کے لیے WireGuard کو اس پراکسی کے اندر لے جاتا ہے۔ پراکسی کو UDP گزارنا ہوگا';
 }

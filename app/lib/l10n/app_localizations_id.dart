@@ -2110,4 +2110,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'Bawaan: nama server';
+
+  @override
+  String get flWgVia => 'Lewat proxy (tautan)';
+
+  @override
+  String get hpWgVia =>
+      'Membawa WireGuard di dalam proxy ini, untuk jaringan yang memblokir UDP. Proxy harus meneruskan UDP';
 }

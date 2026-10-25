@@ -2125,4 +2125,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'डिफ़ॉल्ट सर्वर का नाम है';
+
+  @override
+  String get flWgVia => 'प्रॉक्सी के ज़रिए (शेयर लिंक)';
+
+  @override
+  String get hpWgVia =>
+      'UDP रोकने वाले नेटवर्क के लिए WireGuard को इस प्रॉक्सी के अंदर ले जाता है। प्रॉक्सी को UDP पास करना होगा';
 }

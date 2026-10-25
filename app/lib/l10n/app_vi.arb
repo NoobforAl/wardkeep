@@ -587,5 +587,7 @@
   "hpTlsRecordFragment": "Tách các bản ghi thay vì các gói",
   "hpEch": "Ẩn tên máy chủ; cần máy chủ hỗ trợ",
   "hpEchConfig": "Để trống thì tra trong DNS",
-  "hpEchQueryName": "Mặc định là tên máy chủ"
+  "hpEchQueryName": "Mặc định là tên máy chủ",
+  "flWgVia": "Qua một proxy (liên kết chia sẻ)",
+  "hpWgVia": "Mang WireGuard bên trong proxy này, cho các mạng chặn UDP. Proxy phải cho UDP đi qua"
 }

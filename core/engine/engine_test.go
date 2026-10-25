@@ -49,6 +49,7 @@ func testLinks() []string {
 		"hy2://pw@hy.example.com:443?sni=hy.example.com&obfs=salamander&obfs-password=ob#hy",
 		"tuic://b831381d-6324-4d53-ad4f-8cda48b30811:pw@tu.example.com:443?congestion_control=bbr&sni=tu.example.com#tu",
 		"wireguard://yAnz5TF%2BlXXJte14tji3zlMNq%2Bhd2rYUIgJBgB3fBmk%3D@wg.example.com:51820?publickey=xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg%3D&address=10.0.0.2%2F32&reserved=1,2,3#wg",
+		"wireguard://yAnz5TF%2BlXXJte14tji3zlMNq%2Bhd2rYUIgJBgB3fBmk%3D@wg.example.com:51820?publickey=xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg%3D&address=10.0.0.2%2F32&via=trojan%3A%2F%2Fpw%40proxy.example.com%3A443%3Fsecurity%3Dtls%23p#wgvia",
 	}
 }
 

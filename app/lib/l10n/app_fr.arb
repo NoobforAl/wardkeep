@@ -587,5 +587,7 @@
   "hpTlsRecordFragment": "Coupe les enregistrements au lieu des paquets",
   "hpEch": "Cache le nom du serveur ; nécessite un serveur compatible",
   "hpEchConfig": "Vide : recherché dans le DNS",
-  "hpEchQueryName": "Par défaut, le nom du serveur"
+  "hpEchQueryName": "Par défaut, le nom du serveur",
+  "flWgVia": "Via un proxy (lien de partage)",
+  "hpWgVia": "Fait passer WireGuard dans ce proxy, pour les réseaux qui bloquent l'UDP. Le proxy doit laisser passer l'UDP"
 }

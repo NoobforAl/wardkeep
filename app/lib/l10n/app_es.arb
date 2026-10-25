@@ -587,5 +587,7 @@
   "hpTlsRecordFragment": "Divide los registros en lugar de los paquetes",
   "hpEch": "Oculta el nombre del servidor; necesita un servidor compatible",
   "hpEchConfig": "Si está vacío, se busca en el DNS",
-  "hpEchQueryName": "Por defecto, el nombre del servidor"
+  "hpEchQueryName": "Por defecto, el nombre del servidor",
+  "flWgVia": "A través de un proxy (enlace)",
+  "hpWgVia": "Lleva WireGuard dentro de este proxy, para redes que bloquean UDP. El proxy debe pasar UDP"
 }

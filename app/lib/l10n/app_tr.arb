@@ -587,5 +587,7 @@
   "hpTlsRecordFragment": "Paketler yerine kayıtları böler",
   "hpEch": "Sunucu adını gizler; bunu destekleyen bir sunucu gerekir",
   "hpEchConfig": "Boşsa DNS'te aranır",
-  "hpEchQueryName": "Varsayılan sunucu adıdır"
+  "hpEchQueryName": "Varsayılan sunucu adıdır",
+  "flWgVia": "Bir proxy üzerinden (paylaşım bağlantısı)",
+  "hpWgVia": "UDP'yi engelleyen ağlar için WireGuard'ı bu proxy'nin içinde taşır. Proxy UDP geçirmelidir"
 }

@@ -2148,4 +2148,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get hpEchQueryName => 'Por padrão, o nome do servidor';
+
+  @override
+  String get flWgVia => 'Através de um proxy (link)';
+
+  @override
+  String get hpWgVia =>
+      'Leva o WireGuard dentro deste proxy, para redes que bloqueiam UDP. O proxy precisa passar UDP';
 }

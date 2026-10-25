@@ -388,6 +388,7 @@ func parseWireGuardLink(link string) (*profile.Profile, error) {
 	wg.MTU, _ = strconv.Atoi(q.Get("mtu"))
 	wg.AllowedIPs = splitList(firstNonEmpty(q.Get("allowedips"), q.Get("allowed_ips")))
 	wg.DNS = splitList(q.Get("dns"))
+	wg.Via = strings.TrimSpace(q.Get("via"))
 	wg.Keepalive, _ = strconv.Atoi(firstNonEmpty(q.Get("keepalive"), q.Get("persistent_keepalive")))
 	for _, r := range splitList(q.Get("reserved")) {
 		n, err := strconv.Atoi(r)
@@ -400,6 +401,7 @@ func parseWireGuardLink(link string) (*profile.Profile, error) {
 	// awg:// is the same link with AmneziaWG's obfuscation parameters.
 	if strings.EqualFold(u.Scheme, "awg") {
 		proto = profile.AmneziaWG
+		wg.Via = ""
 		for k := range amneziaKeys {
 			if v := q.Get(k); v != "" {
 				if wg.Amnezia == nil {
