@@ -4,11 +4,13 @@ package profile
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/url"
 	"slices"
+	"strings"
 )
 
 // ErrNeedsCredentials means the profile needs a username and password before connecting.
@@ -82,6 +84,61 @@ type TLS struct {
 	// Certificate is a PEM certificate to trust (pin) instead of the system
 	// CAs, e.g. a server's self-signed certificate.
 	Certificate string `json:"certificate,omitempty"`
+	// Fragment splits the first packet of the TLS handshake in two, and RecordFragment splits its TLS record, so a
+	// filter that reads the server name from the first packet does not see it whole. Only for TLS over TCP.
+	Fragment       bool `json:"fragment,omitempty"`
+	RecordFragment bool `json:"record_fragment,omitempty"`
+	// ECH hides the server name inside the handshake (Encrypted Client Hello).
+	ECH *ECH `json:"ech,omitempty"`
+}
+
+// ECH is Encrypted Client Hello. It works only with a server that supports it, and not with Reality.
+type ECH struct {
+	Enabled bool `json:"enabled"`
+	// Config is the server's ECH configuration as a PEM "ECH CONFIGS" block; empty looks it up in DNS.
+	Config string `json:"config,omitempty"`
+	// QueryServerName is the name to look the configuration up under; empty is the TLS server name.
+	QueryServerName string `json:"query_server_name,omitempty"`
+}
+
+// On reports whether ECH is switched on.
+func (e *ECH) On() bool { return e != nil && e.Enabled }
+
+const (
+	echBegin = "-----BEGIN ECH CONFIGS-----"
+	echEnd   = "-----END ECH CONFIGS-----"
+)
+
+// ECHPEM wraps a base64 ECH configuration (as links carry it) in the PEM block sing-box reads. A PEM block is
+// returned as it is, and anything that is not base64 comes back empty.
+func ECHPEM(s string) string {
+	s = strings.TrimSpace(s)
+	if strings.HasPrefix(s, "-----") {
+		return s
+	}
+	s = strings.Join(strings.Fields(s), "")
+	if s == "" {
+		return ""
+	}
+	if _, err := base64.StdEncoding.DecodeString(s); err != nil {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString(echBegin + "\n")
+	for len(s) > 64 {
+		b.WriteString(s[:64] + "\n")
+		s = s[64:]
+	}
+	b.WriteString(s + "\n" + echEnd)
+	return b.String()
+}
+
+// ECHBase64 is the base64 body of a PEM ECH configuration, the form links carry.
+func ECHBase64(pem string) string {
+	pem = strings.TrimSpace(pem)
+	pem = strings.TrimPrefix(pem, echBegin)
+	pem = strings.TrimSuffix(pem, echEnd)
+	return strings.Join(strings.Fields(pem), "")
 }
 
 // Reality settings for VLESS+Reality.
@@ -279,6 +336,9 @@ func (p *Profile) Validate() error {
 	if err := p.validateMux(); err != nil {
 		return err
 	}
+	if err := p.validateTLSExtras(); err != nil {
+		return err
+	}
 	switch p.Protocol {
 	case VLESS, VMess:
 		if p.UUID == "" {
@@ -339,6 +399,34 @@ func (p *Profile) Validate() error {
 		}
 		if len(p.WireGuard.Address) == 0 {
 			return fmt.Errorf("profile %q: missing wireguard address", p.Name)
+		}
+	}
+	return nil
+}
+
+// tlsTCPProtocols are the protocols whose TLS is the handshake of a TCP connection that fragmenting and ECH apply to.
+var tlsTCPProtocols = []string{VLESS, VMess, Trojan, AnyTLS}
+
+func (p *Profile) validateTLSExtras() error {
+	t := p.TLS
+	if t == nil {
+		return nil
+	}
+	if (t.Fragment || t.RecordFragment || t.ECH.On()) && !slices.Contains(tlsTCPProtocols, p.Protocol) {
+		return fmt.Errorf("profile %q: fragmenting the handshake and ECH are not available for %s", p.Name, p.Protocol)
+	}
+	if (t.Fragment || t.RecordFragment) && !t.Enabled {
+		return fmt.Errorf("profile %q: fragmenting the handshake needs TLS", p.Name)
+	}
+	if t.ECH.On() {
+		if !t.Enabled {
+			return fmt.Errorf("profile %q: ECH needs TLS", p.Name)
+		}
+		if t.Reality != nil {
+			return fmt.Errorf("profile %q: ECH cannot be used with Reality", p.Name)
+		}
+		if c := strings.TrimSpace(t.ECH.Config); c != "" && (!strings.HasPrefix(c, echBegin) || !strings.HasSuffix(c, echEnd)) {
+			return fmt.Errorf("profile %q: the ECH config must be a %q block", p.Name, "ECH CONFIGS")
 		}
 	}
 	return nil

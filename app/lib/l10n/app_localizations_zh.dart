@@ -1996,4 +1996,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => '代替上面两项';
+
+  @override
+  String get flTlsFragment => '分片 TLS 握手';
+
+  @override
+  String get flTlsRecordFragment => '分片 TLS 记录';
+
+  @override
+  String get flEch => '加密客户端问候 (ECH)';
+
+  @override
+  String get flEchConfig => 'ECH 配置 (PEM)';
+
+  @override
+  String get flEchQueryName => 'ECH 查询名称';
+
+  @override
+  String get hpTlsFragment => '拆分第一个数据包，使过滤器读不到服务器名称';
+
+  @override
+  String get hpTlsRecordFragment => '拆分记录而不是数据包';
+
+  @override
+  String get hpEch => '隐藏服务器名称；需要服务器支持';
+
+  @override
+  String get hpEchConfig => '留空则通过 DNS 查询';
+
+  @override
+  String get hpEchQueryName => '默认为服务器名称';
 }

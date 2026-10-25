@@ -574,6 +574,54 @@ func tlsFields(withSecurity, withReality bool) []Field {
 	return fs
 }
 
+func echOf(p *Profile, create bool) *ECH {
+	t := tlsOf(p, create)
+	if t == nil {
+		return nil
+	}
+	if t.ECH == nil && create {
+		t.ECH = &ECH{}
+	}
+	return t.ECH
+}
+
+func echStr(sel func(*ECH) *string) strPtr {
+	return func(p *Profile, create bool) *string {
+		if e := echOf(p, create); e != nil {
+			return sel(e)
+		}
+		return nil
+	}
+}
+
+// tlsExtraFields are the handshake options of the protocols whose TLS runs over TCP.
+func tlsExtraFields() []Field {
+	flag := func(sel func(*TLS) *bool) boolPtr {
+		return func(p *Profile, c bool) *bool {
+			if t := tlsOf(p, c); t != nil {
+				return sel(t)
+			}
+			return nil
+		}
+	}
+	return []Field{
+		toggle("tls.fragment", "Fragment the TLS handshake", flag(func(t *TLS) *bool { return &t.Fragment }), advanced, warn(wFragment),
+			help("Splits the first packet so a filter cannot read the server name")),
+		toggle("tls.record_fragment", "Fragment the TLS records", flag(func(t *TLS) *bool { return &t.RecordFragment }), advanced,
+			warn(wFragment), help("Splits the records instead of the packets")),
+		toggle("tls.ech", "Encrypted Client Hello (ECH)", func(p *Profile, c bool) *bool {
+			if e := echOf(p, c); e != nil {
+				return &e.Enabled
+			}
+			return nil
+		}, advanced, warn(wECH), help("Hides the server name; needs a server that supports it")),
+		pem("tls.ech_config", "ECH config (PEM)", echStr(func(e *ECH) *string { return &e.Config }), advanced,
+			help("Empty looks it up in DNS")),
+		text("tls.ech_query_name", "ECH lookup name", echStr(func(e *ECH) *string { return &e.QueryServerName }), advanced,
+			help("Defaults to the server name")),
+	}
+}
+
 func transportFields() []Field {
 	return []Field{
 		text("transport.type", "Transport", transportStr(func(t *Transport) *string { return &t.Type }), advanced,
@@ -646,6 +694,7 @@ func protocolFields(protocol string) ([]Field, bool) {
 		fs := []Field{uuid(),
 			text("flow", "Flow", func(p *Profile, _ bool) *string { return &p.Flow }, choices("", "xtls-rprx-vision"), advanced)}
 		fs = append(fs, tlsFields(true, true)...)
+		fs = append(fs, tlsExtraFields()...)
 		fs = append(fs, transportFields()...)
 		return append(fs, muxFields()...), true
 	case VMess:
@@ -653,11 +702,13 @@ func protocolFields(protocol string) ([]Field, bool) {
 			text("method", "Encryption", func(p *Profile, _ bool) *string { return &p.Method }, choices("auto", "aes-128-gcm", "chacha20-poly1305", "none", "zero"), def("auto")),
 			number("alter_id", "Alter id", func(p *Profile, _ bool) *int { return &p.AlterID }, advanced)}
 		fs = append(fs, tlsFields(true, false)...)
+		fs = append(fs, tlsExtraFields()...)
 		fs = append(fs, transportFields()...)
 		return append(fs, muxFields()...), true
 	case Trojan:
 		fs := []Field{password(required)}
 		fs = append(fs, tlsFields(true, false)...)
+		fs = append(fs, tlsExtraFields()...)
 		fs = append(fs, transportFields()...)
 		return append(fs, muxFields()...), true
 	case Shadowsocks:
@@ -686,7 +737,7 @@ func protocolFields(protocol string) ([]Field, bool) {
 		}
 		return append(fs, tlsFields(false, false)...), true
 	case AnyTLS:
-		return append([]Field{password(required)}, tlsFields(false, false)...), true
+		return append(append([]Field{password(required)}, tlsFields(false, false)...), tlsExtraFields()...), true
 	case Naive:
 		fs := []Field{username(required), password(required),
 			toggle("naive.quic", "Use HTTP/3 (QUIC)", func(p *Profile, c bool) *bool {
@@ -917,6 +968,9 @@ func (p *Profile) Apply(values map[string]string) error {
 	}
 	if p.Multiplex != nil && !p.Multiplex.Enabled() {
 		p.Multiplex = nil
+	}
+	if p.TLS != nil && p.TLS.ECH != nil && !p.TLS.ECH.On() {
+		p.TLS.ECH = nil
 	}
 	return nil
 }

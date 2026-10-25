@@ -577,5 +577,15 @@
   "flMuxMinStreams": "Số luồng tối thiểu mỗi kết nối",
   "flMuxMaxStreams": "Số luồng tối đa mỗi kết nối",
   "hpMultiplexing": "Nhiều kết nối trong một; máy chủ phải cho phép. Không dùng với flow của VLESS",
-  "hpMuxMaxStreams": "Thay cho hai mục trên"
+  "hpMuxMaxStreams": "Thay cho hai mục trên",
+  "flTlsFragment": "Chia nhỏ bắt tay TLS",
+  "flTlsRecordFragment": "Chia nhỏ bản ghi TLS",
+  "flEch": "Client Hello được mã hóa (ECH)",
+  "flEchConfig": "Cấu hình ECH (PEM)",
+  "flEchQueryName": "Tên tra cứu ECH",
+  "hpTlsFragment": "Tách gói đầu tiên để bộ lọc không đọc được tên máy chủ",
+  "hpTlsRecordFragment": "Tách các bản ghi thay vì các gói",
+  "hpEch": "Ẩn tên máy chủ; cần máy chủ hỗ trợ",
+  "hpEchConfig": "Để trống thì tra trong DNS",
+  "hpEchQueryName": "Mặc định là tên máy chủ"
 }

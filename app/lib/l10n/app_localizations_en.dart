@@ -2090,4 +2090,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'Instead of the two above';
+
+  @override
+  String get flTlsFragment => 'Fragment the TLS handshake';
+
+  @override
+  String get flTlsRecordFragment => 'Fragment the TLS records';
+
+  @override
+  String get flEch => 'Encrypted Client Hello (ECH)';
+
+  @override
+  String get flEchConfig => 'ECH config (PEM)';
+
+  @override
+  String get flEchQueryName => 'ECH lookup name';
+
+  @override
+  String get hpTlsFragment =>
+      'Splits the first packet so a filter cannot read the server name';
+
+  @override
+  String get hpTlsRecordFragment => 'Splits the records instead of the packets';
+
+  @override
+  String get hpEch => 'Hides the server name; needs a server that supports it';
+
+  @override
+  String get hpEchConfig => 'Empty looks it up in DNS';
+
+  @override
+  String get hpEchQueryName => 'Defaults to the server name';
 }

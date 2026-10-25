@@ -816,6 +816,22 @@ func addTLS(out obj, t *profile.TLS) {
 	if t.Certificate != "" {
 		tls["certificate"] = t.Certificate
 	}
+	if t.Fragment {
+		tls["fragment"] = true
+	}
+	if t.RecordFragment {
+		tls["record_fragment"] = true
+	}
+	if e := t.ECH; e.On() {
+		ech := obj{"enabled": true}
+		if c := strings.TrimSpace(e.Config); c != "" {
+			ech["config"] = strings.Split(strings.ReplaceAll(c, "\r\n", "\n"), "\n")
+		}
+		if e.QueryServerName != "" {
+			ech["query_server_name"] = e.QueryServerName
+		}
+		tls["ech"] = ech
+	}
 	out["tls"] = tls
 }
 

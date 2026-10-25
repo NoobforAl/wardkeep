@@ -1362,5 +1362,45 @@
   "hpMuxMaxStreams": "Instead of the two above",
   "@hpMuxMaxStreams": {
     "description": "Editor text for the multiplexing setting"
+  },
+  "flTlsFragment": "Fragment the TLS handshake",
+  "@flTlsFragment": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "flTlsRecordFragment": "Fragment the TLS records",
+  "@flTlsRecordFragment": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "flEch": "Encrypted Client Hello (ECH)",
+  "@flEch": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "flEchConfig": "ECH config (PEM)",
+  "@flEchConfig": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "flEchQueryName": "ECH lookup name",
+  "@flEchQueryName": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "hpTlsFragment": "Splits the first packet so a filter cannot read the server name",
+  "@hpTlsFragment": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "hpTlsRecordFragment": "Splits the records instead of the packets",
+  "@hpTlsRecordFragment": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "hpEch": "Hides the server name; needs a server that supports it",
+  "@hpEch": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "hpEchConfig": "Empty looks it up in DNS",
+  "@hpEchConfig": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
+  },
+  "hpEchQueryName": "Defaults to the server name",
+  "@hpEchQueryName": {
+    "description": "Editor text for the TLS handshake options (fragmenting, ECH)"
   }
 }

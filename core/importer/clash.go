@@ -143,6 +143,9 @@ func clashToProfile(cp clashProxy) (*profile.Profile, error) {
 				t.Fingerprint = "chrome"
 			}
 		}
+		if eo := cp.sub("ech-opts"); eo.boolean("enable") && t.Reality == nil {
+			t.ECH = &profile.ECH{Enabled: true, Config: profile.ECHPEM(eo.str("config")), QueryServerName: eo.str("query-server-name")}
+		}
 		return t
 	}
 	transport := func() *profile.Transport {
@@ -283,6 +286,7 @@ func clashToProfile(cp clashProxy) (*profile.Profile, error) {
 	default:
 		return nil, fmt.Errorf("unsupported proxy type %q", typ)
 	}
+	dropUnusableTLSExtras(p)
 	if sm := cp.sub("smux"); sm.boolean("enabled") {
 		attachMux(p, &profile.Mux{Protocol: firstNonEmpty(sm.str("protocol"), "smux"), MaxConnections: sm.num("max-connections"),
 			MinStreams: sm.num("min-streams"), MaxStreams: sm.num("max-streams"), Padding: sm.boolean("padding")})

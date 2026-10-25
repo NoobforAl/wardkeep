@@ -2127,4 +2127,35 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'Вместо двух предыдущих';
+
+  @override
+  String get flTlsFragment => 'Фрагментировать рукопожатие TLS';
+
+  @override
+  String get flTlsRecordFragment => 'Фрагментировать записи TLS';
+
+  @override
+  String get flEch => 'Зашифрованный Client Hello (ECH)';
+
+  @override
+  String get flEchConfig => 'Конфигурация ECH (PEM)';
+
+  @override
+  String get flEchQueryName => 'Имя для поиска ECH';
+
+  @override
+  String get hpTlsFragment =>
+      'Делит первый пакет, чтобы фильтр не мог прочитать имя сервера';
+
+  @override
+  String get hpTlsRecordFragment => 'Делит записи, а не пакеты';
+
+  @override
+  String get hpEch => 'Скрывает имя сервера; нужен сервер с поддержкой';
+
+  @override
+  String get hpEchConfig => 'Если пусто, ищется в DNS';
+
+  @override
+  String get hpEchQueryName => 'По умолчанию — имя сервера';
 }

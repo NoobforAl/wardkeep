@@ -2132,4 +2132,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'بدلًا من الخيارين أعلاه';
+
+  @override
+  String get flTlsFragment => 'تجزئة مصافحة TLS';
+
+  @override
+  String get flTlsRecordFragment => 'تجزئة سجلات TLS';
+
+  @override
+  String get flEch => 'Client Hello المشفّر (ECH)';
+
+  @override
+  String get flEchConfig => 'إعداد ECH (PEM)';
+
+  @override
+  String get flEchQueryName => 'اسم البحث عن ECH';
+
+  @override
+  String get hpTlsFragment =>
+      'يقسم الحزمة الأولى حتى لا يستطيع المرشح قراءة اسم الخادم';
+
+  @override
+  String get hpTlsRecordFragment => 'يقسم السجلات بدل الحزم';
+
+  @override
+  String get hpEch => 'يخفي اسم الخادم؛ يحتاج إلى خادم يدعمه';
+
+  @override
+  String get hpEchConfig => 'إذا ترك فارغًا يُبحث عنه في DNS';
+
+  @override
+  String get hpEchQueryName => 'الافتراضي هو اسم الخادم';
 }

@@ -577,5 +577,15 @@
   "flMuxMinStreams": "प्रति कनेक्शन न्यूनतम स्ट्रीम",
   "flMuxMaxStreams": "प्रति कनेक्शन अधिकतम स्ट्रीम",
   "hpMultiplexing": "कई कनेक्शन एक में; सर्वर को अनुमति देनी होगी। VLESS flow के साथ नहीं",
-  "hpMuxMaxStreams": "ऊपर के दो के बदले"
+  "hpMuxMaxStreams": "ऊपर के दो के बदले",
+  "flTlsFragment": "TLS हैंडशेक को टुकड़ों में बाँटें",
+  "flTlsRecordFragment": "TLS रिकॉर्ड को टुकड़ों में बाँटें",
+  "flEch": "एन्क्रिप्टेड Client Hello (ECH)",
+  "flEchConfig": "ECH कॉन्फ़िग (PEM)",
+  "flEchQueryName": "ECH खोज का नाम",
+  "hpTlsFragment": "पहले पैकेट को बाँटता है ताकि फ़िल्टर सर्वर का नाम न पढ़ सके",
+  "hpTlsRecordFragment": "पैकेट की जगह रिकॉर्ड को बाँटता है",
+  "hpEch": "सर्वर का नाम छिपाता है; इसका समर्थन करने वाला सर्वर चाहिए",
+  "hpEchConfig": "खाली होने पर DNS में खोजा जाता है",
+  "hpEchQueryName": "डिफ़ॉल्ट सर्वर का नाम है"
 }

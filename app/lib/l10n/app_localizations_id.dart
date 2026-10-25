@@ -2078,4 +2078,36 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'Sebagai pengganti dua di atas';
+
+  @override
+  String get flTlsFragment => 'Pecah handshake TLS';
+
+  @override
+  String get flTlsRecordFragment => 'Pecah rekaman TLS';
+
+  @override
+  String get flEch => 'Client Hello terenkripsi (ECH)';
+
+  @override
+  String get flEchConfig => 'Konfigurasi ECH (PEM)';
+
+  @override
+  String get flEchQueryName => 'Nama pencarian ECH';
+
+  @override
+  String get hpTlsFragment =>
+      'Memecah paket pertama agar filter tidak dapat membaca nama server';
+
+  @override
+  String get hpTlsRecordFragment => 'Memecah rekaman, bukan paket';
+
+  @override
+  String get hpEch =>
+      'Menyembunyikan nama server; perlu server yang mendukungnya';
+
+  @override
+  String get hpEchConfig => 'Jika kosong, dicari di DNS';
+
+  @override
+  String get hpEchQueryName => 'Bawaan: nama server';
 }

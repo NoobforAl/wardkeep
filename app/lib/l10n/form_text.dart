@@ -8,6 +8,11 @@ import 'app_localizations.dart';
 String formLabel(AppLocalizations l, String english) {
   return switch (english) {
     'Name' => l.flName,
+    'Fragment the TLS handshake' => l.flTlsFragment,
+    'Fragment the TLS records' => l.flTlsRecordFragment,
+    'Encrypted Client Hello (ECH)' => l.flEch,
+    'ECH config (PEM)' => l.flEchConfig,
+    'ECH lookup name' => l.flEchQueryName,
     'Multiplexing' => l.flMultiplexing,
     'Multiplexing padding' => l.flMuxPadding,
     'Most connections' => l.flMuxMaxConnections,
@@ -90,6 +95,11 @@ String formHelp(AppLocalizations l, String english) {
     'authorized_keys format; empty accepts any key' => l.hpAuthorizedKeys,
     'Carry IKE and ESP over TCP for networks that block UDP' => l.hpIkeTcp,
     'Defaults to the server address' => l.hpDefaultsToServer,
+    'Splits the first packet so a filter cannot read the server name' => l.hpTlsFragment,
+    'Splits the records instead of the packets' => l.hpTlsRecordFragment,
+    'Hides the server name; needs a server that supports it' => l.hpEch,
+    'Empty looks it up in DNS' => l.hpEchConfig,
+    'Defaults to the server name' => l.hpEchQueryName,
     'Many connections over one; the server must allow it. Not with the VLESS flow' => l.hpMultiplexing,
     'Instead of the two above' => l.hpMuxMaxStreams,
     'Empty connects to Tor directly, or uses the bridge lines below' => l.hpTorBridges,

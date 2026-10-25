@@ -42,6 +42,7 @@ func testLinks() []string {
 		"vmess://" + vmess,
 		"trojan://secret@tr.example.com:443?type=httpupgrade&path=%2Fup&host=tr.example.com#tr",
 		"ss://" + ss + "@ss.example.com:8388#ss",
+		"trojan://secret@tr.example.com:443?security=tls&tlsfrag=1&recfrag=1&ech=AEX%2BDQBB&echsni=public.example#trtls",
 		"trojan://secret@tr.example.com:443?mux=yamux&muxpad=1&muxconn=4&muxmin=8#trmux",
 		"ss://" + ss + "@ss.example.com:8388?mux=h2mux&muxmax=16#ssmux",
 		"vless://b831381d-6324-4d53-ad4f-8cda48b30811@example.com:443?security=tls&type=ws&path=%2Fws&sni=example.com&mux=smux&muxpad=1#vlessmux",

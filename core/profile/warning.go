@@ -121,4 +121,12 @@ func warningsFromOptions(p *Profile, add func(Warning)) {
 	if p.Multiplex.Enabled() {
 		add(wMux)
 	}
+	if t := p.TLS; t != nil {
+		if t.Fragment || t.RecordFragment {
+			add(wFragment)
+		}
+		if t.ECH.On() {
+			add(wECH)
+		}
+	}
 }

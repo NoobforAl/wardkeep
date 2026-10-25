@@ -53,6 +53,23 @@ func truthy(s string) bool {
 	return false
 }
 
+// tlsExtrasFrom reads the handshake options of a link (see links.tlsExtraQuery); get returns "" for a missing one.
+func tlsExtrasFrom(t *profile.TLS, get func(string) string) {
+	t.Fragment, t.RecordFragment = truthy(get("tlsfrag")), truthy(get("recfrag"))
+	switch ech := get("ech"); {
+	case ech == "":
+	case truthy(ech):
+		t.ECH = &profile.ECH{Enabled: true, QueryServerName: get("echsni")}
+	default:
+		if cfg := profile.ECHPEM(ech); cfg != "" {
+			t.ECH = &profile.ECH{Enabled: true, Config: cfg, QueryServerName: get("echsni")}
+		}
+	}
+	if t.Reality != nil { // ECH and Reality exclude each other; the server is worth more than the option
+		t.ECH = nil
+	}
+}
+
 // tlsFromQuery reads the common TLS/Reality query parameters used by
 // v2rayN-style vless and trojan links.
 func tlsFromQuery(q url.Values, defaultOn bool) *profile.TLS {
@@ -76,6 +93,7 @@ func tlsFromQuery(q url.Values, defaultOn bool) *profile.TLS {
 			t.Fingerprint = "chrome"
 		}
 	}
+	tlsExtrasFrom(t, q.Get)
 	return t
 }
 
@@ -90,6 +108,15 @@ func muxFrom(get func(string) string) *profile.Mux {
 	m.MinStreams, _ = strconv.Atoi(get("muxmin"))
 	m.MaxStreams, _ = strconv.Atoi(get("muxmax"))
 	return m
+}
+
+// dropUnusableTLSExtras removes the handshake options from a profile whose protocol cannot use them (they are for
+// TLS over TCP): an import keeps the server and loses the option.
+func dropUnusableTLSExtras(p *profile.Profile) {
+	if p.TLS == nil || slices.Contains([]string{profile.VLESS, profile.VMess, profile.Trojan, profile.AnyTLS}, p.Protocol) {
+		return
+	}
+	p.TLS.Fragment, p.TLS.RecordFragment, p.TLS.ECH = false, false, nil
 }
 
 // attachMux sets a profile's multiplexing when it is usable for the protocol. An import should keep the server
@@ -225,6 +252,7 @@ func parseVMess(link string) (*profile.Profile, error) {
 			ALPN:        splitList(str("alpn")),
 			Fingerprint: str("fp"),
 		}
+		tlsExtrasFrom(p.TLS, str)
 	}
 	q := url.Values{}
 	q.Set("type", str("net"))

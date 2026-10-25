@@ -577,5 +577,15 @@
   "flMuxMinStreams": "Flux minimum par connexion",
   "flMuxMaxStreams": "Flux maximum par connexion",
   "hpMultiplexing": "Plusieurs connexions en une ; le serveur doit l'autoriser. Pas avec le flow VLESS",
-  "hpMuxMaxStreams": "À la place des deux précédents"
+  "hpMuxMaxStreams": "À la place des deux précédents",
+  "flTlsFragment": "Fragmenter la poignée de main TLS",
+  "flTlsRecordFragment": "Fragmenter les enregistrements TLS",
+  "flEch": "Client Hello chiffré (ECH)",
+  "flEchConfig": "Configuration ECH (PEM)",
+  "flEchQueryName": "Nom de recherche ECH",
+  "hpTlsFragment": "Coupe le premier paquet pour qu'un filtre ne puisse pas lire le nom du serveur",
+  "hpTlsRecordFragment": "Coupe les enregistrements au lieu des paquets",
+  "hpEch": "Cache le nom du serveur ; nécessite un serveur compatible",
+  "hpEchConfig": "Vide : recherché dans le DNS",
+  "hpEchQueryName": "Par défaut, le nom du serveur"
 }

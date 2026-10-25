@@ -21,6 +21,13 @@ type sbTLS struct {
 		PublicKey string `json:"public_key"`
 		ShortID   string `json:"short_id"`
 	} `json:"reality"`
+	Fragment       bool `json:"fragment"`
+	RecordFragment bool `json:"record_fragment"`
+	ECH            *struct {
+		Enabled         bool       `json:"enabled"`
+		Config          stringList `json:"config"`
+		QueryServerName string     `json:"query_server_name"`
+	} `json:"ech"`
 }
 
 type sbMux struct {
@@ -189,6 +196,10 @@ func sbToProfile(o sbOutbound) (*profile.Profile, error) {
 		if t.Reality != nil && t.Reality.PublicKey != "" {
 			p.TLS.Reality = &profile.Reality{PublicKey: t.Reality.PublicKey, ShortID: t.Reality.ShortID}
 		}
+		p.TLS.Fragment, p.TLS.RecordFragment = t.Fragment, t.RecordFragment
+		if e := t.ECH; e != nil && e.Enabled && p.TLS.Reality == nil {
+			p.TLS.ECH = &profile.ECH{Enabled: true, Config: profile.ECHPEM(e.Config.joined()), QueryServerName: e.QueryServerName}
+		}
 	}
 	if tr := o.Transport; tr != nil {
 		pt := &profile.Transport{Type: tr.Type, Path: tr.Path, ServiceName: tr.ServiceName}
@@ -248,6 +259,7 @@ func sbToProfile(o sbOutbound) (*profile.Profile, error) {
 	default:
 		return nil, fmt.Errorf("unsupported outbound type %q", o.Type)
 	}
+	dropUnusableTLSExtras(p)
 	if m := o.Multiplex; m != nil && m.Enabled {
 		attachMux(p, &profile.Mux{Protocol: firstNonEmpty(m.Protocol, "smux"), MaxConnections: m.MaxConnections,
 			MinStreams: m.MinStreams, MaxStreams: m.MaxStreams, Padding: m.Padding})

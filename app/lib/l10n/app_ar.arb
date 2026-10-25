@@ -584,5 +584,15 @@
   "flMuxMinStreams": "أقل عدد تدفقات لكل اتصال",
   "flMuxMaxStreams": "أكثر عدد تدفقات لكل اتصال",
   "hpMultiplexing": "اتصالات كثيرة عبر اتصال واحد؛ يجب أن يسمح الخادم بذلك. لا يعمل مع flow في VLESS",
-  "hpMuxMaxStreams": "بدلًا من الخيارين أعلاه"
+  "hpMuxMaxStreams": "بدلًا من الخيارين أعلاه",
+  "flTlsFragment": "تجزئة مصافحة TLS",
+  "flTlsRecordFragment": "تجزئة سجلات TLS",
+  "flEch": "Client Hello المشفّر (ECH)",
+  "flEchConfig": "إعداد ECH (PEM)",
+  "flEchQueryName": "اسم البحث عن ECH",
+  "hpTlsFragment": "يقسم الحزمة الأولى حتى لا يستطيع المرشح قراءة اسم الخادم",
+  "hpTlsRecordFragment": "يقسم السجلات بدل الحزم",
+  "hpEch": "يخفي اسم الخادم؛ يحتاج إلى خادم يدعمه",
+  "hpEchConfig": "إذا ترك فارغًا يُبحث عنه في DNS",
+  "hpEchQueryName": "الافتراضي هو اسم الخادم"
 }

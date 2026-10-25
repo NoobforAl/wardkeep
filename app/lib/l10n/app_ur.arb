@@ -577,5 +577,15 @@
   "flMuxMinStreams": "فی کنکشن کم از کم اسٹریمز",
   "flMuxMaxStreams": "فی کنکشن زیادہ سے زیادہ اسٹریمز",
   "hpMultiplexing": "کئی کنکشن ایک میں؛ سرور کو اجازت دینی ہوگی۔ VLESS flow کے ساتھ نہیں",
-  "hpMuxMaxStreams": "اوپر کے دونوں کی جگہ"
+  "hpMuxMaxStreams": "اوپر کے دونوں کی جگہ",
+  "flTlsFragment": "TLS ہینڈ شیک کو ٹکڑوں میں بانٹیں",
+  "flTlsRecordFragment": "TLS ریکارڈز کو ٹکڑوں میں بانٹیں",
+  "flEch": "خفیہ کردہ Client Hello (ECH)",
+  "flEchConfig": "ECH کنفیگ (PEM)",
+  "flEchQueryName": "ECH تلاش کا نام",
+  "hpTlsFragment": "پہلا پیکٹ تقسیم کرتا ہے تاکہ فلٹر سرور کا نام نہ پڑھ سکے",
+  "hpTlsRecordFragment": "پیکٹس کی بجائے ریکارڈز کو تقسیم کرتا ہے",
+  "hpEch": "سرور کا نام چھپاتا ہے؛ اسے سپورٹ کرنے والا سرور چاہیے",
+  "hpEchConfig": "خالی ہو تو DNS میں تلاش کیا جاتا ہے",
+  "hpEchQueryName": "طے شدہ سرور کا نام ہے"
 }

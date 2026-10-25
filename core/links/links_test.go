@@ -36,6 +36,10 @@ func TestExportRoundTrip(t *testing.T) {
 		"vless plain":         "vless://" + uuid + "@203.0.113.7:80?type=tcp&security=none#plain",
 		"trojan":              "trojan://pass%40word@203.0.113.7:8443?security=tls&sni=203.0.113.7&insecure=1&allowInsecure=1#Lab%20Trojan",
 		"trojan ws":           "trojan://secret@example.com:443?type=ws&security=tls&sni=example.com&path=%2Ft#t",
+		"trojan fragment":     "trojan://secret@example.com:443?security=tls&sni=example.com&tlsfrag=1&recfrag=1#tf",
+		"trojan ech":          "trojan://secret@example.com:443?security=tls&sni=example.com&ech=AEX%2BDQBB&echsni=public.example#te",
+		"vless reality frag":  "vless://" + uuid + "@203.0.113.7:443?type=tcp&security=reality&sni=www.microsoft.com&fp=chrome&pbk=PUBKEY&sid=ab12&tlsfrag=1#rf",
+		"anytls ech":          "anytls://pw@203.0.113.7:8445/?sni=203.0.113.7&fp=chrome&tlsfrag=1&ech=1#ae",
 		"trojan mux":          "trojan://secret@example.com:443?security=tls&sni=example.com&mux=yamux&muxpad=1&muxconn=4&muxmin=8#tm",
 		"vless mux":           "vless://" + uuid + "@example.com:443?type=ws&security=tls&sni=example.com&path=%2Fws&mux=smux&muxmax=16#vm",
 		"ss mux":              "ss://MjAyMi1ibGFrZTMtYWVzLTEyOC1nY206c2VydmVya2V5OnVzZXJrZXk@203.0.113.7:8388?mux=h2mux&muxpad=1#ssm",
@@ -70,7 +74,8 @@ func TestExportRoundTrip(t *testing.T) {
 			var err error
 			if name == "vmess" {
 				p = &profile.Profile{Name: "vm", Protocol: profile.VMess, Server: "example.com", Port: 443, UUID: uuid, Method: "auto",
-					TLS: &profile.TLS{Enabled: true, ServerName: "example.com"}, Transport: &profile.Transport{Type: "ws", Path: "/p", Host: "example.com"},
+					TLS:       &profile.TLS{Enabled: true, ServerName: "example.com", Fragment: true, ECH: &profile.ECH{Enabled: true, Config: "-----BEGIN ECH CONFIGS-----\nAEX+DQBB\n-----END ECH CONFIGS-----"}},
+					Transport: &profile.Transport{Type: "ws", Path: "/p", Host: "example.com"},
 					Multiplex: &profile.Mux{Protocol: "yamux", Padding: true, MaxConnections: 4, MinStreams: 8}}
 			} else if p, err = importer.ParseLink(link); err != nil {
 				t.Fatalf("parse %q: %v", link, err)

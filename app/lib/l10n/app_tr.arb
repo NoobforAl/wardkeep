@@ -577,5 +577,15 @@
   "flMuxMinStreams": "Bağlantı başına en az akış",
   "flMuxMaxStreams": "Bağlantı başına en çok akış",
   "hpMultiplexing": "Birçok bağlantı tek bağlantıda; sunucu buna izin vermeli. VLESS flow ile olmaz",
-  "hpMuxMaxStreams": "Yukarıdaki ikisinin yerine"
+  "hpMuxMaxStreams": "Yukarıdaki ikisinin yerine",
+  "flTlsFragment": "TLS el sıkışmasını parçala",
+  "flTlsRecordFragment": "TLS kayıtlarını parçala",
+  "flEch": "Şifreli Client Hello (ECH)",
+  "flEchConfig": "ECH yapılandırması (PEM)",
+  "flEchQueryName": "ECH arama adı",
+  "hpTlsFragment": "İlk paketi böler, böylece bir filtre sunucu adını okuyamaz",
+  "hpTlsRecordFragment": "Paketler yerine kayıtları böler",
+  "hpEch": "Sunucu adını gizler; bunu destekleyen bir sunucu gerekir",
+  "hpEchConfig": "Boşsa DNS'te aranır",
+  "hpEchQueryName": "Varsayılan sunucu adıdır"
 }

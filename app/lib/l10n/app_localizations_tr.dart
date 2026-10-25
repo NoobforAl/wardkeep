@@ -2097,4 +2097,36 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'Yukarıdaki ikisinin yerine';
+
+  @override
+  String get flTlsFragment => 'TLS el sıkışmasını parçala';
+
+  @override
+  String get flTlsRecordFragment => 'TLS kayıtlarını parçala';
+
+  @override
+  String get flEch => 'Şifreli Client Hello (ECH)';
+
+  @override
+  String get flEchConfig => 'ECH yapılandırması (PEM)';
+
+  @override
+  String get flEchQueryName => 'ECH arama adı';
+
+  @override
+  String get hpTlsFragment =>
+      'İlk paketi böler, böylece bir filtre sunucu adını okuyamaz';
+
+  @override
+  String get hpTlsRecordFragment => 'Paketler yerine kayıtları böler';
+
+  @override
+  String get hpEch =>
+      'Sunucu adını gizler; bunu destekleyen bir sunucu gerekir';
+
+  @override
+  String get hpEchConfig => 'Boşsa DNS\'te aranır';
+
+  @override
+  String get hpEchQueryName => 'Varsayılan sunucu adıdır';
 }

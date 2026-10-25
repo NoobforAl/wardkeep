@@ -3587,6 +3587,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Instead of the two above'**
   String get hpMuxMaxStreams;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'Fragment the TLS handshake'**
+  String get flTlsFragment;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'Fragment the TLS records'**
+  String get flTlsRecordFragment;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted Client Hello (ECH)'**
+  String get flEch;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'ECH config (PEM)'**
+  String get flEchConfig;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'ECH lookup name'**
+  String get flEchQueryName;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'Splits the first packet so a filter cannot read the server name'**
+  String get hpTlsFragment;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'Splits the records instead of the packets'**
+  String get hpTlsRecordFragment;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'Hides the server name; needs a server that supports it'**
+  String get hpEch;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'Empty looks it up in DNS'**
+  String get hpEchConfig;
+
+  /// Editor text for the TLS handshake options (fragmenting, ECH)
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults to the server name'**
+  String get hpEchQueryName;
 }
 
 class _AppLocalizationsDelegate

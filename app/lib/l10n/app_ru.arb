@@ -584,5 +584,15 @@
   "flMuxMinStreams": "Мин. потоков в соединении",
   "flMuxMaxStreams": "Макс. потоков в соединении",
   "hpMultiplexing": "Много соединений в одном; сервер должен это разрешать. Не работает с flow VLESS",
-  "hpMuxMaxStreams": "Вместо двух предыдущих"
+  "hpMuxMaxStreams": "Вместо двух предыдущих",
+  "flTlsFragment": "Фрагментировать рукопожатие TLS",
+  "flTlsRecordFragment": "Фрагментировать записи TLS",
+  "flEch": "Зашифрованный Client Hello (ECH)",
+  "flEchConfig": "Конфигурация ECH (PEM)",
+  "flEchQueryName": "Имя для поиска ECH",
+  "hpTlsFragment": "Делит первый пакет, чтобы фильтр не мог прочитать имя сервера",
+  "hpTlsRecordFragment": "Делит записи, а не пакеты",
+  "hpEch": "Скрывает имя сервера; нужен сервер с поддержкой",
+  "hpEchConfig": "Если пусто, ищется в DNS",
+  "hpEchQueryName": "По умолчанию — имя сервера"
 }

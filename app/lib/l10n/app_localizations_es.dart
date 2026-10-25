@@ -2119,4 +2119,37 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'En lugar de los dos anteriores';
+
+  @override
+  String get flTlsFragment => 'Fragmentar el saludo TLS';
+
+  @override
+  String get flTlsRecordFragment => 'Fragmentar los registros TLS';
+
+  @override
+  String get flEch => 'Client Hello cifrado (ECH)';
+
+  @override
+  String get flEchConfig => 'Configuración ECH (PEM)';
+
+  @override
+  String get flEchQueryName => 'Nombre de búsqueda de ECH';
+
+  @override
+  String get hpTlsFragment =>
+      'Divide el primer paquete para que un filtro no lea el nombre del servidor';
+
+  @override
+  String get hpTlsRecordFragment =>
+      'Divide los registros en lugar de los paquetes';
+
+  @override
+  String get hpEch =>
+      'Oculta el nombre del servidor; necesita un servidor compatible';
+
+  @override
+  String get hpEchConfig => 'Si está vacío, se busca en el DNS';
+
+  @override
+  String get hpEchQueryName => 'Por defecto, el nombre del servidor';
 }

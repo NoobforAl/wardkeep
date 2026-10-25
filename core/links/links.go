@@ -116,6 +116,23 @@ func insecure(q *query, t *profile.TLS, names ...string) {
 	}
 }
 
+// tlsExtraQuery writes the handshake options: tlsfrag=1, recfrag=1, ech=<base64 config | 1> and echsni.
+func tlsExtraQuery(q *query, t *profile.TLS) {
+	if t == nil {
+		return
+	}
+	q.addFlag("tlsfrag", t.Fragment)
+	q.addFlag("recfrag", t.RecordFragment)
+	if e := t.ECH; e.On() {
+		if c := profile.ECHBase64(e.Config); c != "" {
+			q.add("ech", c)
+		} else {
+			q.add("ech", "1")
+		}
+		q.add("echsni", e.QueryServerName)
+	}
+}
+
 // tlsQuery writes the v2rayN-style TLS/Reality parameters.
 func tlsQuery(q *query, t *profile.TLS, flow string) {
 	switch {
@@ -136,6 +153,7 @@ func tlsQuery(q *query, t *profile.TLS, flow string) {
 		q.add("sid", t.Reality.ShortID)
 	}
 	insecure(q, t, "insecure", "allowInsecure", "allow_insecure")
+	tlsExtraQuery(q, t)
 }
 
 func transportQuery(q *query, tr *profile.Transport) {
@@ -204,6 +222,17 @@ func vmess(p *profile.Profile) (string, error) {
 	}
 	if t := p.TLS; t != nil && t.Enabled {
 		v["tls"], v["sni"], v["fp"], v["alpn"] = "tls", t.ServerName, t.Fingerprint, strings.Join(t.ALPN, ",")
+	}
+	if t := p.TLS; t != nil && t.Enabled {
+		if t.Fragment {
+			v["tlsfrag"] = "1"
+		}
+		if t.RecordFragment {
+			v["recfrag"] = "1"
+		}
+		if e := t.ECH; e.On() {
+			v["ech"], v["echsni"] = orDefault(profile.ECHBase64(e.Config), "1"), e.QueryServerName
+		}
 	}
 	if m := p.Multiplex; m.Enabled() {
 		v["mux"] = m.Protocol
@@ -302,6 +331,7 @@ func anytls(p *profile.Profile) string {
 		q.add("fp", p.TLS.Fingerprint)
 		q.add("alpn", strings.Join(p.TLS.ALPN, ","))
 		insecure(q, p.TLS, "insecure", "allowInsecure", "allow_insecure")
+		tlsExtraQuery(q, p.TLS)
 	}
 	return build("anytls", url.PathEscape(p.Password), hostPort(p), "/", q, p.Name)
 }

@@ -584,5 +584,15 @@
   "flMuxMinStreams": "每个连接的最少流数",
   "flMuxMaxStreams": "每个连接的最多流数",
   "hpMultiplexing": "多个连接合并为一个；服务器必须允许。不能与 VLESS 的 flow 同时使用",
-  "hpMuxMaxStreams": "代替上面两项"
+  "hpMuxMaxStreams": "代替上面两项",
+  "flTlsFragment": "分片 TLS 握手",
+  "flTlsRecordFragment": "分片 TLS 记录",
+  "flEch": "加密客户端问候 (ECH)",
+  "flEchConfig": "ECH 配置 (PEM)",
+  "flEchQueryName": "ECH 查询名称",
+  "hpTlsFragment": "拆分第一个数据包，使过滤器读不到服务器名称",
+  "hpTlsRecordFragment": "拆分记录而不是数据包",
+  "hpEch": "隐藏服务器名称；需要服务器支持",
+  "hpEchConfig": "留空则通过 DNS 查询",
+  "hpEchQueryName": "默认为服务器名称"
 }

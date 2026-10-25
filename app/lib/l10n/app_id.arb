@@ -577,5 +577,15 @@
   "flMuxMinStreams": "Aliran paling sedikit per koneksi",
   "flMuxMaxStreams": "Aliran terbanyak per koneksi",
   "hpMultiplexing": "Banyak koneksi dalam satu; server harus mengizinkannya. Tidak dengan flow VLESS",
-  "hpMuxMaxStreams": "Sebagai pengganti dua di atas"
+  "hpMuxMaxStreams": "Sebagai pengganti dua di atas",
+  "flTlsFragment": "Pecah handshake TLS",
+  "flTlsRecordFragment": "Pecah rekaman TLS",
+  "flEch": "Client Hello terenkripsi (ECH)",
+  "flEchConfig": "Konfigurasi ECH (PEM)",
+  "flEchQueryName": "Nama pencarian ECH",
+  "hpTlsFragment": "Memecah paket pertama agar filter tidak dapat membaca nama server",
+  "hpTlsRecordFragment": "Memecah rekaman, bukan paket",
+  "hpEch": "Menyembunyikan nama server; perlu server yang mendukungnya",
+  "hpEchConfig": "Jika kosong, dicari di DNS",
+  "hpEchQueryName": "Bawaan: nama server"
 }

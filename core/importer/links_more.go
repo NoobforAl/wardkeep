@@ -47,19 +47,21 @@ func parseAnyTLS(link string) (*profile.Profile, error) {
 	}
 	q := u.Query()
 	password, _ := url.PathUnescape(u.User.Username())
+	t := &profile.TLS{
+		Enabled:     true,
+		ServerName:  firstNonEmpty(q.Get("sni"), q.Get("peer")),
+		Insecure:    truthy(q.Get("insecure")) || truthy(q.Get("allowInsecure")),
+		ALPN:        splitList(q.Get("alpn")),
+		Fingerprint: q.Get("fp"),
+	}
+	tlsExtrasFrom(t, q.Get)
 	return &profile.Profile{
 		Name:     fragmentName(u),
 		Protocol: profile.AnyTLS,
 		Server:   host,
 		Port:     port,
 		Password: password,
-		TLS: &profile.TLS{
-			Enabled:     true,
-			ServerName:  firstNonEmpty(q.Get("sni"), q.Get("peer")),
-			Insecure:    truthy(q.Get("insecure")) || truthy(q.Get("allowInsecure")),
-			ALPN:        splitList(q.Get("alpn")),
-			Fingerprint: q.Get("fp"),
-		},
+		TLS:      t,
 	}, nil
 }
 

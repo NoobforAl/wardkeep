@@ -2092,4 +2092,36 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'به‌جای دو مورد بالا';
+
+  @override
+  String get flTlsFragment => 'تکه‌تکه کردن دست‌دهی TLS';
+
+  @override
+  String get flTlsRecordFragment => 'تکه‌تکه کردن رکوردهای TLS';
+
+  @override
+  String get flEch => 'Client Hello رمزگذاری‌شده (ECH)';
+
+  @override
+  String get flEchConfig => 'پیکربندی ECH (PEM)';
+
+  @override
+  String get flEchQueryName => 'نام جست‌وجوی ECH';
+
+  @override
+  String get hpTlsFragment =>
+      'اولین بسته را تقسیم می‌کند تا فیلتر نتواند نام سرور را بخواند';
+
+  @override
+  String get hpTlsRecordFragment => 'به‌جای بسته‌ها، رکوردها را تقسیم می‌کند';
+
+  @override
+  String get hpEch =>
+      'نام سرور را پنهان می‌کند؛ به سروری نیاز دارد که پشتیبانی کند';
+
+  @override
+  String get hpEchConfig => 'اگر خالی باشد از DNS جست‌وجو می‌شود';
+
+  @override
+  String get hpEchQueryName => 'پیش‌فرض نام سرور است';
 }

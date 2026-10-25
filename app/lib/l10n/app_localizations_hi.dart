@@ -2093,4 +2093,36 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'ऊपर के दो के बदले';
+
+  @override
+  String get flTlsFragment => 'TLS हैंडशेक को टुकड़ों में बाँटें';
+
+  @override
+  String get flTlsRecordFragment => 'TLS रिकॉर्ड को टुकड़ों में बाँटें';
+
+  @override
+  String get flEch => 'एन्क्रिप्टेड Client Hello (ECH)';
+
+  @override
+  String get flEchConfig => 'ECH कॉन्फ़िग (PEM)';
+
+  @override
+  String get flEchQueryName => 'ECH खोज का नाम';
+
+  @override
+  String get hpTlsFragment =>
+      'पहले पैकेट को बाँटता है ताकि फ़िल्टर सर्वर का नाम न पढ़ सके';
+
+  @override
+  String get hpTlsRecordFragment => 'पैकेट की जगह रिकॉर्ड को बाँटता है';
+
+  @override
+  String get hpEch =>
+      'सर्वर का नाम छिपाता है; इसका समर्थन करने वाला सर्वर चाहिए';
+
+  @override
+  String get hpEchConfig => 'खाली होने पर DNS में खोजा जाता है';
+
+  @override
+  String get hpEchQueryName => 'डिफ़ॉल्ट सर्वर का नाम है';
 }

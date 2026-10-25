@@ -584,5 +584,15 @@
   "flMuxMinStreams": "کمترین جریان در هر اتصال",
   "flMuxMaxStreams": "بیشترین جریان در هر اتصال",
   "hpMultiplexing": "چند اتصال روی یک اتصال؛ سرور باید اجازه دهد. با flow در VLESS کار نمی‌کند",
-  "hpMuxMaxStreams": "به‌جای دو مورد بالا"
+  "hpMuxMaxStreams": "به‌جای دو مورد بالا",
+  "flTlsFragment": "تکه‌تکه کردن دست‌دهی TLS",
+  "flTlsRecordFragment": "تکه‌تکه کردن رکوردهای TLS",
+  "flEch": "Client Hello رمزگذاری‌شده (ECH)",
+  "flEchConfig": "پیکربندی ECH (PEM)",
+  "flEchQueryName": "نام جست‌وجوی ECH",
+  "hpTlsFragment": "اولین بسته را تقسیم می‌کند تا فیلتر نتواند نام سرور را بخواند",
+  "hpTlsRecordFragment": "به‌جای بسته‌ها، رکوردها را تقسیم می‌کند",
+  "hpEch": "نام سرور را پنهان می‌کند؛ به سروری نیاز دارد که پشتیبانی کند",
+  "hpEchConfig": "اگر خالی باشد از DNS جست‌وجو می‌شود",
+  "hpEchQueryName": "پیش‌فرض نام سرور است"
 }

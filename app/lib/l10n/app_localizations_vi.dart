@@ -2077,4 +2077,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get hpMuxMaxStreams => 'Thay cho hai mục trên';
+
+  @override
+  String get flTlsFragment => 'Chia nhỏ bắt tay TLS';
+
+  @override
+  String get flTlsRecordFragment => 'Chia nhỏ bản ghi TLS';
+
+  @override
+  String get flEch => 'Client Hello được mã hóa (ECH)';
+
+  @override
+  String get flEchConfig => 'Cấu hình ECH (PEM)';
+
+  @override
+  String get flEchQueryName => 'Tên tra cứu ECH';
+
+  @override
+  String get hpTlsFragment =>
+      'Tách gói đầu tiên để bộ lọc không đọc được tên máy chủ';
+
+  @override
+  String get hpTlsRecordFragment => 'Tách các bản ghi thay vì các gói';
+
+  @override
+  String get hpEch => 'Ẩn tên máy chủ; cần máy chủ hỗ trợ';
+
+  @override
+  String get hpEchConfig => 'Để trống thì tra trong DNS';
+
+  @override
+  String get hpEchQueryName => 'Mặc định là tên máy chủ';
 }
