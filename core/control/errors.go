@@ -81,6 +81,12 @@ func subscriptionError(err error) *Error {
 		e.Code = CodeSubTooLarge
 	case errors.Is(err, subscription.ErrBadURL):
 		e.Code = CodeSubBadURL
+	case errors.Is(err, subscription.ErrUnsigned):
+		e.Code = CodeSubUnsigned
+	case errors.Is(err, subscription.ErrBadSignature):
+		e.Code = CodeSubBadSignature
+	case errors.Is(err, subscription.ErrBadKey):
+		e.Code = CodeSubBadKey
 	}
 	return e
 }

@@ -596,5 +596,13 @@
   "hpEchConfig": "留空则通过 DNS 查询",
   "hpEchQueryName": "默认为服务器名称",
   "flWgVia": "通过代理（分享链接）",
-  "hpWgVia": "在此代理内传输 WireGuard，适用于封锁 UDP 的网络。代理必须能传输 UDP"
+  "hpWgVia": "在此代理内传输 WireGuard，适用于封锁 UDP 的网络。代理必须能传输 UDP",
+  "subSigned": "已签名",
+  "subKeyLabel": "签名密钥（可选）",
+  "subKeyHelp": "提供商的公钥。没有用它生成的有效签名的响应会被拒绝",
+  "subBackupLabel": "备用地址（可选）",
+  "subBackupHelp": "每行一个。第一个地址无法访问时按顺序尝试",
+  "subErrKey": "签名密钥不是有效的公钥",
+  "subUnsigned": "订阅没有签名，但设置了签名密钥，因此被拒绝",
+  "subBadSignature": "订阅的签名不正确：可能在传输中被修改，或密钥已过期"
 }

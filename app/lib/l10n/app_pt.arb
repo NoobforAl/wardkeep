@@ -589,5 +589,13 @@
   "hpEchConfig": "Vazio: procurado no DNS",
   "hpEchQueryName": "Por padrão, o nome do servidor",
   "flWgVia": "Através de um proxy (link)",
-  "hpWgVia": "Leva o WireGuard dentro deste proxy, para redes que bloqueiam UDP. O proxy precisa passar UDP"
+  "hpWgVia": "Leva o WireGuard dentro deste proxy, para redes que bloqueiam UDP. O proxy precisa passar UDP",
+  "subSigned": "Assinada digitalmente",
+  "subKeyLabel": "Chave de assinatura (opcional)",
+  "subKeyHelp": "A chave pública do provedor. Uma resposta sem assinatura digital válida feita com ela é recusada",
+  "subBackupLabel": "Endereços de reserva (opcional)",
+  "subBackupHelp": "Um por linha. Tentados em ordem quando o primeiro não responde",
+  "subErrKey": "A chave de assinatura não é uma chave pública válida",
+  "subUnsigned": "A lista não está assinada digitalmente, mas há uma chave de assinatura, então foi recusada",
+  "subBadSignature": "A assinatura digital da lista está errada: ela pode ter sido alterada no caminho, ou a chave é antiga"
 }

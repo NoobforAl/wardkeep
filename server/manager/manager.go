@@ -580,7 +580,7 @@ func (m *Manager) Links(name string) (*LinkSet, error) {
 	if u == nil {
 		return nil, notFound("no user %q", name)
 	}
-	set := &LinkSet{User: u.Name, Subscription: serverconf.SubscriptionURL(st, u), Links: []Link{}}
+	set := &LinkSet{User: u.Name, Subscription: serverconf.SubscriptionLink(st, u), Links: []Link{}}
 	for _, l := range serverconf.Links(st, m.Store, u) {
 		set.Links = append(set.Links, Link{Protocol: l.Protocol, URL: l.URL})
 	}

@@ -1410,5 +1410,37 @@
   "hpWgVia": "Carries WireGuard inside this proxy, for networks that block UDP. The proxy must pass UDP",
   "@hpWgVia": {
     "description": "Editor text for WireGuard through a proxy"
+  },
+  "subSigned": "Signed",
+  "@subSigned": {
+    "description": "Signed subscriptions: the signing key, backup addresses and what a failed check says"
+  },
+  "subKeyLabel": "Signing key (optional)",
+  "@subKeyLabel": {
+    "description": "Signed subscriptions: the signing key, backup addresses and what a failed check says"
+  },
+  "subKeyHelp": "The provider's public key. Without a valid signature made with it, an answer is refused",
+  "@subKeyHelp": {
+    "description": "Signed subscriptions: the signing key, backup addresses and what a failed check says"
+  },
+  "subBackupLabel": "Backup addresses (optional)",
+  "@subBackupLabel": {
+    "description": "Signed subscriptions: the signing key, backup addresses and what a failed check says"
+  },
+  "subBackupHelp": "One per line. Tried in order when the first cannot be reached",
+  "@subBackupHelp": {
+    "description": "Signed subscriptions: the signing key, backup addresses and what a failed check says"
+  },
+  "subErrKey": "The signing key is not a valid public key",
+  "@subErrKey": {
+    "description": "Signed subscriptions: the signing key, backup addresses and what a failed check says"
+  },
+  "subUnsigned": "The subscription is not signed, but a signing key is set, so it was refused",
+  "@subUnsigned": {
+    "description": "Signed subscriptions: the signing key, backup addresses and what a failed check says"
+  },
+  "subBadSignature": "The subscription's signature is wrong: it may have been changed on the way, or the key is old",
+  "@subBadSignature": {
+    "description": "Signed subscriptions: the signing key, backup addresses and what a failed check says"
   }
 }

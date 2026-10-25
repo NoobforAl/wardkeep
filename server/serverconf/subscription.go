@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/NoobforAl/omnitun/core/links"
 	"github.com/NoobforAl/omnitun/core/protocols"
 	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/omnitun/core/subscription"
 	"github.com/NoobforAl/omnitun/server/stats"
 	"github.com/NoobforAl/omnitun/server/store"
 )
@@ -118,7 +118,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 			}
 			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", name))
 			w.Header().Set("Cache-Control", "no-store")
-			io.WriteString(w, text)
+			writeSigned(w, st, []byte(text))
 			return
 		}
 		info := ""
@@ -136,6 +136,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 		w.Header().Set("Profile-Update-Interval", "12")
 		w.Header().Set("Profile-Title", "base64:"+base64.StdEncoding.EncodeToString([]byte(st.Server.Name)))
 		w.Header().Set("Cache-Control", "no-store")
+		setProtocolOrder(w.Header(), st)
 		// Wardkeep (and other sing-box clients) get a sing-box config, which can
 		// also carry OpenVPN; everyone else gets the usual base64 link list.
 		if wantsSingBox(r) {
@@ -145,7 +146,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(body)
+			writeSigned(w, st, body)
 			return
 		}
 		var lines []string
@@ -153,6 +154,28 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 			lines = append(lines, l.URL)
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		fmt.Fprint(w, base64.StdEncoding.EncodeToString([]byte(strings.Join(lines, "\n"))))
+		writeSigned(w, st, []byte(base64.StdEncoding.EncodeToString([]byte(strings.Join(lines, "\n")))))
 	})
+}
+
+// setProtocolOrder adds the protocol order the operator asked for ("Protocol-Order", and one per country).
+func setProtocolOrder(h http.Header, st *store.State) {
+	for country, list := range st.Server.Subscription.ProtocolOrder {
+		name := subscription.OrderHeader
+		if country != "" {
+			name += "-" + strings.ToUpper(country)
+		}
+		if list != "" {
+			h.Set(name, list)
+		}
+	}
+}
+
+// writeSigned writes body with an X-Signature header (made over the body and the order headers already set), so a
+// client that has the public key can tell an answer that was changed on the way. Without a key it writes the body as it is.
+func writeSigned(w http.ResponseWriter, st *store.State, body []byte) {
+	if key, ok := st.Server.Subscription.SigningPrivate(); ok {
+		w.Header().Set(subscription.SignatureHeader, subscription.Sign(key, body, w.Header()))
+	}
+	w.Write(body)
 }

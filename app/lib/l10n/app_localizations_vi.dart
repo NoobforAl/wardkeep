@@ -2115,4 +2115,32 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get hpWgVia =>
       'Mang WireGuard bên trong proxy này, cho các mạng chặn UDP. Proxy phải cho UDP đi qua';
+
+  @override
+  String get subSigned => 'Đã ký';
+
+  @override
+  String get subKeyLabel => 'Khóa chữ ký (không bắt buộc)';
+
+  @override
+  String get subKeyHelp =>
+      'Khóa công khai của nhà cung cấp. Phản hồi không có chữ ký hợp lệ tạo bằng khóa này sẽ bị từ chối';
+
+  @override
+  String get subBackupLabel => 'Địa chỉ dự phòng (không bắt buộc)';
+
+  @override
+  String get subBackupHelp =>
+      'Mỗi dòng một địa chỉ. Thử lần lượt khi địa chỉ đầu không truy cập được';
+
+  @override
+  String get subErrKey => 'Khóa chữ ký không phải là khóa công khai hợp lệ';
+
+  @override
+  String get subUnsigned =>
+      'Gói đăng ký không được ký nhưng đã đặt khóa chữ ký, nên bị từ chối';
+
+  @override
+  String get subBadSignature =>
+      'Chữ ký của gói đăng ký sai: có thể đã bị sửa trên đường hoặc khóa đã cũ';
 }

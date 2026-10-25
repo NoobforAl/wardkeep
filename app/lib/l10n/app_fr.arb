@@ -589,5 +589,13 @@
   "hpEchConfig": "Vide : recherché dans le DNS",
   "hpEchQueryName": "Par défaut, le nom du serveur",
   "flWgVia": "Via un proxy (lien de partage)",
-  "hpWgVia": "Fait passer WireGuard dans ce proxy, pour les réseaux qui bloquent l'UDP. Le proxy doit laisser passer l'UDP"
+  "hpWgVia": "Fait passer WireGuard dans ce proxy, pour les réseaux qui bloquent l'UDP. Le proxy doit laisser passer l'UDP",
+  "subSigned": "Signée",
+  "subKeyLabel": "Clé de signature (facultatif)",
+  "subKeyHelp": "La clé publique du fournisseur. Une réponse sans signature valide faite avec elle est refusée",
+  "subBackupLabel": "Adresses de secours (facultatif)",
+  "subBackupHelp": "Une par ligne. Essayées dans l'ordre quand la première est injoignable",
+  "subErrKey": "La clé de signature n'est pas une clé publique valide",
+  "subUnsigned": "L'abonnement n'est pas signé alors qu'une clé de signature est définie ; il a été refusé",
+  "subBadSignature": "La signature de l'abonnement est fausse : il a pu être modifié en chemin, ou la clé est ancienne"
 }

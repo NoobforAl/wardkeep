@@ -65,6 +65,9 @@ const (
 	CodeSubHTTP            = "SUB_HTTP"              // args: status
 	CodeSubTooLarge        = "SUB_TOO_LARGE"
 	CodeSubBadURL          = "SUB_BAD_URL"
+	CodeSubUnsigned        = "SUB_UNSIGNED"      // a signing key is set and the answer is not signed
+	CodeSubBadSignature    = "SUB_BAD_SIGNATURE" // the signature does not fit the answer and the key
+	CodeSubBadKey          = "SUB_BAD_KEY"       // the signing key is not a valid public key
 )
 
 // Error is a typed failure.

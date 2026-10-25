@@ -366,7 +366,15 @@ class SubscriptionInfo {
     this.expire,
     this.updateIntervalHours = 0,
     this.title = '',
+    this.verified = false,
+    this.protocolOrder = const {},
   });
+
+  /// The answer carried a valid signature from the provider's key.
+  final bool verified;
+
+  /// The order of protocols the provider asks for (signed): the default under '', and each country by code.
+  final Map<String, List<String>> protocolOrder;
 
   final int upload;
   final int download;
@@ -388,6 +396,11 @@ class SubscriptionInfo {
       expire: expire > 0 ? DateTime.fromMillisecondsSinceEpoch(expire * 1000) : null,
       updateIntervalHours: (j['update_interval_hours'] as num?)?.toInt() ?? 0,
       title: j['title'] as String? ?? '',
+      verified: j['verified'] as bool? ?? false,
+      protocolOrder: {
+        for (final e in (j['protocol_order'] as Map? ?? const {}).entries)
+          '${e.key}': [for (final p in (e.value as List? ?? const [])) '$p'],
+      },
     );
   }
 
@@ -398,6 +411,8 @@ class SubscriptionInfo {
         if (expire != null) 'expire': expire!.millisecondsSinceEpoch ~/ 1000,
         'update_interval_hours': updateIntervalHours,
         'title': title,
+        if (verified) 'verified': true,
+        if (protocolOrder.isNotEmpty) 'protocol_order': protocolOrder,
       };
 }
 

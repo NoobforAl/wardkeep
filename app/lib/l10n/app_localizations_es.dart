@@ -2159,4 +2159,32 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get hpWgVia =>
       'Lleva WireGuard dentro de este proxy, para redes que bloquean UDP. El proxy debe pasar UDP';
+
+  @override
+  String get subSigned => 'Firmada';
+
+  @override
+  String get subKeyLabel => 'Clave de firma (opcional)';
+
+  @override
+  String get subKeyHelp =>
+      'La clave pública del proveedor. Una respuesta sin una firma válida hecha con ella se rechaza';
+
+  @override
+  String get subBackupLabel => 'Direcciones de respaldo (opcional)';
+
+  @override
+  String get subBackupHelp =>
+      'Una por línea. Se prueban en orden si no se llega a la primera';
+
+  @override
+  String get subErrKey => 'La clave de firma no es una clave pública válida';
+
+  @override
+  String get subUnsigned =>
+      'La suscripción no está firmada, pero hay una clave de firma, así que se rechazó';
+
+  @override
+  String get subBadSignature =>
+      'La firma de la suscripción es incorrecta: puede haberse cambiado por el camino, o la clave es antigua';
 }

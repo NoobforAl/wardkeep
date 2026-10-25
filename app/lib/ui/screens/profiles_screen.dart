@@ -473,6 +473,7 @@ class _SubscriptionHeader extends ConsumerWidget {
       if (info.total > 0) l.subUsageOf(formatBytes(info.used), formatBytes(info.total))
       else if (info.used > 0) l.subUsed(formatBytes(info.used)),
       if (info.expire != null) _expiry(l, info.expire!),
+      if (info.verified) l.subSigned,
       if (sub.updatedAt != null) l.subUpdated(_ago(l, sub.updatedAt!)),
     ];
 

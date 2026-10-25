@@ -559,6 +559,37 @@ func (s *Server) dispatch(req Request) (any, error) {
 // fetchSubscription downloads a subscription directly or, as the request
 // says, through the running VPN (for providers that are blocked here).
 func (s *Server) fetchSubscription(ctx context.Context, req subscription.Request) (*subscription.Result, error) {
+	urls := append([]string{req.URL}, req.FallbackURLs...)
+	var firstErr error
+	for _, u := range urls {
+		if strings.TrimSpace(u) == "" {
+			continue
+		}
+		one := req
+		one.URL, one.FallbackURLs = u, nil
+		res, err := s.fetchSubscriptionOne(ctx, one)
+		if err == nil {
+			return res, nil
+		}
+		if firstErr == nil {
+			firstErr = err
+		}
+		// A wrong password is not cured by another address, and a key that is not a key by any.
+		if errors.Is(err, subscription.ErrAuth) || errors.Is(err, subscription.ErrBadKey) || ctx.Err() != nil {
+			return nil, err
+		}
+	}
+	if firstErr == nil {
+		return nil, fmt.Errorf("%w %q", subscription.ErrBadURL, req.URL)
+	}
+	if len(urls) > 1 {
+		return nil, fmt.Errorf("%w (and %d backup addresses failed too)", firstErr, len(urls)-1)
+	}
+	return nil, firstErr
+}
+
+// fetchSubscriptionOne fetches one address: directly or through the running VPN, as the request says.
+func (s *Server) fetchSubscriptionOne(ctx context.Context, req subscription.Request) (*subscription.Result, error) {
 	pool := s.rootPool()
 	switch req.Via {
 	case subscription.ViaDirect:

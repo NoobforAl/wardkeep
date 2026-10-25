@@ -2032,4 +2032,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hpWgVia => '在此代理内传输 WireGuard，适用于封锁 UDP 的网络。代理必须能传输 UDP';
+
+  @override
+  String get subSigned => '已签名';
+
+  @override
+  String get subKeyLabel => '签名密钥（可选）';
+
+  @override
+  String get subKeyHelp => '提供商的公钥。没有用它生成的有效签名的响应会被拒绝';
+
+  @override
+  String get subBackupLabel => '备用地址（可选）';
+
+  @override
+  String get subBackupHelp => '每行一个。第一个地址无法访问时按顺序尝试';
+
+  @override
+  String get subErrKey => '签名密钥不是有效的公钥';
+
+  @override
+  String get subUnsigned => '订阅没有签名，但设置了签名密钥，因此被拒绝';
+
+  @override
+  String get subBadSignature => '订阅的签名不正确：可能在传输中被修改，或密钥已过期';
 }

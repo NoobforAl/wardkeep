@@ -2155,4 +2155,33 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get hpWgVia =>
       'Leva o WireGuard dentro deste proxy, para redes que bloqueiam UDP. O proxy precisa passar UDP';
+
+  @override
+  String get subSigned => 'Assinada digitalmente';
+
+  @override
+  String get subKeyLabel => 'Chave de assinatura (opcional)';
+
+  @override
+  String get subKeyHelp =>
+      'A chave pública do provedor. Uma resposta sem assinatura digital válida feita com ela é recusada';
+
+  @override
+  String get subBackupLabel => 'Endereços de reserva (opcional)';
+
+  @override
+  String get subBackupHelp =>
+      'Um por linha. Tentados em ordem quando o primeiro não responde';
+
+  @override
+  String get subErrKey =>
+      'A chave de assinatura não é uma chave pública válida';
+
+  @override
+  String get subUnsigned =>
+      'A lista não está assinada digitalmente, mas há uma chave de assinatura, então foi recusada';
+
+  @override
+  String get subBadSignature =>
+      'A assinatura digital da lista está errada: ela pode ter sido alterada no caminho, ou a chave é antiga';
 }

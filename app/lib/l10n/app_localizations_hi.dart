@@ -2132,4 +2132,32 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get hpWgVia =>
       'UDP रोकने वाले नेटवर्क के लिए WireGuard को इस प्रॉक्सी के अंदर ले जाता है। प्रॉक्सी को UDP पास करना होगा';
+
+  @override
+  String get subSigned => 'हस्ताक्षरित';
+
+  @override
+  String get subKeyLabel => 'हस्ताक्षर कुंजी (वैकल्पिक)';
+
+  @override
+  String get subKeyHelp =>
+      'प्रदाता की सार्वजनिक कुंजी। इससे बने वैध हस्ताक्षर के बिना जवाब अस्वीकार कर दिया जाता है';
+
+  @override
+  String get subBackupLabel => 'बैकअप पते (वैकल्पिक)';
+
+  @override
+  String get subBackupHelp =>
+      'हर पंक्ति में एक। पहला न मिले तो क्रम से आज़माए जाते हैं';
+
+  @override
+  String get subErrKey => 'हस्ताक्षर कुंजी वैध सार्वजनिक कुंजी नहीं है';
+
+  @override
+  String get subUnsigned =>
+      'सदस्यता हस्ताक्षरित नहीं है जबकि हस्ताक्षर कुंजी सेट है, इसलिए अस्वीकार की गई';
+
+  @override
+  String get subBadSignature =>
+      'सदस्यता का हस्ताक्षर गलत है: रास्ते में बदला गया हो सकता है, या कुंजी पुरानी है';
 }

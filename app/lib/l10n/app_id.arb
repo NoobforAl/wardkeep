@@ -589,5 +589,13 @@
   "hpEchConfig": "Jika kosong, dicari di DNS",
   "hpEchQueryName": "Bawaan: nama server",
   "flWgVia": "Lewat proxy (tautan)",
-  "hpWgVia": "Membawa WireGuard di dalam proxy ini, untuk jaringan yang memblokir UDP. Proxy harus meneruskan UDP"
+  "hpWgVia": "Membawa WireGuard di dalam proxy ini, untuk jaringan yang memblokir UDP. Proxy harus meneruskan UDP",
+  "subSigned": "Bertanda tangan",
+  "subKeyLabel": "Kunci tanda tangan (opsional)",
+  "subKeyHelp": "Kunci publik penyedia. Jawaban tanpa tanda tangan sah dari kunci ini ditolak",
+  "subBackupLabel": "Alamat cadangan (opsional)",
+  "subBackupHelp": "Satu per baris. Dicoba berurutan jika yang pertama tidak bisa dijangkau",
+  "subErrKey": "Kunci tanda tangan bukan kunci publik yang sah",
+  "subUnsigned": "Langganan tidak bertanda tangan, tetapi kunci tanda tangan sudah diatur, jadi ditolak",
+  "subBadSignature": "Tanda tangan langganan salah: mungkin diubah di jalan, atau kuncinya lama"
 }

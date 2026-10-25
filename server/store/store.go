@@ -71,6 +71,11 @@ type Subscription struct {
 	Port    int    `json:"port"`
 	// Path is a random prefix so the endpoint isn't trivially discoverable.
 	Path string `json:"path"`
+	// SigningKey signs every answer (base64 Ed25519 private key); the public half is in the subscription link.
+	SigningKey string `json:"signing_key,omitempty"`
+	// ProtocolOrder asks clients to try protocols in this order: a comma-separated list of client protocol
+	// names, for everyone under "" and for a country under its code ("IR"). It is signed with the answer.
+	ProtocolOrder map[string]string `json:"protocol_order,omitempty"`
 }
 
 // ACME asks a certificate authority (Let's Encrypt by default) for a real

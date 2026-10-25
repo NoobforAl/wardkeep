@@ -2165,4 +2165,32 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get hpWgVia =>
       'Пропускает WireGuard внутри этого прокси, для сетей, блокирующих UDP. Прокси должен передавать UDP';
+
+  @override
+  String get subSigned => 'Подписано';
+
+  @override
+  String get subKeyLabel => 'Ключ подписи (необязательно)';
+
+  @override
+  String get subKeyHelp =>
+      'Открытый ключ провайдера. Ответ без верной подписи этим ключом отклоняется';
+
+  @override
+  String get subBackupLabel => 'Резервные адреса (необязательно)';
+
+  @override
+  String get subBackupHelp =>
+      'По одному в строке. Пробуются по порядку, если первый недоступен';
+
+  @override
+  String get subErrKey => 'Ключ подписи не является верным открытым ключом';
+
+  @override
+  String get subUnsigned =>
+      'Подписка не подписана, а ключ подписи задан, поэтому она отклонена';
+
+  @override
+  String get subBadSignature =>
+      'Подпись подписки неверна: её могли изменить по пути, или ключ устарел';
 }

@@ -2128,4 +2128,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get hpWgVia =>
       'Carries WireGuard inside this proxy, for networks that block UDP. The proxy must pass UDP';
+
+  @override
+  String get subSigned => 'Signed';
+
+  @override
+  String get subKeyLabel => 'Signing key (optional)';
+
+  @override
+  String get subKeyHelp =>
+      'The provider\'s public key. Without a valid signature made with it, an answer is refused';
+
+  @override
+  String get subBackupLabel => 'Backup addresses (optional)';
+
+  @override
+  String get subBackupHelp =>
+      'One per line. Tried in order when the first cannot be reached';
+
+  @override
+  String get subErrKey => 'The signing key is not a valid public key';
+
+  @override
+  String get subUnsigned =>
+      'The subscription is not signed, but a signing key is set, so it was refused';
+
+  @override
+  String get subBadSignature =>
+      'The subscription\'s signature is wrong: it may have been changed on the way, or the key is old';
 }

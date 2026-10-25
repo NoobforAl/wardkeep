@@ -2134,4 +2134,32 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get hpWgVia =>
       'UDP روکنے والے نیٹ ورکس کے لیے WireGuard کو اس پراکسی کے اندر لے جاتا ہے۔ پراکسی کو UDP گزارنا ہوگا';
+
+  @override
+  String get subSigned => 'دستخط شدہ';
+
+  @override
+  String get subKeyLabel => 'دستخطی کلید (اختیاری)';
+
+  @override
+  String get subKeyHelp =>
+      'فراہم کنندہ کی عوامی کلید۔ اس سے بنے درست دستخط کے بغیر جواب مسترد کر دیا جاتا ہے';
+
+  @override
+  String get subBackupLabel => 'بیک اپ پتے (اختیاری)';
+
+  @override
+  String get subBackupHelp =>
+      'ہر سطر میں ایک۔ پہلا نہ ملے تو ترتیب سے آزمائے جاتے ہیں';
+
+  @override
+  String get subErrKey => 'دستخطی کلید درست عوامی کلید نہیں ہے';
+
+  @override
+  String get subUnsigned =>
+      'رکنیت پر دستخط نہیں ہیں لیکن دستخطی کلید مقرر ہے، اس لیے مسترد کی گئی';
+
+  @override
+  String get subBadSignature =>
+      'رکنیت کا دستخط غلط ہے: ہو سکتا ہے راستے میں بدلی گئی ہو، یا کلید پرانی ہو';
 }

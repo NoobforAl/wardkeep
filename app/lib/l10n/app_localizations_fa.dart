@@ -2131,4 +2131,32 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get hpWgVia =>
       'WireGuard را درون این پروکسی می‌برد، برای شبکه‌هایی که UDP را می‌بندند. پروکسی باید UDP را عبور دهد';
+
+  @override
+  String get subSigned => 'امضاشده';
+
+  @override
+  String get subKeyLabel => 'کلید امضا (اختیاری)';
+
+  @override
+  String get subKeyHelp =>
+      'کلید عمومی ارائه‌دهنده. پاسخی که امضای معتبر با این کلید نداشته باشد رد می‌شود';
+
+  @override
+  String get subBackupLabel => 'نشانی‌های پشتیبان (اختیاری)';
+
+  @override
+  String get subBackupHelp =>
+      'در هر خط یکی. اگر نشانی اول در دسترس نبود، به ترتیب امتحان می‌شوند';
+
+  @override
+  String get subErrKey => 'کلید امضا یک کلید عمومی معتبر نیست';
+
+  @override
+  String get subUnsigned =>
+      'اشتراک امضا نشده، ولی کلید امضا تنظیم شده است؛ بنابراین رد شد';
+
+  @override
+  String get subBadSignature =>
+      'امضای اشتراک نادرست است: ممکن است در مسیر تغییر کرده باشد، یا کلید قدیمی است';
 }

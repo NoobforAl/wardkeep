@@ -2162,4 +2162,33 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get hpWgVia =>
       'Fait passer WireGuard dans ce proxy, pour les réseaux qui bloquent l\'UDP. Le proxy doit laisser passer l\'UDP';
+
+  @override
+  String get subSigned => 'Signée';
+
+  @override
+  String get subKeyLabel => 'Clé de signature (facultatif)';
+
+  @override
+  String get subKeyHelp =>
+      'La clé publique du fournisseur. Une réponse sans signature valide faite avec elle est refusée';
+
+  @override
+  String get subBackupLabel => 'Adresses de secours (facultatif)';
+
+  @override
+  String get subBackupHelp =>
+      'Une par ligne. Essayées dans l\'ordre quand la première est injoignable';
+
+  @override
+  String get subErrKey =>
+      'La clé de signature n\'est pas une clé publique valide';
+
+  @override
+  String get subUnsigned =>
+      'L\'abonnement n\'est pas signé alors qu\'une clé de signature est définie ; il a été refusé';
+
+  @override
+  String get subBadSignature =>
+      'La signature de l\'abonnement est fausse : il a pu être modifié en chemin, ou la clé est ancienne';
 }

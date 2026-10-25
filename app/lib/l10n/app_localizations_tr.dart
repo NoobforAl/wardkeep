@@ -2136,4 +2136,32 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get hpWgVia =>
       'UDP\'yi engelleyen ağlar için WireGuard\'ı bu proxy\'nin içinde taşır. Proxy UDP geçirmelidir';
+
+  @override
+  String get subSigned => 'İmzalı';
+
+  @override
+  String get subKeyLabel => 'İmza anahtarı (isteğe bağlı)';
+
+  @override
+  String get subKeyHelp =>
+      'Sağlayıcının genel anahtarı. Bununla atılmış geçerli bir imza olmayan yanıt reddedilir';
+
+  @override
+  String get subBackupLabel => 'Yedek adresler (isteğe bağlı)';
+
+  @override
+  String get subBackupHelp =>
+      'Her satıra bir tane. İlkine ulaşılamazsa sırayla denenir';
+
+  @override
+  String get subErrKey => 'İmza anahtarı geçerli bir genel anahtar değil';
+
+  @override
+  String get subUnsigned =>
+      'Abonelik imzalı değil ama bir imza anahtarı ayarlı, bu yüzden reddedildi';
+
+  @override
+  String get subBadSignature =>
+      'Aboneliğin imzası yanlış: yolda değiştirilmiş olabilir ya da anahtar eski';
 }

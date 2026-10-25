@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../engine/engine.dart';
 import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/subscriptions.dart';
 import '../insets.dart';
+import '../widgets/warning_list.dart';
 
 /// Adds a subscription (or edits one when [existing] is given).
 class SubscriptionScreen extends ConsumerStatefulWidget {
@@ -40,6 +42,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   late final _token = TextEditingController(text: widget.existing?.auth.token ?? '');
   late final _header = TextEditingController(text: widget.existing?.auth.header ?? '');
   late final _queryKey = TextEditingController(text: widget.existing?.auth.queryKey ?? 'token');
+  late final _key = TextEditingController(text: widget.existing?.publicKey ?? '');
+  late final _backups = TextEditingController(text: (widget.existing?.fallbackUrls ?? const <String>[]).join('\n'));
   late String _authType = widget.existing?.auth.type ?? 'none';
   late String _via = widget.existing?.via ?? Subscription.defaultVia;
   bool _busy = false;
@@ -48,7 +52,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _url, _username, _password, _token, _header, _queryKey]) {
+    for (final c in [_name, _url, _username, _password, _token, _header, _queryKey, _key, _backups]) {
       c.dispose();
     }
     super.dispose();
@@ -63,8 +67,22 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         queryKey: _authType == 'query' ? _queryKey.text.trim() : '',
       );
 
+  List<String> get _backupUrls => [
+        for (final line in _backups.text.split('\n'))
+          if (line.trim().isNotEmpty) line.trim(),
+      ];
+
+  static bool _isAddress(String s) {
+    final uri = Uri.tryParse(s);
+    return uri != null && (uri.isScheme('http') || uri.isScheme('https') || uri.isScheme('nordvpn')) && uri.host.isNotEmpty;
+  }
+
   String? _validate(AppLocalizations l) {
-    final uri = Uri.tryParse(_url.text.trim());
+    final (link, linkKey) = Subscription.splitKey(_url.text.trim());
+    if (_key.text.trim().isNotEmpty && !Subscription.isValidKey(_key.text)) return l.subErrKey;
+    if (_key.text.trim().isEmpty && linkKey.isNotEmpty && !Subscription.isValidKey(linkKey)) return l.subErrKey;
+    if (_backupUrls.any((u) => !_isAddress(u))) return l.subErrUrl;
+    final uri = Uri.tryParse(link);
     // nordvpn://<access token>?country=DE gives NordLynx (WireGuard) servers.
     if (uri == null || !(uri.isScheme('http') || uri.isScheme('https') || uri.isScheme('nordvpn')) || uri.host.isEmpty) {
       return l.subErrUrl;
@@ -92,9 +110,24 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       final int count;
       final existing = widget.existing;
       if (existing == null) {
-        count = await ctrl.add(url: _url.text, name: _name.text.trim(), auth: _auth, via: _via);
+        count = await ctrl.add(
+          url: _url.text,
+          name: _name.text.trim(),
+          auth: _auth,
+          via: _via,
+          fallbackUrls: _backupUrls,
+          publicKey: _key.text,
+        );
       } else {
-        ctrl.update(existing.copyWith(name: _name.text.trim(), url: _url.text.trim(), auth: _auth, via: _via));
+        final (link, linkKey) = Subscription.splitKey(_url.text.trim());
+        ctrl.update(existing.copyWith(
+          name: _name.text.trim(),
+          url: link,
+          auth: _auth,
+          via: _via,
+          fallbackUrls: _backupUrls,
+          publicKey: _key.text.trim().isNotEmpty ? _key.text.trim() : linkKey,
+        ));
         count = await ctrl.refresh(existing.id);
       }
       if (!mounted) return;
@@ -239,6 +272,41 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 DropdownMenuItem(value: e.key, child: Text(e.value, overflow: TextOverflow.ellipsis)),
             ],
             onChanged: _busy ? null : (v) => setState(() => _via = v ?? Subscription.defaultVia),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _key,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(
+              labelText: l.subKeyLabel,
+              helperText: l.subKeyHelp,
+              helperMaxLines: 3,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          ListenableBuilder(
+            listenable: _key,
+            builder: (context, _) => _key.text.trim().isEmpty && !_url.text.contains('#pk=')
+                ? const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: WarningList([WarningSpec(code: 'SUB_UNSIGNED', text: 'This list is not signed.', risk: false)]),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _backups,
+            keyboardType: TextInputType.multiline,
+            minLines: 2,
+            maxLines: 5,
+            autocorrect: false,
+            decoration: InputDecoration(
+              labelText: l.subBackupLabel,
+              helperText: l.subBackupHelp,
+              helperMaxLines: 2,
+              border: const OutlineInputBorder(),
+            ),
           ),
           SoftAppear(
             show: _error != null,

@@ -61,6 +61,12 @@ type Request struct {
 	UserAgent string `json:"user_agent,omitempty"`
 	// Via says whether to go through the VPN: ViaDirect, ViaAuto or ViaTunnel.
 	Via string `json:"via,omitempty"`
+	// FallbackURLs are other addresses of the same subscription, tried in order when the first cannot be
+	// reached (a blocked name, a moved server). They face the same signature check.
+	FallbackURLs []string `json:"fallback_urls,omitempty"`
+	// PublicKey is the provider's signing key (base64 Ed25519). When it is set the answer must carry a valid
+	// signature (see signature.go), or the fetch fails: a list that was changed on the way is not used.
+	PublicKey string `json:"public_key,omitempty"`
 }
 
 // Dialer opens a connection; Fetch's default is the system's.
@@ -76,6 +82,11 @@ type Info struct {
 	// UpdateIntervalHours is the provider's suggested refresh interval.
 	UpdateIntervalHours int    `json:"update_interval_hours,omitempty"`
 	Title               string `json:"title,omitempty"`
+	// Verified is set when the answer's signature was checked against the request's key.
+	Verified bool `json:"verified,omitempty"`
+	// ProtocolOrder is the order the provider asks protocols to be tried in: the default under "", and each
+	// country under its code. It is read only from a verified answer, so it cannot be changed on the way.
+	ProtocolOrder map[string][]string `json:"protocol_order,omitempty"`
 }
 
 // Result of a fetch.
@@ -184,11 +195,25 @@ func FetchVia(ctx context.Context, req Request, rootCAs *x509.CertPool, dial Dia
 		return nil, ErrTooLarge
 	}
 
+	info := parseInfo(resp.Header)
+	if req.PublicKey != "" {
+		key, err := ParseKey(req.PublicKey)
+		if err != nil {
+			return nil, err
+		}
+		if err := Verify(key, body, resp.Header); err != nil {
+			return nil, err
+		}
+		info.Verified = true
+	} else {
+		info.ProtocolOrder = nil // an unsigned answer cannot ask for a reordering
+	}
+
 	parsed, err := importer.Import(string(body))
 	if err != nil {
 		return nil, fmt.Errorf("parse subscription: %w", err)
 	}
-	return &Result{Result: *parsed, Info: parseInfo(resp.Header), FetchedAt: time.Now()}, nil
+	return &Result{Result: *parsed, Info: info, FetchedAt: time.Now()}, nil
 }
 
 // parseInfo reads the de-facto standard headers:
@@ -227,6 +252,7 @@ func parseInfo(h http.Header) Info {
 		}
 	}
 	info.Title = title
+	info.ProtocolOrder = protocolOrders(h)
 	return info
 }
 

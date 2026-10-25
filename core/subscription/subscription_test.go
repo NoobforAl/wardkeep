@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -65,7 +66,7 @@ func TestFetchAuthTypes(t *testing.T) {
 				t.Fatalf("profiles: %+v", res.Profiles)
 			}
 			want := Info{Upload: 100, Download: 200, Total: 1000, Expire: 1893456000, UpdateIntervalHours: 12, Title: "My Provider"}
-			if res.Info != want {
+			if !reflect.DeepEqual(res.Info, want) {
 				t.Fatalf("info = %+v, want %+v", res.Info, want)
 			}
 		})

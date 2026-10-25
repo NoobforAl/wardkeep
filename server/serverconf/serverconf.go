@@ -5,6 +5,8 @@
 package serverconf
 
 import (
+	"crypto/ed25519"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"os"
@@ -260,6 +262,17 @@ func FileURL(st *store.State, u *store.User, key string) string {
 
 // OVPNURL is where the user downloads the .ovpn file for proto.
 func OVPNURL(st *store.State, u *store.User, proto string) string { return FileURL(st, u, proto) }
+
+// SubscriptionLink is the subscription URL to hand to a user: the URL plus the public signing key in the fragment
+// (#pk=...), which is never sent to the server and which Wardkeep reads to check every answer's signature.
+func SubscriptionLink(st *store.State, u *store.User) string {
+	link := SubscriptionURL(st, u)
+	if priv, ok := st.Server.Subscription.SigningPrivate(); ok && link != "" {
+		// URL-safe base64 without padding: nothing in it needs escaping in a fragment.
+		link += "#pk=" + base64.RawURLEncoding.EncodeToString(priv.Public().(ed25519.PublicKey))
+	}
+	return link
+}
 
 // SubscriptionURL is the user's subscription link, or "" if disabled.
 func SubscriptionURL(st *store.State, u *store.User) string {

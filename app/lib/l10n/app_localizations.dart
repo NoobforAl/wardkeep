@@ -3659,6 +3659,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Carries WireGuard inside this proxy, for networks that block UDP. The proxy must pass UDP'**
   String get hpWgVia;
+
+  /// Signed subscriptions: the signing key, backup addresses and what a failed check says
+  ///
+  /// In en, this message translates to:
+  /// **'Signed'**
+  String get subSigned;
+
+  /// Signed subscriptions: the signing key, backup addresses and what a failed check says
+  ///
+  /// In en, this message translates to:
+  /// **'Signing key (optional)'**
+  String get subKeyLabel;
+
+  /// Signed subscriptions: the signing key, backup addresses and what a failed check says
+  ///
+  /// In en, this message translates to:
+  /// **'The provider\'s public key. Without a valid signature made with it, an answer is refused'**
+  String get subKeyHelp;
+
+  /// Signed subscriptions: the signing key, backup addresses and what a failed check says
+  ///
+  /// In en, this message translates to:
+  /// **'Backup addresses (optional)'**
+  String get subBackupLabel;
+
+  /// Signed subscriptions: the signing key, backup addresses and what a failed check says
+  ///
+  /// In en, this message translates to:
+  /// **'One per line. Tried in order when the first cannot be reached'**
+  String get subBackupHelp;
+
+  /// Signed subscriptions: the signing key, backup addresses and what a failed check says
+  ///
+  /// In en, this message translates to:
+  /// **'The signing key is not a valid public key'**
+  String get subErrKey;
+
+  /// Signed subscriptions: the signing key, backup addresses and what a failed check says
+  ///
+  /// In en, this message translates to:
+  /// **'The subscription is not signed, but a signing key is set, so it was refused'**
+  String get subUnsigned;
+
+  /// Signed subscriptions: the signing key, backup addresses and what a failed check says
+  ///
+  /// In en, this message translates to:
+  /// **'The subscription\'s signature is wrong: it may have been changed on the way, or the key is old'**
+  String get subBadSignature;
 }
 
 class _AppLocalizationsDelegate

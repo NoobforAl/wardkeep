@@ -85,6 +85,10 @@ func Init(s *Store, opts InitOptions) (*State, error) {
 	if err != nil {
 		return nil, err
 	}
+	signingKey, err := NewSigningKey()
+	if err != nil {
+		return nil, err
+	}
 	st := &State{
 		Version: 1,
 		Server: Server{
@@ -98,7 +102,7 @@ func Init(s *Store, opts InitOptions) (*State, error) {
 			SelfSigned:  true,
 			IPv6:        opts.IPv6,
 			Subscription: Subscription{
-				Enabled: true, Listen: "0.0.0.0", Port: opts.SubPort, Path: RandomHex(8),
+				Enabled: true, Listen: "0.0.0.0", Port: opts.SubPort, Path: RandomHex(8), SigningKey: signingKey,
 			},
 		},
 	}

@@ -2117,4 +2117,32 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get hpWgVia =>
       'Membawa WireGuard di dalam proxy ini, untuk jaringan yang memblokir UDP. Proxy harus meneruskan UDP';
+
+  @override
+  String get subSigned => 'Bertanda tangan';
+
+  @override
+  String get subKeyLabel => 'Kunci tanda tangan (opsional)';
+
+  @override
+  String get subKeyHelp =>
+      'Kunci publik penyedia. Jawaban tanpa tanda tangan sah dari kunci ini ditolak';
+
+  @override
+  String get subBackupLabel => 'Alamat cadangan (opsional)';
+
+  @override
+  String get subBackupHelp =>
+      'Satu per baris. Dicoba berurutan jika yang pertama tidak bisa dijangkau';
+
+  @override
+  String get subErrKey => 'Kunci tanda tangan bukan kunci publik yang sah';
+
+  @override
+  String get subUnsigned =>
+      'Langganan tidak bertanda tangan, tetapi kunci tanda tangan sudah diatur, jadi ditolak';
+
+  @override
+  String get subBadSignature =>
+      'Tanda tangan langganan salah: mungkin diubah di jalan, atau kuncinya lama';
 }

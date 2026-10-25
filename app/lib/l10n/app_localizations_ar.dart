@@ -2170,4 +2170,32 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get hpWgVia =>
       'ينقل WireGuard داخل هذا الوكيل للشبكات التي تحجب UDP. يجب أن ينقل الوكيل UDP';
+
+  @override
+  String get subSigned => 'موقّع';
+
+  @override
+  String get subKeyLabel => 'مفتاح التوقيع (اختياري)';
+
+  @override
+  String get subKeyHelp =>
+      'المفتاح العام للمزوّد. يُرفض أي رد بلا توقيع صالح بهذا المفتاح';
+
+  @override
+  String get subBackupLabel => 'عناوين احتياطية (اختياري)';
+
+  @override
+  String get subBackupHelp =>
+      'واحد في كل سطر. تُجرَّب بالترتيب إذا تعذّر الوصول إلى الأول';
+
+  @override
+  String get subErrKey => 'مفتاح التوقيع ليس مفتاحًا عامًا صالحًا';
+
+  @override
+  String get subUnsigned =>
+      'الاشتراك غير موقّع بينما مفتاح التوقيع مُعيَّن، لذا رُفض';
+
+  @override
+  String get subBadSignature =>
+      'توقيع الاشتراك خاطئ: ربما تغيّر في الطريق أو أن المفتاح قديم';
 }

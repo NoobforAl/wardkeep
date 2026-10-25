@@ -589,5 +589,13 @@
   "hpEchConfig": "Si está vacío, se busca en el DNS",
   "hpEchQueryName": "Por defecto, el nombre del servidor",
   "flWgVia": "A través de un proxy (enlace)",
-  "hpWgVia": "Lleva WireGuard dentro de este proxy, para redes que bloquean UDP. El proxy debe pasar UDP"
+  "hpWgVia": "Lleva WireGuard dentro de este proxy, para redes que bloquean UDP. El proxy debe pasar UDP",
+  "subSigned": "Firmada",
+  "subKeyLabel": "Clave de firma (opcional)",
+  "subKeyHelp": "La clave pública del proveedor. Una respuesta sin una firma válida hecha con ella se rechaza",
+  "subBackupLabel": "Direcciones de respaldo (opcional)",
+  "subBackupHelp": "Una por línea. Se prueban en orden si no se llega a la primera",
+  "subErrKey": "La clave de firma no es una clave pública válida",
+  "subUnsigned": "La suscripción no está firmada, pero hay una clave de firma, así que se rechazó",
+  "subBadSignature": "La firma de la suscripción es incorrecta: puede haberse cambiado por el camino, o la clave es antigua"
 }

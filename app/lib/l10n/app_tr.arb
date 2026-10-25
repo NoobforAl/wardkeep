@@ -589,5 +589,13 @@
   "hpEchConfig": "Boşsa DNS'te aranır",
   "hpEchQueryName": "Varsayılan sunucu adıdır",
   "flWgVia": "Bir proxy üzerinden (paylaşım bağlantısı)",
-  "hpWgVia": "UDP'yi engelleyen ağlar için WireGuard'ı bu proxy'nin içinde taşır. Proxy UDP geçirmelidir"
+  "hpWgVia": "UDP'yi engelleyen ağlar için WireGuard'ı bu proxy'nin içinde taşır. Proxy UDP geçirmelidir",
+  "subSigned": "İmzalı",
+  "subKeyLabel": "İmza anahtarı (isteğe bağlı)",
+  "subKeyHelp": "Sağlayıcının genel anahtarı. Bununla atılmış geçerli bir imza olmayan yanıt reddedilir",
+  "subBackupLabel": "Yedek adresler (isteğe bağlı)",
+  "subBackupHelp": "Her satıra bir tane. İlkine ulaşılamazsa sırayla denenir",
+  "subErrKey": "İmza anahtarı geçerli bir genel anahtar değil",
+  "subUnsigned": "Abonelik imzalı değil ama bir imza anahtarı ayarlı, bu yüzden reddedildi",
+  "subBadSignature": "Aboneliğin imzası yanlış: yolda değiştirilmiş olabilir ya da anahtar eski"
 }
