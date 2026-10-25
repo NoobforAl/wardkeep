@@ -45,10 +45,10 @@ List<ProfileInfo> byLatency(Iterable<ProfileInfo> profiles) {
   return list;
 }
 
-/// Profiles that Auto and country choices may start on. Tor and a mesh of the user's own
-/// devices only run when the user picks them, and a profile that wants a password the app doesn't have
+/// Profiles that Auto and country choices may start on. Tor, a DNS tunnel (slow, a last resort) and a mesh of the
+/// user's own devices only run when the user picks them, and a profile that wants a password the app doesn't have
 /// can't start on its own.
-bool _automatic(ProfileInfo p) => p.protocol != 'tor' && !p.isMesh && !(p.needsCredentials && !p.hasCredentials);
+bool _automatic(ProfileInfo p) => p.protocol != 'tor' && p.protocol != 'dnstt' && !p.isMesh && !(p.needsCredentials && !p.hasCredentials);
 
 /// The order in which [profiles] are tried for [choice], or null without profiles.
 /// [countryOf] gives the country of a profile (null = unknown).

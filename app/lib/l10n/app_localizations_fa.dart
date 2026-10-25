@@ -2163,4 +2163,50 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get subStale =>
       'این پاسخ از آخرین پاسخ پذیرفته‌شده قدیمی‌تر است، پس رد شد. اگر ارائه‌دهنده نسخه پشتیبان قدیمی را بازگردانده، اشتراک را ویرایش و دوباره ذخیره کنید.';
+
+  @override
+  String get flTunnelDomain => 'دامنهٔ تونل';
+
+  @override
+  String get flServerKey => 'کلید سرور';
+
+  @override
+  String get flResolvers => 'حل‌کننده‌های DNS';
+
+  @override
+  String get hpTunnelDomain =>
+      'ناحیه‌ای که به سرور تونل واگذار کرده‌اید، مثل t.example.com';
+
+  @override
+  String get hpServerKey => '۶۴ رقم هگزادسیمال؛ سرور آن را چاپ می‌کند';
+
+  @override
+  String get hpResolvers =>
+      'به ترتیب امتحان می‌شوند: udp://IP:port، tls://host:port یا https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'ورود به بالادست SOCKS5 سرور؛ اگر ندارد خالی بگذارید';
+
+  @override
+  String get scanFind => 'یافتن حل‌کننده‌های کارا';
+
+  @override
+  String get scanBusy => 'در حال آزمودن حل‌کننده‌ها…';
+
+  @override
+  String scanFound(int count) {
+    return 'حل‌کننده‌های کارای پیداشده: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'هیچ حل‌کننده‌ای کار نکرد. دامنه و کلید را بررسی کنید و ببینید سرور در حال اجراست.';
+
+  @override
+  String get scanConnected =>
+      'ابتدا قطع کنید: بررسی باید مستقیماً از شبکه استفاده کند، نه از طریق VPN.';
+
+  @override
+  String get scanNeedsFields => 'ابتدا دامنهٔ تونل و کلید سرور را وارد کنید.';
 }

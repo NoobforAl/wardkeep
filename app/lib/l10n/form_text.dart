@@ -8,6 +8,9 @@ import 'app_localizations.dart';
 String formLabel(AppLocalizations l, String english) {
   return switch (english) {
     'Name' => l.flName,
+    'Tunnel domain' => l.flTunnelDomain,
+    'Server key' => l.flServerKey,
+    'Resolvers' => l.flResolvers,
     'Through a proxy (share link)' => l.flWgVia,
     'Fragment the TLS handshake' => l.flTlsFragment,
     'Fragment the TLS records' => l.flTlsRecordFragment,
@@ -96,6 +99,10 @@ String formHelp(AppLocalizations l, String english) {
     'authorized_keys format; empty accepts any key' => l.hpAuthorizedKeys,
     'Carry IKE and ESP over TCP for networks that block UDP' => l.hpIkeTcp,
     'Defaults to the server address' => l.hpDefaultsToServer,
+    'The zone you delegated to the tunnel server, such as t.example.com' => l.hpTunnelDomain,
+    '64 hexadecimal digits; the server prints it' => l.hpServerKey,
+    'Tried in order: udp://IP:port, tls://host:port or https://host/path' => l.hpResolvers,
+    'The login of the server\'s SOCKS5 upstream; empty if it has none' => l.hpTunnelLogin,
     'Carries WireGuard inside this proxy, for networks that block UDP. The proxy must pass UDP' => l.hpWgVia,
     'Splits the first packet so a filter cannot read the server name' => l.hpTlsFragment,
     'Splits the records instead of the packets' => l.hpTlsRecordFragment,

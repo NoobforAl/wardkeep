@@ -59,7 +59,10 @@ type Spec struct {
 	DefaultOff bool `json:"default_off,omitempty"`
 	// Service marks a server-side service for the VPN's users that is not a way to
 	// connect (the DNSCrypt resolver): it has no client profile and no share link.
-	Service bool     `json:"service,omitempty"`
+	Service bool `json:"service,omitempty"`
+	// Sidecar marks a protocol whose front end is a process the server starts next to sing-box (the DNS tunnel's
+	// UDP/53 server): sing-box serves only what it forwards to, on a loopback inbound with the users.
+	Sidecar bool     `json:"sidecar,omitempty"`
 	Options []Option `json:"options,omitempty"`
 }
 
@@ -96,6 +99,7 @@ type Env struct {
 	WireGuard   WireGuard
 	AWG         AmneziaWG
 	DNSCrypt    DNSCrypt
+	DNSTT       DNSTT
 	// IPv6 gives every user a second, IPv6 address in the tunnels that can carry
 	// one (see ipv6.go) and makes the server route and NAT it.
 	IPv6 bool

@@ -43,6 +43,7 @@ type Event struct {
 const (
 	CodeUnauthorized       = "UNAUTHORIZED"
 	CodeBadRequest         = "BAD_REQUEST"
+	CodeScanConnected      = "SCAN_CONNECTED" // a resolver scan needs the network as it is, not through the VPN
 	CodeUnknownMethod      = "UNKNOWN_METHOD"
 	CodeImportFailed       = "IMPORT_FAILED"
 	CodeStartFailed        = "START_FAILED"
@@ -97,6 +98,14 @@ type BuildProfileParams struct {
 	Protocol string            `json:"protocol,omitempty"`
 	Values   map[string]string `json:"values"`
 	Profile  *profile.Profile  `json:"profile,omitempty"`
+}
+
+// DNSTTScanParams asks which resolvers work for a DNS tunnel: the domain and server key say which tunnel, and
+// Resolvers are the candidates (none: a list of well-known ones).
+type DNSTTScanParams struct {
+	Domain    string   `json:"domain"`
+	PubKey    string   `json:"pubkey"`
+	Resolvers []string `json:"resolvers,omitempty"`
 }
 
 // ProfileParams names one profile (for its editor values or share link).

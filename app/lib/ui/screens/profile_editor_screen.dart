@@ -76,6 +76,8 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
   String? _loadError;
   String? _saveError;
   bool _saving = false;
+  bool _scanning = false;
+  String? _scanMessage;
 
   /// The country picked here: a code, '' for "work it out from the name", null = untouched.
   String? _country;
@@ -118,6 +120,38 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
       });
     } catch (e) {
       if (mounted) setState(() => _loadError = e is _NoEditor ? context.l10n.formNoEditor(_protocol) : describeError(context.l10n, e));
+    }
+  }
+
+  /// Tests the DNS tunnel through well-known resolvers and puts the ones that work, the fastest first, in the field.
+  Future<void> _scan() async {
+    final l = context.l10n;
+    final domain = _text['dnstt.domain']?.text.trim() ?? '';
+    final key = _text['dnstt.pubkey']?.text.trim() ?? '';
+    if (domain.isEmpty || key.isEmpty) {
+      setState(() => _scanMessage = l.scanNeedsFields);
+      return;
+    }
+    setState(() {
+      _scanning = true;
+      _scanMessage = null;
+    });
+    try {
+      final results = await ref.read(engineProvider).scanResolvers(domain: domain, pubKey: key);
+      final working = [for (final r in results) if (r.works) r.resolver];
+      if (!mounted) return;
+      setState(() {
+        _scanning = false;
+        _scanMessage = working.isEmpty ? l.scanNone : l.scanFound(working.length);
+        if (working.isNotEmpty) _text['dnstt.resolvers']?.text = working.take(5).join(', ');
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _scanning = false;
+          _scanMessage = describeError(l, e);
+        });
+      }
     }
   }
 
@@ -299,6 +333,28 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
               ),
             ),
             if (multiline) _FillButtons(controller: controller),
+            if (f.key == 'dnstt.resolvers')
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        key: const Key('scan-resolvers'),
+                        onPressed: _scanning ? null : _scan,
+                        icon: _scanning
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.travel_explore),
+                        label: Text(_scanning ? l.scanBusy : l.scanFind),
+                      ),
+                    ),
+                    if (_scanMessage != null)
+                      Text(_scanMessage!, key: const Key('scan-message'), style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+              ),
           ],
         );
     }

@@ -2168,4 +2168,51 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get subStale =>
       'Bu yanıt en son kabul edilenden eski, bu yüzden reddedildi. Sağlayıcı eski bir yedeği geri yüklediyse aboneliği düzenleyip yeniden kaydedin.';
+
+  @override
+  String get flTunnelDomain => 'Tünel alan adı';
+
+  @override
+  String get flServerKey => 'Sunucu anahtarı';
+
+  @override
+  String get flResolvers => 'Çözücüler';
+
+  @override
+  String get hpTunnelDomain =>
+      'Tünel sunucusuna devrettiğiniz bölge, örneğin t.example.com';
+
+  @override
+  String get hpServerKey => '64 onaltılık basamak; sunucu bunu yazdırır';
+
+  @override
+  String get hpResolvers =>
+      'Sırayla denenir: udp://IP:port, tls://host:port veya https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'Sunucunun SOCKS5 üst akışının girişi; yoksa boş bırakın';
+
+  @override
+  String get scanFind => 'Çalışan çözücüleri bul';
+
+  @override
+  String get scanBusy => 'Çözücüler deneniyor…';
+
+  @override
+  String scanFound(int count) {
+    return 'Çalışan çözücüler: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'Hiçbir çözücü çalışmadı. Alan adını ve anahtarı, bir de sunucunun çalıştığını kontrol edin.';
+
+  @override
+  String get scanConnected =>
+      'Önce bağlantıyı kesin: tarama ağı doğrudan kullanmalı, VPN üzerinden değil.';
+
+  @override
+  String get scanNeedsFields =>
+      'Önce tünel alan adını ve sunucu anahtarını girin.';
 }

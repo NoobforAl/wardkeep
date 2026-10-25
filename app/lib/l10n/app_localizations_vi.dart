@@ -2147,4 +2147,51 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get subStale =>
       'Phản hồi này cũ hơn phản hồi được chấp nhận gần nhất nên bị từ chối. Nếu nhà cung cấp khôi phục bản sao lưu cũ, hãy sửa gói đăng ký và lưu lại.';
+
+  @override
+  String get flTunnelDomain => 'Tên miền đường hầm';
+
+  @override
+  String get flServerKey => 'Khóa máy chủ';
+
+  @override
+  String get flResolvers => 'Bộ phân giải';
+
+  @override
+  String get hpTunnelDomain =>
+      'Vùng bạn đã ủy quyền cho máy chủ đường hầm, như t.example.com';
+
+  @override
+  String get hpServerKey => '64 chữ số thập lục phân; máy chủ sẽ in ra';
+
+  @override
+  String get hpResolvers =>
+      'Thử lần lượt: udp://IP:port, tls://host:port hoặc https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'Thông tin đăng nhập SOCKS5 phía trên của máy chủ; để trống nếu không có';
+
+  @override
+  String get scanFind => 'Tìm bộ phân giải hoạt động';
+
+  @override
+  String get scanBusy => 'Đang thử các bộ phân giải…';
+
+  @override
+  String scanFound(int count) {
+    return 'Số bộ phân giải hoạt động: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'Không bộ phân giải nào hoạt động. Hãy kiểm tra tên miền, khóa và xem máy chủ có đang chạy không.';
+
+  @override
+  String get scanConnected =>
+      'Hãy ngắt kết nối trước: quét phải dùng mạng trực tiếp, không qua VPN.';
+
+  @override
+  String get scanNeedsFields =>
+      'Hãy nhập tên miền đường hầm và khóa máy chủ trước.';
 }

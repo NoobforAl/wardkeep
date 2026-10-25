@@ -836,6 +836,8 @@ func protocolFields(protocol string) ([]Field, bool) {
 			toggle("tailscale.ephemeral", "Temporary device", tsBool(func(o *TailscaleOpts) *bool { return &o.Ephemeral }),
 				advanced, help("Removed from the network when it goes offline")),
 		}, true
+	case DNSTT:
+		return dnsttFields(), true
 	case Tor:
 		return []Field{
 			text("tor.builtin", "Bridges", func(p *Profile, c bool) *string {
@@ -860,18 +862,18 @@ var formLabels = []struct{ protocol, label string }{
 	{VLESS, "VLESS"}, {VMess, "VMess"}, {Trojan, "Trojan"}, {Shadowsocks, "Shadowsocks"},
 	{Hysteria2, "Hysteria 2"}, {Hysteria, "Hysteria"}, {TUIC, "TUIC"}, {AnyTLS, "AnyTLS"}, {Naive, "NaiveProxy"},
 	{WireGuard, "WireGuard"}, {AmneziaWG, "AmneziaWG"}, {OpenVPN, "OpenVPN"}, {IKEv2, "IKEv2/IPsec"}, {SSTP, "SSTP"},
-	{SSH, "SSH"}, {Tor, "Tor"}, {Tailscale, "Tailscale / Headscale"},
+	{SSH, "SSH"}, {Tor, "Tor"}, {DNSTT, "DNS tunnel"}, {Tailscale, "Tailscale / Headscale"},
 }
 
 // defaultPorts are the ports a new profile starts with.
 var defaultPorts = map[string]int{
 	VLESS: 443, VMess: 443, Trojan: 443, Shadowsocks: 8388, Hysteria2: 443, Hysteria: 443, TUIC: 443,
-	AnyTLS: 443, Naive: 443, SSH: 22, WireGuard: 51820, AmneziaWG: 51820, OpenVPN: 1194, IKEv2: 4500, SSTP: 443,
+	AnyTLS: 443, Naive: 443, SSH: 22, DNSTT: dnsttPort, WireGuard: 51820, AmneziaWG: 51820, OpenVPN: 1194, IKEv2: 4500, SSTP: 443,
 }
 
 func commonFields(protocol string) []Field {
 	fs := []Field{text("name", "Name", func(p *Profile, _ bool) *string { return &p.Name })}
-	if protocol == Tor || protocol == Tailscale {
+	if protocol == Tor || protocol == Tailscale || protocol == DNSTT {
 		return fs
 	}
 	return append(fs,

@@ -27,6 +27,9 @@ func goldenState(t *testing.T) (*store.State, *store.Store) {
 			Subscription: store.Subscription{Enabled: true, Listen: "0.0.0.0", Port: 2096, Path: "subpath"},
 			OpenVPN:      store.OpenVPN{CA: "CA-PEM\n", ServerCert: "SERVER-CERT", ServerKey: "SERVER-KEY", TLSCrypt: "TLS-CRYPT\n"},
 			WireGuard:    store.WireGuard{PrivateKey: "c2VydmVyLXByaXZhdGU=", PublicKey: "c2VydmVyLXB1YmxpYw=="},
+			DNSTT: store.DNSTT{Domain: "t.example.com", UpstreamPort: 5300,
+				PublicKey:  "b2b3e1cf0a1ae0f0b2a2f0b6c4e0e0d5a4f1bde3d2d79f7b8a4f2c6e1d5b7a90",
+				PrivateKey: "0011223344556677889900112233445566778899001122334455667788990011"},
 			AmneziaWG: store.AmneziaWG{PrivateKey: "YXdnLXByaXZhdGU=", PublicKey: "YXdnLXB1YmxpYw==", Params: map[string]string{
 				"jc": "5", "jmin": "42", "jmax": "105", "s1": "30", "s2": "94",
 				"h1": "1043474670", "h2": "1207032647", "h3": "682630448", "h4": "1230328733",

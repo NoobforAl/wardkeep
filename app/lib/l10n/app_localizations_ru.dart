@@ -2197,4 +2197,50 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get subStale =>
       'Этот ответ старше последнего принятого, поэтому он отклонён. Если провайдер восстановил старую копию, откройте подписку и сохраните её снова.';
+
+  @override
+  String get flTunnelDomain => 'Домен туннеля';
+
+  @override
+  String get flServerKey => 'Ключ сервера';
+
+  @override
+  String get flResolvers => 'DNS-резолверы';
+
+  @override
+  String get hpTunnelDomain =>
+      'Зона, делегированная серверу туннеля, например t.example.com';
+
+  @override
+  String get hpServerKey => '64 шестнадцатеричные цифры; сервер выводит его';
+
+  @override
+  String get hpResolvers =>
+      'Пробуются по порядку: udp://IP:port, tls://host:port или https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'Логин SOCKS5-апстрима сервера; пусто, если его нет';
+
+  @override
+  String get scanFind => 'Найти рабочие резолверы';
+
+  @override
+  String get scanBusy => 'Проверяю резолверы…';
+
+  @override
+  String scanFound(int count) {
+    return 'Найдено рабочих резолверов: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'Ни один резолвер не сработал. Проверьте домен и ключ и что сервер запущен.';
+
+  @override
+  String get scanConnected =>
+      'Сначала отключитесь: проверка должна идти напрямую, а не через VPN.';
+
+  @override
+  String get scanNeedsFields => 'Сначала введите домен туннеля и ключ сервера.';
 }

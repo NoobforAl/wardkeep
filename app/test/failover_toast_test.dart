@@ -50,6 +50,12 @@ class ScriptedEngine implements VpnEngine {
   @override
   Future<List<WarningSpec>> warnings(ProfileInfo profile) async => const [];
   @override
+  Future<List<ResolverScanResult>> scanResolvers({
+    required String domain,
+    required String pubKey,
+    List<String> resolvers = const [],
+  }) async => const [];
+  @override
   Future<String> exportLink(ProfileInfo profile) async => '';
   @override
   void dispose() => controller.close();

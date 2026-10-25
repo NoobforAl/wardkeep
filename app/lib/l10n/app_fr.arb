@@ -598,5 +598,18 @@
   "subErrKey": "La clé de signature n'est pas une clé publique valide",
   "subUnsigned": "L'abonnement n'est pas signé alors qu'une clé de signature est définie ; il a été refusé",
   "subBadSignature": "La signature de l'abonnement est fausse : il a pu être modifié en chemin, ou la clé est ancienne",
-  "subStale": "Cette réponse est plus ancienne que la dernière acceptée, elle a donc été refusée. Si le fournisseur a restauré une ancienne sauvegarde, modifiez l'abonnement et enregistrez-le de nouveau."
+  "subStale": "Cette réponse est plus ancienne que la dernière acceptée, elle a donc été refusée. Si le fournisseur a restauré une ancienne sauvegarde, modifiez l'abonnement et enregistrez-le de nouveau.",
+  "flTunnelDomain": "Domaine du tunnel",
+  "flServerKey": "Clé du serveur",
+  "flResolvers": "Résolveurs",
+  "hpTunnelDomain": "La zone déléguée au serveur du tunnel, comme t.example.com",
+  "hpServerKey": "64 chiffres hexadécimaux ; le serveur l'affiche",
+  "hpResolvers": "Essayés dans l'ordre : udp://IP:port, tls://host:port ou https://host/path",
+  "hpTunnelLogin": "L'identifiant du SOCKS5 en amont du serveur ; vide s'il n'y en a pas",
+  "scanFind": "Trouver les résolveurs qui marchent",
+  "scanBusy": "Essai des résolveurs…",
+  "scanFound": "Résolveurs qui marchent : {count}",
+  "scanNone": "Aucun résolveur n'a fonctionné. Vérifiez le domaine et la clé, et que le serveur tourne.",
+  "scanConnected": "Déconnectez-vous d'abord : la recherche doit utiliser le réseau directement, pas le VPN.",
+  "scanNeedsFields": "Renseignez d'abord le domaine du tunnel et la clé du serveur."
 }

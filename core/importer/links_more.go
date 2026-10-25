@@ -2,6 +2,7 @@ package importer
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -201,5 +202,37 @@ func parseSSTP(link string) (*profile.Profile, error) {
 		// SSTP servers mostly use self-signed certificates; MS-CHAPv2 still
 		// authenticates the server (it must know the password).
 		TLS: &profile.TLS{Enabled: true, Insecure: q.Get("insecure") != "0"},
+	}, nil
+}
+
+// dnstt://<server key>@<domain>?resolver=udp://1.1.1.1:53&resolver=https://dns.google/dns-query&user=u&pass=p#name
+// The resolver parameter may repeat or hold a comma-separated list; without one the profile starts with the usual
+// public resolvers.
+func parseDNSTT(link string) (*profile.Profile, error) {
+	u, err := url.Parse(link)
+	if err != nil {
+		return nil, fmt.Errorf("invalid link: %w", err)
+	}
+	domain := u.Hostname()
+	if domain == "" {
+		return nil, fmt.Errorf("missing tunnel domain")
+	}
+	key, _ := url.PathUnescape(u.User.Username())
+	q := u.Query()
+	var resolvers []string
+	for _, v := range q["resolver"] {
+		resolvers = append(resolvers, splitList(v)...)
+	}
+	if len(resolvers) == 0 {
+		resolvers = splitList(profile.DefaultDNSTTResolvers)
+	}
+	return &profile.Profile{
+		Name:     fragmentName(u),
+		Protocol: profile.DNSTT,
+		Server:   domain,
+		Port:     53,
+		Username: q.Get("user"),
+		Password: q.Get("pass"),
+		DNSTT:    &profile.DNSTTOpts{Domain: domain, PubKey: strings.TrimSpace(key), Resolvers: resolvers},
 	}, nil
 }

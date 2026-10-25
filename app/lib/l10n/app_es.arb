@@ -598,5 +598,18 @@
   "subErrKey": "La clave de firma no es una clave pública válida",
   "subUnsigned": "La suscripción no está firmada, pero hay una clave de firma, así que se rechazó",
   "subBadSignature": "La firma de la suscripción es incorrecta: puede haberse cambiado por el camino, o la clave es antigua",
-  "subStale": "Esta respuesta es más antigua que la última aceptada, así que se rechazó. Si el proveedor restauró una copia antigua, edita la suscripción y guárdala de nuevo."
+  "subStale": "Esta respuesta es más antigua que la última aceptada, así que se rechazó. Si el proveedor restauró una copia antigua, edita la suscripción y guárdala de nuevo.",
+  "flTunnelDomain": "Dominio del túnel",
+  "flServerKey": "Clave del servidor",
+  "flResolvers": "Resolutores",
+  "hpTunnelDomain": "La zona que delegaste al servidor del túnel, como t.example.com",
+  "hpServerKey": "64 dígitos hexadecimales; lo muestra el servidor",
+  "hpResolvers": "Se prueban en orden: udp://IP:port, tls://host:port o https://host/path",
+  "hpTunnelLogin": "El acceso del upstream SOCKS5 del servidor; vacío si no tiene",
+  "scanFind": "Buscar resolutores que funcionen",
+  "scanBusy": "Probando resolutores…",
+  "scanFound": "Resolutores que funcionan: {count}",
+  "scanNone": "Ningún resolutor funcionó. Revisa el dominio y la clave, y que el servidor esté en marcha.",
+  "scanConnected": "Desconéctate primero: la búsqueda debe usar la red directamente, no la VPN.",
+  "scanNeedsFields": "Primero escribe el dominio del túnel y la clave del servidor."
 }

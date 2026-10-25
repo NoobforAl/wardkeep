@@ -598,5 +598,18 @@
   "subErrKey": "İmza anahtarı geçerli bir genel anahtar değil",
   "subUnsigned": "Abonelik imzalı değil ama bir imza anahtarı ayarlı, bu yüzden reddedildi",
   "subBadSignature": "Aboneliğin imzası yanlış: yolda değiştirilmiş olabilir ya da anahtar eski",
-  "subStale": "Bu yanıt en son kabul edilenden eski, bu yüzden reddedildi. Sağlayıcı eski bir yedeği geri yüklediyse aboneliği düzenleyip yeniden kaydedin."
+  "subStale": "Bu yanıt en son kabul edilenden eski, bu yüzden reddedildi. Sağlayıcı eski bir yedeği geri yüklediyse aboneliği düzenleyip yeniden kaydedin.",
+  "flTunnelDomain": "Tünel alan adı",
+  "flServerKey": "Sunucu anahtarı",
+  "flResolvers": "Çözücüler",
+  "hpTunnelDomain": "Tünel sunucusuna devrettiğiniz bölge, örneğin t.example.com",
+  "hpServerKey": "64 onaltılık basamak; sunucu bunu yazdırır",
+  "hpResolvers": "Sırayla denenir: udp://IP:port, tls://host:port veya https://host/path",
+  "hpTunnelLogin": "Sunucunun SOCKS5 üst akışının girişi; yoksa boş bırakın",
+  "scanFind": "Çalışan çözücüleri bul",
+  "scanBusy": "Çözücüler deneniyor…",
+  "scanFound": "Çalışan çözücüler: {count}",
+  "scanNone": "Hiçbir çözücü çalışmadı. Alan adını ve anahtarı, bir de sunucunun çalıştığını kontrol edin.",
+  "scanConnected": "Önce bağlantıyı kesin: tarama ağı doğrudan kullanmalı, VPN üzerinden değil.",
+  "scanNeedsFields": "Önce tünel alan adını ve sunucu anahtarını girin."
 }

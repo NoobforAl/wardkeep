@@ -2188,4 +2188,51 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get subStale =>
       'Esta resposta é mais antiga que a última aceita, por isso foi recusada. Se o provedor restaurou um backup antigo, edite a lista e salve de novo.';
+
+  @override
+  String get flTunnelDomain => 'Domínio do túnel';
+
+  @override
+  String get flServerKey => 'Chave do servidor';
+
+  @override
+  String get flResolvers => 'Resolvedores';
+
+  @override
+  String get hpTunnelDomain =>
+      'A zona delegada ao servidor do túnel, como t.example.com';
+
+  @override
+  String get hpServerKey => '64 dígitos hexadecimais; o servidor o mostra';
+
+  @override
+  String get hpResolvers =>
+      'Tentados em ordem: udp://IP:port, tls://host:port ou https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'O login do upstream SOCKS5 do servidor; vazio se não houver';
+
+  @override
+  String get scanFind => 'Encontrar resolvedores que funcionam';
+
+  @override
+  String get scanBusy => 'Testando resolvedores…';
+
+  @override
+  String scanFound(int count) {
+    return 'Resolvedores que funcionam: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'Nenhum resolvedor funcionou. Confira o domínio e a chave, e se o servidor está rodando.';
+
+  @override
+  String get scanConnected =>
+      'Desconecte primeiro: a busca precisa usar a rede diretamente, não a VPN.';
+
+  @override
+  String get scanNeedsFields =>
+      'Preencha primeiro o domínio do túnel e a chave do servidor.';
 }

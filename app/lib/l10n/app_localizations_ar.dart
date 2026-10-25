@@ -2202,4 +2202,50 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get subStale =>
       'هذا الرد أقدم من آخر رد مقبول، لذا رُفض. إذا استعاد المزوّد نسخة احتياطية قديمة فعدّل الاشتراك واحفظه من جديد.';
+
+  @override
+  String get flTunnelDomain => 'نطاق النفق';
+
+  @override
+  String get flServerKey => 'مفتاح الخادم';
+
+  @override
+  String get flResolvers => 'محللات DNS';
+
+  @override
+  String get hpTunnelDomain =>
+      'المنطقة التي فوّضتها إلى خادم النفق، مثل t.example.com';
+
+  @override
+  String get hpServerKey => '64 رقمًا سداسي عشري؛ يطبعه الخادم';
+
+  @override
+  String get hpResolvers =>
+      'تُجرَّب بالترتيب: udp://IP:port أو tls://host:port أو https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'بيانات دخول SOCKS5 لدى الخادم؛ اتركها فارغة إن لم يكن هناك';
+
+  @override
+  String get scanFind => 'ابحث عن المحللات العاملة';
+
+  @override
+  String get scanBusy => 'جارٍ تجربة المحللات…';
+
+  @override
+  String scanFound(int count) {
+    return 'المحللات العاملة التي وُجدت: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'لم ينجح أي محلل. تحقّق من النطاق والمفتاح ومن أن الخادم يعمل.';
+
+  @override
+  String get scanConnected =>
+      'افصل الاتصال أولًا: يجب أن يستخدم الفحص الشبكة مباشرةً لا عبر VPN.';
+
+  @override
+  String get scanNeedsFields => 'املأ نطاق النفق ومفتاح الخادم أولًا.';
 }

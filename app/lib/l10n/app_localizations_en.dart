@@ -2160,4 +2160,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subStale =>
       'This answer is older than the last one accepted, so it was refused. If the provider restored an old backup, edit the subscription and save it again.';
+
+  @override
+  String get flTunnelDomain => 'Tunnel domain';
+
+  @override
+  String get flServerKey => 'Server key';
+
+  @override
+  String get flResolvers => 'Resolvers';
+
+  @override
+  String get hpTunnelDomain =>
+      'The zone you delegated to the tunnel server, such as t.example.com';
+
+  @override
+  String get hpServerKey => '64 hexadecimal digits; the server prints it';
+
+  @override
+  String get hpResolvers =>
+      'Tried in order: udp://IP:port, tls://host:port or https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'The login of the server\'s SOCKS5 upstream; empty if it has none';
+
+  @override
+  String get scanFind => 'Find working resolvers';
+
+  @override
+  String get scanBusy => 'Trying resolvers…';
+
+  @override
+  String scanFound(int count) {
+    return 'Working resolvers found: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'No resolver worked. Check the domain and the key, and that the server is running.';
+
+  @override
+  String get scanConnected =>
+      'Disconnect first: the scan has to use the network directly, not through the VPN.';
+
+  @override
+  String get scanNeedsFields =>
+      'Fill in the tunnel domain and the server key first.';
 }

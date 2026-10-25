@@ -605,5 +605,18 @@
   "subErrKey": "签名密钥不是有效的公钥",
   "subUnsigned": "订阅没有签名，但设置了签名密钥，因此被拒绝",
   "subBadSignature": "订阅的签名不正确：可能在传输中被修改，或密钥已过期",
-  "subStale": "此响应比上次接受的更旧，因此被拒绝。如果提供商恢复了旧备份，请编辑订阅并重新保存。"
+  "subStale": "此响应比上次接受的更旧，因此被拒绝。如果提供商恢复了旧备份，请编辑订阅并重新保存。",
+  "flTunnelDomain": "隧道域名",
+  "flServerKey": "服务器密钥",
+  "flResolvers": "解析器",
+  "hpTunnelDomain": "委派给隧道服务器的区域，例如 t.example.com",
+  "hpServerKey": "64 位十六进制数字；服务器会打印出来",
+  "hpResolvers": "按顺序尝试：udp://IP:port、tls://host:port 或 https://host/path",
+  "hpTunnelLogin": "服务器 SOCKS5 上游的登录名；没有则留空",
+  "scanFind": "查找可用的解析器",
+  "scanBusy": "正在尝试解析器…",
+  "scanFound": "找到可用的解析器：{count}",
+  "scanNone": "没有可用的解析器。请检查域名和密钥，并确认服务器正在运行。",
+  "scanConnected": "请先断开连接：扫描必须直接使用网络，而不是通过 VPN。",
+  "scanNeedsFields": "请先填写隧道域名和服务器密钥。"
 }

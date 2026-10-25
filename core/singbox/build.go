@@ -16,6 +16,13 @@ import (
 	"github.com/NoobforAl/omnitun/core/profile"
 )
 
+// HelperSocks is where a helper tunnel's local port is, and the SOCKS5 login its far end asks for (both empty: none).
+type HelperSocks struct {
+	Addr     string
+	Username string
+	Password string
+}
+
 // ErrOtherEngine marks profiles that another engine of the core runs (SSTP,
 // IKEv2, AmneziaWG): they have no sing-box form.
 var ErrOtherEngine = errors.New("not run by sing-box")
@@ -90,6 +97,10 @@ type Options struct {
 	// profiles are skipped without it.
 	TorSocks string
 
+	// Helpers are the local SOCKS5 ports of helper tunnels (a DNS tunnel) by profile ID; a profile of that kind is
+	// skipped without its helper.
+	Helpers map[string]HelperSocks
+
 	// StateDir is where mesh (Tailscale) profiles keep their device identity, one
 	// folder per profile; empty uses a relative folder.
 	StateDir string
@@ -137,7 +148,7 @@ func (o *Options) defaults() {
 	}
 	// Tor exits don't allow DNS over TLS (port 853) or plain DNS, but they do
 	// allow HTTPS: resolve through DoH while Tor is the way out.
-	if o.TorSocks != "" && !torDNSOK(o.DNS) {
+	if (o.TorSocks != "" || len(o.Helpers) > 0) && !torDNSOK(o.DNS) {
 		o.DNS = "https://1.1.1.1/dns-query"
 	}
 	if o.Selected == "" {
@@ -184,6 +195,8 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		)
 		if p.Protocol == profile.Tor {
 			out, err = torOutbound(opts.TorSocks, p.ID)
+		} else if p.Protocol == profile.DNSTT {
+			out, err = helperOutbound(opts.Helpers[p.ID], p.ID)
 		} else if p.Protocol == profile.Tailscale {
 			// A mesh device is online only while its profile is the selected one.
 			if p.ID != opts.Selected {
@@ -599,6 +612,8 @@ func convertProfile(p *profile.Profile, tag string) (out obj, isEndpoint bool, e
 		return nil, false, nil, fmt.Errorf("%w: amneziawg runs on the dedicated AWG engine (not sing-box)", ErrOtherEngine)
 	case profile.IKEv2, profile.SSTP:
 		return nil, false, nil, fmt.Errorf("%w: %s runs on the built-in classic VPN engine (not sing-box)", ErrOtherEngine, p.Protocol)
+	case profile.DNSTT:
+		return nil, false, nil, fmt.Errorf("%w: a DNS tunnel runs as a helper next to sing-box", ErrOtherEngine)
 	default:
 		return nil, false, nil, fmt.Errorf("protocol %q is not supported by the sing-box engine", p.Protocol)
 	}
@@ -963,6 +978,23 @@ func Outbound(p *profile.Profile, tag string) (out map[string]any, isEndpoint bo
 }
 
 // torOutbound routes a Tor profile into the local Tor client's SOCKS5 port.
+// helperOutbound routes a profile into a helper tunnel's local SOCKS5 port, logging in as the profile says.
+func helperOutbound(h HelperSocks, tag string) (obj, error) {
+	host, port, err := net.SplitHostPort(h.Addr)
+	if err != nil || h.Addr == "" {
+		return nil, fmt.Errorf("the tunnel is not running")
+	}
+	n, err := strconv.Atoi(port)
+	if err != nil {
+		return nil, fmt.Errorf("bad tunnel address %q", h.Addr)
+	}
+	out := obj{"type": "socks", "tag": tag, "server": host, "server_port": n, "version": "5"}
+	if h.Username != "" || h.Password != "" {
+		out["username"], out["password"] = h.Username, h.Password
+	}
+	return out, nil
+}
+
 func torOutbound(socks, tag string) (obj, error) {
 	host, port, err := net.SplitHostPort(socks)
 	if err != nil || socks == "" {

@@ -267,6 +267,7 @@ String protocolBadge(String protocol) {
     'ikev2' => 'IKEv2',
     'sstp' => 'SSTP',
     'tor' => 'TOR',
+    'dnstt' => 'DNS',
     _ => protocol.toUpperCase(),
   };
 }

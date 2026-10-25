@@ -2195,4 +2195,51 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get subStale =>
       'Cette réponse est plus ancienne que la dernière acceptée, elle a donc été refusée. Si le fournisseur a restauré une ancienne sauvegarde, modifiez l\'abonnement et enregistrez-le de nouveau.';
+
+  @override
+  String get flTunnelDomain => 'Domaine du tunnel';
+
+  @override
+  String get flServerKey => 'Clé du serveur';
+
+  @override
+  String get flResolvers => 'Résolveurs';
+
+  @override
+  String get hpTunnelDomain =>
+      'La zone déléguée au serveur du tunnel, comme t.example.com';
+
+  @override
+  String get hpServerKey => '64 chiffres hexadécimaux ; le serveur l\'affiche';
+
+  @override
+  String get hpResolvers =>
+      'Essayés dans l\'ordre : udp://IP:port, tls://host:port ou https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'L\'identifiant du SOCKS5 en amont du serveur ; vide s\'il n\'y en a pas';
+
+  @override
+  String get scanFind => 'Trouver les résolveurs qui marchent';
+
+  @override
+  String get scanBusy => 'Essai des résolveurs…';
+
+  @override
+  String scanFound(int count) {
+    return 'Résolveurs qui marchent : $count';
+  }
+
+  @override
+  String get scanNone =>
+      'Aucun résolveur n\'a fonctionné. Vérifiez le domaine et la clé, et que le serveur tourne.';
+
+  @override
+  String get scanConnected =>
+      'Déconnectez-vous d\'abord : la recherche doit utiliser le réseau directement, pas le VPN.';
+
+  @override
+  String get scanNeedsFields =>
+      'Renseignez d\'abord le domaine du tunnel et la clé du serveur.';
 }

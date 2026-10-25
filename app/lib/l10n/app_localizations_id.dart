@@ -2149,4 +2149,50 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get subStale =>
       'Jawaban ini lebih lama dari yang terakhir diterima, jadi ditolak. Jika penyedia memulihkan cadangan lama, ubah langganan lalu simpan lagi.';
+
+  @override
+  String get flTunnelDomain => 'Domain terowongan';
+
+  @override
+  String get flServerKey => 'Kunci server';
+
+  @override
+  String get flResolvers => 'Resolver';
+
+  @override
+  String get hpTunnelDomain =>
+      'Zona yang Anda delegasikan ke server terowongan, seperti t.example.com';
+
+  @override
+  String get hpServerKey => '64 digit heksadesimal; server menampilkannya';
+
+  @override
+  String get hpResolvers =>
+      'Dicoba berurutan: udp://IP:port, tls://host:port atau https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'Login upstream SOCKS5 server; kosongkan jika tidak ada';
+
+  @override
+  String get scanFind => 'Cari resolver yang bekerja';
+
+  @override
+  String get scanBusy => 'Mencoba resolver…';
+
+  @override
+  String scanFound(int count) {
+    return 'Resolver yang bekerja: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'Tidak ada resolver yang bekerja. Periksa domain dan kunci, dan pastikan server berjalan.';
+
+  @override
+  String get scanConnected =>
+      'Putuskan dulu: pemindaian harus memakai jaringan langsung, bukan lewat VPN.';
+
+  @override
+  String get scanNeedsFields => 'Isi dulu domain terowongan dan kunci server.';
 }

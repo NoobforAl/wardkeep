@@ -130,6 +130,7 @@ type Server struct {
 	WireGuard    WireGuard    `json:"wireguard"`
 	AmneziaWG    AmneziaWG    `json:"amneziawg"`
 	DNSCrypt     DNSCrypt     `json:"dnscrypt"`
+	DNSTT        DNSTT        `json:"dnstt"`
 	API          API          `json:"api"`
 	ACME         ACME         `json:"acme"`
 	// IPv6 gives users an IPv6 address inside the tunnels that can carry one

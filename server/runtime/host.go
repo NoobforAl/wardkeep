@@ -88,6 +88,7 @@ func (s *Server) startHostLocked(st *store.State) {
 
 // stopHostLocked stops the host-level servers and removes their NAT rules.
 func (s *Server) stopHostLocked() {
+	s.stopDNSTTLocked()
 	for key, srv := range s.hosts {
 		s.meters.remove(key, s.tracker) // the last reading, while the server still counts
 		srv.Close()

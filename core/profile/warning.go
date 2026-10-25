@@ -83,6 +83,8 @@ func WarningsForProtocol(protocol string) []Warning {
 		return []Warning{wDPI}
 	case SSH:
 		return []Warning{wSSH}
+	case DNSTT:
+		return []Warning{wDNSTTSlow}
 	}
 	return nil
 }
@@ -120,6 +122,9 @@ func WarningsFor(p *Profile) []Warning {
 func warningsFromOptions(p *Profile, add func(Warning)) {
 	if p.Multiplex.Enabled() {
 		add(wMux)
+	}
+	if p.Protocol == DNSTT && p.Username == "" && p.Password == "" {
+		add(wDNSTTOpen)
 	}
 	if w := p.WireGuard; w != nil && w.Via != "" {
 		add(wWGChain)

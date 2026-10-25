@@ -502,6 +502,25 @@ class ProtocolFormSpec {
   );
 }
 
+/// How one candidate resolver did when a DNS tunnel was tested through it.
+class ResolverScanResult {
+  const ResolverScanResult({required this.resolver, this.ms = 0, this.error = ''});
+
+  final String resolver;
+
+  /// The time the tunnel's handshake took, in milliseconds; 0 when it did not work.
+  final int ms;
+  final String error;
+
+  bool get works => ms > 0;
+
+  factory ResolverScanResult.fromJson(Map<String, dynamic> j) => ResolverScanResult(
+        resolver: j['resolver'] as String,
+        ms: (j['ms'] as num?)?.toInt() ?? 0,
+        error: j['error'] as String? ?? '',
+      );
+}
+
 /// A weakness of a protocol or setting the user should know about: easy to recognise, not encrypted, slow.
 /// [code] is stable and translated by the app; [text] is the core's English fallback.
 class WarningSpec {
@@ -573,6 +592,15 @@ abstract class VpnEngine {
 
   /// The weaknesses of [profile]: its protocol's and the ones its settings cause.
   Future<List<WarningSpec>> warnings(ProfileInfo profile);
+
+  /// Tests a DNS tunnel ([domain], the server's [pubKey] in hex) through each of [resolvers] (none: a list of
+  /// well-known ones) and returns them, the working ones first. Throws [EngineException] (SCAN_CONNECTED) while
+  /// the VPN is on: the scan has to use the network directly.
+  Future<List<ResolverScanResult>> scanResolvers({
+    required String domain,
+    required String pubKey,
+    List<String> resolvers = const [],
+  });
 
   /// The share link of [profile]. Throws [EngineException] when the protocol has none.
   Future<String> exportLink(ProfileInfo profile);

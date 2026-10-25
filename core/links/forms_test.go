@@ -42,6 +42,7 @@ var formSamples = map[string]map[string]string{
 	profile.SSTP:  {"server": "vpn.example.com", "username": "alice", "password": "pw", "tls.insecure": "true"},
 	profile.IKEv2: {"server": "vpn.example.com", "username": "alice", "password": "pw", "ikev2.tcp": "true", "ikev2.remote_id": "vpn.example.com"},
 	profile.Tor:   {"tor.builtin": "snowflake"},
+	profile.DNSTT: {"dnstt.domain": "t.example.com", "dnstt.pubkey": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff", "dnstt.resolvers": "udp://1.1.1.1:53, https://dns.google/dns-query", "username": "u", "password": "p"},
 	profile.Tailscale: {"password": "tskey-auth-kABC123-secret", "tailscale.control_url": "https://hs.example.com", "tailscale.hostname": "phone",
 		"tailscale.exit_node": "home-pc", "tailscale.accept_routes": "true", "tailscale.ephemeral": "true"},
 	profile.OpenVPN: {"server": "vpn.example.com", "username": "u", "password": "p", "openvpn.network": "tcp",
@@ -109,7 +110,7 @@ func TestFormProfilesExportImportAndBuild(t *testing.T) {
 				t.Fatalf("link: %v", err)
 			}
 			switch protocol {
-			case profile.AmneziaWG, profile.SSTP, profile.IKEv2, profile.Tor, profile.Tailscale:
+			case profile.AmneziaWG, profile.SSTP, profile.IKEv2, profile.Tor, profile.Tailscale, profile.DNSTT:
 				return // not sing-box outbounds
 			}
 			if _, _, _, err := singbox.Outbound(p, "t"); err != nil {

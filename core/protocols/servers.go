@@ -18,7 +18,7 @@ func init() {
 	// certificate and looks like a real site), UDP protocols last.
 	for _, p := range []Protocol{
 		vlessReality{}, shadowsocks{}, trojan{}, hysteria2{}, tuic{}, anyTLS{}, shadowTLS{}, naive{}, sstp{}, ikev2{}, amneziawg{}, wireguard{},
-		openvpn{udp: true}, openvpn{}, dnscryptService{},
+		openvpn{udp: true}, openvpn{}, dnsttServer{}, dnscryptService{},
 	} {
 		register(p)
 	}

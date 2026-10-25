@@ -598,5 +598,18 @@
   "subErrKey": "A chave de assinatura não é uma chave pública válida",
   "subUnsigned": "A lista não está assinada digitalmente, mas há uma chave de assinatura, então foi recusada",
   "subBadSignature": "A assinatura digital da lista está errada: ela pode ter sido alterada no caminho, ou a chave é antiga",
-  "subStale": "Esta resposta é mais antiga que a última aceita, por isso foi recusada. Se o provedor restaurou um backup antigo, edite a lista e salve de novo."
+  "subStale": "Esta resposta é mais antiga que a última aceita, por isso foi recusada. Se o provedor restaurou um backup antigo, edite a lista e salve de novo.",
+  "flTunnelDomain": "Domínio do túnel",
+  "flServerKey": "Chave do servidor",
+  "flResolvers": "Resolvedores",
+  "hpTunnelDomain": "A zona delegada ao servidor do túnel, como t.example.com",
+  "hpServerKey": "64 dígitos hexadecimais; o servidor o mostra",
+  "hpResolvers": "Tentados em ordem: udp://IP:port, tls://host:port ou https://host/path",
+  "hpTunnelLogin": "O login do upstream SOCKS5 do servidor; vazio se não houver",
+  "scanFind": "Encontrar resolvedores que funcionam",
+  "scanBusy": "Testando resolvedores…",
+  "scanFound": "Resolvedores que funcionam: {count}",
+  "scanNone": "Nenhum resolvedor funcionou. Confira o domínio e a chave, e se o servidor está rodando.",
+  "scanConnected": "Desconecte primeiro: a busca precisa usar a rede diretamente, não a VPN.",
+  "scanNeedsFields": "Preencha primeiro o domínio do túnel e a chave do servidor."
 }

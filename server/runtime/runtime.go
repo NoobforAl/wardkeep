@@ -52,6 +52,7 @@ type Server struct {
 	accStop context.CancelFunc
 
 	hosts   map[string]hostproto.Server // running SSTP / IKEv2 servers
+	dnstt   *dnsttSidecar               // the DNS tunnel's front end, when it runs
 	undoNAT func()
 	meters  hostMeters       // per-user traffic of the host-level servers
 	runner  hostproto.Runner // runs nft/iptables; tests replace it
@@ -130,6 +131,7 @@ func (s *Server) Start() error {
 		return err
 	}
 	s.startHostLocked(st)
+	s.startDNSTTLocked(st)
 	if sub := st.Server.Subscription; sub.Enabled {
 		ln, err := net.Listen("tcp", net.JoinHostPort(sub.Listen, strconv.Itoa(sub.Port)))
 		if err != nil {
@@ -218,6 +220,8 @@ func (s *Server) stopBoxLocked() {
 func listenerFingerprint(st *store.State) string {
 	c := *st
 	c.Server.API = store.API{}
+	// The subscription endpoint reads these from the file on every request; no listener does.
+	c.Server.Subscription.ProtocolOrder, c.Server.Subscription.SigningKey = nil, ""
 	c.Users = make([]*store.User, len(st.Users))
 	for i, u := range st.Users {
 		v := *u
@@ -245,6 +249,7 @@ func (s *Server) Reload() error {
 	s.stopHostLocked()
 	err = s.startBoxLocked(st)
 	s.startHostLocked(st)
+	s.startDNSTTLocked(st)
 	return err
 }
 

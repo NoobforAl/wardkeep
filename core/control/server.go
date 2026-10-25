@@ -22,6 +22,7 @@ import (
 	"github.com/sagernet/sing-box/option"
 	"github.com/sagernet/sing/common/logger"
 
+	"github.com/NoobforAl/omnitun/core/dnstt"
 	"github.com/NoobforAl/omnitun/core/engine"
 	"github.com/NoobforAl/omnitun/core/importer"
 	"github.com/NoobforAl/omnitun/core/killswitch"
@@ -429,6 +430,22 @@ func (s *Server) dispatch(req Request) (any, error) {
 			return nil, &Error{Code: CodeBadRequest, Message: "a profile is required"}
 		}
 		return p.Profile.Values(), nil
+	case "dnstt_scan":
+		p, err := decode[DNSTTScanParams](req.Params)
+		if err != nil {
+			return nil, err
+		}
+		// The scan has to use the network as it is: through a running VPN it would measure the VPN.
+		if st := s.engine.State().Status; st == engine.StatusRunning || st == engine.StatusStarting {
+			return nil, &Error{Code: CodeScanConnected, Message: "disconnect the VPN first: a resolver scan has to use the network directly"}
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		defer cancel()
+		res, err := dnstt.Scan(ctx, dnstt.Config{Domain: p.Domain, PubKey: p.PubKey}, p.Resolvers, dnstt.Options{}, 6, 12*time.Second)
+		if err != nil && res == nil {
+			return nil, badRequest(err)
+		}
+		return res, nil
 	case "warnings":
 		p, err := decode[ProfileParams](req.Params)
 		if err != nil || p.Profile == nil {

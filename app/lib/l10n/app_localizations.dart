@@ -3713,6 +3713,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This answer is older than the last one accepted, so it was refused. If the provider restored an old backup, edit the subscription and save it again.'**
   String get subStale;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Tunnel domain'**
+  String get flTunnelDomain;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Server key'**
+  String get flServerKey;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Resolvers'**
+  String get flResolvers;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'The zone you delegated to the tunnel server, such as t.example.com'**
+  String get hpTunnelDomain;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'64 hexadecimal digits; the server prints it'**
+  String get hpServerKey;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Tried in order: udp://IP:port, tls://host:port or https://host/path'**
+  String get hpResolvers;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'The login of the server\'s SOCKS5 upstream; empty if it has none'**
+  String get hpTunnelLogin;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Find working resolvers'**
+  String get scanFind;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Trying resolvers…'**
+  String get scanBusy;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Working resolvers found: {count}'**
+  String scanFound(int count);
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'No resolver worked. Check the domain and the key, and that the server is running.'**
+  String get scanNone;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect first: the scan has to use the network directly, not through the VPN.'**
+  String get scanConnected;
+
+  /// DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the tunnel domain and the server key first.'**
+  String get scanNeedsFields;
 }
 
 class _AppLocalizationsDelegate

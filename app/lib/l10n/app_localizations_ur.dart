@@ -2166,4 +2166,50 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get subStale =>
       'یہ جواب آخری قبول شدہ جواب سے پرانا ہے، اس لیے مسترد کیا گیا۔ اگر فراہم کنندہ نے پرانا بیک اپ بحال کیا ہے تو رکنیت میں ترمیم کریں اور دوبارہ محفوظ کریں۔';
+
+  @override
+  String get flTunnelDomain => 'ٹنل کا ڈومین';
+
+  @override
+  String get flServerKey => 'سرور کی کلید';
+
+  @override
+  String get flResolvers => 'ریزولور';
+
+  @override
+  String get hpTunnelDomain =>
+      'وہ زون جو آپ نے ٹنل سرور کو سونپا، جیسے t.example.com';
+
+  @override
+  String get hpServerKey => '64 ہیکساڈیسیمل ہندسے؛ سرور اسے دکھاتا ہے';
+
+  @override
+  String get hpResolvers =>
+      'ترتیب سے آزمائے جاتے ہیں: udp://IP:port، tls://host:port یا https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'سرور کے SOCKS5 اپ اسٹریم کا لاگ اِن؛ نہ ہو تو خالی چھوڑیں';
+
+  @override
+  String get scanFind => 'کام کرنے والے ریزولور تلاش کریں';
+
+  @override
+  String get scanBusy => 'ریزولور آزمائے جا رہے ہیں…';
+
+  @override
+  String scanFound(int count) {
+    return 'کام کرنے والے ریزولور ملے: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'کوئی ریزولور کام نہ آیا۔ ڈومین اور کلید جانچیں، اور دیکھیں کہ سرور چل رہا ہے۔';
+
+  @override
+  String get scanConnected =>
+      'پہلے ڈس کنیکٹ کریں: اسکین کو نیٹ ورک براہِ راست استعمال کرنا ہوگا، VPN کے ذریعے نہیں۔';
+
+  @override
+  String get scanNeedsFields => 'پہلے ٹنل کا ڈومین اور سرور کی کلید درج کریں۔';
 }

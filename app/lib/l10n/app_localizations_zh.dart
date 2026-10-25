@@ -2059,4 +2059,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get subStale => '此响应比上次接受的更旧，因此被拒绝。如果提供商恢复了旧备份，请编辑订阅并重新保存。';
+
+  @override
+  String get flTunnelDomain => '隧道域名';
+
+  @override
+  String get flServerKey => '服务器密钥';
+
+  @override
+  String get flResolvers => '解析器';
+
+  @override
+  String get hpTunnelDomain => '委派给隧道服务器的区域，例如 t.example.com';
+
+  @override
+  String get hpServerKey => '64 位十六进制数字；服务器会打印出来';
+
+  @override
+  String get hpResolvers =>
+      '按顺序尝试：udp://IP:port、tls://host:port 或 https://host/path';
+
+  @override
+  String get hpTunnelLogin => '服务器 SOCKS5 上游的登录名；没有则留空';
+
+  @override
+  String get scanFind => '查找可用的解析器';
+
+  @override
+  String get scanBusy => '正在尝试解析器…';
+
+  @override
+  String scanFound(int count) {
+    return '找到可用的解析器：$count';
+  }
+
+  @override
+  String get scanNone => '没有可用的解析器。请检查域名和密钥，并确认服务器正在运行。';
+
+  @override
+  String get scanConnected => '请先断开连接：扫描必须直接使用网络，而不是通过 VPN。';
+
+  @override
+  String get scanNeedsFields => '请先填写隧道域名和服务器密钥。';
 }

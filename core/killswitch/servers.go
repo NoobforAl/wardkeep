@@ -27,6 +27,7 @@ var unsupported = map[string]bool{
 	profile.IKEv2:     true,
 	profile.SSTP:      true,
 	profile.AmneziaWG: true,
+	profile.DNSTT:     true, // its helper sockets go to resolvers the kill switch does not know
 }
 
 // CheckProfiles refuses a profile set the kill switch cannot protect.

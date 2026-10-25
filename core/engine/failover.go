@@ -173,7 +173,7 @@ func (e *Engine) probe(ctx context.Context, instance *box.Box, tag, testURL stri
 	// Tor builds circuits on the first connection, which takes a while.
 	timeout := 8 * time.Second
 	e.mu.Lock()
-	if e.torRun != nil {
+	if e.torRun != nil || e.dnsttRun != nil {
 		timeout = 40 * time.Second
 	}
 	e.mu.Unlock()

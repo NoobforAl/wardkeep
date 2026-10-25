@@ -155,6 +155,10 @@ func (m *Manager) Init(o InitOptions) (*ServerInfo, error) {
 		// It needs an address to listen on, which a new server does not have yet.
 		return nil, invalid("%v (init the server without dnscrypt, then set the address and run: proto enable dnscrypt)", store.ErrDNSCryptListen)
 	}
+	if slices.Contains(o.Enabled, store.DNSTTKey) {
+		// It needs a domain delegated to the server, which a new server does not have yet.
+		return nil, invalid("the DNS tunnel needs its domain first (init the server without dnstt, then run: dnstt domain <name>; proto enable dnstt)")
+	}
 	probe := &store.State{Server: store.Server{Protocols: map[string]*store.Proto{}}}
 	for _, key := range append(append([]string{}, o.Enabled...), mapKeys(o.Ports)...) {
 		if !slices.Contains(store.AllProtocols, key) {
@@ -366,6 +370,9 @@ func (m *Manager) SetProtocol(key string, patch ProtocolPatch) (*ProtocolInfo, e
 				if _, err := store.ParseDNSCryptListen(st.Server.DNSCrypt.Listen); err != nil {
 					return invalid("%v", store.ErrDNSCryptListen)
 				}
+			}
+			if *patch.Enabled && key == store.DNSTTKey && st.Server.DNSTT.Domain == "" {
+				return invalid("the DNS tunnel needs its domain first (omnitun-server dnstt domain <name>)")
 			}
 			p.Enabled = *patch.Enabled
 		}

@@ -345,6 +345,20 @@ class DaemonEngine implements VpnEngine {
   ];
 
   @override
+  Future<List<ResolverScanResult>> scanResolvers({
+    required String domain,
+    required String pubKey,
+    List<String> resolvers = const [],
+  }) async => [
+    for (final r in await _call('dnstt_scan', {
+      'domain': domain,
+      'pubkey': pubKey,
+      if (resolvers.isNotEmpty) 'resolvers': resolvers,
+    }) as List)
+      ResolverScanResult.fromJson(r as Map<String, dynamic>),
+  ];
+
+  @override
   Future<String> exportLink(ProfileInfo profile) async =>
       await _call('export_link', {'profile': profile.raw}) as String;
 

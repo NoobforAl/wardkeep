@@ -1446,5 +1446,62 @@
   "subStale": "This answer is older than the last one accepted, so it was refused. If the provider restored an old backup, edit the subscription and save it again.",
   "@subStale": {
     "description": "A signed subscription answer older than the last one accepted"
+  },
+  "flTunnelDomain": "Tunnel domain",
+  "@flTunnelDomain": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "flServerKey": "Server key",
+  "@flServerKey": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "flResolvers": "Resolvers",
+  "@flResolvers": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "hpTunnelDomain": "The zone you delegated to the tunnel server, such as t.example.com",
+  "@hpTunnelDomain": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "hpServerKey": "64 hexadecimal digits; the server prints it",
+  "@hpServerKey": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "hpResolvers": "Tried in order: udp://IP:port, tls://host:port or https://host/path",
+  "@hpResolvers": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "hpTunnelLogin": "The login of the server's SOCKS5 upstream; empty if it has none",
+  "@hpTunnelLogin": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "scanFind": "Find working resolvers",
+  "@scanFind": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "scanBusy": "Trying resolvers…",
+  "@scanBusy": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "scanFound": "Working resolvers found: {count}",
+  "@scanFound": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanNone": "No resolver worked. Check the domain and the key, and that the server is running.",
+  "@scanNone": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "scanConnected": "Disconnect first: the scan has to use the network directly, not through the VPN.",
+  "@scanConnected": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "scanNeedsFields": "Fill in the tunnel domain and the server key first.",
+  "@scanNeedsFields": {
+    "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
   }
 }

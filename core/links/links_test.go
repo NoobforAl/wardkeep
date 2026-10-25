@@ -63,6 +63,8 @@ func TestExportRoundTrip(t *testing.T) {
 		"tailscale":           "tailscale://tskey-auth-kABC123-secret@hs.example.com:8443?hostname=phone&exit=home&routes=1&ephemeral=1#Home%20mesh",
 		"tailscale http":      "tailscale://0123abcd@192.0.2.9:8080?scheme=http&hostname=lab#Lab",
 		"tailscale own":       "tailscale://tskey-auth-kXYZ-abc@/#Tailscale",
+		"dnstt":               "dnstt://00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff@t.example.com?resolver=udp%3A%2F%2F1.1.1.1%3A53&resolver=https%3A%2F%2Fdns.google%2Fdns-query&user=u&pass=p#dns",
+		"dnstt open":          "dnstt://00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff@t.example.com?resolver=tls%3A%2F%2Fdns.google%3A853#open",
 		"tor":                 "tor://",
 		"tor snowflake":       "tor://snowflake",
 		"tor meek":            "tor://meek",

@@ -135,6 +135,11 @@ func (st *State) migrate() (bool, error) {
 	} else if ch {
 		changed = true
 	}
+	if ch, err := st.ensureDNSTT(); err != nil {
+		return false, err
+	} else if ch {
+		changed = true
+	}
 	if ch, err := st.ensureSubscriptionKey(); err != nil {
 		return false, err
 	} else if ch {

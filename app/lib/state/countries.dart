@@ -181,7 +181,7 @@ String flagEmoji(String code) => String.fromCharCodes(code.toUpperCase().codeUni
 /// Guesses the country of [p] from its name, then its address. Returns an
 /// ISO code, or null when nothing in the profile tells.
 String? guessCountry(ProfileInfo p) {
-  if (p.protocol == 'tor' || p.isMesh) return null;
+  if (p.protocol == 'tor' || p.protocol == 'dnstt' || p.isMesh) return null;
   final name = p.name;
 
   final flag = codeOfFlag(name);

@@ -598,5 +598,18 @@
   "subErrKey": "Kunci tanda tangan bukan kunci publik yang sah",
   "subUnsigned": "Langganan tidak bertanda tangan, tetapi kunci tanda tangan sudah diatur, jadi ditolak",
   "subBadSignature": "Tanda tangan langganan salah: mungkin diubah di jalan, atau kuncinya lama",
-  "subStale": "Jawaban ini lebih lama dari yang terakhir diterima, jadi ditolak. Jika penyedia memulihkan cadangan lama, ubah langganan lalu simpan lagi."
+  "subStale": "Jawaban ini lebih lama dari yang terakhir diterima, jadi ditolak. Jika penyedia memulihkan cadangan lama, ubah langganan lalu simpan lagi.",
+  "flTunnelDomain": "Domain terowongan",
+  "flServerKey": "Kunci server",
+  "flResolvers": "Resolver",
+  "hpTunnelDomain": "Zona yang Anda delegasikan ke server terowongan, seperti t.example.com",
+  "hpServerKey": "64 digit heksadesimal; server menampilkannya",
+  "hpResolvers": "Dicoba berurutan: udp://IP:port, tls://host:port atau https://host/path",
+  "hpTunnelLogin": "Login upstream SOCKS5 server; kosongkan jika tidak ada",
+  "scanFind": "Cari resolver yang bekerja",
+  "scanBusy": "Mencoba resolver…",
+  "scanFound": "Resolver yang bekerja: {count}",
+  "scanNone": "Tidak ada resolver yang bekerja. Periksa domain dan kunci, dan pastikan server berjalan.",
+  "scanConnected": "Putuskan dulu: pemindaian harus memakai jaringan langsung, bukan lewat VPN.",
+  "scanNeedsFields": "Isi dulu domain terowongan dan kunci server."
 }

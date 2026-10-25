@@ -272,6 +272,13 @@ class CoreEngine implements VpnEngine {
   Future<List<WarningSpec>> warnings(ProfileInfo profile) async => (await _ready).warnings(profile);
 
   @override
+  Future<List<ResolverScanResult>> scanResolvers({
+    required String domain,
+    required String pubKey,
+    List<String> resolvers = const [],
+  }) async => (await _ready).scanResolvers(domain: domain, pubKey: pubKey, resolvers: resolvers);
+
+  @override
   Future<String> exportLink(ProfileInfo profile) async => (await _ready).exportLink(profile);
 
   @override

@@ -258,6 +258,20 @@ class MockEngine implements VpnEngine {
   @override
   Future<List<WarningSpec>> warnings(ProfileInfo profile) async => const [];
 
+  /// What [scanResolvers] answers (tests change it): one resolver that works, one that does not.
+  List<ResolverScanResult> scan = const [
+    ResolverScanResult(resolver: 'udp://1.1.1.1:53', ms: 180),
+    ResolverScanResult(resolver: 'https://dns.google/dns-query', ms: 420),
+    ResolverScanResult(resolver: 'udp://8.8.8.8:53', error: 'context deadline exceeded'),
+  ];
+
+  @override
+  Future<List<ResolverScanResult>> scanResolvers({
+    required String domain,
+    required String pubKey,
+    List<String> resolvers = const [],
+  }) async => scan;
+
   @override
   Future<String> exportLink(ProfileInfo profile) async {
     if (profile.protocol != 'trojan') throw EngineException('BAD_REQUEST', 'no share link for ${profile.protocol}');

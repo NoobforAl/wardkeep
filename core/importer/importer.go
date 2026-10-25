@@ -139,6 +139,8 @@ func ParseLink(link string) (*profile.Profile, error) {
 		p, err = parseTorLink(link)
 	case "tailscale", "headscale":
 		p, err = parseTailscaleLink(link)
+	case "dnstt":
+		p, err = parseDNSTT(link)
 	default:
 		return nil, &UnsupportedError{Scheme: scheme}
 	}

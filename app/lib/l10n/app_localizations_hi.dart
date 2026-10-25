@@ -2164,4 +2164,50 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get subStale =>
       'यह जवाब पिछले स्वीकार किए गए जवाब से पुराना है, इसलिए अस्वीकार किया गया। यदि प्रदाता ने पुराना बैकअप बहाल किया है, तो सदस्यता संपादित करें और फिर से सहेजें।';
+
+  @override
+  String get flTunnelDomain => 'टनल का डोमेन';
+
+  @override
+  String get flServerKey => 'सर्वर कुंजी';
+
+  @override
+  String get flResolvers => 'रिज़ॉल्वर';
+
+  @override
+  String get hpTunnelDomain =>
+      'वह ज़ोन जो आपने टनल सर्वर को सौंपा है, जैसे t.example.com';
+
+  @override
+  String get hpServerKey => '64 हेक्साडेसिमल अंक; सर्वर इसे दिखाता है';
+
+  @override
+  String get hpResolvers =>
+      'क्रम से आज़माए जाते हैं: udp://IP:port, tls://host:port या https://host/path';
+
+  @override
+  String get hpTunnelLogin =>
+      'सर्वर के SOCKS5 अपस्ट्रीम का लॉगिन; न हो तो खाली छोड़ें';
+
+  @override
+  String get scanFind => 'काम करने वाले रिज़ॉल्वर खोजें';
+
+  @override
+  String get scanBusy => 'रिज़ॉल्वर आज़माए जा रहे हैं…';
+
+  @override
+  String scanFound(int count) {
+    return 'काम करने वाले रिज़ॉल्वर मिले: $count';
+  }
+
+  @override
+  String get scanNone =>
+      'कोई रिज़ॉल्वर काम नहीं आया। डोमेन और कुंजी जाँचें, और देखें कि सर्वर चल रहा है।';
+
+  @override
+  String get scanConnected =>
+      'पहले डिस्कनेक्ट करें: जाँच को नेटवर्क सीधे इस्तेमाल करना होगा, VPN से नहीं।';
+
+  @override
+  String get scanNeedsFields => 'पहले टनल का डोमेन और सर्वर कुंजी भरें।';
 }

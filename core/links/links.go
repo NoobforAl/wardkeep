@@ -53,6 +53,8 @@ func Export(p *profile.Profile) (string, error) {
 		return tor(p), nil
 	case profile.Tailscale:
 		return tailscale(p)
+	case profile.DNSTT:
+		return dnstt(p), nil
 	case profile.WireGuard, profile.AmneziaWG:
 		return wireguard(p)
 	}
@@ -480,4 +482,20 @@ func wireguard(p *profile.Profile) (string, error) {
 		}
 	}
 	return build(scheme, url.PathEscape(g.PrivateKey), hostPort(p), "", q, p.Name), nil
+}
+
+// dnstt is dnstt://<server key>@<domain>?resolver=...&resolver=...&user=...&pass=...#name. The key is public, so it
+// travels as the user part of the link, the way a host-and-key pair is written elsewhere.
+func dnstt(p *profile.Profile) string {
+	o := p.DNSTT
+	if o == nil {
+		o = &profile.DNSTTOpts{}
+	}
+	q := &query{}
+	for _, r := range o.Resolvers {
+		q.add("resolver", r)
+	}
+	q.add("user", p.Username)
+	q.add("pass", p.Password)
+	return build("dnstt", url.PathEscape(o.PubKey), o.Domain, "", q, p.Name)
 }

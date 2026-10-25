@@ -9,6 +9,7 @@ import (
 
 	"github.com/NoobforAl/omnitun/core/importer"
 	"github.com/NoobforAl/omnitun/core/links"
+	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
 )
 
@@ -19,6 +20,7 @@ func testEnv() Env {
 		SSServerKey: "c2VydmVyLWtleS0xMjM0NQ==",
 		OpenVPN:     OpenVPN{CA: "CA\n", ServerCert: "CERT", ServerKey: "KEY", TLSCrypt: "CRYPT\n"},
 		WireGuard:   WireGuard{PrivateKey: "c2VydmVyLXByaXZhdGU=", PublicKey: "c2VydmVyLXB1YmxpYw==", Address: "10.30.0.1/16"},
+		DNSTT:       DNSTT{Domain: "t.example.com", PublicKey: strings.Repeat("ab", 32), PrivateKey: strings.Repeat("cd", 32), UpstreamPort: 5300},
 		AWG: AmneziaWG{PrivateKey: "YXdnLXByaXZhdGU=", PublicKey: "YXdnLXB1YmxpYw==", Params: map[string]string{
 			"jc": "5", "jmin": "42", "jmax": "105", "s1": "30", "s2": "94", "h1": "11", "h2": "12", "h3": "13", "h4": "14",
 		}},
@@ -93,7 +95,11 @@ func TestEveryProtocolIsCoherent(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if p.Protocol != s.Profile || p.Server != env.Host || !strings.HasPrefix(p.Name, env.Name) {
+			wantServer := env.Host
+			if s.Profile == profile.DNSTT {
+				wantServer = env.DNSTT.Domain // a DNS tunnel is reached by its zone, not by the host's address
+			}
+			if p.Protocol != s.Profile || p.Server != wantServer || !strings.HasPrefix(p.Name, env.Name) {
 				t.Fatalf("profile = %+v", p)
 			}
 			// SSTP, IKEv2 and AmneziaWG run on the core's own engines, not sing-box.

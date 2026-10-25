@@ -11,10 +11,12 @@ require (
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/danielgtaylor/huma/v2 v2.39.1
+	github.com/flynn/noise v1.0.0
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/gofrs/flock v0.13.1
 	github.com/gofrs/uuid/v5 v5.5.1
 	github.com/miekg/dns v1.1.73
+	github.com/refraction-networking/utls v1.8.2
 	github.com/sagernet/sing v0.9.7-0.20260929150544-0ad23b637bd4
 	github.com/sagernet/sing-box v1.14.3
 	github.com/sagernet/sing-openvpn v0.1.1-0.20260929151220-7c3045dbddce
@@ -23,10 +25,13 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/tailscale/wf v0.0.0-20240214030419-6fbb0a674ee6
 	github.com/xen0bit/veepin v0.9.8
+	github.com/xtaci/kcp-go/v5 v5.6.72
+	github.com/xtaci/smux v1.5.57
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird v0.0.0-20261008205628-362a60bb4e3f
 	go.yaml.in/yaml/v3 v3.0.5
 	go4.org/netipx v0.0.0-20260823151212-3075585bcbeb
 	golang.org/x/crypto v0.58.0
+	golang.org/x/net v0.61.0
 	golang.org/x/sys v0.49.0
 	golang.org/x/term v0.47.0
 	golang.zx2c4.com/wireguard/windows v1.1.1
@@ -172,7 +177,6 @@ require (
 	github.com/pkg/sftp v1.13.11 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/realclientip/realclientip-go v1.0.0 // indirect
-	github.com/refraction-networking/utls v1.8.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/safchain/ethtool v0.7.0 // indirect
 	github.com/sagernet/bbolt v0.0.0-20260915102804-500ee1e84832 // indirect
@@ -251,8 +255,6 @@ require (
 	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xo/terminfo v1.2.0 // indirect
-	github.com/xtaci/kcp-go/v5 v5.6.72 // indirect
-	github.com/xtaci/smux v1.5.57 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
 	gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266 // indirect
@@ -274,7 +276,6 @@ require (
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/mod v0.42.0 // indirect
-	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/text v0.43.0 // indirect

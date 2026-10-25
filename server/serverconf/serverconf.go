@@ -7,6 +7,7 @@ package serverconf
 import (
 	"crypto/ed25519"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -42,6 +43,7 @@ func Env(st *store.State, s *store.Store) protocols.Env {
 		WireGuard: wireGuardEnv(srv),
 		AWG:       awgEnv(srv),
 		DNSCrypt:  dnsCryptEnv(srv),
+		DNSTT:     protocols.DNSTT{Domain: srv.DNSTT.Domain, PublicKey: srv.DNSTT.PublicKey, PrivateKey: srv.DNSTT.PrivateKey, UpstreamPort: srv.DNSTT.UpstreamPort},
 		IPv6:      srv.IPv6,
 	}
 	if data, err := os.ReadFile(env.CertPath); err == nil {
@@ -210,6 +212,9 @@ func Profiles(st *store.State, s *store.Store, u *store.User) ([]*profile.Profil
 			continue // the DNSCrypt resolver is not a way to connect
 		}
 		prof, err := proto.Profile(env, p.Port, Account(u))
+		if errors.Is(err, protocols.ErrNoDNSTTDomain) {
+			continue // enabled by hand without a domain: nothing to hand out, and no reason to fail the rest
+		}
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", key, err)
 		}

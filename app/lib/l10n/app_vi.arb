@@ -598,5 +598,18 @@
   "subErrKey": "Khóa chữ ký không phải là khóa công khai hợp lệ",
   "subUnsigned": "Gói đăng ký không được ký nhưng đã đặt khóa chữ ký, nên bị từ chối",
   "subBadSignature": "Chữ ký của gói đăng ký sai: có thể đã bị sửa trên đường hoặc khóa đã cũ",
-  "subStale": "Phản hồi này cũ hơn phản hồi được chấp nhận gần nhất nên bị từ chối. Nếu nhà cung cấp khôi phục bản sao lưu cũ, hãy sửa gói đăng ký và lưu lại."
+  "subStale": "Phản hồi này cũ hơn phản hồi được chấp nhận gần nhất nên bị từ chối. Nếu nhà cung cấp khôi phục bản sao lưu cũ, hãy sửa gói đăng ký và lưu lại.",
+  "flTunnelDomain": "Tên miền đường hầm",
+  "flServerKey": "Khóa máy chủ",
+  "flResolvers": "Bộ phân giải",
+  "hpTunnelDomain": "Vùng bạn đã ủy quyền cho máy chủ đường hầm, như t.example.com",
+  "hpServerKey": "64 chữ số thập lục phân; máy chủ sẽ in ra",
+  "hpResolvers": "Thử lần lượt: udp://IP:port, tls://host:port hoặc https://host/path",
+  "hpTunnelLogin": "Thông tin đăng nhập SOCKS5 phía trên của máy chủ; để trống nếu không có",
+  "scanFind": "Tìm bộ phân giải hoạt động",
+  "scanBusy": "Đang thử các bộ phân giải…",
+  "scanFound": "Số bộ phân giải hoạt động: {count}",
+  "scanNone": "Không bộ phân giải nào hoạt động. Hãy kiểm tra tên miền, khóa và xem máy chủ có đang chạy không.",
+  "scanConnected": "Hãy ngắt kết nối trước: quét phải dùng mạng trực tiếp, không qua VPN.",
+  "scanNeedsFields": "Hãy nhập tên miền đường hầm và khóa máy chủ trước."
 }
