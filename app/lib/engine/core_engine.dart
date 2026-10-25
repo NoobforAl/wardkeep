@@ -269,6 +269,9 @@ class CoreEngine implements VpnEngine {
   Future<Map<String, String>> profileValues(ProfileInfo profile) async => (await _ready).profileValues(profile);
 
   @override
+  Future<List<WarningSpec>> warnings(ProfileInfo profile) async => (await _ready).warnings(profile);
+
+  @override
   Future<String> exportLink(ProfileInfo profile) async => (await _ready).exportLink(profile);
 
   @override

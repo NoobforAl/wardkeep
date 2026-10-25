@@ -256,6 +256,9 @@ class MockEngine implements VpnEngine {
   };
 
   @override
+  Future<List<WarningSpec>> warnings(ProfileInfo profile) async => const [];
+
+  @override
   Future<String> exportLink(ProfileInfo profile) async {
     if (profile.protocol != 'trojan') throw EngineException('BAD_REQUEST', 'no share link for ${profile.protocol}');
     return 'trojan://${Uri.encodeComponent(profile.raw['password'] as String? ?? '')}@${profile.server}:${profile.port}'

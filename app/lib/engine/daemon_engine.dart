@@ -339,6 +339,12 @@ class DaemonEngine implements VpnEngine {
   }
 
   @override
+  Future<List<WarningSpec>> warnings(ProfileInfo profile) async => [
+    for (final w in await _call('warnings', {'profile': profile.raw}) as List)
+      WarningSpec.fromJson(w as Map<String, dynamic>),
+  ];
+
+  @override
   Future<String> exportLink(ProfileInfo profile) async =>
       await _call('export_link', {'profile': profile.raw}) as String;
 

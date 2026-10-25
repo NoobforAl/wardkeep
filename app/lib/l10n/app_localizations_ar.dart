@@ -2053,4 +2053,58 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errMeshExit =>
       'لا يمكن استخدام هذا الجهاز كمخرج الآن. يجب أن يكون متصلًا ويتيح اتصاله.';
+
+  @override
+  String get wnTlsInsecure =>
+      'لا يتم فحص شهادة الخادم. يمكن لأي شخص على المسار قراءة حركة بياناتك أو تغييرها.';
+
+  @override
+  String get wnNoTls =>
+      'حركة البيانات غير مغلّفة بـ TLS. يسهل التعرف عليها وقد تُقرأ في الطريق.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess بروتوكول قديم ويسهل التعرف عليه. VLESS مع Reality خيار أفضل.';
+
+  @override
+  String get wnSsPlain =>
+      'من دون إضافة مثل shadow-tls تبدو حركة البيانات كبايتات عشوائية، وبعض الشبكات تحظر هذا النمط.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 متقادم. استخدم Hysteria 2 إذا كان الخادم يدعمه.';
+
+  @override
+  String get wnDpiVisible =>
+      'يسهل التعرف على هذا البروتوكول وغالبًا ما يُحظر في الشبكات المتشددة.';
+
+  @override
+  String get wnSshVisible => 'يسهل التعرف على أنفاق SSH.';
+
+  @override
+  String get wnDnsttSlow =>
+      'بطيء (عادةً أقل بكثير من 1 ميغابت/ث) ويعمل عبر TCP فقط. يرسل استعلامات DNS كثيرة يمكن للشبكة رؤيتها. استخدمه عندما لا ينجح غيره.';
+
+  @override
+  String get wnDnsttOpen =>
+      'بلا اسم مستخدم أو كلمة مرور: يمكن لأي شخص يملك هذا الرابط استخدام الخادم.';
+
+  @override
+  String get wnMuxLossy =>
+      'تعدد الإرسال يجمع اتصالات كثيرة في اتصال واحد. قد يبطئ الخط السيئ جميعها.';
+
+  @override
+  String get wnFragmentSide =>
+      'تجزئة المصافحة تفيد ضد بعض المرشحات، وقد تتعطل على غيرها، وتضيف تأخيرًا.';
+
+  @override
+  String get wnEchServer => 'يحتاج إلى خادم يدعم ECH، وإلا فشل الاتصال.';
+
+  @override
+  String get wnWgChain =>
+      'WireGuard داخل وكيل: إذا كان الوكيل بطيئًا فقد يتعثر النفق. يجب أن ينقل الوكيل UDP.';
+
+  @override
+  String get wnSubUnsigned =>
+      'هذه القائمة غير موقّعة، لذا لا يمكن اكتشاف تغييرها.';
 }

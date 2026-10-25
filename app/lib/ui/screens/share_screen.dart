@@ -8,6 +8,7 @@ import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
 import '../insets.dart';
+import '../widgets/warning_list.dart';
 
 /// A server's share link as text and as a QR code, for another device.
 class ShareScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,8 @@ class ShareScreen extends ConsumerStatefulWidget {
 
 class _ShareScreenState extends ConsumerState<ShareScreen> {
   late final Future<String> _link = ref.read(engineProvider).exportLink(widget.profile);
+  late final Future<List<WarningSpec>> _warnings =
+      ref.read(engineProvider).warnings(widget.profile).catchError((_) => const <WarningSpec>[]);
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +101,10 @@ class _ShareScreenState extends ConsumerState<ShareScreen> {
                     label: Text(context.l10n.shareCopy),
                   ),
                   const SizedBox(height: 16),
+                  FutureBuilder<List<WarningSpec>>(
+                    future: _warnings,
+                    builder: (context, w) => WarningList(w.data ?? const []),
+                  ),
                   Text(
                     context.l10n.shareWarning,
                     style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),

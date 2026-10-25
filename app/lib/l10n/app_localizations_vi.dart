@@ -1997,4 +1997,59 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get errMeshExit =>
       'Hiện không thể dùng thiết bị đó làm lối ra. Nó phải trực tuyến và chia sẻ kết nối của mình.';
+
+  @override
+  String get wnTlsInsecure =>
+      'Chứng chỉ của máy chủ không được kiểm tra. Bất kỳ ai trên đường đi đều có thể đọc hoặc sửa lưu lượng của bạn.';
+
+  @override
+  String get wnNoTls =>
+      'Lưu lượng không được bọc trong TLS. Dễ nhận ra và có thể bị đọc trên đường.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess là giao thức cũ và dễ nhận ra. VLESS với Reality là lựa chọn tốt hơn.';
+
+  @override
+  String get wnSsPlain =>
+      'Không có plugin như shadow-tls, lưu lượng trông như các byte ngẫu nhiên, và một số mạng chặn kiểu này.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 đã lỗi thời. Hãy dùng Hysteria 2 nếu máy chủ hỗ trợ.';
+
+  @override
+  String get wnDpiVisible =>
+      'Giao thức này dễ bị nhận diện và thường bị chặn trên các mạng nghiêm ngặt.';
+
+  @override
+  String get wnSshVisible => 'Đường hầm SSH dễ bị nhận diện.';
+
+  @override
+  String get wnDnsttSlow =>
+      'Chậm (thường thấp hơn nhiều so với 1 Mbit/s) và chỉ dùng TCP. Nó gửi rất nhiều truy vấn DNS mà mạng có thể thấy. Chỉ dùng khi không còn cách nào khác.';
+
+  @override
+  String get wnDnsttOpen =>
+      'Không có tên người dùng và mật khẩu: ai có liên kết này đều có thể dùng máy chủ.';
+
+  @override
+  String get wnMuxLossy =>
+      'Ghép kênh đặt nhiều kết nối vào một. Đường truyền xấu có thể làm chậm tất cả.';
+
+  @override
+  String get wnFragmentSide =>
+      'Chia nhỏ bắt tay giúp chống một số bộ lọc, có thể hỏng ở nơi khác và thêm độ trễ.';
+
+  @override
+  String get wnEchServer =>
+      'Cần máy chủ hỗ trợ ECH. Nếu không, kết nối sẽ thất bại.';
+
+  @override
+  String get wnWgChain =>
+      'WireGuard bên trong proxy: nếu proxy chậm, đường hầm có thể bị kẹt. Proxy phải truyền được UDP.';
+
+  @override
+  String get wnSubUnsigned =>
+      'Danh sách này không được ký, nên không thể phát hiện nếu nó bị thay đổi.';
 }

@@ -1,6 +1,7 @@
 // Translations of the core's profile-editor texts. The core sends its forms in English, so this maps an
 // English label or help text to the translated message; unknown texts are shown as they come. Add an entry
 // here (and the messages to every app_*.arb) when the core gets a new field: a test fails until it is covered.
+import '../engine/engine.dart';
 import 'app_localizations.dart';
 
 /// The translated label of a field of the core's profile forms ([english] is what the core sent).
@@ -102,5 +103,27 @@ String formHelp(AppLocalizations l, String english) {
     'Name or address of a device whose internet connection to use; empty reaches only your devices' => l.hpExitDevice,
     'Removed from the network when it goes offline' => l.hpTempDevice,
     _ => english,
+  };
+}
+
+/// The translated text of a warning of the core (see core/profile/warning.go), by its stable code; a code this
+/// app does not know yet shows the core's English text.
+String warningText(AppLocalizations l, WarningSpec w) {
+  return switch (w.code) {
+    'TLS_INSECURE' => l.wnTlsInsecure,
+    'NO_TLS' => l.wnNoTls,
+    'VMESS_LEGACY' => l.wnVmessLegacy,
+    'SS_PLAIN' => l.wnSsPlain,
+    'HYSTERIA1' => l.wnHysteria1,
+    'DPI_VISIBLE' => l.wnDpiVisible,
+    'SSH_VISIBLE' => l.wnSshVisible,
+    'DNSTT_SLOW' => l.wnDnsttSlow,
+    'DNSTT_OPEN' => l.wnDnsttOpen,
+    'MUX_LOSSY' => l.wnMuxLossy,
+    'FRAGMENT_SIDE' => l.wnFragmentSide,
+    'ECH_SERVER' => l.wnEchServer,
+    'WG_CHAIN' => l.wnWgChain,
+    'SUB_UNSIGNED' => l.wnSubUnsigned,
+    _ => w.text,
   };
 }

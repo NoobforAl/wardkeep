@@ -1274,5 +1274,61 @@
   "deviceCopyName": "Copy name",
   "deviceCopyAddress": "Copy address",
   "deviceCopied": "Copied",
-  "errMeshExit": "That device cannot be used as the exit right now. It must be online and offer its connection."
+  "errMeshExit": "That device cannot be used as the exit right now. It must be online and offer its connection.",
+  "wnTlsInsecure": "The server's certificate is not checked. Anyone on the path can read or change your traffic.",
+  "@wnTlsInsecure": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnNoTls": "Traffic is not wrapped in TLS. It is easy to recognise and may be read on the way.",
+  "@wnNoTls": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnVmessLegacy": "VMess is an older protocol and is easy to recognise. VLESS with Reality is a better choice.",
+  "@wnVmessLegacy": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnSsPlain": "Without a plugin such as shadow-tls the traffic looks like random bytes, and some networks block that pattern.",
+  "@wnSsPlain": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnHysteria1": "Hysteria 1 is deprecated. Use Hysteria 2 when the server supports it.",
+  "@wnHysteria1": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnDpiVisible": "This protocol is easy to identify and is often blocked on strict networks.",
+  "@wnDpiVisible": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnSshVisible": "SSH tunnels are easy to identify.",
+  "@wnSshVisible": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnDnsttSlow": "Slow (usually well under 1 Mbit/s) and TCP only. It sends many DNS queries that the network can see. Use it when nothing else works.",
+  "@wnDnsttSlow": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnDnsttOpen": "No username or password: anyone with this link can use the server.",
+  "@wnDnsttOpen": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnMuxLossy": "Multiplexing puts many connections on one. A bad link can slow all of them.",
+  "@wnMuxLossy": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnFragmentSide": "Fragmenting the handshake helps against some filters, may break on others, and adds delay.",
+  "@wnFragmentSide": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnEchServer": "Needs a server that supports ECH. Otherwise the connection fails.",
+  "@wnEchServer": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnWgChain": "WireGuard inside a proxy: if the proxy is slow, the tunnel can stall. The proxy must carry UDP.",
+  "@wnWgChain": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  },
+  "wnSubUnsigned": "This list is not signed, so a changed list cannot be detected.",
+  "@wnSubUnsigned": {
+    "description": "A warning about a weakness of a protocol or setting (see core/profile/warning.go)"
+  }
 }

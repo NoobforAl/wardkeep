@@ -2017,4 +2017,59 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get errMeshExit =>
       'Bu cihaz şu anda çıkış olarak kullanılamıyor. Çevrimiçi olmalı ve bağlantısını sunmalı.';
+
+  @override
+  String get wnTlsInsecure =>
+      'Sunucunun sertifikası denetlenmiyor. Yoldaki herkes trafiğinizi okuyabilir veya değiştirebilir.';
+
+  @override
+  String get wnNoTls =>
+      'Trafik TLS içine sarılmamış. Kolay tanınır ve yolda okunabilir.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess eski bir protokoldür ve kolay tanınır. Reality ile VLESS daha iyi bir seçimdir.';
+
+  @override
+  String get wnSsPlain =>
+      'shadow-tls gibi bir eklenti olmadan trafik rastgele baytlara benzer ve bazı ağlar bu örüntüyü engeller.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 kullanımdan kalktı. Sunucu destekliyorsa Hysteria 2 kullanın.';
+
+  @override
+  String get wnDpiVisible =>
+      'Bu protokol kolay tanınır ve sıkı ağlarda sık sık engellenir.';
+
+  @override
+  String get wnSshVisible => 'SSH tünelleri kolay tanınır.';
+
+  @override
+  String get wnDnsttSlow =>
+      'Yavaş (genellikle 1 Mbit/s\'nin çok altında) ve yalnızca TCP. Ağın görebileceği çok sayıda DNS sorgusu gönderir. Başka hiçbir şey çalışmadığında kullanın.';
+
+  @override
+  String get wnDnsttOpen =>
+      'Kullanıcı adı ve parola yok: bu bağlantıya sahip herkes sunucuyu kullanabilir.';
+
+  @override
+  String get wnMuxLossy =>
+      'Çoğullama birçok bağlantıyı tek bağlantıya koyar. Kötü bir hat hepsini yavaşlatabilir.';
+
+  @override
+  String get wnFragmentSide =>
+      'El sıkışmayı parçalamak bazı filtrelere karşı yardımcı olur, bazılarında bozulabilir ve gecikme ekler.';
+
+  @override
+  String get wnEchServer =>
+      'ECH destekleyen bir sunucu gerekir. Aksi halde bağlantı başarısız olur.';
+
+  @override
+  String get wnWgChain =>
+      'Bir proxy içinde WireGuard: proxy yavaşsa tünel takılabilir. Proxy UDP taşımalıdır.';
+
+  @override
+  String get wnSubUnsigned =>
+      'Bu liste imzalı değil, bu yüzden değiştirilmesi fark edilemez.';
 }

@@ -48,6 +48,8 @@ class ScriptedEngine implements VpnEngine {
   @override
   Future<Map<String, String>> profileValues(ProfileInfo profile) async => const {};
   @override
+  Future<List<WarningSpec>> warnings(ProfileInfo profile) async => const [];
+  @override
   Future<String> exportLink(ProfileInfo profile) async => '';
   @override
   void dispose() => controller.close();

@@ -2012,4 +2012,59 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get errMeshExit =>
       'اکنون نمی‌توان از آن دستگاه به‌عنوان خروجی استفاده کرد. باید آنلاین باشد و اتصالش را ارائه کند.';
+
+  @override
+  String get wnTlsInsecure =>
+      'گواهی سرور بررسی نمی‌شود. هر کسی در مسیر می‌تواند ترافیک شما را بخواند یا تغییر دهد.';
+
+  @override
+  String get wnNoTls =>
+      'ترافیک داخل TLS قرار نگرفته است. شناسایی آن آسان است و ممکن است در مسیر خوانده شود.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess پروتکلی قدیمی است و به‌آسانی شناسایی می‌شود. VLESS با Reality انتخاب بهتری است.';
+
+  @override
+  String get wnSsPlain =>
+      'بدون افزونه‌ای مانند shadow-tls، ترافیک شبیه بایت‌های تصادفی دیده می‌شود و برخی شبکه‌ها این الگو را مسدود می‌کنند.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 منسوخ شده است. اگر سرور پشتیبانی می‌کند از Hysteria 2 استفاده کنید.';
+
+  @override
+  String get wnDpiVisible =>
+      'این پروتکل به‌آسانی شناسایی می‌شود و در شبکه‌های سخت‌گیر اغلب مسدود است.';
+
+  @override
+  String get wnSshVisible => 'تونل‌های SSH به‌آسانی شناسایی می‌شوند.';
+
+  @override
+  String get wnDnsttSlow =>
+      'کند (معمولاً خیلی کمتر از ۱ مگابیت بر ثانیه) و فقط TCP. تعداد زیادی پرس‌وجوی DNS می‌فرستد که شبکه می‌تواند ببیند. فقط وقتی چیز دیگری کار نمی‌کند از آن استفاده کنید.';
+
+  @override
+  String get wnDnsttOpen =>
+      'بدون نام کاربری و گذرواژه: هر کسی که این پیوند را دارد می‌تواند از سرور استفاده کند.';
+
+  @override
+  String get wnMuxLossy =>
+      'چندگانه‌سازی چند اتصال را روی یک اتصال می‌گذارد. یک خط بد می‌تواند همه را کند کند.';
+
+  @override
+  String get wnFragmentSide =>
+      'تکه‌تکه کردن دست‌دهی در برابر برخی فیلترها کمک می‌کند، ممکن است روی برخی شبکه‌ها خراب شود و تأخیر اضافه می‌کند.';
+
+  @override
+  String get wnEchServer =>
+      'به سروری نیاز دارد که ECH را پشتیبانی کند، وگرنه اتصال برقرار نمی‌شود.';
+
+  @override
+  String get wnWgChain =>
+      'WireGuard درون یک پروکسی: اگر پروکسی کند باشد، تونل می‌تواند گیر کند. پروکسی باید UDP را عبور دهد.';
+
+  @override
+  String get wnSubUnsigned =>
+      'این فهرست امضا نشده است، پس تغییر آن قابل تشخیص نیست.';
 }

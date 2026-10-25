@@ -2042,4 +2042,59 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errMeshExit =>
       'Cet appareil ne peut pas servir de sortie pour le moment. Il doit être en ligne et proposer sa connexion.';
+
+  @override
+  String get wnTlsInsecure =>
+      'Le certificat du serveur n\'est pas vérifié. N\'importe qui sur le chemin peut lire ou modifier votre trafic.';
+
+  @override
+  String get wnNoTls =>
+      'Le trafic n\'est pas enveloppé dans du TLS. Il est facile à reconnaître et peut être lu en chemin.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess est un ancien protocole, facile à reconnaître. VLESS avec Reality est un meilleur choix.';
+
+  @override
+  String get wnSsPlain =>
+      'Sans module comme shadow-tls, le trafic ressemble à des octets aléatoires, et certains réseaux bloquent ce motif.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 est obsolète. Utilisez Hysteria 2 si le serveur le gère.';
+
+  @override
+  String get wnDpiVisible =>
+      'Ce protocole est facile à identifier et souvent bloqué sur les réseaux stricts.';
+
+  @override
+  String get wnSshVisible => 'Les tunnels SSH sont faciles à identifier.';
+
+  @override
+  String get wnDnsttSlow =>
+      'Lent (généralement bien en dessous de 1 Mbit/s) et TCP uniquement. Il envoie beaucoup de requêtes DNS que le réseau peut voir. À utiliser quand rien d\'autre ne marche.';
+
+  @override
+  String get wnDnsttOpen =>
+      'Ni nom d\'utilisateur ni mot de passe : toute personne ayant ce lien peut utiliser le serveur.';
+
+  @override
+  String get wnMuxLossy =>
+      'Le multiplexage met plusieurs connexions dans une seule. Une mauvaise liaison peut toutes les ralentir.';
+
+  @override
+  String get wnFragmentSide =>
+      'Fragmenter la poignée de main aide contre certains filtres, peut échouer sur d\'autres et ajoute du délai.';
+
+  @override
+  String get wnEchServer =>
+      'Nécessite un serveur compatible ECH. Sinon la connexion échoue.';
+
+  @override
+  String get wnWgChain =>
+      'WireGuard dans un proxy : si le proxy est lent, le tunnel peut se bloquer. Le proxy doit transporter l\'UDP.';
+
+  @override
+  String get wnSubUnsigned =>
+      'Cette liste n\'est pas signée : une modification ne peut pas être détectée.';
 }

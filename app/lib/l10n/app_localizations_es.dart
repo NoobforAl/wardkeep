@@ -2039,4 +2039,59 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errMeshExit =>
       'Ese dispositivo no se puede usar como salida ahora. Debe estar en línea y ofrecer su conexión.';
+
+  @override
+  String get wnTlsInsecure =>
+      'No se comprueba el certificado del servidor. Cualquiera en la ruta puede leer o cambiar tu tráfico.';
+
+  @override
+  String get wnNoTls =>
+      'El tráfico no va envuelto en TLS. Es fácil de reconocer y puede leerse por el camino.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess es un protocolo antiguo y fácil de reconocer. VLESS con Reality es mejor opción.';
+
+  @override
+  String get wnSsPlain =>
+      'Sin un complemento como shadow-tls, el tráfico parece bytes aleatorios, y algunas redes bloquean ese patrón.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 está obsoleto. Usa Hysteria 2 si el servidor lo admite.';
+
+  @override
+  String get wnDpiVisible =>
+      'Este protocolo es fácil de identificar y suele bloquearse en redes estrictas.';
+
+  @override
+  String get wnSshVisible => 'Los túneles SSH son fáciles de identificar.';
+
+  @override
+  String get wnDnsttSlow =>
+      'Lento (normalmente muy por debajo de 1 Mbit/s) y solo TCP. Envía muchas consultas DNS que la red puede ver. Úsalo cuando nada más funcione.';
+
+  @override
+  String get wnDnsttOpen =>
+      'Sin usuario ni contraseña: cualquiera con este enlace puede usar el servidor.';
+
+  @override
+  String get wnMuxLossy =>
+      'La multiplexación junta muchas conexiones en una. Un enlace malo puede ralentizarlas todas.';
+
+  @override
+  String get wnFragmentSide =>
+      'Fragmentar el saludo ayuda contra algunos filtros, puede fallar en otros y añade retardo.';
+
+  @override
+  String get wnEchServer =>
+      'Necesita un servidor compatible con ECH. Si no, la conexión falla.';
+
+  @override
+  String get wnWgChain =>
+      'WireGuard dentro de un proxy: si el proxy es lento, el túnel puede atascarse. El proxy debe transportar UDP.';
+
+  @override
+  String get wnSubUnsigned =>
+      'Esta lista no está firmada, así que no se puede detectar si la cambian.';
 }

@@ -2010,4 +2010,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errMeshExit =>
       'That device cannot be used as the exit right now. It must be online and offer its connection.';
+
+  @override
+  String get wnTlsInsecure =>
+      'The server\'s certificate is not checked. Anyone on the path can read or change your traffic.';
+
+  @override
+  String get wnNoTls =>
+      'Traffic is not wrapped in TLS. It is easy to recognise and may be read on the way.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess is an older protocol and is easy to recognise. VLESS with Reality is a better choice.';
+
+  @override
+  String get wnSsPlain =>
+      'Without a plugin such as shadow-tls the traffic looks like random bytes, and some networks block that pattern.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 is deprecated. Use Hysteria 2 when the server supports it.';
+
+  @override
+  String get wnDpiVisible =>
+      'This protocol is easy to identify and is often blocked on strict networks.';
+
+  @override
+  String get wnSshVisible => 'SSH tunnels are easy to identify.';
+
+  @override
+  String get wnDnsttSlow =>
+      'Slow (usually well under 1 Mbit/s) and TCP only. It sends many DNS queries that the network can see. Use it when nothing else works.';
+
+  @override
+  String get wnDnsttOpen =>
+      'No username or password: anyone with this link can use the server.';
+
+  @override
+  String get wnMuxLossy =>
+      'Multiplexing puts many connections on one. A bad link can slow all of them.';
+
+  @override
+  String get wnFragmentSide =>
+      'Fragmenting the handshake helps against some filters, may break on others, and adds delay.';
+
+  @override
+  String get wnEchServer =>
+      'Needs a server that supports ECH. Otherwise the connection fails.';
+
+  @override
+  String get wnWgChain =>
+      'WireGuard inside a proxy: if the proxy is slow, the tunnel can stall. The proxy must carry UDP.';
+
+  @override
+  String get wnSubUnsigned =>
+      'This list is not signed, so a changed list cannot be detected.';
 }

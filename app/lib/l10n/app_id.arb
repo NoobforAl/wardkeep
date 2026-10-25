@@ -555,5 +555,19 @@
   "deviceCopyName": "Salin nama",
   "deviceCopyAddress": "Salin alamat",
   "deviceCopied": "Disalin",
-  "errMeshExit": "Perangkat itu tidak bisa dipakai sebagai jalur keluar saat ini. Perangkat harus online dan menawarkan koneksinya."
+  "errMeshExit": "Perangkat itu tidak bisa dipakai sebagai jalur keluar saat ini. Perangkat harus online dan menawarkan koneksinya.",
+  "wnTlsInsecure": "Sertifikat server tidak diperiksa. Siapa pun di jalur dapat membaca atau mengubah lalu lintas Anda.",
+  "wnNoTls": "Lalu lintas tidak dibungkus TLS. Mudah dikenali dan bisa dibaca di jalan.",
+  "wnVmessLegacy": "VMess adalah protokol lama dan mudah dikenali. VLESS dengan Reality pilihan yang lebih baik.",
+  "wnSsPlain": "Tanpa plugin seperti shadow-tls, lalu lintas tampak seperti byte acak, dan beberapa jaringan memblokir pola itu.",
+  "wnHysteria1": "Hysteria 1 sudah usang. Gunakan Hysteria 2 jika server mendukungnya.",
+  "wnDpiVisible": "Protokol ini mudah dikenali dan sering diblokir di jaringan yang ketat.",
+  "wnSshVisible": "Terowongan SSH mudah dikenali.",
+  "wnDnsttSlow": "Lambat (biasanya jauh di bawah 1 Mbit/s) dan hanya TCP. Mengirim banyak kueri DNS yang bisa dilihat jaringan. Pakai saat tidak ada yang lain berhasil.",
+  "wnDnsttOpen": "Tanpa nama pengguna dan kata sandi: siapa pun yang punya tautan ini dapat memakai server.",
+  "wnMuxLossy": "Multipleks menaruh banyak koneksi dalam satu. Jalur yang buruk dapat memperlambat semuanya.",
+  "wnFragmentSide": "Memecah handshake membantu melawan beberapa filter, bisa gagal di yang lain, dan menambah jeda.",
+  "wnEchServer": "Perlu server yang mendukung ECH. Jika tidak, koneksi gagal.",
+  "wnWgChain": "WireGuard di dalam proxy: jika proxy lambat, terowongan bisa macet. Proxy harus membawa UDP.",
+  "wnSubUnsigned": "Daftar ini tidak bertanda tangan, jadi perubahan tidak bisa dideteksi."
 }

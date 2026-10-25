@@ -256,7 +256,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  test('every label and help text of the real core editors is translated', () async {
+  test('every label, help text and warning of the real core editors is translated', () async {
     final exe = CoreEngine.findDaemonExecutable();
     if (exe == null) {
       markTestSkipped('omnitun-svc not built');
@@ -295,8 +295,15 @@ void main() {
       'I5',
     };
     final missing = <String>[];
+    void checkWarning(WarningSpec w) {
+      if (warningText(en, w) != w.text) missing.add('warning (English) ${w.code}');
+      if (warningText(fa, w) == w.text) missing.add('warning ${w.code}');
+    }
+
     for (final f in forms) {
+      f.warnings.forEach(checkWarning);
       for (final field in f.fields) {
+        if (field.warning != null) checkWarning(field.warning!);
         if (formLabel(en, field.label) != field.label) missing.add('label (English) ${field.label}');
         if (!same.contains(field.label) && formLabel(fa, field.label) == field.label) {
           missing.add('label ${field.label}');

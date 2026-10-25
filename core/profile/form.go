@@ -34,6 +34,9 @@ type Field struct {
 	Default  string   `json:"default,omitempty"`
 	// Advanced fields can be hidden behind a "more" toggle.
 	Advanced bool `json:"advanced,omitempty"`
+	// Warning is shown while the field is on (a switched-on toggle, a chosen
+	// value) because that setting weakens something.
+	Warning *Warning `json:"warning,omitempty"`
 
 	get func(*Profile) string
 	set func(*Profile, string) error
@@ -44,6 +47,8 @@ type ProtocolForm struct {
 	Protocol string  `json:"protocol"`
 	Label    string  `json:"label"`
 	Fields   []Field `json:"fields"`
+	// Warnings are what is true of the protocol whatever its settings are.
+	Warnings []Warning `json:"warnings,omitempty"`
 }
 
 // ------------------------------------------------------------- accessors
@@ -60,11 +65,12 @@ func (f Field) with(opts ...func(*Field)) Field {
 	return f
 }
 
-func required(f *Field)          { f.Required = true }
-func advanced(f *Field)          { f.Advanced = true }
-func help(s string) func(*Field) { return func(f *Field) { f.Help = s } }
-func def(s string) func(*Field)  { return func(f *Field) { f.Default = s } }
-func kind(k string) func(*Field) { return func(f *Field) { f.Kind = k } }
+func required(f *Field)           { f.Required = true }
+func advanced(f *Field)           { f.Advanced = true }
+func help(s string) func(*Field)  { return func(f *Field) { f.Help = s } }
+func warn(w Warning) func(*Field) { return func(f *Field) { f.Warning = &w } }
+func def(s string) func(*Field)   { return func(f *Field) { f.Default = s } }
+func kind(k string) func(*Field)  { return func(f *Field) { f.Kind = k } }
 func choices(c ...string) func(*Field) {
 	return func(f *Field) { f.Kind, f.Choices = FieldChoice, c }
 }
@@ -510,7 +516,7 @@ func tlsFields(withSecurity, withReality bool) []Field {
 				return &t.Insecure
 			}
 			return nil
-		}, advanced, help("Only for servers with a self-signed certificate you cannot pin")),
+		}, advanced, help("Only for servers with a self-signed certificate you cannot pin"), warn(wInsecure)),
 		pem("tls.certificate", "Pinned certificate (PEM)", tlsStr(func(t *TLS) *string { return &t.Certificate }), advanced,
 			help("Trust this certificate instead of the system's authorities")),
 	)
@@ -788,7 +794,7 @@ func Forms() []ProtocolForm {
 	out := make([]ProtocolForm, 0, len(formLabels))
 	for _, l := range formLabels {
 		fs, _ := FormFor(l.protocol)
-		out = append(out, ProtocolForm{Protocol: l.protocol, Label: l.label, Fields: fs})
+		out = append(out, ProtocolForm{Protocol: l.protocol, Label: l.label, Fields: fs, Warnings: WarningsForProtocol(l.protocol)})
 	}
 	return out
 }

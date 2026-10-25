@@ -3455,6 +3455,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That device cannot be used as the exit right now. It must be online and offer its connection.'**
   String get errMeshExit;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'The server\'s certificate is not checked. Anyone on the path can read or change your traffic.'**
+  String get wnTlsInsecure;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic is not wrapped in TLS. It is easy to recognise and may be read on the way.'**
+  String get wnNoTls;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'VMess is an older protocol and is easy to recognise. VLESS with Reality is a better choice.'**
+  String get wnVmessLegacy;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'Without a plugin such as shadow-tls the traffic looks like random bytes, and some networks block that pattern.'**
+  String get wnSsPlain;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'Hysteria 1 is deprecated. Use Hysteria 2 when the server supports it.'**
+  String get wnHysteria1;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'This protocol is easy to identify and is often blocked on strict networks.'**
+  String get wnDpiVisible;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'SSH tunnels are easy to identify.'**
+  String get wnSshVisible;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'Slow (usually well under 1 Mbit/s) and TCP only. It sends many DNS queries that the network can see. Use it when nothing else works.'**
+  String get wnDnsttSlow;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'No username or password: anyone with this link can use the server.'**
+  String get wnDnsttOpen;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplexing puts many connections on one. A bad link can slow all of them.'**
+  String get wnMuxLossy;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'Fragmenting the handshake helps against some filters, may break on others, and adds delay.'**
+  String get wnFragmentSide;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a server that supports ECH. Otherwise the connection fails.'**
+  String get wnEchServer;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'WireGuard inside a proxy: if the proxy is slow, the tunnel can stall. The proxy must carry UDP.'**
+  String get wnWgChain;
+
+  /// A warning about a weakness of a protocol or setting (see core/profile/warning.go)
+  ///
+  /// In en, this message translates to:
+  /// **'This list is not signed, so a changed list cannot be detected.'**
+  String get wnSubUnsigned;
 }
 
 class _AppLocalizationsDelegate

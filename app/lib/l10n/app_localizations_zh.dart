@@ -1929,4 +1929,47 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get errMeshExit => '目前无法把该设备用作出口。它必须在线并共享其网络连接。';
+
+  @override
+  String get wnTlsInsecure => '不会检查服务器证书。路径上的任何人都可以读取或修改你的流量。';
+
+  @override
+  String get wnNoTls => '流量没有包裹在 TLS 中，容易被识别，也可能在途中被读取。';
+
+  @override
+  String get wnVmessLegacy => 'VMess 是较旧的协议，容易被识别。使用 VLESS 加 Reality 更好。';
+
+  @override
+  String get wnSsPlain => '没有 shadow-tls 之类的插件时，流量看起来像随机字节，有些网络会屏蔽这种特征。';
+
+  @override
+  String get wnHysteria1 => 'Hysteria 1 已被弃用。服务器支持时请使用 Hysteria 2。';
+
+  @override
+  String get wnDpiVisible => '此协议很容易被识别，在严格的网络中经常被屏蔽。';
+
+  @override
+  String get wnSshVisible => 'SSH 隧道很容易被识别。';
+
+  @override
+  String get wnDnsttSlow =>
+      '速度慢（通常远低于 1 Mbit/s），且仅支持 TCP。它会发出大量网络可见的 DNS 查询。仅在其他方式都不可用时使用。';
+
+  @override
+  String get wnDnsttOpen => '没有用户名和密码：任何拿到此链接的人都可以使用该服务器。';
+
+  @override
+  String get wnMuxLossy => '多路复用把许多连接放进一个连接。线路差时，它们可能全部变慢。';
+
+  @override
+  String get wnFragmentSide => '分片握手能对付某些过滤，但在另一些网络上可能失效，并增加延迟。';
+
+  @override
+  String get wnEchServer => '需要支持 ECH 的服务器，否则连接会失败。';
+
+  @override
+  String get wnWgChain => 'WireGuard 在代理内部运行：代理慢时隧道可能卡住。代理必须能传输 UDP。';
+
+  @override
+  String get wnSubUnsigned => '此列表未签名，因此无法发现列表被篡改。';
 }

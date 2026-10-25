@@ -2016,4 +2016,59 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get errMeshExit =>
       'اس ڈیوائس کو ابھی ایگزٹ کے طور پر استعمال نہیں کیا جا سکتا۔ اسے آن لائن ہونا اور اپنا کنکشن پیش کرنا ہوگا۔';
+
+  @override
+  String get wnTlsInsecure =>
+      'سرور کا سرٹیفکیٹ نہیں جانچا جاتا۔ راستے میں کوئی بھی آپ کا ٹریفک پڑھ یا بدل سکتا ہے۔';
+
+  @override
+  String get wnNoTls =>
+      'ٹریفک TLS میں لپٹا ہوا نہیں ہے۔ اسے پہچاننا آسان ہے اور راستے میں پڑھا جا سکتا ہے۔';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess پرانا پروٹوکول ہے اور اسے پہچاننا آسان ہے۔ Reality کے ساتھ VLESS بہتر انتخاب ہے۔';
+
+  @override
+  String get wnSsPlain =>
+      'shadow-tls جیسے پلگ اِن کے بغیر ٹریفک بے ترتیب بائٹس جیسا لگتا ہے، اور کچھ نیٹ ورک اس نمونے کو روک دیتے ہیں۔';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 متروک ہو چکا ہے۔ سرور سپورٹ کرے تو Hysteria 2 استعمال کریں۔';
+
+  @override
+  String get wnDpiVisible =>
+      'اس پروٹوکول کو پہچاننا آسان ہے اور سخت نیٹ ورکس پر اکثر بند کر دیا جاتا ہے۔';
+
+  @override
+  String get wnSshVisible => 'SSH ٹنل کو پہچاننا آسان ہے۔';
+
+  @override
+  String get wnDnsttSlow =>
+      'سست (عموماً 1 Mbit/s سے بہت کم) اور صرف TCP۔ یہ بہت سی DNS کوئریز بھیجتا ہے جنہیں نیٹ ورک دیکھ سکتا ہے۔ صرف تب استعمال کریں جب کچھ اور نہ چلے۔';
+
+  @override
+  String get wnDnsttOpen =>
+      'صارف نام اور پاس ورڈ نہیں: اس لنک والا کوئی بھی سرور استعمال کر سکتا ہے۔';
+
+  @override
+  String get wnMuxLossy =>
+      'ملٹی پلیکسنگ کئی کنکشن ایک میں رکھتی ہے۔ خراب لائن سب کو سست کر سکتی ہے۔';
+
+  @override
+  String get wnFragmentSide =>
+      'ہینڈ شیک کو ٹکڑوں میں بانٹنا کچھ فلٹرز کے خلاف مدد دیتا ہے، کچھ پر خراب ہو سکتا ہے اور تاخیر بڑھاتا ہے۔';
+
+  @override
+  String get wnEchServer =>
+      'ایسا سرور چاہیے جو ECH سپورٹ کرے، ورنہ کنکشن ناکام ہوگا۔';
+
+  @override
+  String get wnWgChain =>
+      'پراکسی کے اندر WireGuard: پراکسی سست ہو تو ٹنل رک سکتی ہے۔ پراکسی کو UDP گزارنا ہوگا۔';
+
+  @override
+  String get wnSubUnsigned =>
+      'یہ فہرست دستخط شدہ نہیں ہے، اس لیے تبدیلی کا پتا نہیں چل سکتا۔';
 }

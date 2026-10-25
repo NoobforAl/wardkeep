@@ -425,6 +425,12 @@ func (s *Server) dispatch(req Request) (any, error) {
 			return nil, &Error{Code: CodeBadRequest, Message: "a profile is required"}
 		}
 		return p.Profile.Values(), nil
+	case "warnings":
+		p, err := decode[ProfileParams](req.Params)
+		if err != nil || p.Profile == nil {
+			return nil, &Error{Code: CodeBadRequest, Message: "a profile is required"}
+		}
+		return append([]profile.Warning{}, profile.WarningsFor(p.Profile)...), nil
 	case "export_link":
 		p, err := decode[ProfileParams](req.Params)
 		if err != nil || p.Profile == nil {

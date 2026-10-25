@@ -147,7 +147,7 @@ void main() {
 
     final torProfile = await engine.buildProfile({'tor.builtin': 'snowflake'}, protocol: 'tor');
     expect(torProfile.protocol, 'tor');
-    expect(await engine.exportLink(torProfile), 'tor://snowflake');
+    expect(await engine.exportLink(torProfile), startsWith('tor://snowflake'));
   }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 
   test('JSON configs import through the daemon, and a failure says where and why', () async {

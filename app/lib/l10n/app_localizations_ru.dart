@@ -2047,4 +2047,59 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get errMeshExit =>
       'Сейчас это устройство нельзя использовать как выход. Оно должно быть в сети и предоставлять своё соединение.';
+
+  @override
+  String get wnTlsInsecure =>
+      'Сертификат сервера не проверяется. Любой на пути может читать или менять ваш трафик.';
+
+  @override
+  String get wnNoTls =>
+      'Трафик не обёрнут в TLS. Его легко распознать, и он может быть прочитан по пути.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess — устаревший протокол, его легко распознать. VLESS с Reality — лучший выбор.';
+
+  @override
+  String get wnSsPlain =>
+      'Без плагина вроде shadow-tls трафик выглядит как случайные байты, и некоторые сети блокируют такой шаблон.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 устарел. Используйте Hysteria 2, если сервер её поддерживает.';
+
+  @override
+  String get wnDpiVisible =>
+      'Этот протокол легко опознаётся и часто блокируется в строгих сетях.';
+
+  @override
+  String get wnSshVisible => 'SSH-туннели легко опознаются.';
+
+  @override
+  String get wnDnsttSlow =>
+      'Медленно (обычно намного меньше 1 Мбит/с) и только TCP. Отправляет много DNS-запросов, которые видит сеть. Используйте, когда ничего другого не работает.';
+
+  @override
+  String get wnDnsttOpen =>
+      'Нет имени пользователя и пароля: любой, у кого есть эта ссылка, может пользоваться сервером.';
+
+  @override
+  String get wnMuxLossy =>
+      'Мультиплексирование собирает много соединений в одно. Плохой канал может замедлить их все.';
+
+  @override
+  String get wnFragmentSide =>
+      'Фрагментация рукопожатия помогает против одних фильтров, может ломаться на других и добавляет задержку.';
+
+  @override
+  String get wnEchServer =>
+      'Нужен сервер с поддержкой ECH. Иначе соединение не установится.';
+
+  @override
+  String get wnWgChain =>
+      'WireGuard внутри прокси: если прокси медленный, туннель может зависать. Прокси должен передавать UDP.';
+
+  @override
+  String get wnSubUnsigned =>
+      'Этот список не подписан, поэтому подмену списка не обнаружить.';
 }

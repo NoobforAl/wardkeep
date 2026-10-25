@@ -419,6 +419,7 @@ class FormFieldSpec {
     this.choices = const [],
     this.defaultValue = '',
     this.advanced = false,
+    this.warning,
   });
 
   final String key;
@@ -434,6 +435,9 @@ class FormFieldSpec {
   /// Shown only after "More options".
   final bool advanced;
 
+  /// What to tell the user while this setting is on (a weakness the setting brings).
+  final WarningSpec? warning;
+
   factory FormFieldSpec.fromJson(Map<String, dynamic> j) => FormFieldSpec(
     key: j['key'] as String,
     label: j['label'] as String,
@@ -443,22 +447,42 @@ class FormFieldSpec {
     choices: [for (final c in (j['choices'] as List? ?? const [])) c as String],
     defaultValue: j['default'] as String? ?? '',
     advanced: j['advanced'] as bool? ?? false,
+    warning: j['warning'] == null ? null : WarningSpec.fromJson(j['warning'] as Map<String, dynamic>),
   );
 }
 
 /// The editor of one protocol.
 class ProtocolFormSpec {
-  const ProtocolFormSpec({required this.protocol, required this.label, required this.fields});
+  const ProtocolFormSpec({required this.protocol, required this.label, required this.fields, this.warnings = const []});
 
   final String protocol;
   final String label;
   final List<FormFieldSpec> fields;
 
+  /// What is true of the protocol whatever its settings are (see core/profile/warning.go).
+  final List<WarningSpec> warnings;
+
   factory ProtocolFormSpec.fromJson(Map<String, dynamic> j) => ProtocolFormSpec(
     protocol: j['protocol'] as String,
     label: j['label'] as String,
     fields: [for (final f in (j['fields'] as List? ?? const [])) FormFieldSpec.fromJson(f as Map<String, dynamic>)],
+    warnings: [for (final w in (j['warnings'] as List? ?? const [])) WarningSpec.fromJson(w as Map<String, dynamic>)],
   );
+}
+
+/// A weakness of a protocol or setting the user should know about: easy to recognise, not encrypted, slow.
+/// [code] is stable and translated by the app; [text] is the core's English fallback.
+class WarningSpec {
+  const WarningSpec({required this.code, required this.text, this.risk = true});
+
+  final String code;
+  final String text;
+
+  /// A "risk" weakens privacy or is easy to recognise; otherwise it is only good to know ("info").
+  final bool risk;
+
+  factory WarningSpec.fromJson(Map<String, dynamic> j) =>
+      WarningSpec(code: j['code'] as String, text: j['text'] as String? ?? '', risk: (j['level'] as String?) != 'info');
 }
 
 abstract class VpnEngine {
@@ -514,6 +538,9 @@ abstract class VpnEngine {
 
   /// What the editor shows for [profile].
   Future<Map<String, String>> profileValues(ProfileInfo profile);
+
+  /// The weaknesses of [profile]: its protocol's and the ones its settings cause.
+  Future<List<WarningSpec>> warnings(ProfileInfo profile);
 
   /// The share link of [profile]. Throws [EngineException] when the protocol has none.
   Future<String> exportLink(ProfileInfo profile);

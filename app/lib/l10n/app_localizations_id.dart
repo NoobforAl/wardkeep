@@ -1998,4 +1998,59 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get errMeshExit =>
       'Perangkat itu tidak bisa dipakai sebagai jalur keluar saat ini. Perangkat harus online dan menawarkan koneksinya.';
+
+  @override
+  String get wnTlsInsecure =>
+      'Sertifikat server tidak diperiksa. Siapa pun di jalur dapat membaca atau mengubah lalu lintas Anda.';
+
+  @override
+  String get wnNoTls =>
+      'Lalu lintas tidak dibungkus TLS. Mudah dikenali dan bisa dibaca di jalan.';
+
+  @override
+  String get wnVmessLegacy =>
+      'VMess adalah protokol lama dan mudah dikenali. VLESS dengan Reality pilihan yang lebih baik.';
+
+  @override
+  String get wnSsPlain =>
+      'Tanpa plugin seperti shadow-tls, lalu lintas tampak seperti byte acak, dan beberapa jaringan memblokir pola itu.';
+
+  @override
+  String get wnHysteria1 =>
+      'Hysteria 1 sudah usang. Gunakan Hysteria 2 jika server mendukungnya.';
+
+  @override
+  String get wnDpiVisible =>
+      'Protokol ini mudah dikenali dan sering diblokir di jaringan yang ketat.';
+
+  @override
+  String get wnSshVisible => 'Terowongan SSH mudah dikenali.';
+
+  @override
+  String get wnDnsttSlow =>
+      'Lambat (biasanya jauh di bawah 1 Mbit/s) dan hanya TCP. Mengirim banyak kueri DNS yang bisa dilihat jaringan. Pakai saat tidak ada yang lain berhasil.';
+
+  @override
+  String get wnDnsttOpen =>
+      'Tanpa nama pengguna dan kata sandi: siapa pun yang punya tautan ini dapat memakai server.';
+
+  @override
+  String get wnMuxLossy =>
+      'Multipleks menaruh banyak koneksi dalam satu. Jalur yang buruk dapat memperlambat semuanya.';
+
+  @override
+  String get wnFragmentSide =>
+      'Memecah handshake membantu melawan beberapa filter, bisa gagal di yang lain, dan menambah jeda.';
+
+  @override
+  String get wnEchServer =>
+      'Perlu server yang mendukung ECH. Jika tidak, koneksi gagal.';
+
+  @override
+  String get wnWgChain =>
+      'WireGuard di dalam proxy: jika proxy lambat, terowongan bisa macet. Proxy harus membawa UDP.';
+
+  @override
+  String get wnSubUnsigned =>
+      'Daftar ini tidak bertanda tangan, jadi perubahan tidak bisa dideteksi.';
 }

@@ -11,6 +11,7 @@ import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
 import '../insets.dart';
 import '../widgets/country_flag.dart';
+import '../widgets/warning_list.dart';
 import 'location_screen.dart';
 import 'qr_scan_screen.dart';
 import '../layout.dart';
@@ -38,6 +39,9 @@ class NewServerScreen extends ConsumerWidget {
             for (final f in list)
               ListTile(
                 title: Text(f.label),
+                subtitle: f.warnings.isEmpty
+                    ? null
+                    : Text(warningText(context.l10n, f.warnings.first), maxLines: 2, overflow: TextOverflow.ellipsis),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
                   final added = await Navigator.of(context)
@@ -195,6 +199,11 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
                 child: Text(_saveError ?? '', style: TextStyle(color: scheme.onErrorContainer)),
               ),
             ),
+            WarningList([
+              ...form.warnings,
+              for (final f in form.fields)
+                if (f.warning != null && _isOn(f)) f.warning!,
+            ]),
             if (profile != null && profile.group != ProfileInfo.defaultGroup)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -224,6 +233,12 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
         ),
       ),
     );
+  }
+
+  /// Whether a setting that carries a warning is switched on (a toggle on, a choice or text filled in).
+  bool _isOn(FormFieldSpec f) {
+    final v = _values[f.key] ?? _text[f.key]?.text ?? '';
+    return f.kind == 'bool' ? v == 'true' : v.isNotEmpty;
   }
 
   Widget _field(BuildContext context, FormFieldSpec f) {

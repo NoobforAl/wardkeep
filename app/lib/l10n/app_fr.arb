@@ -555,5 +555,19 @@
   "deviceCopyName": "Copier le nom",
   "deviceCopyAddress": "Copier l'adresse",
   "deviceCopied": "Copié",
-  "errMeshExit": "Cet appareil ne peut pas servir de sortie pour le moment. Il doit être en ligne et proposer sa connexion."
+  "errMeshExit": "Cet appareil ne peut pas servir de sortie pour le moment. Il doit être en ligne et proposer sa connexion.",
+  "wnTlsInsecure": "Le certificat du serveur n'est pas vérifié. N'importe qui sur le chemin peut lire ou modifier votre trafic.",
+  "wnNoTls": "Le trafic n'est pas enveloppé dans du TLS. Il est facile à reconnaître et peut être lu en chemin.",
+  "wnVmessLegacy": "VMess est un ancien protocole, facile à reconnaître. VLESS avec Reality est un meilleur choix.",
+  "wnSsPlain": "Sans module comme shadow-tls, le trafic ressemble à des octets aléatoires, et certains réseaux bloquent ce motif.",
+  "wnHysteria1": "Hysteria 1 est obsolète. Utilisez Hysteria 2 si le serveur le gère.",
+  "wnDpiVisible": "Ce protocole est facile à identifier et souvent bloqué sur les réseaux stricts.",
+  "wnSshVisible": "Les tunnels SSH sont faciles à identifier.",
+  "wnDnsttSlow": "Lent (généralement bien en dessous de 1 Mbit/s) et TCP uniquement. Il envoie beaucoup de requêtes DNS que le réseau peut voir. À utiliser quand rien d'autre ne marche.",
+  "wnDnsttOpen": "Ni nom d'utilisateur ni mot de passe : toute personne ayant ce lien peut utiliser le serveur.",
+  "wnMuxLossy": "Le multiplexage met plusieurs connexions dans une seule. Une mauvaise liaison peut toutes les ralentir.",
+  "wnFragmentSide": "Fragmenter la poignée de main aide contre certains filtres, peut échouer sur d'autres et ajoute du délai.",
+  "wnEchServer": "Nécessite un serveur compatible ECH. Sinon la connexion échoue.",
+  "wnWgChain": "WireGuard dans un proxy : si le proxy est lent, le tunnel peut se bloquer. Le proxy doit transporter l'UDP.",
+  "wnSubUnsigned": "Cette liste n'est pas signée : une modification ne peut pas être détectée."
 }
