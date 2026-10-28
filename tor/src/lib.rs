@@ -6,5 +6,6 @@
 //! as "unmanaged" transports (`--transport obfs4=127.0.0.1:PORT`).
 
 pub mod args;
+pub mod logging;
 pub mod path;
 pub mod socks;

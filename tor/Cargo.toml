@@ -26,8 +26,10 @@ tor-linkspec = "0.47"
 tor-geoip = { version = "0.47", features = ["embedded-db"] }
 anyhow = "1"
 serde_json = "1"
+# Logs (Arti's and ours) go to stdout as JSON records next to the events (docs/logging.md).
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["std", "registry", "env-filter"] }
 # Arti's TLS needs a process-wide crypto provider; ring cross-compiles to Android easily.
-tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "ansi"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 # Only with --features dhat-heap: a heap profiler for finding what allocates and what grows.
 dhat = { version = "0.3", optional = true }

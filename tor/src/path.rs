@@ -5,12 +5,12 @@
 
 use serde_json::{Value, json};
 
-/// The role of hop `i` of `n`: the first is the bridge when bridges are on, else the guard; the last is the
-/// exit; whatever lies between is a middle relay.
-pub fn role(i: usize, n: usize, bridged: bool) -> &'static str {
-    if i == 0 {
+/// The role of hop `index` of `hops`: the first is the bridge when bridges are on, else the guard; the last
+/// is the exit; whatever lies between is a middle relay.
+pub fn role(index: usize, hops: usize, bridged: bool) -> &'static str {
+    if index == 0 {
         if bridged { "bridge" } else { "guard" }
-    } else if i + 1 == n {
+    } else if index + 1 == hops {
         "exit"
     } else {
         "middle"
@@ -19,13 +19,16 @@ pub fn role(i: usize, n: usize, bridged: bool) -> &'static str {
 
 /// The `path` event for the core: one entry per hop, `country` null when it is not known (a bridge behind
 /// Snowflake or a front has no real address to look up).
-pub fn event(countries: &[Option<String>], bridged: bool) -> Value {
-    let n = countries.len();
+pub fn event(countries: &[Option<impl AsRef<str>>], bridged: bool) -> Value {
     let hops: Vec<Value> = countries
         .iter()
         .enumerate()
-        .map(|(i, c)| json!({"role": role(i, n, bridged), "country": c}))
+        .map(|(index, country)| {
+            let role = role(index, countries.len(), bridged);
+            json!({"role": role, "country": country.as_ref().map(AsRef::as_ref)})
+        })
         .collect();
+
     json!({"event": "path", "hops": hops})
 }
 
@@ -53,9 +56,9 @@ mod tests {
 
     #[test]
     fn the_event_carries_only_roles_and_countries() {
-        let v = event(&[Some("DE".into()), None, Some("NL".into())], true);
+        let path = event(&[Some("DE"), None, Some("NL")], true);
         assert_eq!(
-            v,
+            path,
             json!({"event": "path", "hops": [
                 {"role": "bridge", "country": "DE"},
                 {"role": "middle", "country": null},
