@@ -11,7 +11,7 @@ const minMtu = 576;
 const maxMtu = 65535;
 
 /// The two network options of the Connection group in Settings: IPv6 on or off, and the tunnel's MTU.
-List<Widget> networkTiles(BuildContext context, WidgetRef ref, SettingsState s) {
+List<Widget> networkTiles(BuildContext context, WidgetRef ref, SettingsState settings) {
   final l = context.l10n;
   final ctrl = ref.read(settingsProvider.notifier);
   return [
@@ -19,17 +19,17 @@ List<Widget> networkTiles(BuildContext context, WidgetRef ref, SettingsState s) 
       secondary: const Icon(Icons.public_rounded),
       title: Text(l.ipv6Title),
       subtitle: Text(l.ipv6Hint),
-      value: s.ipv6,
+      value: settings.ipv6,
       onChanged: (v) => ctrl.update((s) => s.copyWith(ipv6: v)),
     ),
     ListTile(
       leading: const Icon(Icons.straighten_rounded),
       title: Text(l.mtuTitle),
-      subtitle: Text(s.mtu == 0 ? l.mtuAuto : '${s.mtu}', textDirection: TextDirection.ltr),
+      subtitle: Text(settings.mtu == 0 ? l.mtuAuto : '${settings.mtu}', textDirection: TextDirection.ltr),
       trailing: const Icon(Icons.edit_outlined),
-      enabled: s.tunMode,
+      enabled: settings.tunMode,
       onTap: () async {
-        final value = await showDialog<int>(animationStyle: softAnimation, context: context, builder: (_) => MtuDialog(s.mtu));
+        final value = await showDialog<int>(animationStyle: softAnimation, context: context, builder: (_) => MtuDialog(settings.mtu));
         if (value != null) ctrl.update((s) => s.copyWith(mtu: value));
       },
     ),
@@ -59,9 +59,9 @@ class _MtuDialogState extends State<MtuDialog> {
   void _save() {
     final text = _controller.text.trim();
     if (text.isEmpty) return Navigator.pop(context, 0);
-    final n = int.tryParse(text);
-    if (n == null || n < minMtu || n > maxMtu) return setState(() => _bad = true);
-    Navigator.pop(context, n);
+    final mtu = int.tryParse(text);
+    if (mtu == null || mtu < minMtu || mtu > maxMtu) return setState(() => _bad = true);
+    Navigator.pop(context, mtu);
   }
 
   @override

@@ -125,17 +125,17 @@ class IpDbController extends Notifier<IpDbState> {
 
   Future<void> _init() async {
     try {
-      final d = await _dir();
+      final dir = await _dir();
       try {
-        final info = IpDbInfo.fromJson(jsonDecode(await _meta(d).readAsString()) as Map<String, dynamic>);
-        final db = IpCountryDb.fromBytes(await _bin(d).readAsBytes());
+        final info = IpDbInfo.fromJson(jsonDecode(await _meta(dir).readAsString()) as Map<String, dynamic>);
+        final db = IpCountryDb.fromBytes(await _bin(dir).readAsBytes());
         if (!ref.mounted) return;
         state = state.copyWith(phase: IpDbPhase.ready, info: info, db: db);
       } catch (_) {
         // Nothing installed (or a file that cannot be read: it is replaced by the next download).
       }
       // A download that was left half-way, by an error or a closed app, is offered to continue.
-      final left = await ref.read(ipDbDownloaderProvider)(_staging(d)).onDisk();
+      final left = await ref.read(ipDbDownloaderProvider)(_staging(dir)).onDisk();
       if (!ref.mounted) return;
       if (left != null && left.overallReceived > 0 && state.phase != IpDbPhase.downloading) {
         state = state.copyWith(phase: IpDbPhase.paused, progress: () => left);
@@ -148,20 +148,20 @@ class IpDbController extends Notifier<IpDbState> {
   /// Starts a download, or continues one that stopped (the bytes already fetched are kept).
   Future<void> start() async {
     if (state.phase == IpDbPhase.downloading || state.phase == IpDbPhase.preparing) return;
-    final d = await _dir();
-    final downloader = ref.read(ipDbDownloaderProvider)(_staging(d));
+    final dir = await _dir();
+    final downloader = ref.read(ipDbDownloaderProvider)(_staging(dir));
     final cancel = _cancel = IpDbCancel();
     state = state.copyWith(phase: IpDbPhase.downloading, error: () => null);
     try {
-      final version = await downloader.download((p) {
-        if (ref.mounted && !cancel.cancelled) state = state.copyWith(progress: () => p);
+      final version = await downloader.download((progress) {
+        if (ref.mounted && !cancel.cancelled) state = state.copyWith(progress: () => progress);
       }, cancel);
       if (!ref.mounted) return;
       state = state.copyWith(phase: IpDbPhase.preparing);
-      final built = await downloader.build(_bin(d).path);
+      final built = await downloader.build(_bin(dir).path);
       final info = IpDbInfo(version: version, builtAt: DateTime.now(), v4: built.v4Ranges, v6: built.v6Ranges, bytes: built.bytes);
-      await _meta(d).writeAsString(jsonEncode(info.toJson()));
-      final db = IpCountryDb.fromBytes(await _bin(d).readAsBytes());
+      await _meta(dir).writeAsString(jsonEncode(info.toJson()));
+      final db = IpCountryDb.fromBytes(await _bin(dir).readAsBytes());
       if (!ref.mounted) return;
       state = state.copyWith(phase: IpDbPhase.ready, progress: () => null, error: () => null, info: info, db: db);
     } on IpDbDownloadException catch (e) {
@@ -188,9 +188,9 @@ class IpDbController extends Notifier<IpDbState> {
   /// Removes the database and anything half-downloaded.
   Future<void> delete() async {
     _cancel?.cancel();
-    final d = await _dir();
+    final dir = await _dir();
     try {
-      if (await d.exists()) await d.delete(recursive: true);
+      if (await dir.exists()) await dir.delete(recursive: true);
     } catch (_) {}
     if (!ref.mounted) return;
     state = IpDbState(enabled: state.enabled);
@@ -272,6 +272,6 @@ final dbCountriesProvider = NotifierProvider<DbCountries, Map<String, String>>(D
 /// Fills in the country of an address that a lookup service answered without one, and prefers the
 /// local database's answer when it is installed (nothing more is asked of a website for the country).
 ExitInfo withDbCountry(ExitInfo info, IpCountryDb? db) {
-  final c = db?.lookup(info.ip);
-  return c == null ? info : ExitInfo(info.ip, c);
+  final country = db?.lookup(info.ip);
+  return country == null ? info : ExitInfo(info.ip, country);
 }

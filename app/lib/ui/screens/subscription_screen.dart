@@ -52,8 +52,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _url, _username, _password, _token, _header, _queryKey, _key, _backups]) {
-      c.dispose();
+    for (final controller in [_name, _url, _username, _password, _token, _header, _queryKey, _key, _backups]) {
+      controller.dispose();
     }
     super.dispose();
   }

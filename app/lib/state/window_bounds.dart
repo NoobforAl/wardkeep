@@ -17,12 +17,12 @@ Rect openingBounds({required List<Rect> displays, Rect? saved}) {
   assert(displays.isNotEmpty);
   final primary = displays.first;
   if (saved != null && saved.width >= minWindowSize.width && saved.height >= minWindowSize.height) {
-    for (final d in displays) {
-      if (d.contains(saved.center)) {
+    for (final display in displays) {
+      if (display.contains(saved.center)) {
         // Never bigger than the monitor it is on, and fully on it.
-        final w = math.min(saved.width, d.width), h = math.min(saved.height, d.height);
-        final x = saved.left.clamp(d.left, d.right - w).toDouble();
-        final y = saved.top.clamp(d.top, d.bottom - h).toDouble();
+        final w = math.min(saved.width, display.width), h = math.min(saved.height, display.height);
+        final x = saved.left.clamp(display.left, display.right - w).toDouble();
+        final y = saved.top.clamp(display.top, display.bottom - h).toDouble();
         return Rect.fromLTWH(x, y, w, h);
       }
     }
@@ -38,10 +38,10 @@ Map<String, double> boundsToJson(Rect r) => {'x': r.left, 'y': r.top, 'w': r.wid
 /// The inverse of [boundsToJson]; null for anything that is not a rectangle.
 Rect? boundsFromJson(Object? j) {
   if (j is! Map) return null;
-  final v = [for (final k in const ['x', 'y', 'w', 'h']) j[k]];
-  if (v.any((e) => e is! num || !e.toDouble().isFinite)) return null;
-  final n = [for (final e in v) (e as num).toDouble()];
-  return Rect.fromLTWH(n[0], n[1], n[2], n[3]);
+  final raw = [for (final k in const ['x', 'y', 'w', 'h']) j[k]];
+  if (raw.any((e) => e is! num || !e.toDouble().isFinite)) return null;
+  final values = [for (final e in raw) (e as num).toDouble()];
+  return Rect.fromLTWH(values[0], values[1], values[2], values[3]);
 }
 
 /// The window [start] after its [edge] is dragged by [delta] (logical pixels, the pointer's movement

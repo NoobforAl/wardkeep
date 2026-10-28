@@ -12,7 +12,7 @@ class MockEngine implements VpnEngine {
   /// The Tor circuit a connected Tor profile reports (for tests and the preview).
   List<TorHop> torPath = const [];
   final _states = StreamController<EngineState>.broadcast();
-  final _logs = StreamController<String>.broadcast();
+  final _logs = StreamController<LogRecord>.broadcast();
   final _rng = Random();
   EngineState _state = const EngineState();
   Timer? _traffic;
@@ -21,14 +21,24 @@ class MockEngine implements VpnEngine {
   Stream<EngineState> get states => _states.stream;
 
   @override
-  Stream<String> get logs => _logs.stream;
+  Stream<LogRecord> get logs => _logs.stream;
+
+  LoggingMode _logging = const LoggingMode(defaultLevel: 'info', mode: 'dev');
+
+  @override
+  Future<LoggingMode> loggingMode() async => _logging;
+
+  @override
+  Future<void> setLogging(String level, {DateTime? until}) async =>
+      _logging = LoggingMode(level: level, defaultLevel: _logging.defaultLevel, mode: _logging.mode, until: until);
 
   void _emit(EngineState s) {
     _state = s;
     _states.add(s);
   }
 
-  void _log(String line) => _logs.add('${DateTime.now().toIso8601String().substring(11, 19)}  $line');
+  void _log(String line) =>
+      _logs.add(LogRecord(time: DateTime.now(), level: 'info', source: 'core', msg: line));
 
   @override
   String get name => 'preview (mock)';
@@ -155,10 +165,10 @@ class MockEngine implements VpnEngine {
   @override
   Future<ProfileInfo> buildProfile(Map<String, String> values, {String? protocol, ProfileInfo? profile}) async {
     final merged = {...?profile?.raw, ...values};
-    final p = protocol ?? profile!.protocol;
-    for (final f in (await forms()).firstWhere((f) => f.protocol == p).fields) {
-      if (f.required && (merged[f.key] ?? '').toString().trim().isEmpty) {
-        throw EngineException('FORM_REQUIRED', '${f.label} is required', {'label': f.label});
+    final kind = protocol ?? profile!.protocol;
+    for (final field in (await forms()).firstWhere((f) => f.protocol == kind).fields) {
+      if (field.required && (merged[field.key] ?? '').toString().trim().isEmpty) {
+        throw EngineException('FORM_REQUIRED', '${field.label} is required', {'label': field.label});
       }
     }
     final server = (merged['server'] ?? '').toString();
@@ -167,9 +177,9 @@ class MockEngine implements VpnEngine {
     return ProfileInfo.fromJson({
       ...?profile?.raw,
       ...values,
-      'id': profile?.id ?? '$p-$server-$port',
-      'name': name.isEmpty ? (server.isEmpty ? p : server) : name,
-      'protocol': p,
+      'id': profile?.id ?? '$kind-$server-$port',
+      'name': name.isEmpty ? (server.isEmpty ? kind : server) : name,
+      'protocol': kind,
       'server': server,
       'port': port,
     });

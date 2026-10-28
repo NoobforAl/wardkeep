@@ -194,8 +194,8 @@ class TrayController with TrayListener, WindowListener {
   /// Chooses where to connect, and moves the connection there if it is up (as the location list does).
   Future<void> _switchTo(String? id) async {
     if (id != null) {
-      final p = _ref.read(profilesProvider).where((p) => p.id == id).firstOrNull;
-      if (p == null || (p.needsCredentials && !p.hasCredentials)) return;
+      final profile = _ref.read(profilesProvider).where((p) => p.id == id).firstOrNull;
+      if (profile == null || (profile.needsCredentials && !profile.hasCredentials)) return;
     }
     final connection = _ref.read(connectionProvider.notifier);
     final current = _ref.read(selectedProfileIdProvider);

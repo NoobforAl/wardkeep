@@ -2195,4 +2195,93 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get scanNeedsFields => 'Isi dulu domain terowongan dan kunci server.';
+
+  @override
+  String get settingsLogging => 'Log dan galat';
+
+  @override
+  String get debugLogging => 'Log debug';
+
+  @override
+  String get debugLoggingOff => 'Mati';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level sampai $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'Level log inti: $level (build $mode)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'Log debug memperlambat koneksi, lebih boros baterai, dan menyimpan lebih banyak detail. Log ini mati sendiri setelah 24 jam.';
+
+  @override
+  String get logLevelInfo => 'Info';
+
+  @override
+  String get logLevelDebug => 'Debug';
+
+  @override
+  String get logLevelTrace => 'Trace (semuanya)';
+
+  @override
+  String get notifyPopup => 'Beri tahu saya tentang galat';
+
+  @override
+  String get notifyPopupHint =>
+      'Pemberitahuan merah di aplikasi saat ada kegagalan yang tidak bisa diperbaiki aplikasi';
+
+  @override
+  String get notifyOs => 'Notifikasi sistem untuk galat';
+
+  @override
+  String get notifyOsHint =>
+      'Notifikasi sistem, juga saat aplikasi di latar belakang';
+
+  @override
+  String get logsView => 'Lihat log';
+
+  @override
+  String get logsExport => 'Simpan sebagai JSON Lines';
+
+  @override
+  String get logsSaved => 'Log disimpan';
+
+  @override
+  String get logsLevel => 'Level';
+
+  @override
+  String get logsLevelAll => 'Semua level';
+
+  @override
+  String logsConnection(String conn) {
+    return 'Koneksi $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'Tidak ada entri log yang cocok dengan filter.';
+
+  @override
+  String get errTorExited =>
+      'Tor berhenti tiba-tiba. Hubungkan lagi; jika terus terjadi, lihat log.';
+
+  @override
+  String get errDnsttExited =>
+      'Terowongan DNS berhenti tiba-tiba. Hubungkan lagi; jika terus terjadi, lihat log.';
+
+  @override
+  String get errEngineFatal =>
+      'Mesin koneksi berhenti karena galat. Hubungkan lagi; jika terus terjadi, lihat log.';
+
+  @override
+  String get errPanic =>
+      'Terjadi masalah di dalam Wardkeep dan koneksi dihentikan. Detailnya ada di log.';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor tidak bisa membuka koneksi ke situs itu melalui jaringan Tor.';
 }

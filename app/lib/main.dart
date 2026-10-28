@@ -7,18 +7,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'engine/engine.dart';
+import 'l10n/errors.dart';
 import 'l10n/l10n.dart';
 import 'state/incoming.dart';
+import 'state/log_alerts.dart';
 import 'state/providers.dart';
 import 'state/store.dart';
 import 'state/subscriptions.dart';
 import 'state/window_bounds.dart';
 import 'ui/incoming_import.dart';
 import 'ui/screens/home_screen.dart';
+import 'ui/screens/logs_screen.dart';
 import 'ui/screens/onboarding_screen.dart';
 import 'ui/screens/profiles_screen.dart';
 import 'ui/theme.dart';
+import 'ui/system_notifications.dart';
 import 'ui/tray.dart';
+import 'ui/widgets/notice.dart';
 import 'ui/widgets/splash.dart';
 import 'ui/widgets/window_frame.dart';
 import 'ui/layout.dart';
@@ -135,6 +141,9 @@ class OmnitunApp extends ConsumerStatefulWidget {
 class _OmnitunAppState extends ConsumerState<OmnitunApp> {
   final _navigator = GlobalKey<NavigatorState>();
 
+  /// The app's own messenger: a failure is told on whichever page is open.
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
+
   @override
   void initState() {
     super.initState();
@@ -145,6 +154,8 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
       } else if (startInBackground) {
         unawaited(windowManager.show()); // no window set-up, so no tray either: nothing else would bring it back
       }
+      // A tap on a system notification of a failure opens the log of that connection.
+      unawaited(ref.read(systemNotificationsProvider).start(_openLogs));
       // Update subscriptions whose refresh interval has passed.
       ref.read(subscriptionsProvider.notifier).refreshDue();
       // A link or file sent by another app comes first; the introduction steps aside for it.
@@ -176,15 +187,44 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
     if (addServer == true && overlay != null && overlay.mounted) showImportSheet(overlay.context, ref);
   }
 
+  /// The log page, narrowed to one connect attempt when [conn] is given.
+  void _openLogs(String conn) =>
+      _navigator.currentState?.push(AppRoute<void>(builder: (_) => LogsScreen(conn: conn)));
+
+  /// Tells the user of a failure nothing handled (docs/logging.md §5): a red notice on the open page and,
+  /// when the app is not in front (or has no notice to show), a notification of the system.
+  void _tell(LogRecord record) {
+    final context = _navigator.currentContext;
+    if (context == null) return;
+    final l = context.l10n;
+    final settings = ref.read(settingsProvider);
+    final text = logRecordText(l, record);
+    final messenger = _messenger.currentState;
+    final popup = settings.notifyPopup && messenger != null;
+    if (popup) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(noticeSnackBar(Theme.of(context), text, actionLabel: l.logsView, onAction: () => _openLogs(record.conn)));
+    }
+    final inFront = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    if (settings.notifyOs && !(popup && inFront)) {
+      unawaited(ref.read(systemNotificationsProvider).show(title: l.appName, body: text, conn: record.conn));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Collect core logs from startup, not only once the Logs tab is opened.
     ref.listen(logsProvider, (_, _) {});
+    ref.listen(logAlertsProvider, (_, record) {
+      if (record != null) _tell(record);
+    });
     ref.watch(exitProvider); // looks up the exit address after each connection, when switched on
     final theme = ref.watch(settingsProvider.select((s) => s.theme));
     final language = ref.watch(settingsProvider.select((s) => s.language));
     return MaterialApp(
       navigatorKey: _navigator,
+      scaffoldMessengerKey: _messenger,
       title: 'Wardkeep',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),

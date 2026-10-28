@@ -15,11 +15,10 @@ class ProfileSubtitle extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = profile;
-    final used = ref.watch(usageOfProvider(p.id));
-    final address = p.needsCredentials && !p.hasCredentials
-        ? context.l10n.needsSignIn(profileAddress(context, p))
-        : profileAddress(context, p);
+    final used = ref.watch(usageOfProvider(profile.id));
+    final address = profile.needsCredentials && !profile.hasCredentials
+        ? context.l10n.needsSignIn(profileAddress(context, profile))
+        : profileAddress(context, profile);
     if (used <= 0) return Text(address, overflow: TextOverflow.ellipsis);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

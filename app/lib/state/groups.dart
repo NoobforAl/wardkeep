@@ -27,10 +27,10 @@ String groupFileText(String name, Iterable<String> links) => '$groupFileHeader${
 /// The group name a text starts with, or null when it has no [groupFileHeader] as its first line.
 String? groupNameInText(String text) {
   for (final line in const LineSplitter().convert(text.startsWith('\u{feff}') ? text.substring(1) : text)) {
-    final t = line.trim();
-    if (t.isEmpty) continue;
-    if (!t.startsWith(groupFileHeader.trim())) return null;
-    final name = t.substring(groupFileHeader.trim().length).trim();
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) continue;
+    if (!trimmed.startsWith(groupFileHeader.trim())) return null;
+    final name = trimmed.substring(groupFileHeader.trim().length).trim();
     return name.isEmpty ? null : name;
   }
   return null;
@@ -67,9 +67,9 @@ class GroupsController extends Notifier<List<ProfileGroup>> {
   }
 
   ProfileGroup? named(String name) {
-    final n = name.trim().toLowerCase();
+    final wanted = name.trim().toLowerCase();
     for (final g in state) {
-      if (g.name.toLowerCase() == n) return g;
+      if (g.name.toLowerCase() == wanted) return g;
     }
     return null;
   }
@@ -80,9 +80,9 @@ class GroupsController extends Notifier<List<ProfileGroup>> {
     final have = named(name);
     if (have != null) return have;
     final id = 'g-${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}';
-    final g = ProfileGroup(id: id, name: name);
-    _save([...state, g]);
-    return g;
+    final group = ProfileGroup(id: id, name: name);
+    _save([...state, group]);
+    return group;
   }
 
   void rename(String id, String name) {
@@ -101,8 +101,8 @@ class GroupsController extends Notifier<List<ProfileGroup>> {
   List<ProfileInfo> place(String text, List<ProfileInfo> profiles) {
     final name = groupNameInText(text);
     if (name == null || profiles.isEmpty) return profiles;
-    final g = create(name);
-    return [for (final p in profiles) p.group == ProfileInfo.defaultGroup ? p.inGroup(g.id) : p];
+    final group = create(name);
+    return [for (final p in profiles) p.group == ProfileInfo.defaultGroup ? p.inGroup(group.id) : p];
   }
 }
 

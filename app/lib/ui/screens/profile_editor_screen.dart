@@ -93,8 +93,8 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
 
   @override
   void dispose() {
-    for (final c in _text.values) {
-      c.dispose();
+    for (final controller in _text.values) {
+      controller.dispose();
     }
     super.dispose();
   }
@@ -109,12 +109,12 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
       if (!mounted) return;
       setState(() {
         _form = form;
-        for (final f in form.fields) {
-          final v = values[f.key] ?? f.defaultValue;
-          if (f.kind == 'bool' || f.kind == 'choice') {
-            _values[f.key] = v;
+        for (final field in form.fields) {
+          final value = values[field.key] ?? field.defaultValue;
+          if (field.kind == 'bool' || field.kind == 'choice') {
+            _values[field.key] = value;
           } else {
-            _text[f.key] = TextEditingController(text: v);
+            _text[field.key] = TextEditingController(text: value);
           }
         }
       });
@@ -271,8 +271,8 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
 
   /// Whether a setting that carries a warning is switched on (a toggle on, a choice or text filled in).
   bool _isOn(FormFieldSpec f) {
-    final v = _values[f.key] ?? _text[f.key]?.text ?? '';
-    return f.kind == 'bool' ? v == 'true' : v.isNotEmpty;
+    final value = _values[f.key] ?? _text[f.key]?.text ?? '';
+    return f.kind == 'bool' ? value == 'true' : value.isNotEmpty;
   }
 
   Widget _field(BuildContext context, FormFieldSpec f) {
@@ -361,17 +361,17 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
     return Padding(padding: const EdgeInsets.only(bottom: 14), child: child);
   }
 
-  static String _choiceLabel(AppLocalizations l, FormFieldSpec f, String c) {
+  static String _choiceLabel(AppLocalizations l, FormFieldSpec f, String value) {
     if (f.key == 'tor.builtin') {
-      return switch (c) {
+      return switch (value) {
         '' => l.torBridgesNone,
         'snowflake' => l.torBridgesSnowflake,
         'obfs4' => l.torBridgesObfs4,
-        _ => c,
+        _ => value,
       };
     }
-    if (f.key == 'mux.protocol') return c.isEmpty ? l.choiceOff : c;
-    return c.isEmpty ? l.choiceDefault : c;
+    if (f.key == 'mux.protocol') return value.isEmpty ? l.choiceOff : value;
+    return value.isEmpty ? l.choiceDefault : value;
   }
 }
 
@@ -382,9 +382,9 @@ class _FillButtons extends StatelessWidget {
   final TextEditingController controller;
 
   void _add(String text) {
-    final t = text.trim();
-    if (t.isEmpty) return;
-    controller.text = controller.text.trim().isEmpty ? t : '${controller.text.trimRight()}\n$t';
+    final line = text.trim();
+    if (line.isEmpty) return;
+    controller.text = controller.text.trim().isEmpty ? line : '${controller.text.trimRight()}\n$line';
   }
 
   @override

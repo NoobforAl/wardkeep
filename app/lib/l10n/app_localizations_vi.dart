@@ -2194,4 +2194,92 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get scanNeedsFields =>
       'Hãy nhập tên miền đường hầm và khóa máy chủ trước.';
+
+  @override
+  String get settingsLogging => 'Nhật ký và lỗi';
+
+  @override
+  String get debugLogging => 'Nhật ký gỡ lỗi';
+
+  @override
+  String get debugLoggingOff => 'Tắt';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level đến $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'Mức nhật ký của lõi: $level (bản $mode)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'Nhật ký gỡ lỗi làm chậm kết nối, tốn pin hơn và lưu nhiều chi tiết hơn. Nó tự tắt sau 24 giờ.';
+
+  @override
+  String get logLevelInfo => 'Thông tin';
+
+  @override
+  String get logLevelDebug => 'Gỡ lỗi';
+
+  @override
+  String get logLevelTrace => 'Dò vết (mọi thứ)';
+
+  @override
+  String get notifyPopup => 'Báo cho tôi khi có lỗi';
+
+  @override
+  String get notifyPopupHint =>
+      'Thông báo đỏ trong ứng dụng khi có sự cố mà ứng dụng không tự sửa được';
+
+  @override
+  String get notifyOs => 'Thông báo hệ thống cho lỗi';
+
+  @override
+  String get notifyOsHint => 'Thông báo của hệ thống, cả khi ứng dụng chạy nền';
+
+  @override
+  String get logsView => 'Xem nhật ký';
+
+  @override
+  String get logsExport => 'Lưu dạng JSON Lines';
+
+  @override
+  String get logsSaved => 'Đã lưu nhật ký';
+
+  @override
+  String get logsLevel => 'Mức';
+
+  @override
+  String get logsLevelAll => 'Mọi mức';
+
+  @override
+  String logsConnection(String conn) {
+    return 'Kết nối $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'Không có mục nhật ký nào khớp bộ lọc.';
+
+  @override
+  String get errTorExited =>
+      'Tor dừng đột ngột. Hãy kết nối lại; nếu vẫn lặp lại, xem nhật ký.';
+
+  @override
+  String get errDnsttExited =>
+      'Đường hầm DNS dừng đột ngột. Hãy kết nối lại; nếu vẫn lặp lại, xem nhật ký.';
+
+  @override
+  String get errEngineFatal =>
+      'Bộ máy kết nối dừng vì lỗi. Hãy kết nối lại; nếu vẫn lặp lại, xem nhật ký.';
+
+  @override
+  String get errPanic =>
+      'Đã có lỗi bên trong Wardkeep và kết nối bị dừng. Chi tiết có trong nhật ký.';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor không mở được kết nối tới trang đó qua mạng Tor.';
 }

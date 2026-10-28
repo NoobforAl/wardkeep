@@ -169,9 +169,9 @@ final _flag = RegExp('[\u{1F1E6}-\u{1F1FF}]{2}', unicode: true);
 
 /// The two-letter code of a flag emoji, or null.
 String? codeOfFlag(String text) {
-  final m = _flag.firstMatch(text);
-  if (m == null) return null;
-  final units = m.group(0)!.runes.map((r) => String.fromCharCode(r - 0x1F1E6 + 0x41)).join();
+  final match = _flag.firstMatch(text);
+  if (match == null) return null;
+  final units = match.group(0)!.runes.map((r) => String.fromCharCode(r - 0x1F1E6 + 0x41)).join();
   return countryNames.containsKey(units) ? units : null;
 }
 
@@ -221,16 +221,16 @@ String? guessCountry(ProfileInfo p) {
 String? _byWord(String text, Map<String, String> names) {
   String? best;
   var bestLen = 0;
-  for (final e in names.entries) {
-    if (e.key.length <= bestLen) continue;
-    final at = text.indexOf(e.key);
+  for (final entry in names.entries) {
+    if (entry.key.length <= bestLen) continue;
+    final at = text.indexOf(entry.key);
     if (at < 0) continue;
     final before = at == 0 || !_isLetter(text.codeUnitAt(at - 1));
-    final end = at + e.key.length;
+    final end = at + entry.key.length;
     final after = end >= text.length || !_isLetter(text.codeUnitAt(end));
     if (before && after) {
-      best = e.value;
-      bestLen = e.key.length;
+      best = entry.value;
+      bestLen = entry.key.length;
     }
   }
   return best;

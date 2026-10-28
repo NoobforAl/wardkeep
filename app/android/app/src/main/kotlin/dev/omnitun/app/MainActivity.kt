@@ -1,6 +1,10 @@
 package dev.omnitun.app
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -26,6 +30,10 @@ import java.util.concurrent.Executors
  *  - prepareVpn: show the system VPN consent dialog if needed, returns true when granted
  *  - prepareIkev2: register an IKEv2 profile with the system (its own consent dialog)
  *  - requestNotifications: ask for POST_NOTIFICATIONS (Android 13+)
+ *
+ * and the "omnitun/notify" channel: a failure nothing handled (docs/logging.md §5) as a system notification
+ * ("show" {title, body, conn}); tapping it opens the app's log page for that connection ("openLogs" to
+ * Flutter while it runs, "takeOpenLogs" from Flutter when the tap started the app).
  */
 class MainActivity : FlutterActivity() {
 
@@ -41,16 +49,61 @@ class MainActivity : FlutterActivity() {
 
     private class IncomingFailure(val code: String) : Exception(code)
 
+    /** The connection whose log a tapped error notification asked for, until Flutter has taken it. */
+    private var openLogs: String? = null
+    private var notifyChannel: MethodChannel? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Only a fresh start: after a rotation the same intent would import the file again.
-        if (savedInstanceState == null) takeIncoming(intent)
+        if (savedInstanceState == null) {
+            takeIncoming(intent)
+            if (intent?.action == ACTION_SHOW_LOGS) openLogs = intent.getStringExtra(EXTRA_CONN) ?: ""
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.action == ACTION_SHOW_LOGS) {
+            notifyChannel?.invokeMethod("openLogs", intent.getStringExtra(EXTRA_CONN) ?: "")
+            return
+        }
         takeIncoming(intent)
+    }
+
+    /** A failure as a notification on the "errors" channel; one per connection, a newer one replaces it. */
+    private fun showError(title: String, body: String, conn: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val manager = getSystemService(NotificationManager::class.java)
+        if (manager.getNotificationChannel(ERRORS_CHANNEL) == null) {
+            manager.createNotificationChannel(
+                NotificationChannel(ERRORS_CHANNEL, getString(R.string.errors_channel), NotificationManager.IMPORTANCE_DEFAULT),
+            )
+        }
+        val notificationId = ERROR_NOTIFICATION_BASE + (conn.hashCode() and 0xffff)
+        val open = PendingIntent.getActivity(
+            this,
+            notificationId,
+            Intent(this, MainActivity::class.java)
+                .setAction(ACTION_SHOW_LOGS)
+                .putExtra(EXTRA_CONN, conn)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val notification = Notification.Builder(this, ERRORS_CHANNEL)
+            .setSmallIcon(R.drawable.ic_vpn_key)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(Notification.BigTextStyle().bigText(body))
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .build()
+        manager.notify(notificationId, notification)
     }
 
     private fun takeIncoming(intent: Intent?) {
@@ -147,6 +200,27 @@ class MainActivity : FlutterActivity() {
                     incomingError = null
                 } else {
                     result.notImplemented()
+                }
+            }
+        }
+        notifyChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "omnitun/notify").also { ch ->
+            ch.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "show" -> {
+                        runCatching {
+                            showError(
+                                call.argument<String>("title") ?: getString(R.string.app_name),
+                                call.argument<String>("body") ?: "",
+                                call.argument<String>("conn") ?: "",
+                            )
+                        }
+                        result.success(null)
+                    }
+                    "takeOpenLogs" -> {
+                        result.success(openLogs)
+                        openLogs = null
+                    }
+                    else -> result.notImplemented()
                 }
             }
         }
@@ -266,6 +340,10 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val REQUEST_VPN = 1001
         private const val REQUEST_NOTIFICATIONS = 1002
+        private const val ERRORS_CHANNEL = "errors"
+        private const val ERROR_NOTIFICATION_BASE = 0x10000 // above the VPN service's own (1)
+        private const val ACTION_SHOW_LOGS = "dev.omnitun.app.SHOW_LOGS"
+        private const val EXTRA_CONN = "conn"
         private const val MAX_INCOMING = 8 * 1024 * 1024 // as much as the core imports (importer.MaxTextSize)
     }
 }

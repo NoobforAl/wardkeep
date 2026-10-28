@@ -53,13 +53,13 @@ class ProfilesScreen extends ConsumerWidget {
           ),
           PopupMenuButton<String>(
             tooltip: context.l10n.tooltipMore,
-            onSelected: (v) async {
-              if (v == 'new_group') {
+            onSelected: (choice) async {
+              if (choice == 'new_group') {
                 final name = await _askGroupName(context, context.l10n.menuNewGroup, '', context.l10n.groupCreate);
                 if (name != null) ref.read(groupsProvider.notifier).create(name);
-              } else if (v == 'restore_tor') {
+              } else if (choice == 'restore_tor') {
                 await ref.read(defaultProfileIdProvider.notifier).ensureTorDefaults(force: true);
-              } else if (v == 'delete_all') {
+              } else if (choice == 'delete_all') {
                 final l = context.l10n;
                 final messenger = ScaffoldMessenger.of(context);
                 final sure = await showDialog<bool>(animationStyle: softAnimation, 
@@ -174,19 +174,19 @@ class _GroupList extends ConsumerWidget {
       itemCount: profiles.length,
       onReorderItem: (from, to) => ref.read(profilesProvider.notifier).reorderInGroup(group, from, to),
       itemBuilder: (context, i) {
-        final p = profiles[i];
+        final profile = profiles[i];
         return ReorderableDelayedDragStartListener(
-          key: ValueKey(p.id),
+          key: ValueKey(profile.id),
           index: i,
           child: Material(
             type: MaterialType.transparency,
             child: ListTile(
-              selected: p.id == selectedId,
-              leading: Icon(p.id == selectedId ? Icons.radio_button_checked : Icons.radio_button_off),
+              selected: profile.id == selectedId,
+              leading: Icon(profile.id == selectedId ? Icons.radio_button_checked : Icons.radio_button_off),
               title: Row(
                 children: [
-                  Flexible(child: Text(p.name, overflow: TextOverflow.ellipsis)),
-                  if (p.id == defaultId) ...[
+                  Flexible(child: Text(profile.name, overflow: TextOverflow.ellipsis)),
+                  if (profile.id == defaultId) ...[
                     const SizedBox(width: 6),
                     Tooltip(
                       message: context.l10n.badgeDefault,
@@ -195,50 +195,50 @@ class _GroupList extends ConsumerWidget {
                   ],
                 ],
               ),
-              subtitle: ProfileSubtitle(p),
+              subtitle: ProfileSubtitle(profile),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  LatencyText(p.latencyMs),
+                  LatencyText(profile.latencyMs),
                   const SizedBox(width: 8),
-                  ProtocolBadge(p.protocol),
+                  ProtocolBadge(profile.protocol),
                   PopupMenuButton<String>(
                     tooltip: context.l10n.tooltipMore,
-                    onSelected: (v) {
-                      if (v == 'edit') {
-                        Navigator.of(context).push(AppRoute<void>(builder: (_) => ProfileEditorScreen(profile: p)));
+                    onSelected: (choice) {
+                      if (choice == 'edit') {
+                        Navigator.of(context).push(AppRoute<void>(builder: (_) => ProfileEditorScreen(profile: profile)));
                       }
-                      if (v == 'share') {
-                        Navigator.of(context).push(AppRoute<void>(builder: (_) => ShareScreen(profile: p)));
+                      if (choice == 'share') {
+                        Navigator.of(context).push(AppRoute<void>(builder: (_) => ShareScreen(profile: profile)));
                       }
-                      if (v == 'delete') ref.read(profilesProvider.notifier).remove(p.id);
-                      if (v == 'default') {
-                        ref.read(defaultProfileIdProvider.notifier).set(p.id);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.defaultSetToast(p.name))));
+                      if (choice == 'delete') ref.read(profilesProvider.notifier).remove(profile.id);
+                      if (choice == 'default') {
+                        ref.read(defaultProfileIdProvider.notifier).set(profile.id);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.defaultSetToast(profile.name))));
                       }
-                      if (v == 'move') _moveToGroup(context, ref, p);
-                      if (v == 'credentials') askCredentials(context, ref, p);
-                      if (v == 'usage') ref.read(profileUsageProvider.notifier).reset(p.id);
+                      if (choice == 'move') _moveToGroup(context, ref, profile);
+                      if (choice == 'credentials') askCredentials(context, ref, profile);
+                      if (choice == 'usage') ref.read(profileUsageProvider.notifier).reset(profile.id);
                     },
                     itemBuilder: (_) => [
-                      if (ref.read(formsProvider).value?.any((f) => f.protocol == p.protocol) ?? false)
+                      if (ref.read(formsProvider).value?.any((f) => f.protocol == profile.protocol) ?? false)
                         PopupMenuItem(
                           value: 'edit',
-                          child: Text(p.protocol == 'tor' ? context.l10n.menuBridgeSettings : context.l10n.menuEditServer),
+                          child: Text(profile.protocol == 'tor' ? context.l10n.menuBridgeSettings : context.l10n.menuEditServer),
                         ),
                       PopupMenuItem(value: 'share', child: Text(context.l10n.menuShare)),
                       PopupMenuItem(value: 'move', child: Text(context.l10n.menuMoveToGroup)),
-                      if (p.id != defaultId) PopupMenuItem(value: 'default', child: Text(context.l10n.menuSetDefault)),
-                      if (p.needsCredentials)
+                      if (profile.id != defaultId) PopupMenuItem(value: 'default', child: Text(context.l10n.menuSetDefault)),
+                      if (profile.needsCredentials)
                         PopupMenuItem(value: 'credentials', child: Text(context.l10n.menuCredentials)),
-                      if (ref.read(usageOfProvider(p.id)) > 0)
+                      if (ref.read(usageOfProvider(profile.id)) > 0)
                         PopupMenuItem(value: 'usage', child: Text(context.l10n.menuResetUsage)),
                       PopupMenuItem(value: 'delete', child: Text(context.l10n.actionDelete)),
                     ],
                   ),
                 ],
               ),
-              onTap: () => ref.read(selectedProfileIdProvider.notifier).select(p.id),
+              onTap: () => ref.read(selectedProfileIdProvider.notifier).select(profile.id),
             ),
           ),
         );
@@ -276,8 +276,8 @@ class _GroupNameDialogState extends State<_GroupNameDialog> {
   }
 
   void _done() {
-    final t = _controller.text.trim();
-    Navigator.pop(context, t.isEmpty ? null : t);
+    final name = _controller.text.trim();
+    Navigator.pop(context, name.isEmpty ? null : name);
   }
 
   @override
@@ -348,11 +348,11 @@ class _UserGroupHeader extends ConsumerWidget {
   Future<(List<String>, List<String>)> _links(WidgetRef ref) async {
     final engine = ref.read(engineProvider);
     final links = <String>[], skipped = <String>[];
-    for (final p in members) {
+    for (final profile in members) {
       try {
-        links.add(await engine.exportLink(p));
+        links.add(await engine.exportLink(profile));
       } catch (_) {
-        skipped.add(p.name);
+        skipped.add(profile.name);
       }
     }
     return (links, skipped);
@@ -407,8 +407,8 @@ class _UserGroupHeader extends ConsumerWidget {
           Text(l.serversCount(members.length), style: theme.textTheme.bodySmall),
           PopupMenuButton<String>(
             tooltip: l.tooltipMore,
-            onSelected: (v) async {
-              switch (v) {
+            onSelected: (choice) async {
+              switch (choice) {
                 case 'file':
                   await _share(context, ref, toFile: true);
                 case 'copy':
@@ -455,8 +455,8 @@ class _SubscriptionHeader extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final l = context.l10n;
     try {
-      final n = await ref.read(subscriptionsProvider.notifier).refresh(sub.id);
-      messenger.showSnackBar(SnackBar(content: Text(l.subRefreshed(sub.name, n))));
+      final count = await ref.read(subscriptionsProvider.notifier).refresh(sub.id);
+      messenger.showSnackBar(SnackBar(content: Text(l.subRefreshed(sub.name, count))));
     } catch (_) {
       // The error is shown in the header.
     }
@@ -498,10 +498,10 @@ class _SubscriptionHeader extends ConsumerWidget {
                       icon: const Icon(Icons.refresh),
                     ),
               PopupMenuButton<String>(
-                onSelected: (v) {
-                  if (v == 'edit') {
+                onSelected: (choice) {
+                  if (choice == 'edit') {
                     Navigator.of(context).push(AppRoute(builder: (_) => SubscriptionScreen(existing: sub)));
-                  } else if (v == 'delete') {
+                  } else if (choice == 'delete') {
                     ref.read(subscriptionsProvider.notifier).remove(sub.id);
                   }
                 },
@@ -539,12 +539,12 @@ class _SubscriptionHeader extends ConsumerWidget {
     return l.subExpiresIn(days);
   }
 
-  static String _ago(AppLocalizations l, DateTime t) {
-    final d = DateTime.now().difference(t);
-    if (d.inMinutes < 1) return l.agoJustNow;
-    if (d.inHours < 1) return l.agoMinutes(d.inMinutes);
-    if (d.inDays < 1) return l.agoHours(d.inHours);
-    return l.agoDays(d.inDays);
+  static String _ago(AppLocalizations l, DateTime time) {
+    final age = DateTime.now().difference(time);
+    if (age.inMinutes < 1) return l.agoJustNow;
+    if (age.inHours < 1) return l.agoMinutes(age.inMinutes);
+    if (age.inDays < 1) return l.agoHours(age.inHours);
+    return l.agoDays(age.inDays);
   }
 }
 

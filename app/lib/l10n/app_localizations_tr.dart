@@ -2215,4 +2215,92 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get scanNeedsFields =>
       'Önce tünel alan adını ve sunucu anahtarını girin.';
+
+  @override
+  String get settingsLogging => 'Günlükler ve hatalar';
+
+  @override
+  String get debugLogging => 'Hata ayıklama günlüğü';
+
+  @override
+  String get debugLoggingOff => 'Kapalı';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$time saatine kadar $level';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'Çekirdek günlük düzeyi: $level ($mode sürümü)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'Hata ayıklama günlüğü bağlantıları yavaşlatır, daha çok pil harcar ve günlükte daha fazla ayrıntı tutar. 24 saat sonra kendiliğinden kapanır.';
+
+  @override
+  String get logLevelInfo => 'Bilgi';
+
+  @override
+  String get logLevelDebug => 'Hata ayıklama';
+
+  @override
+  String get logLevelTrace => 'İz (her şey)';
+
+  @override
+  String get notifyPopup => 'Hataları bana bildir';
+
+  @override
+  String get notifyPopupHint =>
+      'Uygulamanın düzeltemediği bir sorun olduğunda uygulamada kırmızı uyarı';
+
+  @override
+  String get notifyOs => 'Hatalar için sistem bildirimleri';
+
+  @override
+  String get notifyOsHint => 'Uygulama arka plandayken de bir sistem bildirimi';
+
+  @override
+  String get logsView => 'Günlükleri gör';
+
+  @override
+  String get logsExport => 'JSON Lines olarak kaydet';
+
+  @override
+  String get logsSaved => 'Günlük kaydedildi';
+
+  @override
+  String get logsLevel => 'Düzey';
+
+  @override
+  String get logsLevelAll => 'Tüm düzeyler';
+
+  @override
+  String logsConnection(String conn) {
+    return 'Bağlantı $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'Filtreye uyan günlük kaydı yok.';
+
+  @override
+  String get errTorExited =>
+      'Tor beklenmedik şekilde durdu. Yeniden bağlanın; tekrarlarsa günlüklere bakın.';
+
+  @override
+  String get errDnsttExited =>
+      'DNS tüneli beklenmedik şekilde durdu. Yeniden bağlanın; tekrarlarsa günlüklere bakın.';
+
+  @override
+  String get errEngineFatal =>
+      'Bağlantı motoru bir hatayla durdu. Yeniden bağlanın; tekrarlarsa günlüklere bakın.';
+
+  @override
+  String get errPanic =>
+      'Wardkeep içinde bir sorun oluştu ve bağlantı durduruldu. Ayrıntılar günlüklerde.';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor, Tor ağı üzerinden o siteye bağlantı açamadı.';
 }

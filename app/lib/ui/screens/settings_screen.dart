@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import '../motion.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
+import '../../engine/engine.dart';
 import '../../l10n/l10n.dart';
 import '../../state/providers.dart';
 import '../../state/ipdb_state.dart';
 import '../insets.dart';
+import '../widgets/notice.dart';
 import 'bypass_screen.dart';
 import 'dns_screen.dart';
 import 'ipdb_screen.dart';
@@ -25,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
-    final s = ref.watch(settingsProvider);
+    final settings = ref.watch(settingsProvider);
     final ctrl = ref.read(settingsProvider.notifier);
     final bypassEntries = ref.watch(bypassListsProvider).where((b) => b.enabled).fold<int>(0, (n, b) => n + b.entries);
     void open(Widget page) => Navigator.of(context).push(AppRoute<void>(builder: (_) => page));
@@ -53,38 +56,38 @@ class SettingsScreen extends ConsumerWidget {
                   secondary: const Icon(Icons.vpn_lock_rounded),
                   title: Text(l.vpnMode),
                   subtitle: Text(l.vpnModeHint),
-                  value: s.tunMode,
+                  value: settings.tunMode,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(tunMode: v)),
                 ),
                 SwitchListTile(
                   secondary: const Icon(Icons.lan_outlined),
                   title: Text(l.systemProxy),
                   subtitle: Text(l.systemProxyHint),
-                  value: s.systemProxy,
-                  onChanged: s.tunMode ? null : (v) => ctrl.update((s) => s.copyWith(systemProxy: v)),
+                  value: settings.systemProxy,
+                  onChanged: settings.tunMode ? null : (v) => ctrl.update((s) => s.copyWith(systemProxy: v)),
                 ),
                 SwitchListTile(
                   secondary: const Icon(Icons.autorenew_rounded),
                   title: Text(l.autoSwitch),
                   subtitle: Text(l.autoSwitchHint),
-                  value: s.autoFailover,
+                  value: settings.autoFailover,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(autoFailover: v)),
                 ),
                 SwitchListTile(
                   secondary: const Icon(Icons.travel_explore_rounded),
                   title: Text(l.exitTitle),
                   subtitle: Text(l.exitHint),
-                  value: s.showExit,
+                  value: settings.showExit,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(showExit: v)),
                 ),
                 SwitchListTile(
                   secondary: const Icon(Icons.devices_other_rounded),
                   title: Text(l.bypassLan),
                   subtitle: Text(l.bypassLanHint),
-                  value: s.bypassLan,
+                  value: settings.bypassLan,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(bypassLan: v)),
                 ),
-                ...networkTiles(context, ref, s),
+                ...networkTiles(context, ref, settings),
                 ListTile(
                   leading: const Icon(Icons.alt_route_rounded),
                   title: Text(l.bypassTitle),
@@ -103,13 +106,13 @@ class SettingsScreen extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.call_split_rounded),
                     title: Text(l.splitTunneling),
-                    subtitle: Text(switch (s.splitMode) {
-                      'include' => l.splitSummaryOnly(s.splitApps.length),
-                      'exclude' => l.splitSummaryBypass(s.splitApps.length),
+                    subtitle: Text(switch (settings.splitMode) {
+                      'include' => l.splitSummaryOnly(settings.splitApps.length),
+                      'exclude' => l.splitSummaryBypass(settings.splitApps.length),
                       _ => l.splitSummaryOff,
                     }),
                     trailing: const Icon(Icons.chevron_right_rounded),
-                    enabled: s.tunMode,
+                    enabled: settings.tunMode,
                     onTap: () => open(const SplitTunnelScreen()),
                   ),
                 if (Platform.isAndroid)
@@ -123,7 +126,7 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.hub_outlined),
                   title: Text(l.remoteDns),
-                  subtitle: Text(dnsSummary(l, s), textDirection: TextDirection.ltr),
+                  subtitle: Text(dnsSummary(l, settings), textDirection: TextDirection.ltr),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => open(const DnsScreen()),
                 ),
@@ -134,13 +137,13 @@ class SettingsScreen extends ConsumerWidget {
                   leading: const Icon(Icons.translate_rounded),
                   title: Text(l.language),
                   subtitle: Text(
-                    s.language.isEmpty
+                    settings.language.isEmpty
                         ? l.languageSystem
-                        : supportedLanguages.where((e) => e.$1 == s.language).map((e) => e.$2).firstOrNull ??
-                              s.language,
+                        : supportedLanguages.where((e) => e.$1 == settings.language).map((e) => e.$2).firstOrNull ??
+                              settings.language,
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => _pickLanguage(context, ref, s.language),
+                  onTap: () => _pickLanguage(context, ref, settings.language),
                 ),
                 ListTile(
                   leading: const Icon(Icons.palette_outlined),
@@ -169,7 +172,7 @@ class SettingsScreen extends ConsumerWidget {
                             tooltip: l.themeLight,
                           ),
                         ],
-                        selected: {s.theme},
+                        selected: {settings.theme},
                         onSelectionChanged: (v) => ctrl.update((s) => s.copyWith(theme: v.first)),
                       ),
                     ),
@@ -178,7 +181,7 @@ class SettingsScreen extends ConsumerWidget {
                 SwitchListTile(
                   secondary: const Icon(Icons.power_settings_new_rounded),
                   title: Text(l.stopOnClose),
-                  value: s.stopOnClose,
+                  value: settings.stopOnClose,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(stopOnClose: v)),
                 ),
                 if (Platform.isWindows)
@@ -186,7 +189,7 @@ class SettingsScreen extends ConsumerWidget {
                     secondary: const Icon(Icons.web_asset_off_outlined),
                     title: Text(l.keepInTray),
                     subtitle: Text(l.keepInTrayHint),
-                    value: s.keepInTray,
+                    value: settings.keepInTray,
                     onChanged: (v) => ctrl.update((s) => s.copyWith(keepInTray: v)),
                   ),
                 ListTile(
@@ -207,6 +210,31 @@ class SettingsScreen extends ConsumerWidget {
                   subtitle: Text(l.aboutLine(ref.watch(engineProvider).name)),
                 ),
               ]),
+              _Header(l.settingsLogging),
+              _Group([
+                ListTile(
+                  key: const Key('debug-logging'),
+                  leading: const Icon(Icons.bug_report_outlined),
+                  title: Text(l.debugLogging),
+                  subtitle: Text(_loggingSummary(context, settings, ref.watch(loggingModeProvider).value)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => _pickLogLevel(context, ref, settings.activeLogLevel()),
+                ),
+                SwitchListTile(
+                  secondary: const Icon(Icons.error_outline_rounded),
+                  title: Text(l.notifyPopup),
+                  subtitle: Text(l.notifyPopupHint),
+                  value: settings.notifyPopup,
+                  onChanged: (v) => ctrl.update((s) => s.copyWith(notifyPopup: v)),
+                ),
+                SwitchListTile(
+                  secondary: const Icon(Icons.notifications_active_outlined),
+                  title: Text(l.notifyOs),
+                  subtitle: Text(l.notifyOsHint),
+                  value: settings.notifyOs,
+                  onChanged: (v) => ctrl.update((s) => s.copyWith(notifyOs: v)),
+                ),
+              ]),
             ],
           ),
         ),
@@ -221,6 +249,57 @@ Future<void> _openVpnSettings(BuildContext context) async {
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.openVpnSettingsFallback)));
   }
+}
+
+/// The name of a log level of "Debug logging" ('' is off).
+String _logLevelName(AppLocalizations l, String level) => switch (level) {
+  'info' => l.logLevelInfo,
+  'debug' => l.logLevelDebug,
+  'trace' => l.logLevelTrace,
+  _ => l.debugLoggingOff,
+};
+
+/// "Debug logging" in a line or two: the level chosen and until when, and the level the core reports.
+String _loggingSummary(BuildContext context, SettingsState settings, LoggingMode? core) {
+  final l = context.l10n;
+  final level = settings.activeLogLevel();
+  final until = DateTime.tryParse(settings.logUntil)?.toLocal();
+  final chosen = level.isEmpty || until == null
+      ? l.debugLoggingOff
+      : l.debugLoggingUntil(
+          _logLevelName(l, level),
+          DateFormat.MMMd(Localizations.localeOf(context).toLanguageTag()).add_Hm().format(until),
+        );
+  if (core == null || core.effectiveLevel.isEmpty) return chosen;
+  return '$chosen\n${l.debugLoggingCore(core.effectiveLevel, core.mode)}';
+}
+
+/// "Debug logging": off or a level, with what it costs said first.
+Future<void> _pickLogLevel(BuildContext context, WidgetRef ref, String current) async {
+  final l = context.l10n;
+  final picked = await showDialog<String>(animationStyle: softAnimation,
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(l.debugLogging),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Notice(tone: NoticeTone.warning, message: l.debugLoggingWarning),
+        ),
+        RadioGroup<String>(
+          groupValue: current,
+          onChanged: (v) => Navigator.pop(context, v),
+          child: Column(
+            children: [
+              for (final level in SettingsState.logLevels)
+                RadioListTile<String>(value: level, title: Text(_logLevelName(l, level))),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+  if (picked != null && picked != current) ref.read(settingsProvider.notifier).setLogLevel(picked);
 }
 
 /// The language of the app: the system's, or one of the translations (each shown in its own language).

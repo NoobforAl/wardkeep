@@ -43,7 +43,32 @@ String? localizedError(AppLocalizations l, EngineState s) {
   final message = s.error;
   if (message == null) return null;
   final code = s.errorCode;
-  final reason = switch (code) {
+  final reason = code == null ? null : errorCodeText(l, code);
+  if (code == 'NO_NETWORK') return l.statusNoInternet;
+  if (reason == null) return message;
+  // Messages that name no stage (permission, the Tor texts) stand alone.
+  const standalone = {
+    'NO_PERMISSION',
+    'CORE_LOST',
+    'TOR_TIMEOUT',
+    'TOR_BRIDGE_TIMEOUT',
+    'TOR_BAD_BRIDGE',
+    'TOR_MISSING',
+    'TOR_EXITED',
+    'DNSTT_EXITED',
+    'ENGINE_FATAL',
+    'PANIC',
+    'INTERNAL',
+    'TOR_STREAM_FAILED',
+  };
+  final stage = s.progress?.stage;
+  if (standalone.contains(code) || stage == null) return reason;
+  return l.errorFailed(stageLabel(l, stage), reason);
+}
+
+/// The translation of a connection failure's code (the engine's `ErrorCode`, also the `code` of a log
+/// record), or null for a code that has none.
+String? errorCodeText(AppLocalizations l, String code) => switch (code) {
     'TIMEOUT' => l.errTimeout,
     'REFUSED' => l.errRefused,
     'RESET' => l.errReset,
@@ -67,20 +92,11 @@ String? localizedError(AppLocalizations l, EngineState s) {
     'TOR_MISSING' => l.errTorMissing,
     'NO_PERMISSION' => l.errPermission,
     'CORE_LOST' => l.errCoreLost,
+    'NO_NETWORK' => l.statusNoInternet,
+    'TOR_EXITED' => l.errTorExited,
+    'DNSTT_EXITED' => l.errDnsttExited,
+    'ENGINE_FATAL' => l.errEngineFatal,
+    'PANIC' || 'INTERNAL' => l.errPanic,
+    'TOR_STREAM_FAILED' => l.errTorStreamFailed,
     _ => null,
   };
-  if (code == 'NO_NETWORK') return l.statusNoInternet;
-  if (reason == null) return message;
-  // Messages that name no stage (permission, the Tor texts) stand alone.
-  const standalone = {
-    'NO_PERMISSION',
-    'CORE_LOST',
-    'TOR_TIMEOUT',
-    'TOR_BRIDGE_TIMEOUT',
-    'TOR_BAD_BRIDGE',
-    'TOR_MISSING',
-  };
-  final stage = s.progress?.stage;
-  if (standalone.contains(code) || stage == null) return reason;
-  return l.errorFailed(stageLabel(l, stage), reason);
-}

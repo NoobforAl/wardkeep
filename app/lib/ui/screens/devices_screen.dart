@@ -17,23 +17,23 @@ class DevicesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
-    final s = ref.watch(devicesProvider);
+    final devices = ref.watch(devicesProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l.devicesTitle)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
-          child: _body(context, ref, s),
+          child: _body(context, ref, devices),
         ),
       ),
     );
   }
 
-  Widget _body(BuildContext context, WidgetRef ref, DevicesState s) {
+  Widget _body(BuildContext context, WidgetRef ref, DevicesState devices) {
     final l = context.l10n;
-    final status = s.status;
+    final status = devices.status;
     if (status == null) {
-      final err = s.error;
+      final err = devices.error;
       if (err == null) return const Center(child: CircularProgressIndicator());
       final notRunning = err is EngineException && err.code == 'NOT_RUNNING';
       return _Message(notRunning ? l.devicesNotConnected : (err is EngineException ? err.message : err.toString()));
@@ -60,15 +60,15 @@ class DevicesScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Text(l.devicesExitHint, style: Theme.of(context).textTheme.bodyMedium),
           ),
-        if (s.exitError != null)
+        if (devices.exitError != null)
           Container(
             margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: scheme.errorContainer, borderRadius: BorderRadius.circular(12)),
-            child: Text(describeError(l, s.exitError!), style: TextStyle(color: scheme.onErrorContainer)),
+            child: Text(describeError(l, devices.exitError!), style: TextStyle(color: scheme.onErrorContainer)),
           ),
-        if (status.self != null) _DeviceTile(device: status.self!, self: true, busyId: s.busyId),
-        for (final d in status.devices) _DeviceTile(device: d, busyId: s.busyId),
+        if (status.self != null) _DeviceTile(device: status.self!, self: true, busyId: devices.busyId),
+        for (final d in status.devices) _DeviceTile(device: d, busyId: devices.busyId),
         if (status.devices.isEmpty)
           Padding(padding: const EdgeInsets.all(32), child: Center(child: Text(l.devicesEmpty, textAlign: TextAlign.center))),
       ],
@@ -115,36 +115,35 @@ class _DeviceTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final d = device;
     final ctrl = ref.read(devicesProvider.notifier);
     final busy = busyId != null;
-    final online = self || d.online;
+    final online = self || device.online;
     final lines = <String>[
-      if (d.dnsName.isNotEmpty) d.dnsName,
-      if (d.address.isNotEmpty) d.address,
+      if (device.dnsName.isNotEmpty) device.dnsName,
+      if (device.address.isNotEmpty) device.address,
     ];
     final status = self
         ? l.devicesThisDevice
-        : d.exit
+        : device.exit
         ? l.deviceIsExit
         : online
         ? l.deviceOnline
-        : (d.lastSeen == null
+        : (device.lastSeen == null
               ? l.deviceOffline
-              : '${l.deviceOffline} · ${l.deviceLastSeen(MaterialLocalizations.of(context).formatShortDate(d.lastSeen!))}');
+              : '${l.deviceOffline} · ${l.deviceLastSeen(MaterialLocalizations.of(context).formatShortDate(device.lastSeen!))}');
 
     Widget? action;
-    if (!self && d.exit) {
+    if (!self && device.exit) {
       action = FilledButton.tonal(onPressed: busy ? null : () => ctrl.useAsExit(''), child: Text(l.deviceStopExit));
-    } else if (!self && d.exitOption && online) {
-      action = OutlinedButton(onPressed: busy ? null : () => ctrl.useAsExit(d.id), child: Text(l.deviceUseAsExit));
+    } else if (!self && device.exitOption && online) {
+      action = OutlinedButton(onPressed: busy ? null : () => ctrl.useAsExit(device.id), child: Text(l.deviceUseAsExit));
     }
 
     return ListTile(
       leading: Stack(
         clipBehavior: Clip.none,
         children: [
-          Icon(_osIcon(d.os), size: 32, color: online ? scheme.onSurface : scheme.onSurfaceVariant.withValues(alpha: 0.5)),
+          Icon(_osIcon(device.os), size: 32, color: online ? scheme.onSurface : scheme.onSurfaceVariant.withValues(alpha: 0.5)),
           PositionedDirectional(
             end: -2,
             bottom: -2,
@@ -160,20 +159,20 @@ class _DeviceTile extends ConsumerWidget {
           ),
         ],
       ),
-      title: Text(d.name, overflow: TextOverflow.ellipsis),
+      title: Text(device.name, overflow: TextOverflow.ellipsis),
       isThreeLine: action != null,
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final line in lines) Text(line, textDirection: TextDirection.ltr, overflow: TextOverflow.ellipsis),
           Text(status),
-          if (action != null) Padding(padding: const EdgeInsets.only(top: 6), child: busyId == d.id ? const _Busy() : action),
+          if (action != null) Padding(padding: const EdgeInsets.only(top: 6), child: busyId == device.id ? const _Busy() : action),
         ],
       ),
       trailing: PopupMenuButton<String>(
         tooltip: l.tooltipMore,
-        onSelected: (v) async {
-          final text = v == 'name' ? (d.dnsName.isEmpty ? d.name : d.dnsName) : d.address;
+        onSelected: (choice) async {
+          final text = choice == 'name' ? (device.dnsName.isEmpty ? device.name : device.dnsName) : device.address;
           await Clipboard.setData(ClipboardData(text: text));
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.deviceCopied), duration: const Duration(seconds: 2)));
@@ -181,7 +180,7 @@ class _DeviceTile extends ConsumerWidget {
         },
         itemBuilder: (_) => [
           PopupMenuItem(value: 'name', child: Text(l.deviceCopyName)),
-          if (d.address.isNotEmpty) PopupMenuItem(value: 'address', child: Text(l.deviceCopyAddress)),
+          if (device.address.isNotEmpty) PopupMenuItem(value: 'address', child: Text(l.deviceCopyAddress)),
         ],
       ),
     );

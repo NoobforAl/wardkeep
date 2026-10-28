@@ -77,14 +77,14 @@ class HomeScreen extends ConsumerWidget {
           child: LayoutBuilder(
             builder: (context, box) {
               if (wide) return _WideBody(scheme: scheme);
-              final g = _Geometry(box, MediaQuery.paddingOf(context).top, MediaQuery.textScalerOf(context),
+              final geometry = _Geometry(box, MediaQuery.paddingOf(context).top, MediaQuery.textScalerOf(context),
                   connected: conn.status == ConnStatus.connected,
                   route: conn.status == ConnStatus.connected && conn.torPath.isNotEmpty);
               // The globe and the status sit at fixed places. Where they do not fit (a short screen,
               // a landscape phone, large text) the page scrolls instead of hiding behind the panel.
               final page = SizedBox(
                 width: box.maxWidth,
-                height: math.max(box.maxHeight, g.bottom),
+                height: math.max(box.maxHeight, geometry.bottom),
                 child: Stack(
                   children: [
                     // The Earth is the picture; the status hangs under it.
@@ -93,16 +93,16 @@ class HomeScreen extends ConsumerWidget {
                     AnimatedPositioned(
                       duration: soft(context, 800),
                       curve: softCurve,
-                      left: g.left,
-                      top: g.top,
-                      width: g.d,
-                      height: g.d,
+                      left: geometry.left,
+                      top: geometry.top,
+                      width: geometry.diameter,
+                      height: geometry.diameter,
                       child: _Earth(state: conn),
                     ),
                     AnimatedPositioned(
                       duration: soft(context, 800),
                       curve: softCurve,
-                      top: g.contentTop,
+                      top: geometry.contentTop,
                       left: 0,
                       right: 0,
                       child: Center(
@@ -179,9 +179,9 @@ Future<void> _toggle(BuildContext context, WidgetRef ref) async {
 
 /// The country the connection exits in: what the service saw, else the guess from
 /// the server's name; null for Tor, when not connected, or when unknown.
-String? _exitCode(WidgetRef ref, EngineState s) {
-  if (s.status != ConnStatus.connected) return null;
-  final active = ref.watch(profilesProvider).where((p) => p.id == s.activeProfileId).firstOrNull;
+String? _exitCode(WidgetRef ref, EngineState conn) {
+  if (conn.status != ConnStatus.connected) return null;
+  final active = ref.watch(profilesProvider).where((p) => p.id == conn.activeProfileId).firstOrNull;
   if (active == null || active.protocol == 'tor' || active.isMesh) return null;
   return ref.watch(exitProvider)?.country ?? ref.watch(profileCountryProvider)(active);
 }
@@ -195,22 +195,22 @@ class _Geometry {
     final status = ((connected ? 192.0 : 100.0) + (route ? _TorRoute.height + 40 : 0)) * math.min(text.scale(1), 1.6);
     final region = box.maxHeight - safeTop - topBar;
     final gap = region < 330 ? 10.0 : 22.0; // on a short screen the globe and its status huddle
-    final d = math.max(minGlobe, math.min(math.min(box.maxWidth * 0.74, 400.0), region - gap - status));
-    final free = math.max(0.0, region - (d + gap + status));
+    final diameter = math.max(minGlobe, math.min(math.min(box.maxWidth * 0.74, 400.0), region - gap - status));
+    final free = math.max(0.0, region - (diameter + gap + status));
     final top = safeTop + topBar + free * 0.38;
-    return _Geometry._(d, (box.maxWidth - d) / 2, top, gap, top + d + gap + status + 12);
+    return _Geometry._(diameter, (box.maxWidth - diameter) / 2, top, gap, top + diameter + gap + status + 12);
   }
 
-  _Geometry._(this.d, this.left, this.top, this._gap, this.bottom);
+  _Geometry._(this.diameter, this.left, this.top, this._gap, this.bottom);
 
-  final double d, left, top;
+  final double diameter, left, top;
   final double _gap;
 
   /// Where the status block ends: the page is at least this tall.
   final double bottom;
 
   /// Below the globe: nothing is written on the Earth.
-  double get contentTop => top + d + _gap;
+  double get contentTop => top + diameter + _gap;
 }
 
 /// The computer layout: a rail of destinations on the left (the connection, the servers, the settings, so
@@ -324,7 +324,7 @@ class _ConnectionPage extends ConsumerWidget {
       builder: (context, box) {
         // The column grows a little with the window; the column and the Earth are one group in the middle.
         final side = (box.maxWidth * 0.3).clamp(400.0, 480.0);
-        final d = math.max(180.0, math.min(math.min(box.maxWidth - side - 72, box.maxHeight * 0.88), 1100.0));
+        final globe = math.max(180.0, math.min(math.min(box.maxWidth - side - 72, box.maxHeight * 0.88), 1100.0));
         return Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -355,7 +355,7 @@ class _ConnectionPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 24),
-              SizedBox(width: d, height: d, child: _Earth(state: state)),
+              SizedBox(width: globe, height: globe, child: _Earth(state: state)),
             ],
           ),
         );
@@ -415,8 +415,8 @@ class _Earth extends ConsumerWidget {
             case GlobeSpot.home:
               showHopInfo(context, ref, HopKind.you);
             case GlobeSpot.via:
-              final h = hops[viaHop[index]];
-              showHopInfo(context, ref, hopKindOfRole(h.role), country: h.country);
+              final hop = hops[viaHop[index]];
+              showHopInfo(context, ref, hopKindOfRole(hop.role), country: hop.country);
             case GlobeSpot.exit:
               if (hops.isEmpty) {
                 showHopInfo(context, ref, HopKind.server);
@@ -489,22 +489,22 @@ class _HeroState extends ConsumerState<_Hero> {
   }
 
   String _elapsed(DateTime since) {
-    final d = DateTime.now().difference(since);
+    final elapsed = DateTime.now().difference(since);
     String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(d.inHours)}:${two(d.inMinutes % 60)}:${two(d.inSeconds % 60)}';
+    return '${two(elapsed.inHours)}:${two(elapsed.inMinutes % 60)}:${two(elapsed.inSeconds % 60)}';
   }
 
   @override
   Widget build(BuildContext context) {
-    final s = widget.state;
+    final conn = widget.state;
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     // Not protected is red, like the marker of where you are on the globe.
-    final color = s.status == ConnStatus.disconnected ? scheme.error : statusColor(s.status, scheme);
+    final color = conn.status == ConnStatus.disconnected ? scheme.error : statusColor(conn.status, scheme);
     final countryOf = ref.watch(profileCountryProvider);
     final profiles = ref.watch(profilesProvider);
-    final active = profiles.where((p) => p.id == s.activeProfileId).firstOrNull;
-    final connected = s.status == ConnStatus.connected;
+    final active = profiles.where((p) => p.id == conn.activeProfileId).firstOrNull;
+    final connected = conn.status == ConnStatus.connected;
     final exit = ref.watch(exitProvider);
     final tor = active?.protocol == 'tor';
     // The country the service saw is the truth; the guess is the fallback.
@@ -515,8 +515,8 @@ class _HeroState extends ConsumerState<_Hero> {
     // Where you really are, while not protected (only when address lookups are allowed).
     final allowed = ref.watch(settingsProvider.select((s) => s.showExit));
     final homeCode = allowed ? ref.watch(homeProvider)?.country : null;
-    final idle = s.status == ConnStatus.disconnected || s.status == ConnStatus.error;
-    final progress = s.progress;
+    final idle = conn.status == ConnStatus.disconnected || conn.status == ConnStatus.error;
+    final progress = conn.progress;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -524,13 +524,13 @@ class _HeroState extends ConsumerState<_Hero> {
         mainAxisSize: MainAxisSize.min,
         children: [
           SoftText(
-            connected && place != null ? context.l10n.connectedTo(place) : statusLabel(context.l10n, s.status),
+            connected && place != null ? context.l10n.connectedTo(place) : statusLabel(context.l10n, conn.status),
             style: text.titleLarge?.copyWith(color: color),
             textAlign: TextAlign.center,
           ),
           // While connecting: the step, and a slim bar with the real progress.
           SoftAppear(
-            show: s.status == ConnStatus.connecting && progress != null,
+            show: conn.status == ConnStatus.connecting && progress != null,
             child: progress == null
                 ? const SizedBox.shrink()
                 : Padding(
@@ -595,30 +595,30 @@ class _HeroState extends ConsumerState<_Hero> {
           ),
           // A Tor circuit: where its three relays are.
           SoftAppear(
-            show: connected && tor && s.torPath.isNotEmpty,
+            show: connected && tor && conn.torPath.isNotEmpty,
             ms: 700,
-            child: s.torPath.isEmpty
+            child: conn.torPath.isEmpty
                 ? const SizedBox.shrink()
-                : Padding(padding: const EdgeInsets.only(top: 12), child: _TorRoute(hops: s.torPath)),
+                : Padding(padding: const EdgeInsets.only(top: 12), child: _TorRoute(hops: conn.torPath)),
           ),
           SoftAppear(
-            show: connected && s.connectedSince != null,
+            show: connected && conn.connectedSince != null,
             ms: 700,
-            child: s.connectedSince == null
+            child: conn.connectedSince == null
                 ? const SizedBox.shrink()
                 : Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 16),
                       Text(
-                        _elapsed(s.connectedSince!),
+                        _elapsed(conn.connectedSince!),
                         style: text.titleLarge?.copyWith(
                           fontWeight: FontWeight.w500,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _TrafficRow(up: s.upBps, down: s.downBps),
+                      _TrafficRow(up: conn.upBps, down: conn.downBps),
                     ],
                   ),
           ),
@@ -697,8 +697,8 @@ class _TorRoute extends ConsumerWidget {
 /// An address shown in part only: `147.78.x.x`, `2a07:d883:…`. Enough to recognise, not to track.
 String maskIp(String ip) {
   if (ip.contains(':')) return '${ip.split(':').take(2).join(':')}:…';
-  final o = ip.split('.');
-  return o.length == 4 ? '${o[0]}.${o[1]}.x.x' : ip;
+  final octets = ip.split('.');
+  return octets.length == 4 ? '${octets[0]}.${octets[1]}.x.x' : ip;
 }
 
 /// The flag of the exit country with the server's name and, when known, the exit address.
@@ -1010,29 +1010,29 @@ class _MainButton extends StatelessWidget {
       _ButtonKind.stop => (disconnectRed.withValues(alpha: 0.16), disconnectRed),
       _ButtonKind.cancel => (scheme.surfaceContainerHighest, scheme.onSurface),
     };
-    final p = progress;
-    final d = soft(context, 500);
+    final percent = progress;
+    final duration = soft(context, 500);
     // Connect, cancel and disconnect melt into one another: the gradient fades, the tint and the text
     // colour glide.
     return AnimatedOpacity(
       opacity: onPressed == null ? 0.5 : 1,
-      duration: d,
+      duration: duration,
       child: TweenAnimationBuilder<Color?>(
         tween: ColorTween(end: fg),
-        duration: d,
+        duration: duration,
         curve: softCurve,
         builder: (context, fgNow, _) => TweenAnimationBuilder<Color?>(
           tween: ColorTween(
             end: fill ?? scheme.surfaceContainerHighest.withValues(alpha: 0),
           ),
-          duration: d,
+          duration: duration,
           curve: softCurve,
           builder: (context, fillNow, _) => TweenAnimationBuilder<double>(
             tween: Tween(end: fill == null ? 1 : 0),
-            duration: d,
+            duration: duration,
             curve: softCurve,
             builder: (context, goNow, _) =>
-                _buttonBody(context, fillNow, fgNow ?? fg, goNow, p),
+                _buttonBody(context, fillNow, fgNow ?? fg, goNow, percent),
           ),
         ),
       ),
@@ -1044,7 +1044,7 @@ class _MainButton extends StatelessWidget {
     Color? fill,
     Color fg,
     double go,
-    int? p,
+    int? percent,
   ) {
     return Material(
       color: fill ?? Colors.transparent,
@@ -1065,12 +1065,12 @@ class _MainButton extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            if (p != null)
+            if (percent != null)
               Positioned.fill(
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: TweenAnimationBuilder<double>(
-                    tween: Tween(end: p / 100),
+                    tween: Tween(end: percent / 100),
                     duration: const Duration(milliseconds: 700),
                     curve: Curves.easeOutCubic,
                     builder: (context, value, _) => FractionallySizedBox(
@@ -1097,7 +1097,7 @@ class _MainButton extends StatelessWidget {
                 height: 48,
                 child: Center(
                   child: Text(
-                    p == null ? label : '$label · $p%',
+                    percent == null ? label : '$label · $percent%',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: fg,
                       fontWeight: FontWeight.w700,

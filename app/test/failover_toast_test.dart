@@ -15,7 +15,11 @@ class ScriptedEngine implements VpnEngine {
   @override
   Stream<EngineState> get states => controller.stream;
   @override
-  Stream<String> get logs => const Stream.empty();
+  Stream<LogRecord> get logs => const Stream.empty();
+  @override
+  Future<LoggingMode> loggingMode() async => const LoggingMode();
+  @override
+  Future<void> setLogging(String level, {DateTime? until}) async {}
   @override
   String get name => 'scripted';
   @override

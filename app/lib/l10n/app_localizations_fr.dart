@@ -2242,4 +2242,93 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get scanNeedsFields =>
       'Renseignez d\'abord le domaine du tunnel et la clé du serveur.';
+
+  @override
+  String get settingsLogging => 'Journaux et erreurs';
+
+  @override
+  String get debugLogging => 'Journal de débogage';
+
+  @override
+  String get debugLoggingOff => 'Désactivé';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level jusqu\'à $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'Le cœur journalise : $level (version $mode)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'Le journal de débogage ralentit les connexions, consomme plus de batterie et garde plus de détails. Il se désactive tout seul après 24 heures.';
+
+  @override
+  String get logLevelInfo => 'Info';
+
+  @override
+  String get logLevelDebug => 'Débogage';
+
+  @override
+  String get logLevelTrace => 'Trace (tout)';
+
+  @override
+  String get notifyPopup => 'M\'avertir des erreurs';
+
+  @override
+  String get notifyPopupHint =>
+      'Un avis rouge dans l\'app quand une panne n\'a pas pu être réparée par l\'app';
+
+  @override
+  String get notifyOs => 'Notifications système pour les erreurs';
+
+  @override
+  String get notifyOsHint =>
+      'Une notification du système, même quand l\'app est en arrière-plan';
+
+  @override
+  String get logsView => 'Voir les journaux';
+
+  @override
+  String get logsExport => 'Enregistrer en JSON Lines';
+
+  @override
+  String get logsSaved => 'Journal enregistré';
+
+  @override
+  String get logsLevel => 'Niveau';
+
+  @override
+  String get logsLevelAll => 'Tous les niveaux';
+
+  @override
+  String logsConnection(String conn) {
+    return 'Connexion $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'Aucune entrée ne correspond au filtre.';
+
+  @override
+  String get errTorExited =>
+      'Tor s\'est arrêté de façon inattendue. Reconnectez-vous ; si cela se répète, consultez les journaux.';
+
+  @override
+  String get errDnsttExited =>
+      'Le tunnel DNS s\'est arrêté de façon inattendue. Reconnectez-vous ; si cela se répète, consultez les journaux.';
+
+  @override
+  String get errEngineFatal =>
+      'Le moteur de connexion s\'est arrêté sur une erreur. Reconnectez-vous ; si cela se répète, consultez les journaux.';
+
+  @override
+  String get errPanic =>
+      'Une erreur interne de Wardkeep a arrêté la connexion. Les journaux donnent les détails.';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor n\'a pas pu ouvrir de connexion vers ce site via le réseau Tor.';
 }

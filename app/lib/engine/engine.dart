@@ -4,8 +4,10 @@
 /// channel to the Android VpnService. [MockEngine] lets the UI run without it.
 library;
 
+import 'log_record.dart';
 import 'mesh.dart';
 
+export 'log_record.dart';
 export 'mesh.dart';
 
 /// Thrown for typed failures reported by the core; [message] is fit to show.
@@ -180,8 +182,8 @@ class ExitInfo {
   final String? country;
 
   factory ExitInfo.fromJson(Map<String, dynamic> j) {
-    final c = j['country'] as String?;
-    return ExitInfo(j['ip'] as String, c == null || c.isEmpty ? null : c);
+    final country = j['country'] as String?;
+    return ExitInfo(j['ip'] as String, country == null || country.isEmpty ? null : country);
   }
 }
 
@@ -540,8 +542,15 @@ abstract class VpnEngine {
   /// Status, traffic and failover updates.
   Stream<EngineState> get states;
 
-  /// Log lines from the core.
-  Stream<String> get logs;
+  /// Log records from the core (and the engine's own, with source `app`).
+  Stream<LogRecord> get logs;
+
+  /// What the core logs now (`logging.get`, docs/logging.md §3).
+  Future<LoggingMode> loggingMode();
+
+  /// Keeps records down to [level] (`info`, `debug`, `trace`; '' = the build's default) until [until], when
+  /// the core goes back to its default by itself (`logging.set`).
+  Future<void> setLogging(String level, {DateTime? until});
 
   /// Human-readable engine name for the settings screen.
   String get name;

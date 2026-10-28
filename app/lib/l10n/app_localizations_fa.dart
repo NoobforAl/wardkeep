@@ -2209,4 +2209,92 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get scanNeedsFields => 'ابتدا دامنهٔ تونل و کلید سرور را وارد کنید.';
+
+  @override
+  String get settingsLogging => 'گزارش‌ها و خطاها';
+
+  @override
+  String get debugLogging => 'گزارش اشکال‌زدایی';
+
+  @override
+  String get debugLoggingOff => 'خاموش';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level تا $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'سطح گزارش هسته: $level (نسخهٔ $mode)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'گزارش اشکال‌زدایی اتصال‌ها را کند می‌کند، باتری بیشتری مصرف می‌کند و جزئیات بیشتری در گزارش نگه می‌دارد. پس از ۲۴ ساعت خودش خاموش می‌شود.';
+
+  @override
+  String get logLevelInfo => 'اطلاعات';
+
+  @override
+  String get logLevelDebug => 'اشکال‌زدایی';
+
+  @override
+  String get logLevelTrace => 'ردیابی (همه چیز)';
+
+  @override
+  String get notifyPopup => 'خطاها را به من بگو';
+
+  @override
+  String get notifyPopupHint =>
+      'اعلان قرمز در برنامه وقتی چیزی خراب شود که برنامه نتوانست درستش کند';
+
+  @override
+  String get notifyOs => 'اعلان‌های سیستم برای خطاها';
+
+  @override
+  String get notifyOsHint => 'اعلان سیستم، حتی وقتی برنامه در پس‌زمینه است';
+
+  @override
+  String get logsView => 'دیدن گزارش‌ها';
+
+  @override
+  String get logsExport => 'ذخیره به صورت JSON Lines';
+
+  @override
+  String get logsSaved => 'گزارش ذخیره شد';
+
+  @override
+  String get logsLevel => 'سطح';
+
+  @override
+  String get logsLevelAll => 'همهٔ سطح‌ها';
+
+  @override
+  String logsConnection(String conn) {
+    return 'اتصال $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'هیچ گزارشی با این فیلتر جور نیست.';
+
+  @override
+  String get errTorExited =>
+      'Tor به‌طور غیرمنتظره متوقف شد. دوباره وصل شوید؛ اگر تکرار شد، گزارش‌ها را ببینید.';
+
+  @override
+  String get errDnsttExited =>
+      'تونل DNS به‌طور غیرمنتظره متوقف شد. دوباره وصل شوید؛ اگر تکرار شد، گزارش‌ها را ببینید.';
+
+  @override
+  String get errEngineFatal =>
+      'موتور اتصال با خطا متوقف شد. دوباره وصل شوید؛ اگر تکرار شد، گزارش‌ها را ببینید.';
+
+  @override
+  String get errPanic =>
+      'در درون Wardkeep مشکلی پیش آمد و اتصال متوقف شد. جزئیات در گزارش‌هاست.';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor نتوانست از طریق شبکهٔ Tor به آن سایت وصل شود.';
 }

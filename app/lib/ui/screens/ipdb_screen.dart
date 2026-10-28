@@ -17,19 +17,19 @@ String formatBytes(int bytes) {
 }
 
 /// "01:05"
-String formatClock(Duration d) {
+String formatClock(Duration duration) {
   String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(d.inMinutes)}:${two(d.inSeconds % 60)}';
+  return '${two(duration.inMinutes)}:${two(duration.inSeconds % 60)}';
 }
 
 /// The Settings row's second line.
-String ipDbSubtitle(AppLocalizations l, IpDbState s) {
-  final percent = ((s.progress?.fraction ?? 0) * 100).floor();
-  return switch (s.phase) {
+String ipDbSubtitle(AppLocalizations l, IpDbState ipdb) {
+  final percent = ((ipdb.progress?.fraction ?? 0) * 100).floor();
+  return switch (ipdb.phase) {
     IpDbPhase.downloading => l.ipdbSubDownloading(percent),
     IpDbPhase.preparing => l.ipdbPreparing,
     IpDbPhase.paused || IpDbPhase.failed => l.ipdbSubStopped(percent),
-    IpDbPhase.ready => (s.enabled ? l.ipdbSubReady : l.ipdbSubOff)(formatBytes(s.info?.bytes ?? 0)),
+    IpDbPhase.ready => (ipdb.enabled ? l.ipdbSubReady : l.ipdbSubOff)(formatBytes(ipdb.info?.bytes ?? 0)),
     IpDbPhase.none => l.ipdbSubNone,
   };
 }
@@ -62,13 +62,13 @@ class IpDbScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
-    final s = ref.watch(ipDbProvider);
+    final ipdb = ref.watch(ipDbProvider);
     final ctrl = ref.read(ipDbProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final working = s.phase == IpDbPhase.downloading || s.phase == IpDbPhase.preparing;
-    final stopped = s.phase == IpDbPhase.paused || s.phase == IpDbPhase.failed;
-    final p = s.progress;
+    final working = ipdb.phase == IpDbPhase.downloading || ipdb.phase == IpDbPhase.preparing;
+    final stopped = ipdb.phase == IpDbPhase.paused || ipdb.phase == IpDbPhase.failed;
+    final progress = ipdb.progress;
 
     return Scaffold(
       appBar: AppBar(title: Text(l.ipdbTitle)),
@@ -78,37 +78,37 @@ class IpDbScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
-              if (s.phase == IpDbPhase.none) ...[
+              if (ipdb.phase == IpDbPhase.none) ...[
                 Text(l.ipdbIntro, style: text.bodyLarge?.copyWith(color: scheme.onSurfaceVariant)),
                 const SizedBox(height: 4),
               ],
               const SizedBox(height: 12),
-              Center(child: _Ring(state: s)),
+              Center(child: _Ring(state: ipdb)),
               const SizedBox(height: 20),
-              if (s.phase != IpDbPhase.none || s.installed) _Steps(state: s),
+              if (ipdb.phase != IpDbPhase.none || ipdb.installed) _Steps(state: ipdb),
               const SizedBox(height: 16),
 
               // What is happening, in numbers.
-              if (s.phase == IpDbPhase.downloading && p != null) _Stats(progress: p),
-              if (stopped && p != null)
+              if (ipdb.phase == IpDbPhase.downloading && progress != null) _Stats(progress: progress),
+              if (stopped && progress != null)
                 Center(
                   child: Text(
-                    l.ipdbStoppedAt((p.fraction * 100).floor()),
+                    l.ipdbStoppedAt((progress.fraction * 100).floor()),
                     textAlign: TextAlign.center,
                     style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ),
-              if (s.phase == IpDbPhase.failed && s.error != null) ...[
+              if (ipdb.phase == IpDbPhase.failed && ipdb.error != null) ...[
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    l.ipdbFailed(_reason(l, s.error!)),
+                    l.ipdbFailed(_reason(l, ipdb.error!)),
                     textAlign: TextAlign.center,
                     style: text.bodySmall?.copyWith(color: scheme.error),
                   ),
                 ),
               ],
-              if (s.phase == IpDbPhase.none)
+              if (ipdb.phase == IpDbPhase.none)
                 Center(
                   child: Text(
                     l.ipdbSizeNote('23 MB'),
@@ -118,9 +118,9 @@ class IpDbScreen extends ConsumerWidget {
               const SizedBox(height: 20),
 
               // The buttons.
-              if (s.phase == IpDbPhase.none)
+              if (ipdb.phase == IpDbPhase.none)
                 _Primary(icon: Icons.download_rounded, label: l.ipdbDownload, onPressed: ctrl.start),
-              if (s.phase == IpDbPhase.downloading)
+              if (ipdb.phase == IpDbPhase.downloading)
                 OutlinedButton.icon(
                   onPressed: ctrl.pause,
                   icon: const Icon(Icons.pause_rounded),
@@ -129,7 +129,7 @@ class IpDbScreen extends ConsumerWidget {
                 ),
               if (stopped) ...[
                 _Primary(icon: Icons.play_arrow_rounded, label: l.ipdbContinue, onPressed: ctrl.start),
-                if (s.installed || p != null)
+                if (ipdb.installed || progress != null)
                   TextButton(
                     onPressed: () => _confirmDelete(context, ref),
                     child: Text(l.ipdbDelete, style: TextStyle(color: scheme.error)),
@@ -137,7 +137,7 @@ class IpDbScreen extends ConsumerWidget {
               ],
 
               // An installed database.
-              if (s.installed && !working && !stopped) ...[
+              if (ipdb.installed && !working && !stopped) ...[
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -145,12 +145,12 @@ class IpDbScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l.ipdbReadyLine(_count(s.info!.ranges), formatBytes(s.info!.bytes)),
+                          l.ipdbReadyLine(_count(ipdb.info!.ranges), formatBytes(ipdb.info!.bytes)),
                           style: text.titleMedium,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          l.ipdbVersion(s.info!.version, _date(s.info!.builtAt)),
+                          l.ipdbVersion(ipdb.info!.version, _date(ipdb.info!.builtAt)),
                           style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
@@ -162,7 +162,7 @@ class IpDbScreen extends ConsumerWidget {
                   clipBehavior: Clip.antiAlias,
                   child: SwitchListTile(
                     title: Text(l.ipdbUse),
-                    value: s.enabled,
+                    value: ipdb.enabled,
                     onChanged: ctrl.setEnabled,
                   ),
                 ),
@@ -435,11 +435,11 @@ class _RingState extends State<_Ring> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final s = widget.state;
-    final failed = s.phase == IpDbPhase.failed;
-    final paused = s.phase == IpDbPhase.paused;
-    final ready = s.phase == IpDbPhase.ready;
-    final fraction = ready ? 1.0 : (s.progress?.fraction ?? 0.0);
+    final ipdb = widget.state;
+    final failed = ipdb.phase == IpDbPhase.failed;
+    final paused = ipdb.phase == IpDbPhase.paused;
+    final ready = ipdb.phase == IpDbPhase.ready;
+    final fraction = ready ? 1.0 : (ipdb.progress?.fraction ?? 0.0);
     final color = failed
         ? scheme.error
         : paused
@@ -452,7 +452,7 @@ class _RingState extends State<_Ring> with SingleTickerProviderStateMixin {
     Widget center;
     if (ready) {
       center = Icon(Icons.verified_rounded, size: 64, color: color);
-    } else if (s.phase == IpDbPhase.none) {
+    } else if (ipdb.phase == IpDbPhase.none) {
       center = Icon(Icons.public_rounded, size: 64, color: scheme.onSurfaceVariant);
     } else if (_preparing) {
       center = Icon(Icons.memory_rounded, size: 56, color: color);
@@ -474,7 +474,7 @@ class _RingState extends State<_Ring> with SingleTickerProviderStateMixin {
     }
 
     return Semantics(
-      label: ipDbSubtitle(context.l10n, s),
+      label: ipDbSubtitle(context.l10n, ipdb),
       child: SizedBox(
         width: 220,
         height: 220,
@@ -491,7 +491,7 @@ class _RingState extends State<_Ring> with SingleTickerProviderStateMixin {
                 color: color,
                 track: scheme.outlineVariant,
                 dim: scheme.outline,
-                glow: !(s.phase == IpDbPhase.none),
+                glow: !(ipdb.phase == IpDbPhase.none),
               ),
               child: Center(child: center),
             ),
@@ -515,13 +515,13 @@ class _RingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const stroke = 10.0;
-    final c = size.center(Offset.zero);
-    final r = size.width / 2 - stroke;
-    final rect = Rect.fromCircle(center: c, radius: r);
+    final center = size.center(Offset.zero);
+    final radius = size.width / 2 - stroke;
+    final rect = Rect.fromCircle(center: center, radius: radius);
 
     canvas.drawCircle(
-      c,
-      r,
+      center,
+      radius,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke
@@ -531,10 +531,10 @@ class _RingPainter extends CustomPainter {
     const start = -math.pi / 2;
     if (spin != null) {
       // Preparing: a short arc going round.
-      final a = start + spin! * math.pi * 2;
+      final angle = start + spin! * math.pi * 2;
       canvas.drawArc(
         rect,
-        a,
+        angle,
         math.pi * 0.7,
         false,
         Paint()
@@ -573,15 +573,15 @@ class _RingPainter extends CustomPainter {
 
     // Runes: sixty ticks inside the ring, lit one by one as the bytes arrive.
     const ticks = 60;
-    final outer = r - stroke - 8;
+    final outer = radius - stroke - 8;
     final lit = (fraction * ticks).floor();
     for (var i = 0; i < ticks; i++) {
-      final a = start + math.pi * 2 * i / ticks;
+      final angle = start + math.pi * 2 * i / ticks;
       final on = i < lit || fraction >= 1;
       final len = i.isEven ? 9.0 : 5.0;
       canvas.drawLine(
-        c + Offset(math.cos(a), math.sin(a)) * (outer - len),
-        c + Offset(math.cos(a), math.sin(a)) * outer,
+        center + Offset(math.cos(angle), math.sin(angle)) * (outer - len),
+        center + Offset(math.cos(angle), math.sin(angle)) * outer,
         Paint()
           ..strokeWidth = 2
           ..strokeCap = StrokeCap.round

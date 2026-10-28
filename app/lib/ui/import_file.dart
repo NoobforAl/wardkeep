@@ -47,7 +47,7 @@ String decodeImportFile(List<int> bytes) {
 }
 
 String _utf16(List<int> bytes, Endian endian) {
-  final data = ByteData.sublistView(Uint8List.fromList(bytes));
+  final data = ByteData.sublistView(bytes is Uint8List ? bytes : Uint8List.fromList(bytes));
   final units = <int>[for (var i = 2; i + 1 < bytes.length; i += 2) data.getUint16(i, endian)];
   return String.fromCharCodes(units);
 }

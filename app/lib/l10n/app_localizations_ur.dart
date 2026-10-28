@@ -2212,4 +2212,92 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get scanNeedsFields => 'پہلے ٹنل کا ڈومین اور سرور کی کلید درج کریں۔';
+
+  @override
+  String get settingsLogging => 'لاگز اور خرابیاں';
+
+  @override
+  String get debugLogging => 'ڈیبگ لاگنگ';
+
+  @override
+  String get debugLoggingOff => 'بند';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level، $time تک';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'کور کا لاگ لیول: $level ($mode بلڈ)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'ڈیبگ لاگنگ کنکشن سست کرتی ہے، زیادہ بیٹری خرچ کرتی ہے اور لاگ میں زیادہ تفصیل رکھتی ہے۔ یہ 24 گھنٹے بعد خود بند ہو جاتی ہے۔';
+
+  @override
+  String get logLevelInfo => 'معلومات';
+
+  @override
+  String get logLevelDebug => 'ڈیبگ';
+
+  @override
+  String get logLevelTrace => 'ٹریس (سب کچھ)';
+
+  @override
+  String get notifyPopup => 'خرابیوں کے بارے میں بتائیں';
+
+  @override
+  String get notifyPopupHint =>
+      'ایپ میں سرخ اطلاع جب کوئی ایسی چیز ناکام ہو جسے ایپ ٹھیک نہ کر سکی';
+
+  @override
+  String get notifyOs => 'خرابیوں کے لیے سسٹم اطلاعات';
+
+  @override
+  String get notifyOsHint => 'سسٹم کی اطلاع، ایپ پس منظر میں ہو تب بھی';
+
+  @override
+  String get logsView => 'لاگز دیکھیں';
+
+  @override
+  String get logsExport => 'JSON Lines کے طور پر محفوظ کریں';
+
+  @override
+  String get logsSaved => 'لاگ محفوظ ہو گیا';
+
+  @override
+  String get logsLevel => 'لیول';
+
+  @override
+  String get logsLevelAll => 'تمام لیول';
+
+  @override
+  String logsConnection(String conn) {
+    return 'کنکشن $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'فلٹر سے ملتا کوئی لاگ اندراج نہیں۔';
+
+  @override
+  String get errTorExited =>
+      'Tor اچانک رک گیا۔ دوبارہ جڑیں؛ اگر بار بار ہو تو لاگز دیکھیں۔';
+
+  @override
+  String get errDnsttExited =>
+      'DNS ٹنل اچانک رک گئی۔ دوبارہ جڑیں؛ اگر بار بار ہو تو لاگز دیکھیں۔';
+
+  @override
+  String get errEngineFatal =>
+      'کنکشن انجن خرابی کے ساتھ رک گیا۔ دوبارہ جڑیں؛ اگر بار بار ہو تو لاگز دیکھیں۔';
+
+  @override
+  String get errPanic =>
+      'Wardkeep کے اندر کچھ غلط ہوا اور کنکشن روک دیا گیا۔ تفصیل لاگز میں ہے۔';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor نیٹ ورک کے ذریعے اس سائٹ سے کنکشن نہیں کھل سکا۔';
 }

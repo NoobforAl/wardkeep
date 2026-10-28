@@ -47,17 +47,17 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
       ref.read(settingsProvider.notifier).update((s) => s.copyWith(splitMode: mode));
 
   void _toggle(String package, bool on) {
-    ref.read(settingsProvider.notifier).update((s) {
-      final apps = {...s.splitApps};
+    ref.read(settingsProvider.notifier).update((settings) {
+      final apps = {...settings.splitApps};
       on ? apps.add(package) : apps.remove(package);
-      return s.copyWith(splitApps: apps.toList()..sort());
+      return settings.copyWith(splitApps: apps.toList()..sort());
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final s = ref.watch(settingsProvider);
-    final selected = s.splitApps.toSet();
+    final settings = ref.watch(settingsProvider);
+    final selected = settings.splitApps.toSet();
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -72,14 +72,14 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
                 ButtonSegment(value: 'include', label: Text(context.l10n.splitOnlySelected)),
                 ButtonSegment(value: 'exclude', label: Text(context.l10n.splitBypassSelected)),
               ],
-              selected: {s.splitMode},
+              selected: {settings.splitMode},
               onSelectionChanged: (v) => _setMode(v.first),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
-              switch (s.splitMode) {
+              switch (settings.splitMode) {
                 'include' => selected.isEmpty
                     ? context.l10n.splitHelpOnlyNone
                     : context.l10n.splitHelpOnly(selected.length),
@@ -89,7 +89,7 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
               style: theme.textTheme.bodySmall,
             ),
           ),
-          if (s.splitMode != 'off') ...[
+          if (settings.splitMode != 'off') ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
               child: TextField(
@@ -114,24 +114,24 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
                 builder: (context, snap) {
                   if (snap.hasError) return Center(child: Text(context.l10n.couldNotListApps('${snap.error}')));
                   if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-                  final apps = snap.data!.where((a) {
-                    if (!_showSystem && a.system && !selected.contains(a.package)) return false;
+                  final apps = snap.data!.where((app) {
+                    if (!_showSystem && app.system && !selected.contains(app.package)) return false;
                     return _query.isEmpty ||
-                        a.label.toLowerCase().contains(_query) ||
-                        a.package.toLowerCase().contains(_query);
+                        app.label.toLowerCase().contains(_query) ||
+                        app.package.toLowerCase().contains(_query);
                   }).toList()
                     // Selected apps first.
                     ..sort((a, b) => (selected.contains(b.package) ? 1 : 0) - (selected.contains(a.package) ? 1 : 0));
                   return ListView.builder(
                     itemCount: apps.length,
                     itemBuilder: (context, i) {
-                      final a = apps[i];
+                      final app = apps[i];
                       return CheckboxListTile(
-                        value: selected.contains(a.package),
-                        onChanged: (v) => _toggle(a.package, v ?? false),
-                        secondary: _AppIcon(a.package),
-                        title: Text(a.label, overflow: TextOverflow.ellipsis),
-                        subtitle: Text(a.package, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall),
+                        value: selected.contains(app.package),
+                        onChanged: (v) => _toggle(app.package, v ?? false),
+                        secondary: _AppIcon(app.package),
+                        title: Text(app.label, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(app.package, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall),
                       );
                     },
                   );

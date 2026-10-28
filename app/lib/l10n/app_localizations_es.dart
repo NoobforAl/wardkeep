@@ -2238,4 +2238,93 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get scanNeedsFields =>
       'Primero escribe el dominio del túnel y la clave del servidor.';
+
+  @override
+  String get settingsLogging => 'Registros y errores';
+
+  @override
+  String get debugLogging => 'Registro de depuración';
+
+  @override
+  String get debugLoggingOff => 'Desactivado';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level hasta $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'El núcleo registra: $level (versión $mode)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'El registro de depuración ralentiza las conexiones, gasta más batería y guarda más detalles en el registro. Se desactiva solo a las 24 horas.';
+
+  @override
+  String get logLevelInfo => 'Información';
+
+  @override
+  String get logLevelDebug => 'Depuración';
+
+  @override
+  String get logLevelTrace => 'Rastreo (todo)';
+
+  @override
+  String get notifyPopup => 'Avisarme de los errores';
+
+  @override
+  String get notifyPopupHint =>
+      'Un aviso rojo en la app cuando algo falla y la app no pudo arreglarlo';
+
+  @override
+  String get notifyOs => 'Notificaciones del sistema para errores';
+
+  @override
+  String get notifyOsHint =>
+      'Una notificación del sistema, también con la app en segundo plano';
+
+  @override
+  String get logsView => 'Ver registros';
+
+  @override
+  String get logsExport => 'Guardar como JSON Lines';
+
+  @override
+  String get logsSaved => 'Registro guardado';
+
+  @override
+  String get logsLevel => 'Nivel';
+
+  @override
+  String get logsLevelAll => 'Todos los niveles';
+
+  @override
+  String logsConnection(String conn) {
+    return 'Conexión $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'Ninguna entrada coincide con el filtro.';
+
+  @override
+  String get errTorExited =>
+      'Tor se detuvo inesperadamente. Vuelve a conectar; si se repite, mira los registros.';
+
+  @override
+  String get errDnsttExited =>
+      'El túnel DNS se detuvo inesperadamente. Vuelve a conectar; si se repite, mira los registros.';
+
+  @override
+  String get errEngineFatal =>
+      'El motor de conexión se detuvo con un error. Vuelve a conectar; si se repite, mira los registros.';
+
+  @override
+  String get errPanic =>
+      'Algo falló dentro de Wardkeep y la conexión se detuvo. Los registros tienen los detalles.';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor no pudo abrir una conexión con ese sitio a través de la red Tor.';
 }

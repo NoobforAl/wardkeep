@@ -107,7 +107,7 @@ bash scripts/android-github-secrets.sh  # uploads them as repository secrets (ne
 * Windows: build `omnitun-svc.exe` (`./scripts/go.ps1 build -o dist/app/omnitun-svc.exe ./cmd/omnitun-svc`),
   `flutter build windows --release`, copy the Release folder into `dist/app`, then `installer/build-installer.ps1`.
 * Linux: `flutter build linux --release` (needs `clang cmake ninja-build pkg-config libgtk-3-dev
-  libayatana-appindicator3-dev`), a static `omnitun-svc` (`CGO_ENABLED=0 go build -tags <TAGS> -o <bundle>/omnitun-svc
+  libayatana-appindicator3-dev libnotify-dev`), a static `omnitun-svc` (`CGO_ENABLED=0 go build -tags <TAGS> -o <bundle>/omnitun-svc
   ./cmd/omnitun-svc`, the tags are in the `Makefile`), then `installer/linux/build-installer.sh`.
 
 ## Dependencies

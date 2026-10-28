@@ -2207,4 +2207,93 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get scanNeedsFields =>
       'Fill in the tunnel domain and the server key first.';
+
+  @override
+  String get settingsLogging => 'Logs and errors';
+
+  @override
+  String get debugLogging => 'Debug logging';
+
+  @override
+  String get debugLoggingOff => 'Off';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level until $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'The core logs: $level ($mode build)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'Debug logging slows connections, uses more battery and keeps more detail in the log. It turns itself off after 24 hours.';
+
+  @override
+  String get logLevelInfo => 'Info';
+
+  @override
+  String get logLevelDebug => 'Debug';
+
+  @override
+  String get logLevelTrace => 'Trace (everything)';
+
+  @override
+  String get notifyPopup => 'Tell me about errors';
+
+  @override
+  String get notifyPopupHint =>
+      'A red notice in the app when something fails that the app could not fix';
+
+  @override
+  String get notifyOs => 'System notifications for errors';
+
+  @override
+  String get notifyOsHint =>
+      'A notification of the system, also when the app is in the background';
+
+  @override
+  String get logsView => 'View logs';
+
+  @override
+  String get logsExport => 'Save as JSON lines';
+
+  @override
+  String get logsSaved => 'Log saved';
+
+  @override
+  String get logsLevel => 'Level';
+
+  @override
+  String get logsLevelAll => 'All levels';
+
+  @override
+  String logsConnection(String conn) {
+    return 'Connection $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'No log entries match the filter.';
+
+  @override
+  String get errTorExited =>
+      'Tor stopped unexpectedly. Connect again; if it keeps happening, look at the logs.';
+
+  @override
+  String get errDnsttExited =>
+      'The DNS tunnel stopped unexpectedly. Connect again; if it keeps happening, look at the logs.';
+
+  @override
+  String get errEngineFatal =>
+      'The connection engine stopped with an error. Connect again; if it keeps happening, look at the logs.';
+
+  @override
+  String get errPanic =>
+      'Something went wrong inside Wardkeep and the connection was stopped. The logs have the details.';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor could not open a connection to that site through the Tor network.';
 }

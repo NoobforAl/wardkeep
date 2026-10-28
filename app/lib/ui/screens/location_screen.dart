@@ -26,9 +26,9 @@ Future<void> testAllLatencies(WidgetRef ref) async {
   final profiles = ref.read(profilesProvider);
   final results = ref.read(profilesProvider.notifier);
   await Future.wait(
-    profiles.map((p) async {
-      final ms = await engine.testLatency(p);
-      results.setLatency(p.id, ms);
+    profiles.map((profile) async {
+      final ms = await engine.testLatency(profile);
+      results.setLatency(profile.id, ms);
     }),
   );
 }
@@ -119,8 +119,8 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
           PopupMenuButton<String>(
             tooltip: context.l10n.addServersTooltip,
             icon: const Icon(Icons.add),
-            onSelected: (v) {
-              switch (v) {
+            onSelected: (choice) {
+              switch (choice) {
                 case 'import':
                   showImportSheet(context, ref);
                 case 'new':
@@ -316,13 +316,12 @@ class _ServerRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final p = profile;
     // Only the protocols the core has an editor for can be edited.
-    final editable = ref.watch(formsProvider).value?.any((f) => f.protocol == p.protocol) ?? false;
+    final editable = ref.watch(formsProvider).value?.any((f) => f.protocol == profile.protocol) ?? false;
     return ListTile(
       contentPadding: const EdgeInsetsDirectional.only(start: 40, end: 4),
-      title: Text(p.name, overflow: TextOverflow.ellipsis),
-      subtitle: ProfileSubtitle(p),
+      title: Text(profile.name, overflow: TextOverflow.ellipsis),
+      subtitle: ProfileSubtitle(profile),
       selected: selected,
       selectedTileColor: scheme.primary.withValues(alpha: 0.12),
       onTap: onTap,
@@ -330,27 +329,27 @@ class _ServerRow extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (selected) Icon(Icons.check, color: scheme.primary),
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: LatencyDot(p.latencyMs)),
-          ProtocolBadge(p.protocol),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: LatencyDot(profile.latencyMs)),
+          ProtocolBadge(profile.protocol),
           PopupMenuButton<String>(
             tooltip: context.l10n.tooltipMore,
-            onSelected: (v) async {
-              switch (v) {
+            onSelected: (choice) async {
+              switch (choice) {
                 case 'edit':
-                  Navigator.of(context).push(AppRoute<void>(builder: (_) => ProfileEditorScreen(profile: p)));
+                  Navigator.of(context).push(AppRoute<void>(builder: (_) => ProfileEditorScreen(profile: profile)));
                 case 'share':
-                  Navigator.of(context).push(AppRoute<void>(builder: (_) => ShareScreen(profile: p)));
+                  Navigator.of(context).push(AppRoute<void>(builder: (_) => ShareScreen(profile: profile)));
                 case 'country':
-                  final code = await pickCountry(context, ref.read(profileCountryProvider)(p));
-                  if (code != null) ref.read(countryOverridesProvider.notifier).set(p.id, code == '' ? null : code);
+                  final code = await pickCountry(context, ref.read(profileCountryProvider)(profile));
+                  if (code != null) ref.read(countryOverridesProvider.notifier).set(profile.id, code == '' ? null : code);
                 case 'credentials':
-                  askCredentials(context, ref, p);
+                  askCredentials(context, ref, profile);
                 case 'usage':
-                  ref.read(profileUsageProvider.notifier).reset(p.id);
+                  ref.read(profileUsageProvider.notifier).reset(profile.id);
                 case 'delete':
-                  ref.read(profilesProvider.notifier).remove(p.id);
+                  ref.read(profilesProvider.notifier).remove(profile.id);
                 case 'default':
-                  ref.read(defaultProfileIdProvider.notifier).set(p.id);
+                  ref.read(defaultProfileIdProvider.notifier).set(profile.id);
               }
             },
             itemBuilder: (_) => [
@@ -360,11 +359,11 @@ class _ServerRow extends ConsumerWidget {
                   child: Text(tor ? context.l10n.menuBridgeSettings : context.l10n.menuEditServer),
                 ),
               PopupMenuItem(value: 'share', child: Text(context.l10n.menuShare)),
-              if (p.id != ref.read(defaultProfileProvider)?.id)
+              if (profile.id != ref.read(defaultProfileProvider)?.id)
                 PopupMenuItem(value: 'default', child: Text(context.l10n.menuSetDefault)),
               if (!tor && !mesh) PopupMenuItem(value: 'country', child: Text(context.l10n.menuSetCountry)),
-              if (p.needsCredentials) PopupMenuItem(value: 'credentials', child: Text(context.l10n.menuCredentials)),
-              if (ref.read(usageOfProvider(p.id)) > 0)
+              if (profile.needsCredentials) PopupMenuItem(value: 'credentials', child: Text(context.l10n.menuCredentials)),
+              if (ref.read(usageOfProvider(profile.id)) > 0)
                 PopupMenuItem(value: 'usage', child: Text(context.l10n.menuResetUsage)),
               PopupMenuItem(value: 'delete', child: Text(context.l10n.actionDelete)),
             ],
@@ -401,15 +400,15 @@ class _CountryDialogState extends State<_CountryDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final q = _query.text.trim().toLowerCase();
+    final query = _query.text.trim().toLowerCase();
     final entries =
         [for (final code in countryNames.keys) MapEntry(code, context.countryName(code))]
             .where(
               (e) =>
-                  q.isEmpty ||
-                  e.value.toLowerCase().contains(q) ||
-                  countryNames[e.key]!.toLowerCase().contains(q) ||
-                  e.key.toLowerCase() == q,
+                  query.isEmpty ||
+                  e.value.toLowerCase().contains(query) ||
+                  countryNames[e.key]!.toLowerCase().contains(query) ||
+                  e.key.toLowerCase() == query,
             )
             .toList()
           ..sort((a, b) => a.value.compareTo(b.value));
@@ -434,7 +433,7 @@ class _CountryDialogState extends State<_CountryDialog> {
             Expanded(
               child: ListView(
                 children: [
-                  if (q.isEmpty)
+                  if (query.isEmpty)
                     ListTile(
                       leading: const CountryFlag(null),
                       title: Text(context.l10n.guessFromName),

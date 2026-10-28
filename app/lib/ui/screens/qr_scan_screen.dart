@@ -28,8 +28,8 @@ class _QrScanScreenState extends State<QrScanScreen> {
 
   void _onDetect(BarcodeCapture capture) {
     if (_done) return;
-    for (final b in capture.barcodes) {
-      final text = b.rawValue;
+    for (final barcode in capture.barcodes) {
+      final text = barcode.rawValue;
       if (text != null && text.trim().isNotEmpty) {
         _done = true;
         Navigator.of(context).pop(text.trim());

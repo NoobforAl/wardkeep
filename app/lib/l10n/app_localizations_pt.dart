@@ -2235,4 +2235,93 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get scanNeedsFields =>
       'Preencha primeiro o domínio do túnel e a chave do servidor.';
+
+  @override
+  String get settingsLogging => 'Registros e erros';
+
+  @override
+  String get debugLogging => 'Registro de depuração';
+
+  @override
+  String get debugLoggingOff => 'Desligado';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level até $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'O núcleo registra: $level (versão $mode)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'O registro de depuração deixa as conexões mais lentas, gasta mais bateria e guarda mais detalhes. Ele se desliga sozinho após 24 horas.';
+
+  @override
+  String get logLevelInfo => 'Informação';
+
+  @override
+  String get logLevelDebug => 'Depuração';
+
+  @override
+  String get logLevelTrace => 'Rastreamento (tudo)';
+
+  @override
+  String get notifyPopup => 'Avisar sobre erros';
+
+  @override
+  String get notifyPopupHint =>
+      'Um aviso vermelho no app quando algo falha e o app não conseguiu resolver';
+
+  @override
+  String get notifyOs => 'Notificações do sistema para erros';
+
+  @override
+  String get notifyOsHint =>
+      'Uma notificação do sistema, também com o app em segundo plano';
+
+  @override
+  String get logsView => 'Ver registros';
+
+  @override
+  String get logsExport => 'Salvar como JSON Lines';
+
+  @override
+  String get logsSaved => 'Registro salvo';
+
+  @override
+  String get logsLevel => 'Nível';
+
+  @override
+  String get logsLevelAll => 'Todos os níveis';
+
+  @override
+  String logsConnection(String conn) {
+    return 'Conexão $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'Nenhuma entrada corresponde ao filtro.';
+
+  @override
+  String get errTorExited =>
+      'O Tor parou inesperadamente. Conecte de novo; se continuar, veja os registros.';
+
+  @override
+  String get errDnsttExited =>
+      'O túnel DNS parou inesperadamente. Conecte de novo; se continuar, veja os registros.';
+
+  @override
+  String get errEngineFatal =>
+      'O motor de conexão parou com um erro. Conecte de novo; se continuar, veja os registros.';
+
+  @override
+  String get errPanic =>
+      'Algo deu errado dentro do Wardkeep e a conexão foi interrompida. Os registros têm os detalhes.';
+
+  @override
+  String get errTorStreamFailed =>
+      'O Tor não conseguiu abrir uma conexão com esse site pela rede Tor.';
 }

@@ -36,7 +36,11 @@ class CoreEngine implements VpnEngine {
   VpnEngine? _inner;
   bool _disposed = false;
   final _states = StreamController<EngineState>.broadcast();
-  final _logs = StreamController<String>.broadcast();
+  final _logs = StreamController<LogRecord>.broadcast();
+
+  /// The last `logging.set` the app asked for: sent again to every core this engine connects to (after a
+  /// reconnect, or the Windows service), which starts at its default level.
+  ({String level, DateTime? until})? _logging;
   final _subs = <StreamSubscription<Object?>>[];
 
   final String? _serviceControlFile;
@@ -50,8 +54,8 @@ class CoreEngine implements VpnEngine {
   /// True while the Windows service carries the connection (VPN mode without
   /// administrator rights).
   bool get usingService {
-    final e = _inner;
-    return e is DaemonEngine && e.isService;
+    final inner = _inner;
+    return inner is DaemonEngine && inner.isService;
   }
 
   Future<VpnEngine> _start() async {
@@ -59,7 +63,7 @@ class CoreEngine implements VpnEngine {
     try {
       engine = await _connectCore(reconnect: false);
     } catch (e) {
-      _logs.add('core unavailable, using preview engine: $e');
+      _logs.add(LogRecord.app('core unavailable, using preview engine: $e', level: 'warn'));
       engine = MockEngine();
     }
     _adopt(engine);
@@ -88,17 +92,25 @@ class CoreEngine implements VpnEngine {
   }
 
   void _adopt(VpnEngine engine) {
-    for (final s in _subs) {
-      s.cancel();
+    for (final sub in _subs) {
+      sub.cancel();
     }
     _subs
       ..clear()
-      ..add(engine.states.listen((s) {
-        _last = s;
-        _states.add(s);
+      ..add(engine.states.listen((next) {
+        _last = next;
+        _states.add(next);
       }))
       ..add(engine.logs.listen(_logs.add));
     _inner = engine;
+    final logging = _logging;
+    if (logging != null && engine is DaemonEngine) {
+      // A level that ran out is the default again (the core refuses an end in the past). An older core has
+      // no logging.set; it keeps its own level.
+      final until = logging.until;
+      final ended = until != null && !until.isAfter(DateTime.now());
+      engine.setLogging(ended ? '' : logging.level, until: ended ? null : until).ignore();
+    }
     if (engine is DaemonEngine) {
       if (engine.isService) {
         _service = engine;
@@ -149,13 +161,13 @@ class CoreEngine implements VpnEngine {
       try {
         final engine = await _connectCore(reconnect: true);
         _adopt(engine);
-        _logs.add('reconnected to the core');
+        _logs.add(LogRecord.app('reconnected to the core'));
         return engine;
       } catch (e) {
         if (attempt == 2) {
           _states.add(const EngineState(status: ConnStatus.error, error: 'Lost connection to the core service', errorCode: 'CORE_LOST'));
         }
-        _logs.add('reconnect failed: $e');
+        _logs.add(LogRecord.app('reconnect failed: $e', level: 'warn'));
       }
     }
   }
@@ -173,8 +185,8 @@ class CoreEngine implements VpnEngine {
       candidates.add('${dir.path}${sep}bin$sep$name');
       dir = dir.parent;
     }
-    for (final c in candidates) {
-      if (File(c).existsSync()) return c;
+    for (final candidate in candidates) {
+      if (File(candidate).existsSync()) return candidate;
     }
     return null;
   }
@@ -186,7 +198,16 @@ class CoreEngine implements VpnEngine {
   Stream<EngineState> get states => _states.stream;
 
   @override
-  Stream<String> get logs => _logs.stream;
+  Stream<LogRecord> get logs => _logs.stream;
+
+  @override
+  Future<LoggingMode> loggingMode() async => (await _ready).loggingMode();
+
+  @override
+  Future<void> setLogging(String level, {DateTime? until}) async {
+    _logging = (level: level, until: until);
+    await (await _ready).setLogging(level, until: until);
+  }
 
   @override
   Future<void> connect(
@@ -295,12 +316,12 @@ class CoreEngine implements VpnEngine {
   @override
   void dispose() {
     _disposed = true;
-    for (final s in _subs) {
-      s.cancel();
+    for (final sub in _subs) {
+      sub.cancel();
     }
     _inner?.dispose();
-    for (final e in [_local, _service]) {
-      if (e != null && !identical(e, _inner)) e.dispose();
+    for (final engine in [_local, _service]) {
+      if (engine != null && !identical(engine, _inner)) engine.dispose();
     }
     _states.close();
     _logs.close();

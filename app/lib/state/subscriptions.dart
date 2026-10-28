@@ -70,11 +70,11 @@ class Subscription {
 
   /// Whether [s] is a public key: 32 bytes as base64 (standard or URL-safe, padded or not).
   static bool isValidKey(String s) {
-    final t = s.trim();
-    if (t.isEmpty) return false;
+    final key = s.trim();
+    if (key.isEmpty) return false;
     for (final codec in [base64, base64Url]) {
       try {
-        if (codec.decode(codec.normalize(t)).length == 32) return true;
+        if (codec.decode(codec.normalize(key)).length == 32) return true;
       } on FormatException {
         // not this alphabet
       }
@@ -206,21 +206,21 @@ List<ProfileInfo> orderedByProvider(SubscriptionResult result, {List<String>? co
   final order = result.info.protocolOrder;
   if (!result.info.verified || order.isEmpty) return result.profiles;
   List<String>? wanted;
-  for (final c in countries ?? deviceCountries()) {
-    wanted = order[c.toUpperCase()];
+  for (final country in countries ?? deviceCountries()) {
+    wanted = order[country.toUpperCase()];
     if (wanted != null) break;
   }
   final list = wanted ?? order[''];
   if (list == null || list.isEmpty) return result.profiles;
   int rank(ProfileInfo p) {
-    final i = list.indexOf(p.protocol);
-    return i < 0 ? list.length : i;
+    final at = list.indexOf(p.protocol);
+    return at < 0 ? list.length : at;
   }
 
   final indexed = [for (var i = 0; i < result.profiles.length; i++) (i, result.profiles[i])];
   indexed.sort((a, b) {
-    final c = rank(a.$2).compareTo(rank(b.$2));
-    return c != 0 ? c : a.$1.compareTo(b.$1);
+    final byRank = rank(a.$2).compareTo(rank(b.$2));
+    return byRank != 0 ? byRank : a.$1.compareTo(b.$1);
   });
   return [for (final e in indexed) e.$2];
 }
@@ -309,10 +309,10 @@ class SubscriptionsController extends Notifier<List<Subscription>> {
 
   /// Refreshes every subscription whose interval has passed; errors are recorded, not thrown.
   Future<void> refreshDue() async {
-    for (final s in [...state]) {
-      if (s.isDue) {
+    for (final sub in [...state]) {
+      if (sub.isDue) {
         try {
-          await refresh(s.id);
+          await refresh(sub.id);
         } catch (_) {}
       }
     }
@@ -333,8 +333,8 @@ class SubscriptionsController extends Notifier<List<Subscription>> {
   }
 
   static String _message(Object e) {
-    final s = e.toString();
-    return s.startsWith('Bad state: ') ? s.substring(11) : s;
+    final text = e.toString();
+    return text.startsWith('Bad state: ') ? text.substring(11) : text;
   }
 }
 
@@ -344,11 +344,11 @@ final subscriptionsProvider =
 /// Bytes as a short human string (KB, MB, GB).
 String formatBytes(int bytes) {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  var v = bytes.toDouble();
-  var i = 0;
-  while (v >= 1024 && i < units.length - 1) {
-    v /= 1024;
-    i++;
+  var value = bytes.toDouble();
+  var unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
   }
-  return '${v.toStringAsFixed(v >= 100 || i == 0 ? 0 : 1)} ${units[i]}';
+  return '${value.toStringAsFixed(value >= 100 || unit == 0 ? 0 : 1)} ${units[unit]}';
 }

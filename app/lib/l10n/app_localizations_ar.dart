@@ -2248,4 +2248,93 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get scanNeedsFields => 'املأ نطاق النفق ومفتاح الخادم أولًا.';
+
+  @override
+  String get settingsLogging => 'السجلات والأخطاء';
+
+  @override
+  String get debugLogging => 'سجل التصحيح';
+
+  @override
+  String get debugLoggingOff => 'متوقف';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level حتى $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'مستوى سجل النواة: $level (إصدار $mode)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'سجل التصحيح يبطئ الاتصالات ويستهلك بطارية أكثر ويحتفظ بتفاصيل أكثر في السجل. يتوقف تلقائيًا بعد 24 ساعة.';
+
+  @override
+  String get logLevelInfo => 'معلومات';
+
+  @override
+  String get logLevelDebug => 'تصحيح';
+
+  @override
+  String get logLevelTrace => 'تتبع (كل شيء)';
+
+  @override
+  String get notifyPopup => 'أخبرني بالأخطاء';
+
+  @override
+  String get notifyPopupHint =>
+      'تنبيه أحمر في التطبيق عندما يفشل شيء لم يستطع التطبيق إصلاحه';
+
+  @override
+  String get notifyOs => 'إشعارات النظام للأخطاء';
+
+  @override
+  String get notifyOsHint =>
+      'إشعار من النظام، حتى عندما يكون التطبيق في الخلفية';
+
+  @override
+  String get logsView => 'عرض السجلات';
+
+  @override
+  String get logsExport => 'حفظ بتنسيق JSON Lines';
+
+  @override
+  String get logsSaved => 'تم حفظ السجل';
+
+  @override
+  String get logsLevel => 'المستوى';
+
+  @override
+  String get logsLevelAll => 'كل المستويات';
+
+  @override
+  String logsConnection(String conn) {
+    return 'الاتصال $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'لا توجد سجلات تطابق عامل التصفية.';
+
+  @override
+  String get errTorExited =>
+      'توقف Tor بشكل غير متوقع. اتصل مرة أخرى؛ وإذا تكرر ذلك فراجع السجلات.';
+
+  @override
+  String get errDnsttExited =>
+      'توقف نفق DNS بشكل غير متوقع. اتصل مرة أخرى؛ وإذا تكرر ذلك فراجع السجلات.';
+
+  @override
+  String get errEngineFatal =>
+      'توقف محرك الاتصال بسبب خطأ. اتصل مرة أخرى؛ وإذا تكرر ذلك فراجع السجلات.';
+
+  @override
+  String get errPanic =>
+      'حدث خطأ داخل Wardkeep وتم إيقاف الاتصال. التفاصيل في السجلات.';
+
+  @override
+  String get errTorStreamFailed =>
+      'لم يتمكن Tor من فتح اتصال بهذا الموقع عبر شبكة Tor.';
 }

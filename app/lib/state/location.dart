@@ -34,11 +34,11 @@ List<ProfileInfo> byLatency(Iterable<ProfileInfo> profiles) {
   final list = profiles.toList();
   final index = {for (var i = 0; i < list.length; i++) list[i].id: i};
   list.sort((a, b) {
-    final r = rank(a).compareTo(rank(b));
-    if (r != 0) return r;
+    final byRank = rank(a).compareTo(rank(b));
+    if (byRank != 0) return byRank;
     if (rank(a) == 0) {
-      final l = a.latencyMs!.compareTo(b.latencyMs!);
-      if (l != 0) return l;
+      final byMs = a.latencyMs!.compareTo(b.latencyMs!);
+      if (byMs != 0) return byMs;
     }
     return index[a.id]!.compareTo(index[b.id]!);
   });
@@ -59,10 +59,10 @@ ConnectionPlan? planConnection(List<ProfileInfo> profiles, String? choice, Strin
   if (specific != null) {
     // The rest of its group in list order, then all other profiles.
     final group = profiles.where((p) => p.group == specific.group).toList();
-    final i = group.indexWhere((p) => p.id == specific.id);
+    final at = group.indexWhere((p) => p.id == specific.id);
     return ConnectionPlan(specific, [
-      ...group.skip(i + 1),
-      ...group.take(i),
+      ...group.skip(at + 1),
+      ...group.take(at),
       ...profiles.where((p) => p.group != specific.group),
     ]);
   }
@@ -104,9 +104,9 @@ List<CountryGroup> groupByCountry(
   String Function(String code) nameOf,
 ) {
   final by = <String?, List<ProfileInfo>>{};
-  for (final p in profiles) {
-    if (p.protocol == 'tor' || p.isMesh) continue; // Tor and the user's own devices have their own rows
-    by.putIfAbsent(countryOf(p), () => []).add(p);
+  for (final profile in profiles) {
+    if (profile.protocol == 'tor' || profile.isMesh) continue; // Tor and the user's own devices have their own rows
+    by.putIfAbsent(countryOf(profile), () => []).add(profile);
   }
   final known = [
     for (final e in by.entries)

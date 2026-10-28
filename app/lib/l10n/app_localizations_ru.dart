@@ -2243,4 +2243,93 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get scanNeedsFields => 'Сначала введите домен туннеля и ключ сервера.';
+
+  @override
+  String get settingsLogging => 'Журнал и ошибки';
+
+  @override
+  String get debugLogging => 'Подробный журнал';
+
+  @override
+  String get debugLoggingOff => 'Выкл.';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level до $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'Ядро пишет: $level (сборка $mode)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'Подробный журнал замедляет соединения, расходует больше заряда и сохраняет больше подробностей. Он выключится сам через 24 часа.';
+
+  @override
+  String get logLevelInfo => 'Информация';
+
+  @override
+  String get logLevelDebug => 'Отладка';
+
+  @override
+  String get logLevelTrace => 'Трассировка (всё)';
+
+  @override
+  String get notifyPopup => 'Сообщать об ошибках';
+
+  @override
+  String get notifyPopupHint =>
+      'Красное уведомление в приложении, когда что-то сломалось и приложение не смогло это исправить';
+
+  @override
+  String get notifyOs => 'Системные уведомления об ошибках';
+
+  @override
+  String get notifyOsHint =>
+      'Уведомление системы, даже когда приложение в фоне';
+
+  @override
+  String get logsView => 'Открыть журнал';
+
+  @override
+  String get logsExport => 'Сохранить как JSON Lines';
+
+  @override
+  String get logsSaved => 'Журнал сохранён';
+
+  @override
+  String get logsLevel => 'Уровень';
+
+  @override
+  String get logsLevelAll => 'Все уровни';
+
+  @override
+  String logsConnection(String conn) {
+    return 'Соединение $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'Нет записей, подходящих под фильтр.';
+
+  @override
+  String get errTorExited =>
+      'Tor неожиданно остановился. Подключитесь снова; если это повторяется, посмотрите журнал.';
+
+  @override
+  String get errDnsttExited =>
+      'DNS-туннель неожиданно остановился. Подключитесь снова; если это повторяется, посмотрите журнал.';
+
+  @override
+  String get errEngineFatal =>
+      'Движок соединения остановился с ошибкой. Подключитесь снова; если это повторяется, посмотрите журнал.';
+
+  @override
+  String get errPanic =>
+      'Внутри Wardkeep произошла ошибка, и соединение остановлено. Подробности в журнале.';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor не смог открыть соединение с этим сайтом через сеть Tor.';
 }

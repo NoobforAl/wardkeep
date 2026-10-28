@@ -38,10 +38,10 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
   }
 
   void _toggle(String code, bool on, {required bool hasDb}) {
-    ref.read(settingsProvider.notifier).update((s) {
-      final next = [...s.bypassCountries]..remove(code);
+    ref.read(settingsProvider.notifier).update((settings) {
+      final next = [...settings.bypassCountries]..remove(code);
       if (on) next.add(code);
-      return s.copyWith(bypassCountries: next);
+      return settings.copyWith(bypassCountries: next);
     });
     if (on && !hasDb) ref.read(countryZonesProvider.notifier).ensure(code);
   }
@@ -58,14 +58,14 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
     final server = ref.watch(selectedProfileProvider);
     final serverCountry = server == null ? null : ref.watch(profileCountryProvider)(server);
 
-    final q = _query.trim().toLowerCase();
+    final query = _query.trim().toLowerCase();
     final shown = [
       for (final code in countryNames.keys)
         if (!hasDb || (counts[code] ?? 0) > 0 || chosen.contains(code))
-          if (q.isEmpty ||
-              code.toLowerCase() == q ||
-              context.countryName(code).toLowerCase().contains(q) ||
-              (countryNames[code] ?? '').toLowerCase().contains(q))
+          if (query.isEmpty ||
+              code.toLowerCase() == query ||
+              context.countryName(code).toLowerCase().contains(query) ||
+              (countryNames[code] ?? '').toLowerCase().contains(query))
             code,
     ]..sort((a, b) {
         // Chosen ones first, then by name in the app's language.
@@ -76,14 +76,14 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
 
     String? status(String code) {
       if (hasDb) {
-        final n = counts[code];
-        return n == null ? null : l.bypassRanges(n);
+        final count = counts[code];
+        return count == null ? null : l.bypassRanges(count);
       }
-      final z = zones[code];
-      if (z == null) return null;
-      return switch (z.status) {
+      final zone = zones[code];
+      if (zone == null) return null;
+      return switch (zone.status) {
         ZoneStatus.loading => l.bypassCountriesDownloading,
-        ZoneStatus.ready => l.bypassRanges(z.lines.length),
+        ZoneStatus.ready => l.bypassRanges(zone.lines.length),
         ZoneStatus.failed => l.bypassCountriesFailed,
       };
     }
@@ -146,8 +146,8 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
                   itemBuilder: (context, i) {
                     final code = shown[i];
                     final on = chosen.contains(code);
-                    final z = zones[code];
-                    final failed = !hasDb && z?.status == ZoneStatus.failed;
+                    final zone = zones[code];
+                    final failed = !hasDb && zone?.status == ZoneStatus.failed;
                     final text = status(code);
                     final here = on && code == serverCountry;
                     return ListTile(
@@ -163,7 +163,7 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
                                 if (here) Text(l.bypassCountriesYourServer, style: TextStyle(color: scheme.tertiary)),
                               ],
                             ),
-                      trailing: !hasDb && z?.status == ZoneStatus.loading
+                      trailing: !hasDb && zone?.status == ZoneStatus.loading
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                           : Checkbox(value: on, onChanged: (v) => _toggle(code, v ?? false, hasDb: hasDb)),
                       // A ticked country whose list failed is tried again by tapping it.

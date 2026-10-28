@@ -309,15 +309,15 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
 
   /// What is on screen: the flight plus the user's turn, short of the poles.
   _Scene _shown() {
-    final f = _flying();
-    return f.shift((f.lat + _turnLat).clamp(-_maxLat, _maxLat) - f.lat, _turnLon);
+    final flight = _flying();
+    return flight.shift((flight.lat + _turnLat).clamp(-_maxLat, _maxLat) - flight.lat, _turnLon);
   }
 
   /// Where the middle of the globe is now: (latitude, longitude).
   @visibleForTesting
   (double, double) get shownCentre {
-    final s = _shown();
-    return (s.lat, s.lon);
+    final shown = _shown();
+    return (shown.lat, shown.lon);
   }
 
   /// How far the user has turned it: (latitude, longitude).
@@ -325,8 +325,8 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
   (double, double) get turn => (_turnLat, _turnLon);
 
   void _turnBy(double dLat, double dLon) {
-    final f = _flying();
-    _turnLat = (f.lat + _turnLat + dLat).clamp(-_maxLat, _maxLat) - f.lat;
+    final flight = _flying();
+    _turnLat = (flight.lat + _turnLat + dLat).clamp(-_maxLat, _maxLat) - flight.lat;
     _turnLon += dLon;
   }
 
@@ -335,10 +335,10 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     _lastTick = now;
     setState(() {
       if (_recentring) {
-        final k = math.exp(-dt * 9);
-        _turnLat *= k;
-        _turnLon *= k;
-        _userZoom = 1 + (_userZoom - 1) * k;
+        final decay = math.exp(-dt * 9);
+        _turnLat *= decay;
+        _turnLon *= decay;
+        _userZoom = 1 + (_userZoom - 1) * decay;
         if (_turnLat.abs() < 0.05 && _turnLon.abs() < 0.05 && (_userZoom - 1).abs() < 0.002) {
           _turnLat = _turnLon = 0;
           _userZoom = 1;
@@ -347,9 +347,9 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
         return;
       }
       _turnBy(_speedLat * dt, _speedLon * dt);
-      final k = math.exp(-dt * 3.5);
-      _speedLat *= k;
-      _speedLon *= k;
+      final decay = math.exp(-dt * 3.5);
+      _speedLat *= decay;
+      _speedLon *= decay;
       if (_speedLat.abs() < 1.5 && _speedLon.abs() < 1.5) {
         _speedLat = _speedLon = 0;
         _coast.stop();
@@ -363,8 +363,8 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     _coast.start();
   }
 
-  void _scaleStart(ScaleStartDetails d) {
-    _tapAt = d.localFocalPoint;
+  void _scaleStart(ScaleStartDetails details) {
+    _tapAt = details.localFocalPoint;
     _coast.stop();
     _recentring = false;
     _speedLat = _speedLon = 0;
@@ -372,29 +372,29 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
     _zoomStart = _userZoom;
   }
 
-  void _scaleUpdate(ScaleUpdateDetails d) {
-    if (d.pointerCount >= 2) {
+  void _scaleUpdate(ScaleUpdateDetails details) {
+    if (details.pointerCount >= 2) {
       // Two fingers: pinch to zoom (and no longer a tap).
-      _moved += 100 * (d.scale - 1).abs();
-      setState(() => _userZoom = (_zoomStart * d.scale).clamp(_minZoom, _maxZoom));
+      _moved += 100 * (details.scale - 1).abs();
+      setState(() => _userZoom = (_zoomStart * details.scale).clamp(_minZoom, _maxZoom));
       return;
     }
     // One finger: one pixel across the middle of the globe is 1/r radians.
     final perPixel = 180 / math.pi / (_radius * _userZoom);
-    _moved += d.focalPointDelta.distance;
-    setState(() => _turnBy(d.focalPointDelta.dy * perPixel, -d.focalPointDelta.dx * perPixel));
+    _moved += details.focalPointDelta.distance;
+    setState(() => _turnBy(details.focalPointDelta.dy * perPixel, -details.focalPointDelta.dx * perPixel));
   }
 
-  void _scaleEnd(ScaleEndDetails d) {
+  void _scaleEnd(ScaleEndDetails details) {
     final perPixel = 180 / math.pi / (_radius * _userZoom);
-    final v = d.velocity.pixelsPerSecond;
-    if (d.pointerCount == 0 && (_userZoom - _zoomStart).abs() < 0.01 && v.distance > 80) {
-      _speedLat = (v.dy * perPixel).clamp(-240.0, 240.0);
-      _speedLon = (-v.dx * perPixel).clamp(-240.0, 240.0);
+    final velocity = details.velocity.pixelsPerSecond;
+    if (details.pointerCount == 0 && (_userZoom - _zoomStart).abs() < 0.01 && velocity.distance > 80) {
+      _speedLat = (velocity.dy * perPixel).clamp(-240.0, 240.0);
+      _speedLon = (-velocity.dx * perPixel).clamp(-240.0, 240.0);
       _startCoast();
       return;
     }
-    if (d.pointerCount > 0) return; // one finger of a pinch was lifted, the other still holds
+    if (details.pointerCount > 0) return; // one finger of a pinch was lifted, the other still holds
     // A touch that hardly moved is a tap (a drag that stops before the finger lifts is not):
     // two taps in a row bring the Earth back.
     if (_moved > kTouchSlop) {
@@ -800,14 +800,14 @@ class _GlobePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final r = size.shortestSide / 2 * zoom;
-    final c = size.center(Offset.zero);
+    final radius = size.shortestSide / 2 * zoom;
+    final center = size.center(Offset.zero);
 
     // The sea: a dark sphere, lit from above on the left.
     canvas.drawCircle(
-      c,
-      r,
-      Paint()..shader = ui.Gradient.radial(c + Offset(-r * 0.35, -r * 0.4), r * 1.5, [ocean, oceanDeep]),
+      center,
+      radius,
+      Paint()..shader = ui.Gradient.radial(center + Offset(-radius * 0.35, -radius * 0.4), radius * 1.5, [ocean, oceanDeep]),
     );
 
     final projection = _Projection(scene, size, zoom);
@@ -815,13 +815,13 @@ class _GlobePainter extends CustomPainter {
     const unit = _Projection.unit;
 
     final land3 = _Land.instance;
-    final n = land3.count;
+    final count = land3.count;
     // Dots in three brightness steps: the rim of the globe is dimmer.
-    final near = Float32List(n * 2), mid = Float32List(n * 2), far = Float32List(n * 2);
+    final near = Float32List(count * 2), mid = Float32List(count * 2), far = Float32List(count * 2);
     var nn = 0, nm = 0, nf = 0;
-    final v = land3.xyz;
-    for (var i = 0; i < n; i++) {
-      final (p, z) = project(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]);
+    final xyz = land3.xyz;
+    for (var i = 0; i < count; i++) {
+      final (p, z) = project(xyz[i * 3], xyz[i * 3 + 1], xyz[i * 3 + 2]);
       if (z <= 0.02) continue;
       if (z > 0.6) {
         near[nn++] = p.dx;
@@ -834,7 +834,7 @@ class _GlobePainter extends CustomPainter {
         far[nf++] = p.dy;
       }
     }
-    final dot = (r / 150).clamp(1.6, 3.4);
+    final dot = (radius / 150).clamp(1.6, 3.4);
     void draw(Float32List pts, int len, double alpha) {
       if (len == 0) return;
       canvas.drawRawPoints(
@@ -853,16 +853,16 @@ class _GlobePainter extends CustomPainter {
 
     // A cold halo on the rim: the air.
     canvas.drawCircle(
-      c,
-      r,
+      center,
+      radius,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
         ..color = rim.withValues(alpha: 0.45),
     );
     canvas.drawCircle(
-      c,
-      r + 3,
+      center,
+      radius + 3,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 10
@@ -871,19 +871,19 @@ class _GlobePainter extends CustomPainter {
     );
 
     final home = scene.home, exit = scene.exit;
-    final s = (r / 360).clamp(0.6, 1.2);
+    final scale = (radius / 360).clamp(0.6, 1.2);
 
     // The path between where you are and where you exit, through the places in between: a dotted arc
     // rising above the surface.
     if (home != null && exit != null) {
-      final a = math.min(scene.homeAlpha, scene.exitAlpha);
-      final samples = a > 0.01 ? _routeSamples(scene.route, 56) : null;
+      final routeAlpha = math.min(scene.homeAlpha, scene.exitAlpha);
+      final samples = routeAlpha > 0.01 ? _routeSamples(scene.route, 56) : null;
       if (samples != null) {
-        final paint = Paint()..color = scene.exitColor.withValues(alpha: 0.8 * a);
+        final paint = Paint()..color = scene.exitColor.withValues(alpha: 0.8 * routeAlpha);
         for (var i = 0; i < samples.length; i += 2) {
           final (v, lift) = samples[i];
           final (p, z) = project(v[0], v[1], v[2], lift);
-          if (z > 0) canvas.drawCircle(p, 1.7 * s, paint);
+          if (z > 0) canvas.drawCircle(p, 1.7 * scale, paint);
         }
       }
     }
@@ -893,7 +893,7 @@ class _GlobePainter extends CustomPainter {
       final u = unit(at.$1, at.$2);
       final (p, z) = project(u[0], u[1], u[2]);
       if (z <= 0.05) return;
-      final glow = 46 * s * size;
+      final glow = 46 * scale * size;
       canvas.drawCircle(
         p,
         glow,
@@ -901,7 +901,7 @@ class _GlobePainter extends CustomPainter {
       );
       canvas.drawCircle(
         p,
-        13 * s * size,
+        13 * scale * size,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.6
@@ -909,7 +909,7 @@ class _GlobePainter extends CustomPainter {
       );
       canvas.drawCircle(
         p,
-        4.2 * s * size,
+        4.2 * scale * size,
         Paint()..color = Color.lerp(color, Colors.white, 0.5)!.withValues(alpha: alpha),
       );
     }
@@ -1115,8 +1115,8 @@ class _ArcCache {
   _Arc? _arc;
 
   _Arc? of(_Scene scene, Size size, double zoom) {
-    final c = _scene;
-    if (c != null && c.sameAs(scene) && _zoom == zoom && _size == size) return _arc;
+    final cached = _scene;
+    if (cached != null && cached.sameAs(scene) && _zoom == zoom && _size == size) return _arc;
     _scene = scene;
     _zoom = zoom;
     _size = size;
@@ -1152,7 +1152,7 @@ class _FlowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final pr = _Projection(scene, size, zoom);
-    final s = (pr.r / 360).clamp(0.6, 1.2);
+    final scale = (pr.r / 360).clamp(0.6, 1.2);
     final home = scene.home, exit = scene.exit;
     final look = _looks[math.max(up.index, down.index)];
     final paint = Paint();
@@ -1169,7 +1169,7 @@ class _FlowPainter extends CustomPainter {
       for (var i = 0; i < 2; i++) {
         final ph = _fract(seconds / period + phase + i / 2);
         paint.color = tint.withValues(alpha: strength * math.pow(1 - ph, 1.6).toDouble());
-        canvas.drawCircle(p, (8 + 46 * ph) * s, paint);
+        canvas.drawCircle(p, (8 + 46 * ph) * scale, paint);
       }
     }
 
@@ -1184,8 +1184,8 @@ class _FlowPainter extends CustomPainter {
 
     final line = arc.of(scene, size, zoom);
     if (line == null) return;
-    final a = math.min(scene.homeAlpha, scene.exitAlpha);
-    if (a < 0.01) return;
+    final lineAlpha = math.min(scene.homeAlpha, scene.exitAlpha);
+    if (lineAlpha < 0.01) return;
 
     // The line itself, while connected: a thin glow along the path the data takes; in a surge it is thick,
     // pulses, and has a halo.
@@ -1196,13 +1196,13 @@ class _FlowPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
       if (look.surge) {
         paint
-          ..strokeWidth = look.lineWidth * 3.2 * s
-          ..color = tint.withValues(alpha: 0.16 * a * pulse);
+          ..strokeWidth = look.lineWidth * 3.2 * scale
+          ..color = tint.withValues(alpha: 0.16 * lineAlpha * pulse);
         canvas.drawPath(line.path, paint);
       }
       paint
-        ..strokeWidth = look.lineWidth * s
-        ..color = tint.withValues(alpha: look.lineAlpha * a * pulse);
+        ..strokeWidth = look.lineWidth * scale
+        ..color = tint.withValues(alpha: look.lineAlpha * lineAlpha * pulse);
       canvas.drawPath(line.path, paint);
     }
 
@@ -1214,8 +1214,8 @@ class _FlowPainter extends CustomPainter {
         final p = line.at(u - dir * k * gap);
         if (p == null) continue;
         final fade = 1 - k / tail;
-        paint.color = color.withValues(alpha: alpha * a * fade);
-        canvas.drawCircle(p, size * s * (0.55 + 0.45 * fade), paint);
+        paint.color = color.withValues(alpha: alpha * lineAlpha * fade);
+        canvas.drawCircle(p, size * scale * (0.55 + 0.45 * fade), paint);
       }
     }
 
@@ -1229,10 +1229,10 @@ class _FlowPainter extends CustomPainter {
     // Traffic: dots each way, as many and as quick as that way's own step; down (from the exit to you) in a
     // light tone of the animation's colour, up (from you) in a paler one.
     void stream(_Speed step, int dir, Color color, double phase) {
-      final l = _looks[step.index];
-      for (var i = 0; i < l.dots; i++) {
-        final u = _fract(seconds * l.speed + phase + i / l.dots);
-        comet(dir > 0 ? u : 1 - u, dir, color, l.tail, l.gap, l.alpha, l.size);
+      final stepLook = _looks[step.index];
+      for (var i = 0; i < stepLook.dots; i++) {
+        final u = _fract(seconds * stepLook.speed + phase + i / stepLook.dots);
+        comet(dir > 0 ? u : 1 - u, dir, color, stepLook.tail, stepLook.gap, stepLook.alpha, stepLook.size);
       }
     }
 

@@ -23,10 +23,10 @@ class CountryFlag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final c = code;
-    final emoji = c != null && defaultTargetPlatform != TargetPlatform.windows;
+    final country = code;
+    final emoji = country != null && defaultTargetPlatform != TargetPlatform.windows;
     return Semantics(
-      label: label ?? (c == null ? context.l10n.unknownCountry : context.countryName(c)),
+      label: label ?? (country == null ? context.l10n.unknownCountry : context.countryName(country)),
       excludeSemantics: true,
       child: Container(
         width: size,
@@ -34,11 +34,11 @@ class CountryFlag extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(shape: BoxShape.circle, color: scheme.surfaceContainerHighest),
         child: emoji
-            ? Text(flagEmoji(c), style: TextStyle(fontSize: size * 0.62, height: 1))
-            : c == null
+            ? Text(flagEmoji(country), style: TextStyle(fontSize: size * 0.62, height: 1))
+            : country == null
             ? Icon(icon, size: size * 0.6, color: scheme.onSurfaceVariant)
             : Text(
-                c,
+                country,
                 style: TextStyle(
                   fontSize: size * 0.36,
                   fontWeight: FontWeight.w700,

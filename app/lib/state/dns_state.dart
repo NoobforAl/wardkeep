@@ -76,28 +76,28 @@ class DnsCheck {
 }
 
 class _Reader {
-  _Reader(this.b);
-  final List<int> b;
+  _Reader(this.bytes);
+  final List<int> bytes;
   int pos = 1; // the first byte is the stamp's kind
   bool failed = false;
 
   int u8() {
-    if (pos >= b.length) {
+    if (pos >= bytes.length) {
       failed = true;
       return 0;
     }
-    return b[pos++];
+    return bytes[pos++];
   }
 
-  List<int> take(int n) {
-    if (pos + n > b.length) {
+  List<int> take(int count) {
+    if (pos + count > bytes.length) {
       failed = true;
-      pos = b.length;
+      pos = bytes.length;
       return const [];
     }
-    final v = b.sublist(pos, pos + n);
-    pos += n;
-    return v;
+    final chunk = bytes.sublist(pos, pos + count);
+    pos += count;
+    return chunk;
   }
 
   List<int> lp() => take(u8());
@@ -105,22 +105,22 @@ class _Reader {
   /// A set of strings in which every length byte but the last has its top bit set.
   void vlp() {
     while (!failed) {
-      final l = u8();
-      take(l & 0x7f);
-      if (l & 0x80 == 0) break;
+      final len = u8();
+      take(len & 0x7f);
+      if (len & 0x80 == 0) break;
     }
   }
 
-  bool get atEnd => pos >= b.length;
+  bool get atEnd => pos >= bytes.length;
 }
 
 /// Reads a stamp; the result is a [DnsCheck] with [DnsCheck.stamp] or a problem.
 DnsCheck parseDnsStamp(String input) {
-  final s = input.trim();
-  if (!s.startsWith(dnsStampPrefix)) return const DnsCheck.bad(DnsProblem.notStamp);
+  final text = input.trim();
+  if (!text.startsWith(dnsStampPrefix)) return const DnsCheck.bad(DnsProblem.notStamp);
   List<int> raw;
   try {
-    var body = s.substring(dnsStampPrefix.length).replaceAll('=', '');
+    var body = text.substring(dnsStampPrefix.length).replaceAll('=', '');
     body += '=' * ((4 - body.length % 4) % 4);
     raw = base64Url.decode(body);
   } on FormatException {
@@ -130,41 +130,41 @@ DnsCheck parseDnsStamp(String input) {
   final kind = DnsKind.values.where((k) => k.code == raw[0]).firstOrNull;
   if (kind == null) return const DnsCheck.bad(DnsProblem.unsupported);
 
-  final r = _Reader(raw);
+  final reader = _Reader(raw);
   var props = 0;
   if (kind != DnsKind.relay) {
-    final p = r.take(8);
-    for (var i = 0; i < p.length; i++) {
-      props |= p[i] << (8 * i);
+    final propBytes = reader.take(8);
+    for (var i = 0; i < propBytes.length; i++) {
+      props |= propBytes[i] << (8 * i);
     }
   }
-  final address = utf8.decode(r.lp(), allowMalformed: true);
+  final address = utf8.decode(reader.lp(), allowMalformed: true);
   var name = address;
   switch (kind) {
     case DnsKind.dnscrypt:
-      final key = r.lp();
-      final provider = utf8.decode(r.lp(), allowMalformed: true);
-      if (!r.failed && (key.length != 32 || provider.isEmpty || address.isEmpty)) {
+      final key = reader.lp();
+      final provider = utf8.decode(reader.lp(), allowMalformed: true);
+      if (!reader.failed && (key.length != 32 || provider.isEmpty || address.isEmpty)) {
         return const DnsCheck.bad(DnsProblem.damaged);
       }
       name = provider.replaceFirst('2.dnscrypt-cert.', '');
     case DnsKind.doh:
-      r.vlp();
-      final host = utf8.decode(r.lp(), allowMalformed: true);
-      r.lp(); // path
-      if (!r.failed && !r.atEnd) r.vlp(); // bootstrap addresses
+      reader.vlp();
+      final host = utf8.decode(reader.lp(), allowMalformed: true);
+      reader.lp(); // path
+      if (!reader.failed && !reader.atEnd) reader.vlp(); // bootstrap addresses
       name = _hostOnly(host.isEmpty ? address : host);
     case DnsKind.dot:
     case DnsKind.doq:
-      r.vlp();
-      final host = utf8.decode(r.lp(), allowMalformed: true);
-      if (!r.failed && !r.atEnd) r.vlp();
+      reader.vlp();
+      final host = utf8.decode(reader.lp(), allowMalformed: true);
+      if (!reader.failed && !reader.atEnd) reader.vlp();
       name = _hostOnly(host.isEmpty ? address : host);
     case DnsKind.plain:
     case DnsKind.relay:
       break;
   }
-  if (r.failed || !r.atEnd) return const DnsCheck.bad(DnsProblem.damaged);
+  if (reader.failed || !reader.atEnd) return const DnsCheck.bad(DnsProblem.damaged);
   return DnsCheck.ok(stamp: DnsStamp(kind: kind, props: props, address: address, name: name));
 }
 
@@ -173,21 +173,21 @@ String _hostOnly(String hostPort) {
     final end = hostPort.indexOf(']');
     return end > 0 ? hostPort.substring(1, end) : hostPort;
   }
-  final i = hostPort.lastIndexOf(':');
-  return i > 0 && !hostPort.substring(0, i).contains(':') ? hostPort.substring(0, i) : hostPort;
+  final colon = hostPort.lastIndexOf(':');
+  return colon > 0 && !hostPort.substring(0, colon).contains(':') ? hostPort.substring(0, colon) : hostPort;
 }
 
 /// Checks the resolver setting: a resolver URL or a stamp that names a resolver.
 DnsCheck checkDnsSetting(String input) {
-  final s = input.trim();
-  if (s.startsWith(dnsStampPrefix)) {
-    final c = parseDnsStamp(s);
-    if (!c.ok) return c;
-    if (c.stamp!.kind == DnsKind.relay) return const DnsCheck.bad(DnsProblem.relayAsResolver);
-    return c;
+  final text = input.trim();
+  if (text.startsWith(dnsStampPrefix)) {
+    final check = parseDnsStamp(text);
+    if (!check.ok) return check;
+    if (check.stamp!.kind == DnsKind.relay) return const DnsCheck.bad(DnsProblem.relayAsResolver);
+    return check;
   }
   // A bare IP is a UDP resolver; otherwise the scheme must be one the core speaks.
-  final uri = Uri.tryParse(s.contains('://') ? s : 'udp://$s');
+  final uri = Uri.tryParse(text.contains('://') ? text : 'udp://$text');
   if (uri == null ||
       !RegExp(r'^[0-9A-Za-z._:-]+$').hasMatch(uri.host) ||
       !{'https', 'tls', 'tcp', 'udp'}.contains(uri.scheme)) {
@@ -198,30 +198,30 @@ DnsCheck checkDnsSetting(String input) {
 
 /// Checks the relay setting: a relay stamp, or `ip:port`.
 DnsCheck checkDnsRelay(String input) {
-  final s = input.trim();
-  if (s.startsWith(dnsStampPrefix)) {
-    final c = parseDnsStamp(s);
-    if (!c.ok) return c;
-    return c.stamp!.kind == DnsKind.relay ? c : const DnsCheck.bad(DnsProblem.notRelay);
+  final text = input.trim();
+  if (text.startsWith(dnsStampPrefix)) {
+    final check = parseDnsStamp(text);
+    if (!check.ok) return check;
+    return check.stamp!.kind == DnsKind.relay ? check : const DnsCheck.bad(DnsProblem.notRelay);
   }
-  final m = RegExp(r'^(\[[0-9a-fA-F:.]+\]|[0-9a-zA-Z._-]+)(:\d{1,5})?$').firstMatch(s);
-  return m == null ? const DnsCheck.bad(DnsProblem.notRelay) : DnsCheck.ok(name: m.group(1)!);
+  final match = RegExp(r'^(\[[0-9a-fA-F:.]+\]|[0-9a-zA-Z._-]+)(:\d{1,5})?$').firstMatch(text);
+  return match == null ? const DnsCheck.bad(DnsProblem.notRelay) : DnsCheck.ok(name: match.group(1)!);
 }
 
 /// Whether [dns] is a DNSCrypt stamp (the only kind Anonymized DNSCrypt applies to).
 bool isDnsCryptStamp(String dns) {
-  final c = parseDnsStamp(dns);
-  return c.ok && c.stamp!.kind == DnsKind.dnscrypt;
+  final check = parseDnsStamp(dns);
+  return check.ok && check.stamp!.kind == DnsKind.dnscrypt;
 }
 
 /// A short description of the resolver in use, e.g. `DNSCrypt · quad9.net`; with a relay it ends
 /// in ` (anonymized)` ([anonymized] is the translated word). A plain URL setting is returned as it is.
 String describeDns(String dns, [String relay = '', String anonymized = 'anonymized']) {
-  final c = parseDnsStamp(dns);
-  if (!c.ok) return dns;
-  final st = c.stamp!;
-  final anon = st.kind == DnsKind.dnscrypt && relay.trim().isNotEmpty;
-  return '${st.kind.label} · ${st.name}${anon ? ' ($anonymized)' : ''}';
+  final check = parseDnsStamp(dns);
+  if (!check.ok) return dns;
+  final stamp = check.stamp!;
+  final anon = stamp.kind == DnsKind.dnscrypt && relay.trim().isNotEmpty;
+  return '${stamp.kind.label} · ${stamp.name}${anon ? ' ($anonymized)' : ''}';
 }
 
 /// A resolver choice shown first in the DNS screen. The title of [isDefault] is translated by the
@@ -246,9 +246,9 @@ List<DnsListEntry> get dnsCryptChoices => kDnsCryptResolvers;
 
 /// The text before the first `-` or `.` of a list name, without the `anon-`/`doh-` marker: the operator.
 String dnsOperatorOf(String name) {
-  final n = name.replaceFirst(RegExp(r'^(anon-|doh-)'), '').replaceFirst('dnscry.pt-anon-', 'dnscry-');
+  final bare = name.replaceFirst(RegExp(r'^(anon-|doh-)'), '').replaceFirst('dnscry.pt-anon-', 'dnscry-');
   // Numbered nodes (scaleway, scaleway2) belong to one operator.
-  return n.split(RegExp(r'[-.]')).first.toLowerCase().replaceAll(RegExp(r'\d+$'), '');
+  return bare.split(RegExp(r'[-.]')).first.toLowerCase().replaceAll(RegExp(r'\d+$'), '');
 }
 
 /// The relay to use with [resolver] when the person turns "Anonymized" on: from another operator

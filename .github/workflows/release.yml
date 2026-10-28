@@ -177,6 +177,8 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
 
       - name: Go core (gomobile)
+        env:
+          OMNITUN_BUILD_MODE: release # core/buildinfo: release log levels (docs/logging.md)
         run: bash scripts/build-android-core.sh
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -272,6 +274,8 @@ jobs:
           go-version-file: go.mod
       - name: Core (omnitun-svc.exe)
         shell: pwsh
+        env:
+          OMNITUN_BUILD_MODE: release # core/buildinfo: release log levels (docs/logging.md)
         run: |
           New-Item -ItemType Directory -Force out | Out-Null
           ./scripts/go.ps1 build -trimpath -o out/omnitun-svc.exe ./cmd/omnitun-svc
@@ -406,7 +410,7 @@ jobs:
       - name: Core (omnitun-svc)
         run: |
           TAGS="with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_acme,badlinkname,tfogo_checklinkname0"
-          CGO_ENABLED=0 go build -tags "$TAGS" -trimpath -ldflags "-s -w -checklinkname=0" -o out/omnitun-svc ./cmd/omnitun-svc
+          CGO_ENABLED=0 go build -tags "$TAGS" -trimpath -ldflags "-s -w -checklinkname=0 -X github.com/NoobforAl/omnitun/core/buildinfo.Mode=release" -o out/omnitun-svc ./cmd/omnitun-svc
           file out/omnitun-svc
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -433,7 +437,7 @@ jobs:
       - name: Build tools and libraries
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends clang cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev liblzma-dev
+          sudo apt-get install -y -qq --no-install-recommends clang cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev libnotify-dev liblzma-dev
       - name: App
         working-directory: app
         run: |
@@ -470,7 +474,7 @@ jobs:
       - name: Runtime libraries
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends libgtk-3-0 libayatana-appindicator3-1 xdg-utils desktop-file-utils
+          sudo apt-get install -y -qq --no-install-recommends libgtk-3-0 libayatana-appindicator3-1 libnotify4 xdg-utils desktop-file-utils
 
       - name: Installer
         run: |

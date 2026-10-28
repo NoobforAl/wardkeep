@@ -151,8 +151,8 @@ class ProfilesController extends Notifier<List<ProfileInfo>> {
   /// Moves a profile to [to] (index after removal); the order is the failover priority.
   void reorder(int from, int to) {
     final next = [...state];
-    final p = next.removeAt(from);
-    next.insert(to, p);
+    final moved = next.removeAt(from);
+    next.insert(to, moved);
     _save(next);
   }
 
@@ -232,8 +232,8 @@ class DefaultProfileController extends Notifier<String?> {
     if (fresh && !force) store.write(freshInstall, true);
     final choice = ref.read(selectedProfileIdProvider);
     if ((fresh || force) && choice == null) {
-      final d = resolveDefault(ref.read(profilesProvider), state);
-      if (d != null) ref.read(selectedProfileIdProvider.notifier).select(d.id);
+      final fallback = resolveDefault(ref.read(profilesProvider), state);
+      if (fallback != null) ref.read(selectedProfileIdProvider.notifier).select(fallback.id);
     }
     return added;
   }
@@ -329,14 +329,14 @@ class ConnectionController extends Notifier<EngineState> {
   @override
   EngineState build() {
     final engine = ref.watch(engineProvider);
-    final sub = engine.states.listen((s) {
-      state = s;
+    final sub = engine.states.listen((next) {
+      state = next;
       // Follow automatic switches so the UI shows the profile actually in use.
-      final active = s.activeProfileId;
+      final active = next.activeProfileId;
       // Auto and country choices stay as they are; they pick the profile themselves.
       final choice = ref.read(selectedProfileIdProvider);
       final specific = choice != null && countryOfChoice(choice) == null;
-      if (s.failover != null && active != null && specific && active != choice) {
+      if (next.failover != null && active != null && specific && active != choice) {
         ref.read(selectedProfileIdProvider.notifier).select(active);
       }
     });
@@ -544,23 +544,35 @@ class HomeLocation extends Notifier<ExitInfo?> {
 
 final homeProvider = NotifierProvider<HomeLocation, ExitInfo?>(HomeLocation.new);
 
-class LogsController extends Notifier<List<String>> {
-  static const _max = 500;
+/// The latest log records of the core and the app, the oldest first.
+class LogsController extends Notifier<List<LogRecord>> {
+  /// The most records kept; the oldest go first.
+  static const maxRecords = 500;
 
   @override
-  List<String> build() {
-    final sub = ref.watch(engineProvider).logs.listen((line) {
-      final next = [...state, line];
-      state = next.length > _max ? next.sublist(next.length - _max) : next;
-    });
+  List<LogRecord> build() {
+    final sub = ref.watch(engineProvider).logs.listen(add);
     ref.onDispose(sub.cancel);
     return const [];
+  }
+
+  void add(LogRecord record) {
+    state = [...state.skip(state.length >= maxRecords ? state.length - maxRecords + 1 : 0), record];
   }
 
   void clear() => state = const [];
 }
 
-final logsProvider = NotifierProvider<LogsController, List<String>>(LogsController.new);
+final logsProvider = NotifierProvider<LogsController, List<LogRecord>>(LogsController.new);
+
+/// What the core logs now (`logging.get`); null when it cannot say (an older core).
+final loggingModeProvider = FutureProvider<LoggingMode?>((ref) async {
+  try {
+    return await ref.watch(engineProvider).loggingMode();
+  } catch (_) {
+    return null;
+  }
+});
 
 /// A named list of destinations that go around the VPN (see core/singbox/bypasslist.go).
 class BypassList {
@@ -663,7 +675,17 @@ class SettingsState {
     this.showExit = true,
     this.ipv6 = true,
     this.mtu = 0,
+    this.logLevel = '',
+    this.logUntil = '',
+    this.notifyPopup = true,
+    this.notifyOs = true,
   });
+
+  /// The levels "Debug logging" offers; '' is off (the build's default).
+  static const logLevels = ['', 'info', 'debug', 'trace'];
+
+  /// How long a chosen log level lasts before it turns itself off.
+  static const logLevelLifetime = Duration(hours: 24);
 
   static const defaultRemoteDns = 'https://1.1.1.1/dns-query';
 
@@ -715,6 +737,25 @@ class SettingsState {
   /// The tunnel's packet size (VPN mode); 0 is the core's default.
   final int mtu;
 
+  /// "Debug logging": `info`, `debug` or `trace`, or '' for off (the core keeps only errors in a release).
+  final String logLevel;
+
+  /// When [logLevel] turns itself off (RFC 3339); '' with no level.
+  final String logUntil;
+
+  /// A failure nothing handled shows a red notice in the app.
+  final bool notifyPopup;
+
+  /// ... and a notification of the system's.
+  final bool notifyOs;
+
+  /// [logLevel] while it lasts, else ''.
+  String activeLogLevel([DateTime? now]) {
+    final until = DateTime.tryParse(logUntil);
+    if (logLevel.isEmpty || until == null || !until.isAfter(now ?? DateTime.now())) return '';
+    return logLevel;
+  }
+
   SettingsState copyWith({
     bool? tunMode,
     bool? systemProxy,
@@ -733,6 +774,10 @@ class SettingsState {
     bool? showExit,
     bool? ipv6,
     int? mtu,
+    String? logLevel,
+    String? logUntil,
+    bool? notifyPopup,
+    bool? notifyOs,
   }) =>
       SettingsState(
         tunMode: tunMode ?? this.tunMode,
@@ -752,6 +797,10 @@ class SettingsState {
         showExit: showExit ?? this.showExit,
         ipv6: ipv6 ?? this.ipv6,
         mtu: mtu ?? this.mtu,
+        logLevel: logLevel ?? this.logLevel,
+        logUntil: logUntil ?? this.logUntil,
+        notifyPopup: notifyPopup ?? this.notifyPopup,
+        notifyOs: notifyOs ?? this.notifyOs,
       );
 
   Map<String, dynamic> toJson() => {
@@ -772,6 +821,10 @@ class SettingsState {
         'show_exit': showExit,
         'ipv6': ipv6,
         'mtu': mtu,
+        'log_level': logLevel,
+        'log_until': logUntil,
+        'notify_popup': notifyPopup,
+        'notify_os': notifyOs,
       };
 
   /// Missing keys keep the values from [defaults].
@@ -793,6 +846,10 @@ class SettingsState {
         showExit: j['show_exit'] as bool? ?? defaults.showExit,
         ipv6: j['ipv6'] as bool? ?? defaults.ipv6,
         mtu: j['mtu'] as int? ?? defaults.mtu,
+        logLevel: j['log_level'] as String? ?? defaults.logLevel,
+        logUntil: j['log_until'] as String? ?? defaults.logUntil,
+        notifyPopup: j['notify_popup'] as bool? ?? defaults.notifyPopup,
+        notifyOs: j['notify_os'] as bool? ?? defaults.notifyOs,
       );
 }
 
@@ -804,20 +861,60 @@ class SettingsController extends Notifier<SettingsState> {
     // Android captures all traffic by default; desktop starts in proxy mode (TUN needs admin rights there).
     final defaults = SettingsState(tunMode: Platform.isAndroid);
     final saved = ref.read(storeProvider).read<Map<String, dynamic>>(_key);
-    final s = saved == null ? defaults : SettingsState.fromJson(saved, defaults);
+    var settings = saved == null ? defaults : SettingsState.fromJson(saved, defaults);
+    // Debug logging that ran out while the app was closed is off.
+    if (settings.logLevel.isNotEmpty && settings.activeLogLevel().isEmpty) {
+      settings = settings.copyWith(logLevel: '', logUntil: '');
+    }
     // The native side needs this to act when the OS closes the app.
     final engine = ref.read(engineProvider);
-    Future.microtask(() => engine.setStopOnClose(s.stopOnClose));
-    return s;
+    Future.microtask(() => engine.setStopOnClose(settings.stopOnClose));
+    if (settings.logLevel.isNotEmpty) Future.microtask(() => _sendLogging(settings));
+    _scheduleLoggingEnd(settings);
+    ref.onDispose(() => _loggingEnd?.cancel());
+    return settings;
   }
 
-  void update(SettingsState Function(SettingsState) f) {
+  Timer? _loggingEnd;
+
+  void update(SettingsState Function(SettingsState) change) {
     final before = state;
-    state = f(state);
+    state = change(state);
     ref.read(storeProvider).write(_key, state.toJson());
     if (state.stopOnClose != before.stopOnClose) {
       ref.read(engineProvider).setStopOnClose(state.stopOnClose);
     }
+    if (state.logLevel != before.logLevel || state.logUntil != before.logUntil) {
+      _sendLogging(state);
+      _scheduleLoggingEnd(state);
+    }
+  }
+
+  /// Turns "Debug logging" to [level] ('' = off) for [SettingsState.logLevelLifetime].
+  void setLogLevel(String level, {DateTime? now}) => update((s) => s.copyWith(
+    logLevel: level,
+    logUntil: level.isEmpty ? '' : (now ?? DateTime.now()).toUtc().add(SettingsState.logLevelLifetime).toIso8601String(),
+  ));
+
+  /// Tells the core (`logging.set`); the engine sends it again after a reconnect.
+  Future<void> _sendLogging(SettingsState settings) async {
+    final until = DateTime.tryParse(settings.logUntil);
+    try {
+      await ref.read(engineProvider).setLogging(settings.activeLogLevel(), until: until);
+    } catch (_) {
+      // An older core cannot change its level; the settings page shows what it reports.
+    }
+    if (ref.mounted) ref.invalidate(loggingModeProvider);
+  }
+
+  /// The setting turns itself off when its time is up (the core does the same on its own).
+  void _scheduleLoggingEnd(SettingsState settings) {
+    _loggingEnd?.cancel();
+    final until = DateTime.tryParse(settings.logUntil);
+    if (settings.logLevel.isEmpty || until == null) return;
+    _loggingEnd = Timer(until.difference(DateTime.now()), () {
+      if (ref.mounted) update((s) => s.copyWith(logLevel: '', logUntil: ''));
+    });
   }
 }
 

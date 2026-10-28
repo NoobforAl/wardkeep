@@ -2101,4 +2101,85 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get scanNeedsFields => '请先填写隧道域名和服务器密钥。';
+
+  @override
+  String get settingsLogging => '日志与错误';
+
+  @override
+  String get debugLogging => '调试日志';
+
+  @override
+  String get debugLoggingOff => '关闭';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level，直到 $time';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return '核心日志级别：$level（$mode 版本）';
+  }
+
+  @override
+  String get debugLoggingWarning => '调试日志会减慢连接、更耗电，并在日志中保留更多细节。24 小时后会自动关闭。';
+
+  @override
+  String get logLevelInfo => '信息';
+
+  @override
+  String get logLevelDebug => '调试';
+
+  @override
+  String get logLevelTrace => '跟踪（全部）';
+
+  @override
+  String get notifyPopup => '出错时通知我';
+
+  @override
+  String get notifyPopupHint => '当出现应用无法自行修复的故障时，在应用中显示红色提示';
+
+  @override
+  String get notifyOs => '错误的系统通知';
+
+  @override
+  String get notifyOsHint => '系统通知，应用在后台时也会显示';
+
+  @override
+  String get logsView => '查看日志';
+
+  @override
+  String get logsExport => '另存为 JSON Lines';
+
+  @override
+  String get logsSaved => '日志已保存';
+
+  @override
+  String get logsLevel => '级别';
+
+  @override
+  String get logsLevelAll => '所有级别';
+
+  @override
+  String logsConnection(String conn) {
+    return '连接 $conn';
+  }
+
+  @override
+  String get logsNoMatch => '没有符合筛选条件的日志。';
+
+  @override
+  String get errTorExited => 'Tor 意外停止。请重新连接；如果反复出现，请查看日志。';
+
+  @override
+  String get errDnsttExited => 'DNS 隧道意外停止。请重新连接；如果反复出现，请查看日志。';
+
+  @override
+  String get errEngineFatal => '连接引擎因错误停止。请重新连接；如果反复出现，请查看日志。';
+
+  @override
+  String get errPanic => 'Wardkeep 内部出错，连接已停止。详情见日志。';
+
+  @override
+  String get errTorStreamFailed => 'Tor 无法通过 Tor 网络连接到该网站。';
 }

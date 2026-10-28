@@ -1,6 +1,7 @@
 import '../engine/engine.dart';
 import 'app_localizations.dart';
 import 'form_text.dart';
+import 'l10n.dart' show errorCodeText;
 
 /// The translation of a failure the core reported by [code], or null for a code
 /// that has none (the core's English message is shown instead).
@@ -65,3 +66,13 @@ String? progressDetail(AppLocalizations l, ConnectProgress p) => switch (p.detai
   'TOR_RETRY' => l.torRetry(p.detailN, p.detailM),
   _ => p.detail,
 };
+
+/// What a log record that tells the user of a failure says, in their language: the translation of its
+/// `code` where the app has one, else the record's own (English) message.
+String logRecordText(AppLocalizations l, LogRecord record) {
+  if (record.code.isNotEmpty) {
+    final translated = errorCodeText(l, record.code) ?? translateCode(l, record.code, const {});
+    if (translated != null) return translated;
+  }
+  return record.msg.isNotEmpty ? record.msg : record.err;
+}

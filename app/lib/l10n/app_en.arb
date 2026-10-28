@@ -1503,5 +1503,126 @@
   "scanNeedsFields": "Fill in the tunnel domain and the server key first.",
   "@scanNeedsFields": {
     "description": "DNS tunnel editor text (core/profile/dnstt.go) and the resolver scan"
+  },
+  "settingsLogging": "Logs and errors",
+  "@settingsLogging": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "debugLogging": "Debug logging",
+  "@debugLogging": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "debugLoggingOff": "Off",
+  "@debugLoggingOff": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "debugLoggingUntil": "{level} until {time}",
+  "@debugLoggingUntil": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "debugLoggingCore": "The core logs: {level} ({mode} build)",
+  "@debugLoggingCore": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "debugLoggingWarning": "Debug logging slows connections, uses more battery and keeps more detail in the log. It turns itself off after 24 hours.",
+  "@debugLoggingWarning": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logLevelInfo": "Info",
+  "@logLevelInfo": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logLevelDebug": "Debug",
+  "@logLevelDebug": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logLevelTrace": "Trace (everything)",
+  "@logLevelTrace": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "notifyPopup": "Tell me about errors",
+  "@notifyPopup": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "notifyPopupHint": "A red notice in the app when something fails that the app could not fix",
+  "@notifyPopupHint": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "notifyOs": "System notifications for errors",
+  "@notifyOs": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "notifyOsHint": "A notification of the system, also when the app is in the background",
+  "@notifyOsHint": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logsView": "View logs",
+  "@logsView": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logsExport": "Save as JSON lines",
+  "@logsExport": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logsSaved": "Log saved",
+  "@logsSaved": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logsLevel": "Level",
+  "@logsLevel": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logsLevelAll": "All levels",
+  "@logsLevelAll": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "logsConnection": "Connection {conn}",
+  "@logsConnection": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)",
+    "placeholders": {
+      "conn": {
+        "type": "String"
+      }
+    }
+  },
+  "logsNoMatch": "No log entries match the filter.",
+  "@logsNoMatch": {
+    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  },
+  "errTorExited": "Tor stopped unexpectedly. Connect again; if it keeps happening, look at the logs.",
+  "@errTorExited": {
+    "description": "A failure the core logs with notify (docs/logging.md §5), by its code"
+  },
+  "errDnsttExited": "The DNS tunnel stopped unexpectedly. Connect again; if it keeps happening, look at the logs.",
+  "@errDnsttExited": {
+    "description": "A failure the core logs with notify (docs/logging.md §5), by its code"
+  },
+  "errEngineFatal": "The connection engine stopped with an error. Connect again; if it keeps happening, look at the logs.",
+  "@errEngineFatal": {
+    "description": "A failure the core logs with notify (docs/logging.md §5), by its code"
+  },
+  "errPanic": "Something went wrong inside Wardkeep and the connection was stopped. The logs have the details.",
+  "@errPanic": {
+    "description": "A failure the core logs with notify (docs/logging.md §5), by its code"
+  },
+  "errTorStreamFailed": "Tor could not open a connection to that site through the Tor network.",
+  "@errTorStreamFailed": {
+    "description": "A failure the core logs with notify (docs/logging.md §5), by its code"
   }
 }

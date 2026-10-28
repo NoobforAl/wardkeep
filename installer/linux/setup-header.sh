@@ -110,9 +110,9 @@ check_libraries() {
   [ -z "$missing" ] && return 0
   warn "these libraries are missing, and Wardkeep will not start without them:"
   printf '  %s\n' $missing >&2
-  warn "Debian/Ubuntu: sudo apt install libgtk-3-0 libayatana-appindicator3-1"
-  warn "Fedora:        sudo dnf install gtk3 libayatana-appindicator-gtk3"
-  warn "Arch:          sudo pacman -S gtk3 libayatana-appindicator"
+  warn "Debian/Ubuntu: sudo apt install libgtk-3-0 libayatana-appindicator3-1 libnotify4"
+  warn "Fedora:        sudo dnf install gtk3 libayatana-appindicator-gtk3 libnotify"
+  warn "Arch:          sudo pacman -S gtk3 libayatana-appindicator libnotify"
 }
 
 install_app() {

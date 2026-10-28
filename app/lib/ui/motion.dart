@@ -35,13 +35,13 @@ class SoftAppear extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = soft(context, ms);
+    final duration = soft(context, ms);
     return AnimatedSize(
-      duration: d,
+      duration: duration,
       curve: softCurve,
       alignment: Alignment.topCenter,
       child: AnimatedSwitcher(
-        duration: d,
+        duration: duration,
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
         transitionBuilder: (child, animation) =>

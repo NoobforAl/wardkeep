@@ -14,19 +14,19 @@ class StarFieldPainter extends CustomPainter {
     for (var i = 0; i < 70; i++) {
       final x = rnd.nextDouble() * size.width;
       final y = rnd.nextDouble() * size.height * 0.75;
-      final r = 0.5 + rnd.nextDouble() * 1.4;
-      final a = 0.15 + rnd.nextDouble() * 0.5;
+      final radius = 0.5 + rnd.nextDouble() * 1.4;
+      final alpha = 0.15 + rnd.nextDouble() * 0.5;
       // fade out towards the bottom panel
       final fade = 1 - (y / (size.height * 0.75)) * 0.7;
-      paint.color = Color.fromRGBO(255, 244, 214, a * fade);
-      canvas.drawCircle(Offset(x, y), r, paint);
+      paint.color = Color.fromRGBO(255, 244, 214, alpha * fade);
+      canvas.drawCircle(Offset(x, y), radius, paint);
       if (i % 9 == 0) {
         // a few twinkles: a small cross
         paint
           ..strokeWidth = 0.8
           ..style = PaintingStyle.stroke;
-        canvas.drawLine(Offset(x - r * 3, y), Offset(x + r * 3, y), paint);
-        canvas.drawLine(Offset(x, y - r * 3), Offset(x, y + r * 3), paint);
+        canvas.drawLine(Offset(x - radius * 3, y), Offset(x + radius * 3, y), paint);
+        canvas.drawLine(Offset(x, y - radius * 3), Offset(x, y + radius * 3), paint);
         paint.style = PaintingStyle.fill;
       }
     }

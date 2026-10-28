@@ -98,8 +98,8 @@ Future<void> showHopInfo(BuildContext context, WidgetRef ref, HopKind kind, {Str
       }
       if (exit != null) rows.add((l.hopExitAddress, maskIp(exit.ip), true));
     case HopKind.bridge:
-      final t = profile == null ? null : _transport(profile);
-      if (t != null) rows.add((l.hopTransport, t, false));
+      final transport = profile == null ? null : _transport(profile);
+      if (transport != null) rows.add((l.hopTransport, transport, false));
     case HopKind.exit:
       if (exit != null) rows.add((l.hopExitAddress, maskIp(exit.ip), true));
     case HopKind.entry || HopKind.relay:

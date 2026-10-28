@@ -37,20 +37,20 @@ class IpCountryDb {
   static int _pad8(int n) => (n + 7) & ~7;
 
   static ({int v4s, int v4e, int v4c, int v6s, int v6e, int v6c, int end}) _layout(int n4, int n6) {
-    var o = 16;
-    final v4s = o;
-    o += _pad8(n4 * 4);
-    final v4e = o;
-    o += _pad8(n4 * 4);
-    final v4c = o;
-    o += _pad8(n4 * 2);
-    final v6s = o;
-    o += n6 * 8;
-    final v6e = o;
-    o += n6 * 8;
-    final v6c = o;
-    o += _pad8(n6 * 2);
-    return (v4s: v4s, v4e: v4e, v4c: v4c, v6s: v6s, v6e: v6e, v6c: v6c, end: o);
+    var offset = 16;
+    final v4s = offset;
+    offset += _pad8(n4 * 4);
+    final v4e = offset;
+    offset += _pad8(n4 * 4);
+    final v4c = offset;
+    offset += _pad8(n4 * 2);
+    final v6s = offset;
+    offset += n6 * 8;
+    final v6e = offset;
+    offset += n6 * 8;
+    final v6c = offset;
+    offset += _pad8(n6 * 2);
+    return (v4s: v4s, v4e: v4e, v4c: v4c, v6s: v6s, v6e: v6e, v6c: v6c, end: offset);
   }
 
   /// Reads a database file; throws [FormatException] when it is not one (or is cut short).
@@ -60,27 +60,27 @@ class IpCountryDb {
     }
     final head = ByteData.sublistView(bytes);
     final n4 = head.getUint32(8, Endian.little), n6 = head.getUint32(12, Endian.little);
-    final l = _layout(n4, n6);
-    if (bytes.length < l.end) throw const FormatException('the IP database is incomplete');
+    final layout = _layout(n4, n6);
+    if (bytes.length < layout.end) throw const FormatException('the IP database is incomplete');
     // Typed views need an aligned start, which a Uint8List cut from a larger buffer may not have.
     final aligned = (bytes.offsetInBytes & 7) == 0 ? bytes : Uint8List.fromList(bytes);
     final buf = aligned.buffer;
     final base = aligned.offsetInBytes;
     return IpCountryDb._(
-      buf.asUint32List(base + l.v4s, n4),
-      buf.asUint32List(base + l.v4e, n4),
-      buf.asUint16List(base + l.v4c, n4),
-      buf.asUint64List(base + l.v6s, n6),
-      buf.asUint64List(base + l.v6e, n6),
-      buf.asUint16List(base + l.v6c, n6),
+      buf.asUint32List(base + layout.v4s, n4),
+      buf.asUint32List(base + layout.v4e, n4),
+      buf.asUint16List(base + layout.v4c, n4),
+      buf.asUint64List(base + layout.v6s, n6),
+      buf.asUint64List(base + layout.v6e, n6),
+      buf.asUint16List(base + layout.v6c, n6),
     );
   }
 
   /// The two-letter country of [ip], or null when it is not in the database or not an address.
   String? lookup(String ip) {
-    final a = InternetAddress.tryParse(ip.trim());
-    if (a == null) return null;
-    final raw = a.rawAddress;
+    final address = InternetAddress.tryParse(ip.trim());
+    if (address == null) return null;
+    final raw = address.rawAddress;
     if (raw.length == 4) return _v4(raw[0] << 24 | raw[1] << 16 | raw[2] << 8 | raw[3]);
     // ::ffff:a.b.c.d is an IPv4 address in IPv6 clothes.
     var mapped = true;
@@ -263,40 +263,40 @@ IpDbBuilt _compile(String v4Csv, String v6Csv, String outPath) {
   final v4s = <int>[], v4e = <int>[], v4c = <int>[];
   final v6s = <int>[], v6e = <int>[], v6c = <int>[];
 
-  int? ip4(String s) {
-    final p = s.split('.');
-    if (p.length != 4) return null;
-    var v = 0;
-    for (final part in p) {
-      final n = int.tryParse(part);
-      if (n == null || n < 0 || n > 255) return null;
-      v = (v << 8) | n;
+  int? ip4(String text) {
+    final parts = text.split('.');
+    if (parts.length != 4) return null;
+    var value = 0;
+    for (final part in parts) {
+      final octet = int.tryParse(part);
+      if (octet == null || octet < 0 || octet > 255) return null;
+      value = (value << 8) | octet;
     }
-    return v;
+    return value;
   }
 
-  int? ip6hi(String s) {
-    final a = InternetAddress.tryParse(s);
-    if (a == null || a.rawAddress.length != 16) return null;
+  int? ip6hi(String text) {
+    final address = InternetAddress.tryParse(text);
+    if (address == null || address.rawAddress.length != 16) return null;
     var hi = 0;
     for (var i = 0; i < 8; i++) {
-      hi = (hi << 8) | a.rawAddress[i];
+      hi = (hi << 8) | address.rawAddress[i];
     }
     return hi;
   }
 
-  void read(String path, int? Function(String) parse, List<int> s, List<int> e, List<int> c) {
+  void read(String path, int? Function(String) parse, List<int> starts, List<int> ends, List<int> codes) {
     final lines = File(path).readAsLinesSync();
     for (final line in lines) {
-      final f = line.split(',');
-      if (f.length < 3) continue;
-      final cc = f[2].trim();
+      final fields = line.split(',');
+      if (fields.length < 3) continue;
+      final cc = fields[2].trim();
       if (cc.length != 2 || cc == 'ZZ' || cc == 'XX') continue;
-      final a = parse(f[0].trim()), b = parse(f[1].trim());
-      if (a == null || b == null) continue;
-      s.add(a);
-      e.add(b);
-      c.add(cc.codeUnitAt(0) << 8 | cc.codeUnitAt(1));
+      final first = parse(fields[0].trim()), last = parse(fields[1].trim());
+      if (first == null || last == null) continue;
+      starts.add(first);
+      ends.add(last);
+      codes.add(cc.codeUnitAt(0) << 8 | cc.codeUnitAt(1));
     }
   }
 
@@ -315,19 +315,19 @@ IpDbBuilt _compile(String v4Csv, String v6Csv, String outPath) {
   v6e..clear()..addAll(f6.ends);
   v6c..clear()..addAll(f6.codes);
 
-  final l = IpCountryDb._layout(v4s.length, v6s.length);
-  final out = Uint8List(l.end);
+  final layout = IpCountryDb._layout(v4s.length, v6s.length);
+  final out = Uint8List(layout.end);
   final head = ByteData.sublistView(out);
   out.setAll(0, IpCountryDb._magic);
   out[4] = 1;
   head.setUint32(8, v4s.length, Endian.little);
   head.setUint32(12, v6s.length, Endian.little);
-  out.buffer.asUint32List(l.v4s, v4s.length).setAll(0, v4s);
-  out.buffer.asUint32List(l.v4e, v4e.length).setAll(0, v4e);
-  out.buffer.asUint16List(l.v4c, v4c.length).setAll(0, v4c);
-  out.buffer.asUint64List(l.v6s, v6s.length).setAll(0, v6s);
-  out.buffer.asUint64List(l.v6e, v6e.length).setAll(0, v6e);
-  out.buffer.asUint16List(l.v6c, v6c.length).setAll(0, v6c);
+  out.buffer.asUint32List(layout.v4s, v4s.length).setAll(0, v4s);
+  out.buffer.asUint32List(layout.v4e, v4e.length).setAll(0, v4e);
+  out.buffer.asUint16List(layout.v4c, v4c.length).setAll(0, v4c);
+  out.buffer.asUint64List(layout.v6s, v6s.length).setAll(0, v6s);
+  out.buffer.asUint64List(layout.v6e, v6e.length).setAll(0, v6e);
+  out.buffer.asUint16List(layout.v6c, v6c.length).setAll(0, v6c);
 
   // Atomically: a half-written database must never be picked up.
   final tmp = File('$outPath.tmp')..writeAsBytesSync(out, flush: true);
@@ -520,10 +520,10 @@ class IpDbDownloader {
 
   Future<IpDbSource?> _saved() async {
     try {
-      final m = jsonDecode(await _manifest.readAsString()) as Map<String, dynamic>;
-      final files = (m['files'] as Map<String, dynamic>).map((k, v) => MapEntry(k, IpDbFile.fromJson(v as Map<String, dynamic>)));
+      final manifest = jsonDecode(await _manifest.readAsString()) as Map<String, dynamic>;
+      final files = (manifest['files'] as Map<String, dynamic>).map((k, v) => MapEntry(k, IpDbFile.fromJson(v as Map<String, dynamic>)));
       if (ipDbFiles.any((f) => files[f] == null)) return null;
-      return IpDbSource(m['version'] as String, files);
+      return IpDbSource(manifest['version'] as String, files);
     } catch (_) {
       return null;
     }
@@ -535,11 +535,11 @@ class IpDbDownloader {
     if (source == null) return null;
     var got = 0, all = 0, part = 0;
     for (var i = 0; i < ipDbFiles.length; i++) {
-      final f = ipDbFiles[i];
-      final total = source.files[f]!.size;
+      final name = ipDbFiles[i];
+      final total = source.files[name]!.size;
       all += total;
-      final done = await _file(f).exists();
-      final partial = _file(f, part: true);
+      final done = await _file(name).exists();
+      final partial = _file(name, part: true);
       final have = done ? total : (await partial.exists() ? math.min(await partial.length(), total) : 0);
       got += have;
       if (done) part = i + 1;
@@ -585,21 +585,21 @@ class IpDbDownloader {
     final bad = <String>{}; // mirrors (by origin) that disagreed with the expected file, for this run
     var before = 0;
     for (var i = 0; i < ipDbFiles.length; i++) {
-      final f = ipDbFiles[i];
-      final expected = source.files[f]!;
-      if (await _file(f).exists() && await _file(f).length() == expected.size) {
+      final name = ipDbFiles[i];
+      final expected = source.files[name]!;
+      if (await _file(name).exists() && await _file(name).length() == expected.size) {
         before += expected.size;
         continue;
       }
       var last = DateTime.fromMillisecondsSinceEpoch(0);
-      await _fetchFile(f, source.version, expected, cancel, bad, (got) {
+      await _fetchFile(name, source.version, expected, cancel, bad, (got) {
         final now = DateTime.now();
         if (now.difference(last).inMilliseconds < 100 && got != expected.size) return;
         last = now;
         onProgress(IpDbProgress(
           part: i,
           parts: ipDbFiles.length,
-          file: f,
+          file: name,
           received: got,
           total: expected.size,
           overallReceived: before + got,
@@ -729,8 +729,8 @@ class IpDbDownloader {
 
   /// Forgets a download (the files, the manifest).
   Future<void> clean() async {
-    for (final f in ipDbFiles) {
-      for (final file in [_file(f), _file(f, part: true)]) {
+    for (final name in ipDbFiles) {
+      for (final file in [_file(name), _file(name, part: true)]) {
         if (await file.exists()) await file.delete();
       }
     }

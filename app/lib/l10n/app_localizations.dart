@@ -3791,6 +3791,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fill in the tunnel domain and the server key first.'**
   String get scanNeedsFields;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Logs and errors'**
+  String get settingsLogging;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Debug logging'**
+  String get debugLogging;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get debugLoggingOff;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'{level} until {time}'**
+  String debugLoggingUntil(String level, String time);
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'The core logs: {level} ({mode} build)'**
+  String debugLoggingCore(String level, String mode);
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Debug logging slows connections, uses more battery and keeps more detail in the log. It turns itself off after 24 hours.'**
+  String get debugLoggingWarning;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get logLevelInfo;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Debug'**
+  String get logLevelDebug;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Trace (everything)'**
+  String get logLevelTrace;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me about errors'**
+  String get notifyPopup;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'A red notice in the app when something fails that the app could not fix'**
+  String get notifyPopupHint;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'System notifications for errors'**
+  String get notifyOs;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'A notification of the system, also when the app is in the background'**
+  String get notifyOsHint;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'View logs'**
+  String get logsView;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Save as JSON lines'**
+  String get logsExport;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Log saved'**
+  String get logsSaved;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get logsLevel;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'All levels'**
+  String get logsLevelAll;
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'Connection {conn}'**
+  String logsConnection(String conn);
+
+  /// Logging settings, the log page and error notifications (docs/logging.md)
+  ///
+  /// In en, this message translates to:
+  /// **'No log entries match the filter.'**
+  String get logsNoMatch;
+
+  /// A failure the core logs with notify (docs/logging.md §5), by its code
+  ///
+  /// In en, this message translates to:
+  /// **'Tor stopped unexpectedly. Connect again; if it keeps happening, look at the logs.'**
+  String get errTorExited;
+
+  /// A failure the core logs with notify (docs/logging.md §5), by its code
+  ///
+  /// In en, this message translates to:
+  /// **'The DNS tunnel stopped unexpectedly. Connect again; if it keeps happening, look at the logs.'**
+  String get errDnsttExited;
+
+  /// A failure the core logs with notify (docs/logging.md §5), by its code
+  ///
+  /// In en, this message translates to:
+  /// **'The connection engine stopped with an error. Connect again; if it keeps happening, look at the logs.'**
+  String get errEngineFatal;
+
+  /// A failure the core logs with notify (docs/logging.md §5), by its code
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong inside Wardkeep and the connection was stopped. The logs have the details.'**
+  String get errPanic;
+
+  /// A failure the core logs with notify (docs/logging.md §5), by its code
+  ///
+  /// In en, this message translates to:
+  /// **'Tor could not open a connection to that site through the Tor network.'**
+  String get errTorStreamFailed;
 }
 
 class _AppLocalizationsDelegate

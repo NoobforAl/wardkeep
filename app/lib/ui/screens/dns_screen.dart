@@ -17,11 +17,11 @@ String dnsProblemText(AppLocalizations l, DnsProblem p) => switch (p) {
 };
 
 /// What the resolver setting is called in the settings row and on the home screen.
-String dnsSummary(AppLocalizations l, SettingsState s) {
-  if (isDefaultDns(s.remoteDns)) return '${l.dnsDefault} · ${dnsPresets.first.title}';
-  final preset = dnsPresets.where((p) => p.dns == s.remoteDns).firstOrNull;
+String dnsSummary(AppLocalizations l, SettingsState settings) {
+  if (isDefaultDns(settings.remoteDns)) return '${l.dnsDefault} · ${dnsPresets.first.title}';
+  final preset = dnsPresets.where((p) => p.dns == settings.remoteDns).firstOrNull;
   if (preset != null) return preset.title;
-  return describeDns(s.remoteDns, s.dnsRelay, l.dnsAnonymizedShort);
+  return describeDns(settings.remoteDns, settings.dnsRelay, l.dnsAnonymizedShort);
 }
 
 const _customId = 'custom';
@@ -67,12 +67,12 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
 
   /// A relay of the resolver's own operator hides nothing, so it is replaced when the resolver changes.
   String _relayFor(String dns) {
-    final s = ref.read(settingsProvider);
-    if (s.dnsRelay.isEmpty || !isDnsCryptStamp(dns)) return '';
+    final settings = ref.read(settingsProvider);
+    if (settings.dnsRelay.isEmpty || !isDnsCryptStamp(dns)) return '';
     final resolver = dnsEntryForStamp(dns);
-    final current = dnsRelayEntry(s.dnsRelay);
-    if (resolver == null || current == null) return s.dnsRelay;
-    if (dnsOperatorOf(current.name) != dnsOperatorOf(resolver.name)) return s.dnsRelay;
+    final current = dnsRelayEntry(settings.dnsRelay);
+    if (resolver == null || current == null) return settings.dnsRelay;
+    if (dnsOperatorOf(current.name) != dnsOperatorOf(resolver.name)) return settings.dnsRelay;
     return pickRelayFor(resolver)?.stamp ?? '';
   }
 
@@ -101,20 +101,20 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
   }
 
   void _anonymize(bool on) {
-    final s = ref.read(settingsProvider);
+    final settings = ref.read(settingsProvider);
     if (!on) {
       ref.read(settingsProvider.notifier).update((s) => s.copyWith(dnsRelay: ''));
       return;
     }
-    final resolver = dnsEntryForStamp(s.remoteDns);
+    final resolver = dnsEntryForStamp(settings.remoteDns);
     final relay = resolver != null ? pickRelayFor(resolver) : (kDnsRelays.isEmpty ? null : kDnsRelays.first);
     if (relay != null) ref.read(settingsProvider.notifier).update((s) => s.copyWith(dnsRelay: relay.stamp));
   }
 
   Future<void> _chooseRelay() async {
     final l = context.l10n;
-    final s = ref.read(settingsProvider);
-    final resolver = dnsEntryForStamp(s.remoteDns);
+    final settings = ref.read(settingsProvider);
+    final resolver = dnsEntryForStamp(settings.remoteDns);
     final op = resolver == null ? null : dnsOperatorOf(resolver.name);
     final picked = await showDialog<String>(animationStyle: softAnimation, 
       context: context,
@@ -134,7 +134,7 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
                   // Not the resolver's own operator.
                   if (op == null || dnsOperatorOf(r.name) != op)
                     ListTile(
-                      selected: r.stamp == s.dnsRelay,
+                      selected: r.stamp == settings.dnsRelay,
                       title: Text(r.name, textDirection: TextDirection.ltr),
                       subtitle: r.country.isEmpty ? null : Text(context.countryName(r.country)),
                       onTap: () => Navigator.pop(context, r.stamp),
@@ -158,14 +158,14 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final s = ref.watch(settingsProvider);
-    final selected = dnsSelectedId(s.remoteDns);
-    final dnscrypt = isDnsCryptStamp(s.remoteDns);
-    final anonymized = dnscrypt && s.dnsRelay.isNotEmpty;
-    final relay = anonymized ? dnsRelayEntry(s.dnsRelay) : null;
+    final settings = ref.watch(settingsProvider);
+    final selected = dnsSelectedId(settings.remoteDns);
+    final dnscrypt = isDnsCryptStamp(settings.remoteDns);
+    final anonymized = dnscrypt && settings.dnsRelay.isNotEmpty;
+    final relay = anonymized ? dnsRelayEntry(settings.dnsRelay) : null;
     final custom = _custom.text.trim();
     final customCheck = _check ?? (custom.isEmpty ? null : checkDnsSetting(custom));
-    final canSave = custom.isNotEmpty && customCheck != null && customCheck.ok && custom != s.remoteDns.trim();
+    final canSave = custom.isNotEmpty && customCheck != null && customCheck.ok && custom != settings.remoteDns.trim();
 
     Widget card(List<Widget> rows) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -222,8 +222,8 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
                         key: const ValueKey('dns-custom'),
                         value: _customId,
                         title: Text(l.dnsCustom),
-                        subtitle: selected == _customId && s.remoteDns.trim().isNotEmpty
-                            ? Text(describeDns(s.remoteDns, s.dnsRelay, l.dnsAnonymizedShort), textDirection: TextDirection.ltr)
+                        subtitle: selected == _customId && settings.remoteDns.trim().isNotEmpty
+                            ? Text(describeDns(settings.remoteDns, settings.dnsRelay, l.dnsAnonymizedShort), textDirection: TextDirection.ltr)
                             : null,
                       ),
                       Padding(
@@ -282,7 +282,7 @@ class _DnsScreenState extends ConsumerState<DnsScreen> {
                     title: Text(l.dnsRelay),
                     subtitle: Text(
                       relay == null
-                          ? describeDns(s.dnsRelay)
+                          ? describeDns(settings.dnsRelay)
                           : '${relay.name}${relay.country.isEmpty ? '' : ' · ${context.countryName(relay.country)}'}',
                       textDirection: TextDirection.ltr,
                     ),
@@ -310,13 +310,13 @@ class DnsLine extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(settingsProvider);
-    if (isDefaultDns(s.remoteDns)) return const SizedBox.shrink();
+    final settings = ref.watch(settingsProvider);
+    if (isDefaultDns(settings.remoteDns)) return const SizedBox.shrink();
     final l = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Text(
-        l.dnsLine(describeDns(s.remoteDns, s.dnsRelay, l.dnsAnonymizedShort)),
+        l.dnsLine(describeDns(settings.remoteDns, settings.dnsRelay, l.dnsAnonymizedShort)),
         key: const ValueKey('dns-line'),
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),

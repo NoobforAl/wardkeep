@@ -89,20 +89,32 @@ class Notice extends StatelessWidget {
 /// A failure as a snackbar, in the same red (or amber) as [Notice]; stays a little longer than a plain one,
 /// because there is something to read.
 void showNoticeSnackBar(BuildContext context, String message, {NoticeTone tone = NoticeTone.error}) {
-  final theme = Theme.of(context);
-  final color = theme.noticeColor(tone);
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(
-      duration: const Duration(seconds: 8),
-      backgroundColor: theme.noticeBackground(tone),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: color.withValues(alpha: 0.65))),
-      content: Row(
-        children: [
-          Icon(tone == NoticeTone.error ? Icons.error_outline_rounded : Icons.warning_amber_rounded, color: color),
-          const SizedBox(width: 10),
-          Expanded(child: Text(message, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface))),
-        ],
-      ),
-    ));
+    ..showSnackBar(noticeSnackBar(Theme.of(context), message, tone: tone));
+}
+
+/// The snackbar [showNoticeSnackBar] shows, for a caller that has a [ScaffoldMessengerState] but no context
+/// under it (the app's root); [actionLabel] and [onAction] make a button on it, in the notice's colour.
+SnackBar noticeSnackBar(
+  ThemeData theme,
+  String message, {
+  NoticeTone tone = NoticeTone.error,
+  String? actionLabel,
+  VoidCallback? onAction,
+}) {
+  final color = theme.noticeColor(tone);
+  return SnackBar(
+    duration: const Duration(seconds: 8),
+    backgroundColor: theme.noticeBackground(tone),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: color.withValues(alpha: 0.65))),
+    action: actionLabel == null || onAction == null ? null : SnackBarAction(label: actionLabel, textColor: color, onPressed: onAction),
+    content: Row(
+      children: [
+        Icon(tone == NoticeTone.error ? Icons.error_outline_rounded : Icons.warning_amber_rounded, color: color),
+        const SizedBox(width: 10),
+        Expanded(child: Text(message, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface))),
+      ],
+    ),
+  );
 }

@@ -26,8 +26,8 @@ final _cidr = RegExp(r'^(?:\d{1,3}(?:\.\d{1,3}){3}/\d{1,2}|[0-9a-fA-F:]+:[0-9a-f
 List<String> parseZone(String text) {
   final out = <String>[];
   for (var line in const LineSplitter().convert(text)) {
-    final i = line.indexOf('#');
-    if (i >= 0) line = line.substring(0, i);
+    final hash = line.indexOf('#');
+    if (hash >= 0) line = line.substring(0, hash);
     line = line.trim();
     if (_cidr.hasMatch(line)) out.add(line);
   }
@@ -118,12 +118,12 @@ class CountryZonesController extends Notifier<Map<String, ZoneState>> {
       final dir = await ref.read(countryZonesDirProvider)();
       if (!await dir.exists()) return;
       final found = <String, ZoneState>{};
-      await for (final e in dir.list()) {
-        if (e is! File || !e.path.endsWith('.txt')) continue;
-        final name = e.uri.pathSegments.last;
+      await for (final entry in dir.list()) {
+        if (entry is! File || !entry.path.endsWith('.txt')) continue;
+        final name = entry.uri.pathSegments.last;
         final cc = name.substring(0, name.length - 4).toUpperCase();
         if (!RegExp(r'^[A-Z]{2}$').hasMatch(cc)) continue;
-        final lines = parseZone(await e.readAsString());
+        final lines = parseZone(await entry.readAsString());
         if (lines.isNotEmpty) found[cc] = ZoneState(ZoneStatus.ready, lines: lines);
       }
       if (!ref.mounted) return;
@@ -145,9 +145,9 @@ class CountryZonesController extends Notifier<Map<String, ZoneState>> {
       if (!ref.mounted) return;
       state = {...state, cc: ZoneState(ZoneStatus.ready, lines: lines)};
       try {
-        final f = await _file(cc);
-        await f.parent.create(recursive: true);
-        await f.writeAsString('${lines.join('\n')}\n');
+        final file = await _file(cc);
+        await file.parent.create(recursive: true);
+        await file.writeAsString('${lines.join('\n')}\n');
       } catch (_) {
         // kept for this run only
       }

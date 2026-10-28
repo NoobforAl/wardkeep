@@ -2210,4 +2210,92 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get scanNeedsFields => 'पहले टनल का डोमेन और सर्वर कुंजी भरें।';
+
+  @override
+  String get settingsLogging => 'लॉग और त्रुटियाँ';
+
+  @override
+  String get debugLogging => 'डीबग लॉगिंग';
+
+  @override
+  String get debugLoggingOff => 'बंद';
+
+  @override
+  String debugLoggingUntil(String level, String time) {
+    return '$level, $time तक';
+  }
+
+  @override
+  String debugLoggingCore(String level, String mode) {
+    return 'कोर का लॉग स्तर: $level ($mode बिल्ड)';
+  }
+
+  @override
+  String get debugLoggingWarning =>
+      'डीबग लॉगिंग कनेक्शन धीमे करती है, ज़्यादा बैटरी खर्च करती है और लॉग में ज़्यादा जानकारी रखती है। यह 24 घंटे बाद अपने आप बंद हो जाती है।';
+
+  @override
+  String get logLevelInfo => 'जानकारी';
+
+  @override
+  String get logLevelDebug => 'डीबग';
+
+  @override
+  String get logLevelTrace => 'ट्रेस (सब कुछ)';
+
+  @override
+  String get notifyPopup => 'त्रुटियों के बारे में बताएँ';
+
+  @override
+  String get notifyPopupHint =>
+      'ऐप में लाल सूचना, जब कुछ ऐसा विफल हो जिसे ऐप ठीक नहीं कर सका';
+
+  @override
+  String get notifyOs => 'त्रुटियों के लिए सिस्टम सूचनाएँ';
+
+  @override
+  String get notifyOsHint => 'सिस्टम की सूचना, ऐप पृष्ठभूमि में हो तब भी';
+
+  @override
+  String get logsView => 'लॉग देखें';
+
+  @override
+  String get logsExport => 'JSON Lines के रूप में सहेजें';
+
+  @override
+  String get logsSaved => 'लॉग सहेजा गया';
+
+  @override
+  String get logsLevel => 'स्तर';
+
+  @override
+  String get logsLevelAll => 'सभी स्तर';
+
+  @override
+  String logsConnection(String conn) {
+    return 'कनेक्शन $conn';
+  }
+
+  @override
+  String get logsNoMatch => 'फ़िल्टर से मेल खाती कोई लॉग प्रविष्टि नहीं।';
+
+  @override
+  String get errTorExited =>
+      'Tor अचानक रुक गया। फिर से कनेक्ट करें; बार-बार हो तो लॉग देखें।';
+
+  @override
+  String get errDnsttExited =>
+      'DNS टनल अचानक रुक गई। फिर से कनेक्ट करें; बार-बार हो तो लॉग देखें।';
+
+  @override
+  String get errEngineFatal =>
+      'कनेक्शन इंजन त्रुटि के साथ रुक गया। फिर से कनेक्ट करें; बार-बार हो तो लॉग देखें।';
+
+  @override
+  String get errPanic =>
+      'Wardkeep के अंदर कुछ गलत हुआ और कनेक्शन रोक दिया गया। विवरण लॉग में है।';
+
+  @override
+  String get errTorStreamFailed =>
+      'Tor नेटवर्क से उस साइट तक कनेक्शन नहीं खुल सका।';
 }

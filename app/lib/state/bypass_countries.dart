@@ -15,12 +15,12 @@ final bypassCountryTextProvider = Provider<String>((ref) {
   final db = ref.watch(ipDbProvider.select((s) => s.db));
   final zones = ref.watch(countryZonesProvider);
   final lines = <String>[];
-  for (final c in codes) {
+  for (final code in codes) {
     if (db != null) {
-      lines.addAll(db.cidrsOf(c));
+      lines.addAll(db.cidrsOf(code));
     } else {
-      final z = zones[c.toUpperCase()];
-      if (z != null && z.status == ZoneStatus.ready) lines.addAll(z.lines);
+      final zone = zones[code.toUpperCase()];
+      if (zone != null && zone.status == ZoneStatus.ready) lines.addAll(zone.lines);
     }
   }
   return lines.join('\n');

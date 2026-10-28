@@ -18,7 +18,7 @@ class DaemonEngine implements VpnEngine {
   final Socket _socket;
   final Process? _process;
   final _states = StreamController<EngineState>.broadcast();
-  final _logs = StreamController<String>.broadcast();
+  final _logs = StreamController<LogRecord>.broadcast();
   final _pending = <int, Completer<dynamic>>{};
   int _nextId = 0;
   Timer? _ping;
@@ -59,8 +59,8 @@ class DaemonEngine implements VpnEngine {
   /// Null off Windows.
   static String? serviceControlFile([Map<String, String>? env]) {
     if (!Platform.isWindows && env == null) return null;
-    final e = env ?? Platform.environment;
-    final programData = e['ProgramData'] ?? r'C:\ProgramData';
+    final environment = env ?? Platform.environment;
+    final programData = environment['ProgramData'] ?? r'C:\ProgramData';
     return '$programData\\omnitun\\control\\control.json';
   }
 
@@ -90,8 +90,8 @@ class DaemonEngine implements VpnEngine {
   static Future<DaemonEngine> attachTo(String addr, String token) => _connect(addr, token, null);
 
   static Future<DaemonEngine> _connect(String addr, String token, Process? process) async {
-    final i = addr.lastIndexOf(':');
-    final socket = await Socket.connect(addr.substring(0, i), int.parse(addr.substring(i + 1)),
+    final colon = addr.lastIndexOf(':');
+    final socket = await Socket.connect(addr.substring(0, colon), int.parse(addr.substring(colon + 1)),
         timeout: const Duration(seconds: 5));
     final engine = DaemonEngine._(socket, process);
     engine._listen();
@@ -124,15 +124,13 @@ class DaemonEngine implements VpnEngine {
     if (event == 'state') {
       _applyState(msg['data'] as Map<String, dynamic>);
     } else if (event == 'log') {
-      final d = msg['data'] as Map<String, dynamic>;
-      final time = (d['time'] as String).substring(11, 19);
-      _logs.add('$time  ${(d['level'] as String).toUpperCase().padRight(5)} ${d['message']}');
+      _logs.add(LogRecord.fromJson(msg['data'] as Map<String, dynamic>));
     } else if (msg.containsKey('id')) {
-      final c = _pending.remove(msg['id']);
-      if (c == null) return;
+      final completer = _pending.remove(msg['id']);
+      if (completer == null) return;
       final err = msg['error'] as Map<String, dynamic>?;
       if (err != null) {
-        c.completeError(
+        completer.completeError(
           EngineException(
             err['code'] as String,
             err['message'] as String,
@@ -140,15 +138,15 @@ class DaemonEngine implements VpnEngine {
           ),
         );
       } else {
-        c.complete(msg['result']);
+        completer.complete(msg['result']);
       }
     }
   }
 
   void _onClosed() {
     if (_closed.isCompleted) return;
-    for (final c in _pending.values) {
-      c.completeError(EngineException('DISCONNECTED', 'lost connection to the core'));
+    for (final completer in _pending.values) {
+      completer.completeError(EngineException('DISCONNECTED', 'lost connection to the core'));
     }
     _pending.clear();
     _ping?.cancel();
@@ -166,52 +164,52 @@ class DaemonEngine implements VpnEngine {
       return Future.error(EngineException('DISCONNECTED', 'lost connection to the core'));
     }
     final id = ++_nextId;
-    final c = Completer<dynamic>();
-    _pending[id] = c;
+    final completer = Completer<dynamic>();
+    _pending[id] = completer;
     _socket.write('${jsonEncode({'id': id, 'method': method, 'params': ?params})}\n');
-    return c.future;
+    return completer.future;
   }
 
-  void _emit(EngineState s) {
-    _state = s;
-    _states.add(s);
+  void _emit(EngineState next) {
+    _state = next;
+    _states.add(next);
   }
 
-  void _applyState(Map<String, dynamic> s) {
-    final status = switch (s['status']) {
+  void _applyState(Map<String, dynamic> raw) {
+    final status = switch (raw['status']) {
       // Still connected, but the device itself has no internet.
-      'connected' when s['no_network'] == true => ConnStatus.noInternet,
+      'connected' when raw['no_network'] == true => ConnStatus.noInternet,
       'connected' => ConnStatus.connected,
       'connecting' => ConnStatus.connecting,
       'error' => ConnStatus.error,
       _ => ConnStatus.disconnected,
     };
-    final since = s['since'] as String?;
-    final selected = s['selected'] as String?;
-    final f = s['failover'] as Map<String, dynamic>?;
-    final p = s['progress'] as Map<String, dynamic>?;
+    final since = raw['since'] as String?;
+    final selected = raw['selected'] as String?;
+    final failover = raw['failover'] as Map<String, dynamic>?;
+    final progress = raw['progress'] as Map<String, dynamic>?;
     _emit(EngineState(
       status: status,
       activeProfileId: selected ?? _state.activeProfileId,
       connectedSince: since == null ? null : DateTime.parse(since).toLocal(),
-      error: s['error'] as String?,
-      errorCode: s['error_code'] as String?,
-      upBps: (s['up_bps'] as num?)?.toInt() ?? 0,
-      downBps: (s['down_bps'] as num?)?.toInt() ?? 0,
-      upTotal: (s['up_total'] as num?)?.toInt() ?? 0,
-      downTotal: (s['down_total'] as num?)?.toInt() ?? 0,
-      failover: f == null
+      error: raw['error'] as String?,
+      errorCode: raw['error_code'] as String?,
+      upBps: (raw['up_bps'] as num?)?.toInt() ?? 0,
+      downBps: (raw['down_bps'] as num?)?.toInt() ?? 0,
+      upTotal: (raw['up_total'] as num?)?.toInt() ?? 0,
+      downTotal: (raw['down_total'] as num?)?.toInt() ?? 0,
+      failover: failover == null
           ? null
           : FailoverInfo(
-              from: f['from'] as String,
-              to: f['to'] as String,
-              reason: f['reason'] as String,
-              at: DateTime.parse(f['at'] as String).toLocal(),
+              from: failover['from'] as String,
+              to: failover['to'] as String,
+              reason: failover['reason'] as String,
+              at: DateTime.parse(failover['at'] as String).toLocal(),
             ),
-      progress: p == null ? null : ConnectProgress.fromJson(p),
+      progress: progress == null ? null : ConnectProgress.fromJson(progress),
       torPath: [
-        for (final h in (s['tor_path'] as List<dynamic>? ?? const []))
-          TorHop(role: (h as Map<String, dynamic>)['role'] as String, country: h['country'] as String?),
+        for (final hop in (raw['tor_path'] as List<dynamic>? ?? const []))
+          TorHop(role: (hop as Map<String, dynamic>)['role'] as String, country: hop['country'] as String?),
       ],
     ));
   }
@@ -223,7 +221,19 @@ class DaemonEngine implements VpnEngine {
   Stream<EngineState> get states => _states.stream;
 
   @override
-  Stream<String> get logs => _logs.stream;
+  Stream<LogRecord> get logs => _logs.stream;
+
+  @override
+  Future<LoggingMode> loggingMode() async =>
+      LoggingMode.fromJson(await _call('logging.get') as Map<String, dynamic>? ?? const {});
+
+  @override
+  Future<void> setLogging(String level, {DateTime? until}) async {
+    await _call('logging.set', {
+      'level': level,
+      if (until != null) 'until': DateTime.fromMillisecondsSinceEpoch(until.millisecondsSinceEpoch, isUtc: true).toIso8601String(),
+    });
+  }
 
   /// The core's "start" request for a connection.
   static Map<String, dynamic> startParams(ProfileInfo profile, List<ProfileInfo> fallbacks, ConnectOptions options) => {

@@ -99,8 +99,8 @@ class BypassScreen extends ConsumerWidget {
           PopupMenuButton<String>(
             tooltip: context.l10n.bypassAddTooltip,
             icon: const Icon(Icons.add),
-            onSelected: (v) {
-              switch (v) {
+            onSelected: (choice) {
+              switch (choice) {
                 case 'paste':
                   _fromClipboard(context);
                 case 'file':
@@ -166,9 +166,9 @@ class BypassScreen extends ConsumerWidget {
                   value: l.enabled,
                   secondary: PopupMenuButton<String>(
                     tooltip: context.l10n.tooltipMore,
-                    onSelected: (v) {
-                      if (v == 'edit') _edit(context, list: l);
-                      if (v == 'delete') ref.read(bypassListsProvider.notifier).remove(l.id);
+                    onSelected: (choice) {
+                      if (choice == 'edit') _edit(context, list: l);
+                      if (choice == 'delete') ref.read(bypassListsProvider.notifier).remove(l.id);
                     },
                     itemBuilder: (_) => [
                       PopupMenuItem(value: 'edit', child: Text(context.l10n.actionEdit)),
@@ -298,17 +298,17 @@ class _BypassEditScreenState extends ConsumerState<BypassEditScreen> {
   }
 
   Future<void> _checkNow() async {
-    final n = ++_check;
+    final check = ++_check;
     try {
       final report = await ref.read(engineProvider).parseBypass(_text.text);
-      if (mounted && n == _check) {
+      if (mounted && check == _check) {
         setState(() {
           _report = report;
           _checkError = null;
         });
       }
     } catch (e) {
-      if (mounted && n == _check) setState(() => _checkError = e.toString());
+      if (mounted && check == _check) setState(() => _checkError = e.toString());
     }
   }
 
