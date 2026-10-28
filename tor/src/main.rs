@@ -110,10 +110,12 @@ fn config(args: &args::Args) -> anyhow::Result<TorClientConfig> {
         args.data_dir.join("cache"),
     );
 
-    for line in &args.bridges {
+    for (index, line) in args.bridges.iter().enumerate() {
+        // Name the bridge by its position, never by its text: the line (and Arti's parse error, which
+        // may quote it) holds the bridge's address, and this error reaches the log and the app.
         let bridge: BridgeConfigBuilder = line
             .parse()
-            .with_context(|| format!("bad bridge line {line:?}"))?;
+            .map_err(|_| anyhow::anyhow!("bad bridge line #{}", index + 1))?;
 
         builder.bridges().bridges().push(bridge);
     }
