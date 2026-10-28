@@ -113,26 +113,26 @@ const (
 
 // ECHPEM wraps a base64 ECH configuration (as links carry it) in the PEM block sing-box reads. A PEM block is
 // returned as it is, and anything that is not base64 comes back empty.
-func ECHPEM(s string) string {
-	s = strings.TrimSpace(s)
-	if strings.HasPrefix(s, "-----") {
-		return s
+func ECHPEM(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if strings.HasPrefix(raw, "-----") {
+		return raw
 	}
-	s = strings.Join(strings.Fields(s), "")
-	if s == "" {
+	raw = strings.Join(strings.Fields(raw), "")
+	if raw == "" {
 		return ""
 	}
-	if _, err := base64.StdEncoding.DecodeString(s); err != nil {
+	if _, err := base64.StdEncoding.DecodeString(raw); err != nil {
 		return ""
 	}
-	var b strings.Builder
-	b.WriteString(echBegin + "\n")
-	for len(s) > 64 {
-		b.WriteString(s[:64] + "\n")
-		s = s[64:]
+	var sb strings.Builder
+	sb.WriteString(echBegin + "\n")
+	for len(raw) > 64 {
+		sb.WriteString(raw[:64] + "\n")
+		raw = raw[64:]
 	}
-	b.WriteString(s + "\n" + echEnd)
-	return b.String()
+	sb.WriteString(raw + "\n" + echEnd)
+	return sb.String()
 }
 
 // ECHBase64 is the base64 body of a PEM ECH configuration, the form links carry.
@@ -372,22 +372,22 @@ func (p *Profile) Validate() error {
 			return fmt.Errorf("profile %q: missing SSTP username or password", p.Name)
 		}
 	case IKEv2:
-		o := p.IKEv2
-		if o == nil {
+		opts := p.IKEv2
+		if opts == nil {
 			return fmt.Errorf("profile %q: missing IKEv2 settings", p.Name)
 		}
-		switch o.Auth {
+		switch opts.Auth {
 		case "psk":
-			if o.PSK == "" {
+			if opts.PSK == "" {
 				return fmt.Errorf("profile %q: missing IKEv2 pre-shared key", p.Name)
 			}
 		case "eap":
 		case "cert":
-			if o.ClientCert == "" || o.ClientKey == "" {
+			if opts.ClientCert == "" || opts.ClientKey == "" {
 				return fmt.Errorf("profile %q: missing IKEv2 client certificate or key", p.Name)
 			}
 		default:
-			return fmt.Errorf("profile %q: unknown IKEv2 auth %q", p.Name, o.Auth)
+			return fmt.Errorf("profile %q: unknown IKEv2 auth %q", p.Name, opts.Auth)
 		}
 	case Naive:
 		if p.Username == "" || p.Password == "" {
@@ -428,24 +428,24 @@ func (p *Profile) Validate() error {
 var tlsTCPProtocols = []string{VLESS, VMess, Trojan, AnyTLS}
 
 func (p *Profile) validateTLSExtras() error {
-	t := p.TLS
-	if t == nil {
+	tlsOpts := p.TLS
+	if tlsOpts == nil {
 		return nil
 	}
-	if (t.Fragment || t.RecordFragment || t.ECH.On()) && !slices.Contains(tlsTCPProtocols, p.Protocol) {
+	if (tlsOpts.Fragment || tlsOpts.RecordFragment || tlsOpts.ECH.On()) && !slices.Contains(tlsTCPProtocols, p.Protocol) {
 		return fmt.Errorf("profile %q: fragmenting the handshake and ECH are not available for %s", p.Name, p.Protocol)
 	}
-	if (t.Fragment || t.RecordFragment) && !t.Enabled {
+	if (tlsOpts.Fragment || tlsOpts.RecordFragment) && !tlsOpts.Enabled {
 		return fmt.Errorf("profile %q: fragmenting the handshake needs TLS", p.Name)
 	}
-	if t.ECH.On() {
-		if !t.Enabled {
+	if tlsOpts.ECH.On() {
+		if !tlsOpts.Enabled {
 			return fmt.Errorf("profile %q: ECH needs TLS", p.Name)
 		}
-		if t.Reality != nil {
+		if tlsOpts.Reality != nil {
 			return fmt.Errorf("profile %q: ECH cannot be used with Reality", p.Name)
 		}
-		if c := strings.TrimSpace(t.ECH.Config); c != "" && (!strings.HasPrefix(c, echBegin) || !strings.HasSuffix(c, echEnd)) {
+		if c := strings.TrimSpace(tlsOpts.ECH.Config); c != "" && (!strings.HasPrefix(c, echBegin) || !strings.HasSuffix(c, echEnd)) {
 			return fmt.Errorf("profile %q: the ECH config must be a %q block", p.Name, "ECH CONFIGS")
 		}
 	}
@@ -453,8 +453,8 @@ func (p *Profile) validateTLSExtras() error {
 }
 
 func (p *Profile) validateMux() error {
-	m := p.Multiplex
-	if !m.Enabled() {
+	mux := p.Multiplex
+	if !mux.Enabled() {
 		return nil
 	}
 	switch p.Protocol {
@@ -462,13 +462,13 @@ func (p *Profile) validateMux() error {
 	default:
 		return fmt.Errorf("profile %q: multiplexing is not available for %s", p.Name, p.Protocol)
 	}
-	if !slices.Contains(MuxProtocols, m.Protocol) {
-		return fmt.Errorf("profile %q: unknown multiplexing protocol %q (use smux, yamux or h2mux)", p.Name, m.Protocol)
+	if !slices.Contains(MuxProtocols, mux.Protocol) {
+		return fmt.Errorf("profile %q: unknown multiplexing protocol %q (use smux, yamux or h2mux)", p.Name, mux.Protocol)
 	}
-	if m.MaxConnections < 0 || m.MinStreams < 0 || m.MaxStreams < 0 {
+	if mux.MaxConnections < 0 || mux.MinStreams < 0 || mux.MaxStreams < 0 {
 		return fmt.Errorf("profile %q: multiplexing numbers cannot be negative", p.Name)
 	}
-	if m.MaxStreams > 0 && (m.MaxConnections > 0 || m.MinStreams > 0) {
+	if mux.MaxStreams > 0 && (mux.MaxConnections > 0 || mux.MinStreams > 0) {
 		return fmt.Errorf("profile %q: the most streams cannot be combined with the most connections or the fewest streams", p.Name)
 	}
 	if p.Protocol == VLESS && p.Flow != "" {

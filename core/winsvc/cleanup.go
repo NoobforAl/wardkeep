@@ -59,18 +59,18 @@ func (r Report) Err() error {
 
 // String is a one-line-per-step summary.
 func (r Report) String() string {
-	var b strings.Builder
-	for _, s := range r {
+	var sb strings.Builder
+	for _, step := range r {
 		switch {
-		case s.Err != nil:
-			fmt.Fprintf(&b, "%s: FAILED: %v\n", s.Name, s.Err)
-		case s.Done != "":
-			fmt.Fprintf(&b, "%s: %s\n", s.Name, s.Done)
+		case step.Err != nil:
+			fmt.Fprintf(&sb, "%s: FAILED: %v\n", step.Name, step.Err)
+		case step.Done != "":
+			fmt.Fprintf(&sb, "%s: %s\n", step.Name, step.Done)
 		default:
-			fmt.Fprintf(&b, "%s: nothing to clean\n", s.Name)
+			fmt.Fprintf(&sb, "%s: nothing to clean\n", step.Name)
 		}
 	}
-	return b.String()
+	return sb.String()
 }
 
 // RunCleanup runs every step, in order, even after one fails or panics.

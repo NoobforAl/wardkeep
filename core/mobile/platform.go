@@ -185,13 +185,13 @@ func (w *platformWrapper) NetworkInterfaces() ([]adapter.NetworkInterface, error
 	}
 	var defaultIndex = -1
 	var expensive, constrained bool
-	if m := w.monitor; m != nil {
-		m.mu.Lock()
-		if m.defaultInterface != nil {
-			defaultIndex = m.defaultInterface.Index
+	if mon := w.monitor; mon != nil {
+		mon.mu.Lock()
+		if mon.defaultInterface != nil {
+			defaultIndex = mon.defaultInterface.Index
 		}
-		expensive, constrained = m.expensive, m.constrained
-		m.mu.Unlock()
+		expensive, constrained = mon.expensive, mon.constrained
+		mon.mu.Unlock()
 	}
 	seen := map[string]bool{}
 	var out []adapter.NetworkInterface
@@ -236,25 +236,25 @@ func (w *platformWrapper) SystemDNS() []string {
 	}
 	var v4, v6 []string
 	add := func(ni adapter.NetworkInterface) {
-		for _, s := range ni.DNSServers {
-			addr, err := netip.ParseAddr(s)
+		for _, dnsServer := range ni.DNSServers {
+			addr, err := netip.ParseAddr(dnsServer)
 			if err != nil || addr.IsUnspecified() || addr.IsLoopback() || addr.IsLinkLocalUnicast() {
 				continue
 			}
 			if addr.Is4() {
-				v4 = append(v4, s)
+				v4 = append(v4, dnsServer)
 			} else {
-				v6 = append(v6, s)
+				v6 = append(v6, dnsServer)
 			}
 		}
 	}
 	defaultIndex := -1
-	if m := w.monitor; m != nil {
-		m.mu.Lock()
-		if m.defaultInterface != nil {
-			defaultIndex = m.defaultInterface.Index
+	if mon := w.monitor; mon != nil {
+		mon.mu.Lock()
+		if mon.defaultInterface != nil {
+			defaultIndex = mon.defaultInterface.Index
 		}
-		m.mu.Unlock()
+		mon.mu.Unlock()
 	}
 	// The default network when the monitor knows it, otherwise every real network.
 	for _, ni := range list {
@@ -428,24 +428,24 @@ func linkFlags(raw uint32) net.Flags {
 		iffRunning      = 0x40
 		iffMulticast    = 0x1000
 	)
-	var f net.Flags
+	var flags net.Flags
 	if raw&iffUp != 0 {
-		f |= net.FlagUp
+		flags |= net.FlagUp
 	}
 	if raw&iffRunning != 0 {
-		f |= net.FlagRunning
+		flags |= net.FlagRunning
 	}
 	if raw&iffBroadcast != 0 {
-		f |= net.FlagBroadcast
+		flags |= net.FlagBroadcast
 	}
 	if raw&iffLoopback != 0 {
-		f |= net.FlagLoopback
+		flags |= net.FlagLoopback
 	}
 	if raw&iffPointToPoint != 0 {
-		f |= net.FlagPointToPoint
+		flags |= net.FlagPointToPoint
 	}
 	if raw&iffMulticast != 0 {
-		f |= net.FlagMulticast
+		flags |= net.FlagMulticast
 	}
-	return f
+	return flags
 }

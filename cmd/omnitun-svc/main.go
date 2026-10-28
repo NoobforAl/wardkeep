@@ -19,13 +19,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
 
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/pprofsrv"
 )
 
@@ -63,18 +63,19 @@ func runPerUser(args []string) int {
 		return 2
 	}
 
-	logger := log.New(os.Stderr, "omnitun-svc: ", log.LstdFlags)
+	// One JSON record per line (docs/logging.md), like every other part of Wardkeep.
+	logger := logrec.NewLogger(os.Stderr, logrec.SourceCore)
 	if *pprofAddr != "" {
 		ln, err := pprofsrv.Listen(*pprofAddr)
 		if err != nil {
-			logger.Print(err)
+			logger.Errorf("%v", err)
 			return 2
 		}
 		// The process exit ends it; nothing needs to wait for it.
 		go pprofsrv.ServeListener(context.Background(), ln, logger.Printf)
 	}
 	if *cleanup {
-		runCleanup(logger.Printf)
+		runCleanup(logger)
 	}
 	exit := make(chan string, 2)
 	go func() {
@@ -94,7 +95,7 @@ func runPerUser(args []string) int {
 		OnReady: func(addr string) { fmt.Printf("READY %s\n", addr) },
 	})
 	if err != nil {
-		logger.Print(err)
+		logger.Errorf("%v", err)
 		return 1
 	}
 	return 0

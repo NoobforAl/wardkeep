@@ -34,25 +34,25 @@ func (s *Server) dispatchMesh(req Request) (res any, handled bool, err error) {
 		st, err := s.engine.MeshStatus(ctx)
 		return st, true, meshError(err)
 	case "mesh_exit":
-		p, err := decode[MeshExitParams](req.Params)
+		params, err := decode[MeshExitParams](req.Params)
 		if err != nil {
 			return nil, true, err
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
-		if err := s.engine.SetMeshExit(ctx, p.ID); err != nil {
+		if err := s.engine.SetMeshExit(ctx, params.ID); err != nil {
 			return nil, true, meshError(err)
 		}
 		st, err := s.engine.MeshStatus(ctx)
 		return st, true, meshError(err)
 	case "mesh_ping":
-		p, err := decode[MeshPingParams](req.Params)
+		params, err := decode[MeshPingParams](req.Params)
 		if err != nil {
 			return nil, true, err
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
-		r, err := s.engine.PingMeshDevice(ctx, p.Address)
+		r, err := s.engine.PingMeshDevice(ctx, params.Address)
 		return r, true, meshError(err)
 	}
 	return nil, false, nil

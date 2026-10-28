@@ -53,19 +53,19 @@ func LoadConfig(path string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	var c Config
-	if err := json.Unmarshal(data, &c); err != nil {
+	var cfg Config
+	if err := json.Unmarshal(data, &cfg); err != nil {
 		return Config{}, fmt.Errorf("%s: %w", path, err)
 	}
-	return c, nil
+	return cfg, nil
 }
 
 // SaveConfig writes the settings.
-func SaveConfig(path string, c Config) error {
-	if err := c.Validate(); err != nil {
+func SaveConfig(path string, cfg Config) error {
+	if err := cfg.Validate(); err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(c, "", "  ")
+	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
 	}

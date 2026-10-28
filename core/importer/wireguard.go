@@ -28,7 +28,7 @@ func looksLikeWireGuardConf(text string) bool {
 // Only the first [Peer] is used.
 func ParseWireGuardConf(text string) (*profile.Profile, error) {
 	wg := &profile.WG{}
-	p := &profile.Profile{Protocol: profile.WireGuard, WireGuard: wg}
+	prof := &profile.Profile{Protocol: profile.WireGuard, WireGuard: wg}
 	section := ""
 	peers := 0
 	sc := bufio.NewScanner(strings.NewReader(text))
@@ -85,8 +85,8 @@ func ParseWireGuardConf(text string) (*profile.Profile, error) {
 				if err != nil {
 					return nil, fmt.Errorf("wireguard: invalid endpoint %q", value)
 				}
-				p.Server = host
-				p.Port, err = strconv.Atoi(port)
+				prof.Server = host
+				prof.Port, err = strconv.Atoi(port)
 				if err != nil {
 					return nil, fmt.Errorf("wireguard: invalid endpoint port %q", port)
 				}
@@ -97,12 +97,12 @@ func ParseWireGuardConf(text string) (*profile.Profile, error) {
 		return nil, err
 	}
 	if len(wg.Amnezia) > 0 {
-		p.Protocol = profile.AmneziaWG
+		prof.Protocol = profile.AmneziaWG
 	}
-	p.Source = text
-	if err := p.Validate(); err != nil {
+	prof.Source = text
+	if err := prof.Validate(); err != nil {
 		return nil, err
 	}
-	p.EnsureID()
-	return p, nil
+	prof.EnsureID()
+	return prof, nil
 }

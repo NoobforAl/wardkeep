@@ -36,19 +36,19 @@ func Dial(ctx context.Context, addr, token string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	c := &Client{
+	cl := &Client{
 		conn:    conn,
 		pending: map[int64]chan Response{},
 		events:  make(chan RawEvent, 1024),
 		enc:     json.NewEncoder(conn),
 		done:    make(chan struct{}),
 	}
-	go c.readLoop()
-	if err := c.Call(ctx, "hello", HelloParams{Token: token}, nil); err != nil {
+	go cl.readLoop()
+	if err := cl.Call(ctx, "hello", HelloParams{Token: token}, nil); err != nil {
 		conn.Close()
 		return nil, err
 	}
-	return c, nil
+	return cl, nil
 }
 
 // Events returns pushed events. Events are dropped if the channel is full.

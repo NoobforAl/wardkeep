@@ -13,19 +13,19 @@ import (
 
 // parseURL parses a link and returns the URL with its host and port split out.
 func parseURL(link string) (*url.URL, string, int, error) {
-	u, err := url.Parse(link)
+	uri, err := url.Parse(link)
 	if err != nil {
 		return nil, "", 0, fmt.Errorf("invalid link: %w", err)
 	}
-	host := u.Hostname()
+	host := uri.Hostname()
 	if host == "" {
 		return nil, "", 0, fmt.Errorf("missing server address")
 	}
-	port, err := strconv.Atoi(u.Port())
+	port, err := strconv.Atoi(uri.Port())
 	if err != nil {
-		return nil, "", 0, fmt.Errorf("invalid port %q", u.Port())
+		return nil, "", 0, fmt.Errorf("invalid port %q", uri.Port())
 	}
-	return u, host, port, nil
+	return uri, host, port, nil
 }
 
 func fragmentName(u *url.URL) string {
@@ -54,47 +54,47 @@ func truthy(s string) bool {
 }
 
 // tlsExtrasFrom reads the handshake options of a link (see links.tlsExtraQuery); get returns "" for a missing one.
-func tlsExtrasFrom(t *profile.TLS, get func(string) string) {
-	t.Fragment, t.RecordFragment = truthy(get("tlsfrag")), truthy(get("recfrag"))
+func tlsExtrasFrom(tlsOpts *profile.TLS, get func(string) string) {
+	tlsOpts.Fragment, tlsOpts.RecordFragment = truthy(get("tlsfrag")), truthy(get("recfrag"))
 	switch ech := get("ech"); {
 	case ech == "":
 	case truthy(ech):
-		t.ECH = &profile.ECH{Enabled: true, QueryServerName: get("echsni")}
+		tlsOpts.ECH = &profile.ECH{Enabled: true, QueryServerName: get("echsni")}
 	default:
 		if cfg := profile.ECHPEM(ech); cfg != "" {
-			t.ECH = &profile.ECH{Enabled: true, Config: cfg, QueryServerName: get("echsni")}
+			tlsOpts.ECH = &profile.ECH{Enabled: true, Config: cfg, QueryServerName: get("echsni")}
 		}
 	}
-	if t.Reality != nil { // ECH and Reality exclude each other; the server is worth more than the option
-		t.ECH = nil
+	if tlsOpts.Reality != nil { // ECH and Reality exclude each other; the server is worth more than the option
+		tlsOpts.ECH = nil
 	}
 }
 
 // tlsFromQuery reads the common TLS/Reality query parameters used by
 // v2rayN-style vless and trojan links.
-func tlsFromQuery(q url.Values, defaultOn bool) *profile.TLS {
-	security := q.Get("security")
+func tlsFromQuery(query url.Values, defaultOn bool) *profile.TLS {
+	security := query.Get("security")
 	if security == "" && defaultOn {
 		security = "tls"
 	}
 	if security == "" || security == "none" {
 		return nil
 	}
-	t := &profile.TLS{
+	tlsOpts := &profile.TLS{
 		Enabled:     true,
-		ServerName:  firstNonEmpty(q.Get("sni"), q.Get("peer")),
-		ALPN:        splitList(q.Get("alpn")),
-		Insecure:    truthy(q.Get("allowInsecure")) || truthy(q.Get("insecure")),
-		Fingerprint: q.Get("fp"),
+		ServerName:  firstNonEmpty(query.Get("sni"), query.Get("peer")),
+		ALPN:        splitList(query.Get("alpn")),
+		Insecure:    truthy(query.Get("allowInsecure")) || truthy(query.Get("insecure")),
+		Fingerprint: query.Get("fp"),
 	}
 	if security == "reality" {
-		t.Reality = &profile.Reality{PublicKey: q.Get("pbk"), ShortID: q.Get("sid")}
-		if t.Fingerprint == "" {
-			t.Fingerprint = "chrome"
+		tlsOpts.Reality = &profile.Reality{PublicKey: query.Get("pbk"), ShortID: query.Get("sid")}
+		if tlsOpts.Fingerprint == "" {
+			tlsOpts.Fingerprint = "chrome"
 		}
 	}
-	tlsExtrasFrom(t, q.Get)
-	return t
+	tlsExtrasFrom(tlsOpts, query.Get)
+	return tlsOpts
 }
 
 // muxFrom reads the multiplexing parameters of a link (see links.muxQuery); get returns "" for a missing one.
@@ -103,61 +103,61 @@ func muxFrom(get func(string) string) *profile.Mux {
 	if proto == "" {
 		return nil
 	}
-	m := &profile.Mux{Protocol: proto, Padding: truthy(get("muxpad"))}
-	m.MaxConnections, _ = strconv.Atoi(get("muxconn"))
-	m.MinStreams, _ = strconv.Atoi(get("muxmin"))
-	m.MaxStreams, _ = strconv.Atoi(get("muxmax"))
-	return m
+	mux := &profile.Mux{Protocol: proto, Padding: truthy(get("muxpad"))}
+	mux.MaxConnections, _ = strconv.Atoi(get("muxconn"))
+	mux.MinStreams, _ = strconv.Atoi(get("muxmin"))
+	mux.MaxStreams, _ = strconv.Atoi(get("muxmax"))
+	return mux
 }
 
 // dropUnusableTLSExtras removes the handshake options from a profile whose protocol cannot use them (they are for
 // TLS over TCP): an import keeps the server and loses the option.
-func dropUnusableTLSExtras(p *profile.Profile) {
-	if p.TLS == nil || slices.Contains([]string{profile.VLESS, profile.VMess, profile.Trojan, profile.AnyTLS}, p.Protocol) {
+func dropUnusableTLSExtras(prof *profile.Profile) {
+	if prof.TLS == nil || slices.Contains([]string{profile.VLESS, profile.VMess, profile.Trojan, profile.AnyTLS}, prof.Protocol) {
 		return
 	}
-	p.TLS.Fragment, p.TLS.RecordFragment, p.TLS.ECH = false, false, nil
+	prof.TLS.Fragment, prof.TLS.RecordFragment, prof.TLS.ECH = false, false, nil
 }
 
 // attachMux sets a profile's multiplexing when it is usable for the protocol. An import should keep the server
 // and lose the multiplexing, never the other way round, so what the protocol cannot do is dropped quietly.
-func attachMux(p *profile.Profile, m *profile.Mux) {
-	if !m.Enabled() || !slices.Contains(profile.MuxProtocols, m.Protocol) {
+func attachMux(prof *profile.Profile, mux *profile.Mux) {
+	if !mux.Enabled() || !slices.Contains(profile.MuxProtocols, mux.Protocol) {
 		return
 	}
-	switch p.Protocol {
+	switch prof.Protocol {
 	case profile.VLESS:
-		if p.Flow != "" {
+		if prof.Flow != "" {
 			return
 		}
 	case profile.VMess, profile.Trojan, profile.Shadowsocks:
 	default:
 		return
 	}
-	c := *m
-	c.MaxConnections, c.MinStreams, c.MaxStreams = max(c.MaxConnections, 0), max(c.MinStreams, 0), max(c.MaxStreams, 0)
-	if c.MaxStreams > 0 {
-		c.MaxConnections, c.MinStreams = 0, 0
+	muxCopy := *mux
+	muxCopy.MaxConnections, muxCopy.MinStreams, muxCopy.MaxStreams = max(muxCopy.MaxConnections, 0), max(muxCopy.MinStreams, 0), max(muxCopy.MaxStreams, 0)
+	if muxCopy.MaxStreams > 0 {
+		muxCopy.MaxConnections, muxCopy.MinStreams = 0, 0
 	}
-	p.Multiplex = &c
+	prof.Multiplex = &muxCopy
 }
 
-func transportFromQuery(q url.Values) *profile.Transport {
-	typ := q.Get("type")
+func transportFromQuery(query url.Values) *profile.Transport {
+	typ := query.Get("type")
 	switch typ {
 	case "", "tcp", "raw":
-		if q.Get("headerType") == "http" {
-			return &profile.Transport{Type: "http", Path: q.Get("path"), Host: q.Get("host")}
+		if query.Get("headerType") == "http" {
+			return &profile.Transport{Type: "http", Path: query.Get("path"), Host: query.Get("host")}
 		}
 		return nil
 	case "ws", "httpupgrade":
-		return &profile.Transport{Type: typ, Path: q.Get("path"), Host: q.Get("host")}
+		return &profile.Transport{Type: typ, Path: query.Get("path"), Host: query.Get("host")}
 	case "grpc":
-		return &profile.Transport{Type: "grpc", ServiceName: q.Get("serviceName")}
+		return &profile.Transport{Type: "grpc", ServiceName: query.Get("serviceName")}
 	case "http", "h2":
-		return &profile.Transport{Type: "http", Path: q.Get("path"), Host: q.Get("host")}
+		return &profile.Transport{Type: "http", Path: query.Get("path"), Host: query.Get("host")}
 	default:
-		return &profile.Transport{Type: typ, Path: q.Get("path"), Host: q.Get("host")}
+		return &profile.Transport{Type: typ, Path: query.Get("path"), Host: query.Get("host")}
 	}
 }
 
@@ -172,43 +172,43 @@ func firstNonEmpty(v ...string) string {
 
 // vless://uuid@host:port?security=reality&sni=..&pbk=..&sid=..&flow=..&type=ws&path=..#name
 func parseVLESS(link string) (*profile.Profile, error) {
-	u, host, port, err := parseURL(link)
+	uri, host, port, err := parseURL(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	p := &profile.Profile{
-		Name:      fragmentName(u),
+	query := uri.Query()
+	prof := &profile.Profile{
+		Name:      fragmentName(uri),
 		Protocol:  profile.VLESS,
 		Server:    host,
 		Port:      port,
-		UUID:      u.User.Username(),
-		Flow:      q.Get("flow"),
-		TLS:       tlsFromQuery(q, false),
-		Transport: transportFromQuery(q),
+		UUID:      uri.User.Username(),
+		Flow:      query.Get("flow"),
+		TLS:       tlsFromQuery(query, false),
+		Transport: transportFromQuery(query),
 	}
-	attachMux(p, muxFrom(q.Get))
-	return p, nil
+	attachMux(prof, muxFrom(query.Get))
+	return prof, nil
 }
 
 // trojan://password@host:port?sni=..&type=ws#name — TLS is on by default.
 func parseTrojan(link string) (*profile.Profile, error) {
-	u, host, port, err := parseURL(link)
+	uri, host, port, err := parseURL(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	p := &profile.Profile{
-		Name:      fragmentName(u),
+	query := uri.Query()
+	prof := &profile.Profile{
+		Name:      fragmentName(uri),
 		Protocol:  profile.Trojan,
 		Server:    host,
 		Port:      port,
-		Password:  u.User.Username(),
-		TLS:       tlsFromQuery(q, true),
-		Transport: transportFromQuery(q),
+		Password:  uri.User.Username(),
+		TLS:       tlsFromQuery(query, true),
+		Transport: transportFromQuery(query),
 	}
-	attachMux(p, muxFrom(q.Get))
-	return p, nil
+	attachMux(prof, muxFrom(query.Get))
+	return prof, nil
 }
 
 // vmess://base64(json) in the v2rayN format.
@@ -236,7 +236,7 @@ func parseVMess(link string) (*profile.Profile, error) {
 		return nil, fmt.Errorf("vmess: invalid port %q", str("port"))
 	}
 	aid, _ := strconv.Atoi(str("aid"))
-	p := &profile.Profile{
+	prof := &profile.Profile{
 		Name:     str("ps"),
 		Protocol: profile.VMess,
 		Server:   str("add"),
@@ -246,23 +246,23 @@ func parseVMess(link string) (*profile.Profile, error) {
 		Method:   firstNonEmpty(str("scy"), "auto"),
 	}
 	if str("tls") == "tls" {
-		p.TLS = &profile.TLS{
+		prof.TLS = &profile.TLS{
 			Enabled:     true,
 			ServerName:  firstNonEmpty(str("sni"), str("host")),
 			ALPN:        splitList(str("alpn")),
 			Fingerprint: str("fp"),
 		}
-		tlsExtrasFrom(p.TLS, str)
+		tlsExtrasFrom(prof.TLS, str)
 	}
-	q := url.Values{}
-	q.Set("type", str("net"))
-	q.Set("path", str("path"))
-	q.Set("host", str("host"))
-	q.Set("headerType", str("type"))
-	q.Set("serviceName", str("path"))
-	p.Transport = transportFromQuery(q)
-	attachMux(p, muxFrom(str))
-	return p, nil
+	query := url.Values{}
+	query.Set("type", str("net"))
+	query.Set("path", str("path"))
+	query.Set("host", str("host"))
+	query.Set("headerType", str("type"))
+	query.Set("serviceName", str("path"))
+	prof.Transport = transportFromQuery(query)
+	attachMux(prof, muxFrom(str))
+	return prof, nil
 }
 
 // ss://base64(method:password)@host:port#name (SIP002) or
@@ -281,24 +281,24 @@ func parseShadowsocks(link string) (*profile.Profile, error) {
 		}
 		rest = decoded
 	}
-	u, err := url.Parse("ss://" + rest)
+	uri, err := url.Parse("ss://" + rest)
 	if err != nil {
 		return nil, fmt.Errorf("ss: %w", err)
 	}
-	host := u.Hostname()
-	port, err := strconv.Atoi(u.Port())
+	host := uri.Hostname()
+	port, err := strconv.Atoi(uri.Port())
 	if err != nil || host == "" {
 		return nil, fmt.Errorf("ss: invalid server address")
 	}
 	method, password := "", ""
-	if pw, ok := u.User.Password(); ok {
-		method, password = u.User.Username(), pw
-	} else if decoded, ok := decodeBase64(u.User.Username()); ok {
+	if pw, ok := uri.User.Password(); ok {
+		method, password = uri.User.Username(), pw
+	} else if decoded, ok := decodeBase64(uri.User.Username()); ok {
 		method, password, _ = strings.Cut(decoded, ":")
 	} else {
 		return nil, fmt.Errorf("ss: invalid user info")
 	}
-	p := &profile.Profile{
+	prof := &profile.Profile{
 		Name:     name,
 		Protocol: profile.Shadowsocks,
 		Server:   host,
@@ -306,91 +306,91 @@ func parseShadowsocks(link string) (*profile.Profile, error) {
 		Method:   method,
 		Password: password,
 	}
-	if plugin := u.Query().Get("plugin"); plugin != "" {
-		p.Plugin, p.PluginOpts, _ = strings.Cut(plugin, ";")
+	if plugin := uri.Query().Get("plugin"); plugin != "" {
+		prof.Plugin, prof.PluginOpts, _ = strings.Cut(plugin, ";")
 	}
-	attachMux(p, muxFrom(u.Query().Get))
-	return p, nil
+	attachMux(prof, muxFrom(uri.Query().Get))
+	return prof, nil
 }
 
 // hysteria2://auth@host:port?sni=..&obfs=salamander&obfs-password=..&insecure=1#name
 func parseHysteria2(link string) (*profile.Profile, error) {
-	u, host, port, err := parseURL(link)
+	uri, host, port, err := parseURL(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	password := u.User.Username()
-	if pw, ok := u.User.Password(); ok {
+	query := uri.Query()
+	password := uri.User.Username()
+	if pw, ok := uri.User.Password(); ok {
 		password += ":" + pw
 	}
-	p := &profile.Profile{
-		Name:     fragmentName(u),
+	prof := &profile.Profile{
+		Name:     fragmentName(uri),
 		Protocol: profile.Hysteria2,
 		Server:   host,
 		Port:     port,
 		Password: password,
 		TLS: &profile.TLS{
 			Enabled:    true,
-			ServerName: q.Get("sni"),
-			Insecure:   truthy(q.Get("insecure")),
-			ALPN:       splitList(q.Get("alpn")),
+			ServerName: query.Get("sni"),
+			Insecure:   truthy(query.Get("insecure")),
+			ALPN:       splitList(query.Get("alpn")),
 		},
 	}
-	if obfs := q.Get("obfs"); obfs != "" {
-		p.Hysteria2 = &profile.Hy2{Obfs: obfs, ObfsPassword: q.Get("obfs-password")}
+	if obfs := query.Get("obfs"); obfs != "" {
+		prof.Hysteria2 = &profile.Hy2{Obfs: obfs, ObfsPassword: query.Get("obfs-password")}
 	}
-	return p, nil
+	return prof, nil
 }
 
 // tuic://uuid:password@host:port?congestion_control=bbr&alpn=h3&sni=..#name
 func parseTUIC(link string) (*profile.Profile, error) {
-	u, host, port, err := parseURL(link)
+	uri, host, port, err := parseURL(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	pw, _ := u.User.Password()
+	query := uri.Query()
+	pw, _ := uri.User.Password()
 	return &profile.Profile{
-		Name:     fragmentName(u),
+		Name:     fragmentName(uri),
 		Protocol: profile.TUIC,
 		Server:   host,
 		Port:     port,
-		UUID:     u.User.Username(),
+		UUID:     uri.User.Username(),
 		Password: pw,
 		TLS: &profile.TLS{
 			Enabled:    true,
-			ServerName: q.Get("sni"),
-			ALPN:       splitList(firstNonEmpty(q.Get("alpn"), "h3")),
-			Insecure:   truthy(q.Get("allow_insecure")) || truthy(q.Get("insecure")),
+			ServerName: query.Get("sni"),
+			ALPN:       splitList(firstNonEmpty(query.Get("alpn"), "h3")),
+			Insecure:   truthy(query.Get("allow_insecure")) || truthy(query.Get("insecure")),
 		},
 		TUIC: &profile.TUICOpts{
-			CongestionControl: q.Get("congestion_control"),
-			UDPRelayMode:      q.Get("udp_relay_mode"),
+			CongestionControl: query.Get("congestion_control"),
+			UDPRelayMode:      query.Get("udp_relay_mode"),
 		},
 	}, nil
 }
 
 // wireguard://privatekey@host:port?publickey=..&address=..&mtu=..&reserved=1,2,3#name
 func parseWireGuardLink(link string) (*profile.Profile, error) {
-	u, host, port, err := parseURL(link)
+	uri, host, port, err := parseURL(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	priv, _ := url.PathUnescape(u.User.Username())
+	query := uri.Query()
+	priv, _ := url.PathUnescape(uri.User.Username())
 	wg := &profile.WG{
 		PrivateKey:    priv,
-		PeerPublicKey: firstNonEmpty(q.Get("publickey"), q.Get("peer_public_key")),
-		PreSharedKey:  firstNonEmpty(q.Get("presharedkey"), q.Get("pre_shared_key")),
-		Address:       splitList(firstNonEmpty(q.Get("address"), q.Get("ip"))),
+		PeerPublicKey: firstNonEmpty(query.Get("publickey"), query.Get("peer_public_key")),
+		PreSharedKey:  firstNonEmpty(query.Get("presharedkey"), query.Get("pre_shared_key")),
+		Address:       splitList(firstNonEmpty(query.Get("address"), query.Get("ip"))),
 	}
-	wg.MTU, _ = strconv.Atoi(q.Get("mtu"))
-	wg.AllowedIPs = splitList(firstNonEmpty(q.Get("allowedips"), q.Get("allowed_ips")))
-	wg.DNS = splitList(q.Get("dns"))
-	wg.Via = strings.TrimSpace(q.Get("via"))
-	wg.Keepalive, _ = strconv.Atoi(firstNonEmpty(q.Get("keepalive"), q.Get("persistent_keepalive")))
-	for _, r := range splitList(q.Get("reserved")) {
+	wg.MTU, _ = strconv.Atoi(query.Get("mtu"))
+	wg.AllowedIPs = splitList(firstNonEmpty(query.Get("allowedips"), query.Get("allowed_ips")))
+	wg.DNS = splitList(query.Get("dns"))
+	wg.Via = strings.TrimSpace(query.Get("via"))
+	wg.Keepalive, _ = strconv.Atoi(firstNonEmpty(query.Get("keepalive"), query.Get("persistent_keepalive")))
+	for _, r := range splitList(query.Get("reserved")) {
 		n, err := strconv.Atoi(r)
 		if err != nil {
 			return nil, fmt.Errorf("wireguard: invalid reserved %q", r)
@@ -399,11 +399,11 @@ func parseWireGuardLink(link string) (*profile.Profile, error) {
 	}
 	proto := profile.WireGuard
 	// awg:// is the same link with AmneziaWG's obfuscation parameters.
-	if strings.EqualFold(u.Scheme, "awg") {
+	if strings.EqualFold(uri.Scheme, "awg") {
 		proto = profile.AmneziaWG
 		wg.Via = ""
 		for k := range amneziaKeys {
-			if v := q.Get(k); v != "" {
+			if v := query.Get(k); v != "" {
 				if wg.Amnezia == nil {
 					wg.Amnezia = map[string]string{}
 				}
@@ -412,7 +412,7 @@ func parseWireGuardLink(link string) (*profile.Profile, error) {
 		}
 	}
 	return &profile.Profile{
-		Name:      fragmentName(u),
+		Name:      fragmentName(uri),
 		Protocol:  proto,
 		Server:    host,
 		Port:      port,

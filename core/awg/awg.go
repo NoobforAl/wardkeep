@@ -68,14 +68,14 @@ func UAPI(p *profile.Profile, endpoint netip.AddrPort) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("peer public key: %w", err)
 	}
-	var b strings.Builder
-	fmt.Fprintf(&b, "private_key=%s\n", priv)
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "private_key=%s\n", priv)
 	if err := CheckParams(wg.Amnezia); err != nil {
 		return "", err
 	}
 	for _, k := range deviceKeys {
 		if v, ok := wg.Amnezia[k]; ok {
-			fmt.Fprintf(&b, "%s=%s\n", k, strings.TrimSpace(v))
+			fmt.Fprintf(&sb, "%s=%s\n", k, strings.TrimSpace(v))
 		}
 	}
 	for _, k := range chainKeys {
@@ -83,33 +83,33 @@ func UAPI(p *profile.Profile, endpoint netip.AddrPort) (string, error) {
 			if strings.ContainsAny(v, "\r\n") {
 				return "", fmt.Errorf("invalid %s: line break", k)
 			}
-			fmt.Fprintf(&b, "%s=%s\n", k, strings.TrimSpace(v))
+			fmt.Fprintf(&sb, "%s=%s\n", k, strings.TrimSpace(v))
 		}
 	}
-	b.WriteString("replace_peers=true\n")
-	fmt.Fprintf(&b, "public_key=%s\n", pub)
+	sb.WriteString("replace_peers=true\n")
+	fmt.Fprintf(&sb, "public_key=%s\n", pub)
 	if wg.PreSharedKey != "" {
 		psk, err := keyHex(wg.PreSharedKey)
 		if err != nil {
 			return "", fmt.Errorf("preshared key: %w", err)
 		}
-		fmt.Fprintf(&b, "preshared_key=%s\n", psk)
+		fmt.Fprintf(&sb, "preshared_key=%s\n", psk)
 	}
-	fmt.Fprintf(&b, "endpoint=%s\n", endpoint)
+	fmt.Fprintf(&sb, "endpoint=%s\n", endpoint)
 	keepalive := wg.Keepalive
 	if keepalive == 0 {
 		keepalive = 25 // keeps NAT mappings alive on mobile networks
 	}
-	fmt.Fprintf(&b, "persistent_keepalive_interval=%d\n", keepalive)
-	b.WriteString("replace_allowed_ips=true\n")
+	fmt.Fprintf(&sb, "persistent_keepalive_interval=%d\n", keepalive)
+	sb.WriteString("replace_allowed_ips=true\n")
 	allowed := wg.AllowedIPs
 	if len(allowed) == 0 {
 		allowed = []string{"0.0.0.0/0", "::/0"}
 	}
 	for _, a := range allowed {
-		fmt.Fprintf(&b, "allowed_ip=%s\n", strings.TrimSpace(a))
+		fmt.Fprintf(&sb, "allowed_ip=%s\n", strings.TrimSpace(a))
 	}
-	return b.String(), nil
+	return sb.String(), nil
 }
 
 func isDeviceKey(k string) bool { return slices.Contains(deviceKeys, k) }
@@ -138,21 +138,21 @@ func uintRange(v string) (lo, hi uint64, err error) {
 // (signature packets) and 2.0 (s3, s4 and header ranges); a header that is a
 // number is a range of one.
 func CheckParams(params map[string]string) error {
-	for k, v := range params {
+	for k, value := range params {
 		switch {
 		case slices.Contains(chainKeys, k):
-			if strings.ContainsAny(v, "\r\n") {
+			if strings.ContainsAny(value, "\r\n") {
 				return fmt.Errorf("invalid %s: line break", k)
 			}
 		case slices.Contains(retiredKeys, k):
 			// ignored, see retiredKeys
 		case slices.Contains(headerKeys, k):
-			if _, _, err := uintRange(v); err != nil {
-				return fmt.Errorf("invalid %s=%q: %w", k, v, err)
+			if _, _, err := uintRange(value); err != nil {
+				return fmt.Errorf("invalid %s=%q: %w", k, value, err)
 			}
 		case isDeviceKey(k):
-			if _, err := strconv.ParseUint(strings.TrimSpace(v), 10, 16); err != nil {
-				return fmt.Errorf("invalid %s=%q: not a number from 0 to 65535", k, v)
+			if _, err := strconv.ParseUint(strings.TrimSpace(value), 10, 16); err != nil {
+				return fmt.Errorf("invalid %s=%q: not a number from 0 to 65535", k, value)
 			}
 		default:
 			return fmt.Errorf("%w %q", ErrUnsupported, k)
@@ -229,21 +229,21 @@ func Generation(params map[string]string) string {
 
 // ResolveEndpoint returns the peer address; host names are resolved with the
 // system resolver (before the tunnel exists).
-func ResolveEndpoint(ctx context.Context, p *profile.Profile) (netip.AddrPort, error) {
-	if addr, err := netip.ParseAddr(p.Server); err == nil {
-		return netip.AddrPortFrom(addr.Unmap(), uint16(p.Port)), nil
+func ResolveEndpoint(ctx context.Context, prof *profile.Profile) (netip.AddrPort, error) {
+	if addr, err := netip.ParseAddr(prof.Server); err == nil {
+		return netip.AddrPortFrom(addr.Unmap(), uint16(prof.Port)), nil
 	}
-	addrs, err := net.DefaultResolver.LookupNetIP(ctx, "ip", p.Server)
+	addrs, err := net.DefaultResolver.LookupNetIP(ctx, "ip", prof.Server)
 	if err != nil || len(addrs) == 0 {
-		return netip.AddrPort{}, fmt.Errorf("resolve %s: %w", p.Server, err)
+		return netip.AddrPort{}, fmt.Errorf("resolve %s: %w", prof.Server, err)
 	}
 	// Prefer IPv4: many mobile networks have broken IPv6.
 	for _, a := range addrs {
 		if a.Unmap().Is4() {
-			return netip.AddrPortFrom(a.Unmap(), uint16(p.Port)), nil
+			return netip.AddrPortFrom(a.Unmap(), uint16(prof.Port)), nil
 		}
 	}
-	return netip.AddrPortFrom(addrs[0], uint16(p.Port)), nil
+	return netip.AddrPortFrom(addrs[0], uint16(prof.Port)), nil
 }
 
 // Tunnel is a running AmneziaWG device.
@@ -304,7 +304,7 @@ func (t *Tunnel) Stats() Stats {
 }
 
 func parseStats(raw string) Stats {
-	var s Stats
+	var stats Stats
 	var sec, nsec int64
 	for line := range strings.SplitSeq(raw, "\n") {
 		k, v, ok := strings.Cut(line, "=")
@@ -314,9 +314,9 @@ func parseStats(raw string) Stats {
 		n, _ := strconv.ParseInt(v, 10, 64)
 		switch k {
 		case "rx_bytes":
-			s.RxBytes += n
+			stats.RxBytes += n
 		case "tx_bytes":
-			s.TxBytes += n
+			stats.TxBytes += n
 		case "last_handshake_time_sec":
 			sec = n
 		case "last_handshake_time_nsec":
@@ -324,9 +324,9 @@ func parseStats(raw string) Stats {
 		}
 	}
 	if sec > 0 {
-		s.LastHandshake = time.Unix(sec, nsec)
+		stats.LastHandshake = time.Unix(sec, nsec)
 	}
-	return s
+	return stats
 }
 
 // Close shuts the device down and closes its TUN.

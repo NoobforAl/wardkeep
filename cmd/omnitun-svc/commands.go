@@ -109,7 +109,7 @@ func cmdStatus([]string) int {
 	if err != nil {
 		return fail(err)
 	}
-	l := winsvc.DefaultLayout()
+	layout := winsvc.DefaultLayout()
 	if !st.Installed {
 		say("service: not installed")
 		return statusNotInstalled
@@ -118,16 +118,16 @@ func cmdStatus([]string) int {
 	if st.Path != "" {
 		say("program: %s", st.Path)
 	}
-	if cfg, err := winsvc.LoadConfig(l.Config); err == nil {
+	if cfg, err := winsvc.LoadConfig(layout.Config); err == nil {
 		say("allowed accounts: %s", strings.Join(cfg.AllowedSIDs, ", "))
 	}
-	say("control file: %s", l.ControlFile)
+	say("control file: %s", layout.ControlFile)
 	if st.State != "running" {
 		return statusNotRunning
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	cf, err := winsvc.Detect(ctx, l.ControlFile)
+	cf, err := winsvc.Detect(ctx, layout.ControlFile)
 	if err != nil {
 		say("this user cannot use the service: %v", err)
 		return statusUnreachable
@@ -203,12 +203,12 @@ func cmdKillSwitchSelfTest(args []string) int {
 		}
 	}()
 
-	m := killswitch.NewManager()
-	timer := time.AfterFunc(time.Duration(*seconds)*time.Second, func() { m.Disarm() })
+	ks := killswitch.NewManager()
+	timer := time.AfterFunc(time.Duration(*seconds)*time.Second, func() { ks.Disarm() })
 	defer timer.Stop()
-	defer m.Disarm()
+	defer ks.Disarm()
 	say("2. raising a block that permits loopback only (lasts at most %d s)", *seconds)
-	if err := m.Arm(killswitch.Options{}, ""); err != nil {
+	if err := ks.Arm(killswitch.Options{}, ""); err != nil {
 		return fail(err)
 	}
 	code := 0
@@ -225,7 +225,7 @@ func cmdKillSwitchSelfTest(args []string) int {
 		say("   loopback still works, as expected")
 	}
 	say("3. lifting the block")
-	if err := m.Disarm(); err != nil {
+	if err := ks.Disarm(); err != nil {
 		return fail(err)
 	}
 	time.Sleep(300 * time.Millisecond)

@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
 	"github.com/NoobforAl/omnitun/core/control"
 	"github.com/NoobforAl/omnitun/core/killswitch"
+	"github.com/NoobforAl/omnitun/core/logrec"
 )
 
 func newFlagSet(name string) *flag.FlagSet { return flag.NewFlagSet(name, flag.ContinueOnError) }
@@ -21,54 +21,54 @@ type daemonConfig struct {
 	DataDir     string
 	Grace       time.Duration
 	ParentPID   int
-	Logger      *log.Logger
+	Logger      *logrec.Logger
 	// Exit receives the reason to shut down (a signal, a stop request).
 	Exit chan string
 	// OnReady is called with the listening address once the control file is written.
 	OnReady func(addr string)
 }
 
-// runDaemon serves the control protocol until something arrives on c.Exit, the
+// runDaemon serves the control protocol until something arrives on cfg.Exit, the
 // parent process exits or the server fails; then it stops the tunnel.
-func runDaemon(c daemonConfig) error {
+func runDaemon(cfg daemonConfig) error {
 	srv, err := control.NewServer(control.ServerConfig{
-		DataDir:    c.DataDir,
-		Grace:      c.Grace,
-		Logf:       c.Logger.Printf,
+		DataDir:    cfg.DataDir,
+		Grace:      cfg.Grace,
+		OnLog:      cfg.Logger.Emit,
 		KillSwitch: killswitch.NewManager(),
 	})
 	if err != nil {
 		return err
 	}
-	addr, err := srv.Listen(c.Listen)
+	addr, err := srv.Listen(cfg.Listen)
 	if err != nil {
 		return err
 	}
-	if err := srv.WriteControlFile(c.ControlFile); err != nil {
+	if err := srv.WriteControlFile(cfg.ControlFile); err != nil {
 		srv.Close()
 		return err
 	}
-	defer os.Remove(c.ControlFile)
-	if c.OnReady != nil {
-		c.OnReady(addr.String())
+	defer os.Remove(cfg.ControlFile)
+	if cfg.OnReady != nil {
+		cfg.OnReady(addr.String())
 	}
 
-	if c.ParentPID > 0 {
+	if cfg.ParentPID > 0 {
 		go func() {
-			if err := waitProcess(c.ParentPID); err != nil {
-				c.Exit <- fmt.Sprintf("cannot watch parent %d: %v", c.ParentPID, err)
+			if err := waitProcess(cfg.ParentPID); err != nil {
+				cfg.Exit <- fmt.Sprintf("cannot watch parent %d: %v", cfg.ParentPID, err)
 				return
 			}
-			c.Exit <- fmt.Sprintf("parent %d exited", c.ParentPID)
+			cfg.Exit <- fmt.Sprintf("parent %d exited", cfg.ParentPID)
 		}()
 	}
 	go func() {
 		if err := srv.Serve(); err != nil {
-			c.Exit <- err.Error()
+			cfg.Exit <- err.Error()
 		}
 	}()
 
-	c.Logger.Printf("listening on %s, shutting down: %s", addr, <-c.Exit)
+	cfg.Logger.Printf("listening on %s, shutting down: %s", addr, <-cfg.Exit)
 	srv.Close()
 	return nil
 }

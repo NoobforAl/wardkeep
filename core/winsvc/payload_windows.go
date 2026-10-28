@@ -58,29 +58,29 @@ func openNode(path string) (windows.Handle, uint32, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	h, err := windows.CreateFile(p, windows.READ_CONTROL|windows.FILE_READ_ATTRIBUTES,
+	handle, err := windows.CreateFile(p, windows.READ_CONTROL|windows.FILE_READ_ATTRIBUTES,
 		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil, windows.OPEN_EXISTING,
 		windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
 	if err != nil {
 		return 0, 0, err
 	}
 	var info windows.ByHandleFileInformation
-	if err := windows.GetFileInformationByHandle(h, &info); err != nil {
-		windows.CloseHandle(h)
+	if err := windows.GetFileInformationByHandle(handle, &info); err != nil {
+		windows.CloseHandle(handle)
 		return 0, 0, err
 	}
-	return h, info.FileAttributes, nil
+	return handle, info.FileAttributes, nil
 }
 
 // writersOfPath returns who besides SYSTEM, Administrators and TrustedInstaller
 // can change path (see writersOf). It only reads the access list.
 func writersOfPath(path string) ([]string, error) {
-	h, _, err := openNode(path)
+	handle, _, err := openNode(path)
 	if err != nil {
 		return nil, err
 	}
-	defer windows.CloseHandle(h)
-	owner, entries, err := aclEntries(h)
+	defer windows.CloseHandle(handle)
+	owner, entries, err := aclEntries(handle)
 	if err != nil {
 		return nil, err
 	}
@@ -89,12 +89,12 @@ func writersOfPath(path string) ([]string, error) {
 
 // checkAdminOnly fails if somebody other than the administrators can change path.
 func checkAdminOnly(path string) error {
-	w, err := writersOfPath(path)
+	writers, err := writersOfPath(path)
 	if err != nil {
 		return fmt.Errorf("read the access list of %s: %w", path, err)
 	}
-	if len(w) > 0 {
-		return unsafeSourceError("the folder", path, w)
+	if len(writers) > 0 {
+		return unsafeSourceError("the folder", path, writers)
 	}
 	return nil
 }
@@ -107,40 +107,40 @@ func checkAdminOnly(path string) error {
 // add entries to C:\ cannot replace the folder below). checked caches folders
 // already approved.
 func checkFolderChain(found, real string, checked map[string]bool) error {
-	for _, d := range ancestorDirs(found) {
-		h, attrs, err := openNode(d)
+	for _, dir := range ancestorDirs(found) {
+		handle, attrs, err := openNode(dir)
 		if err != nil {
-			return fmt.Errorf("open %s: %w", d, err)
+			return fmt.Errorf("open %s: %w", dir, err)
 		}
-		windows.CloseHandle(h)
+		windows.CloseHandle(handle)
 		if attrs&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
-			return fmt.Errorf("%s (a folder on the way to the program) is a link; use the real folder", d)
+			return fmt.Errorf("%s (a folder on the way to the program) is a link; use the real folder", dir)
 		}
 	}
-	for i, d := range ancestorDirs(real) {
-		key := strings.ToLower(d)
+	for i, dir := range ancestorDirs(real) {
+		key := strings.ToLower(dir)
 		if checked[key] {
 			continue
 		}
-		h, attrs, err := openNode(d)
+		handle, attrs, err := openNode(dir)
 		if err != nil {
-			return fmt.Errorf("open %s: %w", d, err)
+			return fmt.Errorf("open %s: %w", dir, err)
 		}
 		if attrs&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
-			windows.CloseHandle(h)
-			return fmt.Errorf("%s (a folder on the way to the program) is a link; use the real folder", d)
+			windows.CloseHandle(handle)
+			return fmt.Errorf("%s (a folder on the way to the program) is a link; use the real folder", dir)
 		}
-		owner, entries, err := aclEntries(h)
-		windows.CloseHandle(h)
+		owner, entries, err := aclEntries(handle)
+		windows.CloseHandle(handle)
 		if err != nil {
-			return fmt.Errorf("read the access list of %s: %w", d, err)
+			return fmt.Errorf("read the access list of %s: %w", dir, err)
 		}
 		what, writers := "the folder holding the program", writersOf(owner, entries)
 		if i > 0 {
 			what, writers = "a folder above the program", writersOfAncestor(owner, entries)
 		}
 		if len(writers) > 0 {
-			return unsafeSourceError(what, d, writers)
+			return unsafeSourceError(what, dir, writers)
 		}
 		checked[key] = true
 	}
@@ -194,44 +194,44 @@ func openSource(path string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	h, err := windows.CreateFile(p, windows.GENERIC_READ, windows.FILE_SHARE_READ, nil, windows.OPEN_EXISTING,
+	handle, err := windows.CreateFile(p, windows.GENERIC_READ, windows.FILE_SHARE_READ, nil, windows.OPEN_EXISTING,
 		windows.FILE_ATTRIBUTE_NORMAL|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", path, err)
 	}
 	var info windows.ByHandleFileInformation
-	if err := windows.GetFileInformationByHandle(h, &info); err != nil {
-		windows.CloseHandle(h)
+	if err := windows.GetFileInformationByHandle(handle, &info); err != nil {
+		windows.CloseHandle(handle)
 		return nil, err
 	}
 	if info.FileAttributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
-		windows.CloseHandle(h)
+		windows.CloseHandle(handle)
 		return nil, fmt.Errorf("%s is a link; only real files are installed", path)
 	}
 	if info.FileAttributes&windows.FILE_ATTRIBUTE_DIRECTORY != 0 {
-		windows.CloseHandle(h)
+		windows.CloseHandle(handle)
 		return nil, fmt.Errorf("%s is a folder", path)
 	}
-	return os.NewFile(uintptr(h), path), nil
+	return os.NewFile(uintptr(handle), path), nil
 }
 
 // checkSource checks an open source file through its own handle: the file's
 // access list, its real path and the folders around it.
-func checkSource(s *sourceFile, checked map[string]bool) error {
-	h := windows.Handle(s.f.Fd())
-	real, err := finalPath(h)
+func checkSource(src *sourceFile, checked map[string]bool) error {
+	handle := windows.Handle(src.f.Fd())
+	real, err := finalPath(handle)
 	if err != nil {
-		return fmt.Errorf("find the real path of %s: %w", s.found, err)
+		return fmt.Errorf("find the real path of %s: %w", src.found, err)
 	}
-	s.real = real
-	owner, entries, err := aclEntries(h)
+	src.real = real
+	owner, entries, err := aclEntries(handle)
 	if err != nil {
-		return fmt.Errorf("read the access list of %s: %w", s.found, err)
+		return fmt.Errorf("read the access list of %s: %w", src.found, err)
 	}
 	if w := writersOf(owner, entries); len(w) > 0 {
 		return unsafeSourceError("the file", real, w)
 	}
-	return checkFolderChain(s.found, real, checked)
+	return checkFolderChain(src.found, real, checked)
 }
 
 // copyVerified copies from (opened as openSource does) to to.
@@ -255,8 +255,8 @@ func copyFrom(in *os.File, to string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	h := sha256.New()
-	_, err = io.Copy(io.MultiWriter(out, h), in)
+	hasher := sha256.New()
+	_, err = io.Copy(io.MultiWriter(out, hasher), in)
 	if err == nil {
 		err = out.Sync()
 	}
@@ -267,7 +267,7 @@ func copyFrom(in *os.File, to string) (string, error) {
 		os.Remove(tmp)
 		return "", err
 	}
-	want := hex.EncodeToString(h.Sum(nil))
+	want := hex.EncodeToString(hasher.Sum(nil))
 	got, err := fileSHA256(tmp)
 	if err != nil || got != want {
 		os.Remove(tmp)
@@ -285,16 +285,16 @@ func copyFrom(in *os.File, to string) (string, error) {
 }
 
 func fileSHA256(path string) (string, error) {
-	f, err := os.Open(path)
+	file, err := os.Open(path)
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
+	defer file.Close()
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
 		return "", err
 	}
-	return hex.EncodeToString(h.Sum(nil)), nil
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
 // installPlan is what install copies: source path -> destination file name.
@@ -335,12 +335,12 @@ func planInstall(exe string) (installPlan, error) {
 func openPlan(plan installPlan) (files []*sourceFile, unsafeErr error, err error) {
 	checked := map[string]bool{}
 	for from, name := range plan.files {
-		f, err := openSource(from)
+		file, err := openSource(from)
 		if err != nil {
 			closeAll(files)
 			return nil, nil, err
 		}
-		s := &sourceFile{f: f, name: name, found: from}
+		s := &sourceFile{f: file, name: name, found: from}
 		files = append(files, s)
 		if cerr := checkSource(s, checked); cerr != nil && unsafeErr == nil {
 			unsafeErr = cerr
@@ -360,16 +360,16 @@ func copyProgram(files []*sourceFile, dir string, logf func(string, ...any)) (st
 	if err := checkAdminOnly(dir); err != nil {
 		return "", fmt.Errorf("the install folder is not safe: %w", err)
 	}
-	for _, s := range files {
-		to := filepath.Join(dir, s.name)
-		if strings.EqualFold(s.real, to) || strings.EqualFold(filepath.Clean(s.found), filepath.Clean(to)) {
+	for _, src := range files {
+		to := filepath.Join(dir, src.name)
+		if strings.EqualFold(src.real, to) || strings.EqualFold(filepath.Clean(src.found), filepath.Clean(to)) {
 			continue // installing from the install folder itself
 		}
-		sum, err := copyFrom(s.f, to)
+		sum, err := copyFrom(src.f, to)
 		if err != nil {
 			return "", err
 		}
-		logf("copied %s to %s (sha256 %s)", filepath.Base(s.found), dir, sum)
+		logf("copied %s to %s (sha256 %s)", filepath.Base(src.found), dir, sum)
 	}
 	return filepath.Join(dir, ExeName), nil
 }

@@ -76,7 +76,7 @@ func (i BypassIssue) Error() string {
 // ParseBypassList reads a list. Lines that cannot be used are reported and
 // skipped; the rest of the list still counts.
 func ParseBypassList(text string) (*BypassList, []BypassIssue) {
-	var b BypassList
+	var list BypassList
 	var issues []BypassIssue
 	seen := map[string]bool{}
 	for n, raw := range strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
@@ -91,11 +91,11 @@ func ParseBypassList(text string) (*BypassList, []BypassIssue) {
 		bad := func(code, msg string) {
 			issues = append(issues, BypassIssue{Line: n + 1, Text: clip(raw), Message: msg, Code: code})
 		}
-		if names := len(b.Suffix) + len(b.Full) + len(b.Keyword) + len(b.Regex); names >= MaxBypassEntries {
+		if names := len(list.Suffix) + len(list.Full) + len(list.Keyword) + len(list.Regex); names >= MaxBypassEntries {
 			bad(BypassTooMany, fmt.Sprintf("more than %d entries: the rest is ignored", MaxBypassEntries))
 			issues[len(issues)-1].Limit = MaxBypassEntries
 			break
-		} else if len(b.CIDRs) >= MaxBypassRanges {
+		} else if len(list.CIDRs) >= MaxBypassRanges {
 			bad(BypassTooMany, fmt.Sprintf("more than %d entries: the rest is ignored", MaxBypassRanges))
 			issues[len(issues)-1].Limit = MaxBypassRanges
 			break
@@ -114,7 +114,7 @@ func ParseBypassList(text string) (*BypassList, []BypassIssue) {
 			} else if _, err := regexp.Compile(value); err != nil {
 				bad(BypassBadExpression, "not a valid expression")
 			} else {
-				b.Regex = append(b.Regex, value)
+				list.Regex = append(list.Regex, value)
 			}
 		case hasKind && (strings.EqualFold(kind, "full") || strings.EqualFold(kind, "domain") || strings.EqualFold(kind, "keyword")):
 			value = strings.ToLower(strings.TrimSpace(value))
@@ -124,46 +124,46 @@ func ParseBypassList(text string) (*BypassList, []BypassIssue) {
 			}
 			switch strings.ToLower(kind) {
 			case "full":
-				b.Full = append(b.Full, value)
+				list.Full = append(list.Full, value)
 			case "domain":
-				b.Suffix = append(b.Suffix, value)
+				list.Suffix = append(list.Suffix, value)
 			default:
-				b.Keyword = append(b.Keyword, value)
+				list.Keyword = append(list.Keyword, value)
 			}
 		case hasKind && (strings.EqualFold(kind, "geosite") || strings.EqualFold(kind, "geoip")):
 			bad(BypassGeoUnsupported, "geo lists are not supported; list the domains or ranges")
 		default:
 			if p, err := netip.ParsePrefix(line); err == nil {
-				b.CIDRs = append(b.CIDRs, p.Masked())
+				list.CIDRs = append(list.CIDRs, p.Masked())
 			} else if a, err := netip.ParseAddr(line); err == nil {
-				b.CIDRs = append(b.CIDRs, netip.PrefixFrom(a.Unmap(), a.Unmap().BitLen()))
+				list.CIDRs = append(list.CIDRs, netip.PrefixFrom(a.Unmap(), a.Unmap().BitLen()))
 			} else if name := strings.ToLower(strings.TrimPrefix(line, ".")); validName(name, false) {
-				b.Suffix = append(b.Suffix, name)
+				list.Suffix = append(list.Suffix, name)
 			} else {
 				bad(BypassBadEntry, "not a domain, address or range")
 			}
 		}
 	}
-	return &b, issues
+	return &list, issues
 }
 
 var nameRE = regexp.MustCompile(`^[a-z0-9_]([a-z0-9_-]*[a-z0-9_])?(\.[a-z0-9_]([a-z0-9_-]*[a-z0-9_])?)*$`)
 
 // validName accepts host names (letters, digits, '-', '_', dots); a keyword
 // may be any such word, also without a dot.
-func validName(s string, keyword bool) bool {
-	if s == "" || len(s) > 253 {
+func validName(name string, keyword bool) bool {
+	if name == "" || len(name) > 253 {
 		return false
 	}
 	if keyword {
-		return nameRE.MatchString(strings.ReplaceAll(s, ".", "a"))
+		return nameRE.MatchString(strings.ReplaceAll(name, ".", "a"))
 	}
 	// A name whose last part is all digits is a mistyped address, not a domain.
-	last := s[strings.LastIndexByte(s, '.')+1:]
+	last := name[strings.LastIndexByte(name, '.')+1:]
 	if strings.Trim(last, "0123456789") == "" {
 		return false
 	}
-	return nameRE.MatchString(s)
+	return nameRE.MatchString(name)
 }
 
 func clip(s string) string {

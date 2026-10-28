@@ -139,11 +139,11 @@ func transportFor(rootCAs *x509.CertPool, dial Dialer) *http.Transport {
 // FetchVia is Fetch with connections opened by dial (for example through the
 // running VPN); nil dials directly.
 func FetchVia(ctx context.Context, req Request, rootCAs *x509.CertPool, dial Dialer) (*Result, error) {
-	u, err := url.Parse(strings.TrimSpace(req.URL))
-	if err == nil && u.Scheme == "nordvpn" {
-		return fetchNordVPN(ctx, u, req, rootCAs, dial)
+	uri, err := url.Parse(strings.TrimSpace(req.URL))
+	if err == nil && uri.Scheme == "nordvpn" {
+		return fetchNordVPN(ctx, uri, req, rootCAs, dial)
 	}
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+	if err != nil || (uri.Scheme != "http" && uri.Scheme != "https") || uri.Host == "" {
 		return nil, fmt.Errorf("%w %q", ErrBadURL, req.URL)
 	}
 	if req.Auth.Type == AuthQuery {
@@ -151,11 +151,11 @@ func FetchVia(ctx context.Context, req Request, rootCAs *x509.CertPool, dial Dia
 		if key == "" {
 			key = "token"
 		}
-		q := u.Query()
+		q := uri.Query()
 		q.Set(key, req.Auth.Token)
-		u.RawQuery = q.Encode()
+		uri.RawQuery = q.Encode()
 	}
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -235,51 +235,51 @@ func FetchVia(ctx context.Context, req Request, rootCAs *x509.CertPool, dial Dia
 // subscription-userinfo: upload=1; download=2; total=3; expire=4
 // profile-update-interval: 24
 // profile-title: name or base64:bmFtZQ==
-func parseInfo(h http.Header) Info {
+func parseInfo(header http.Header) Info {
 	var info Info
-	for part := range strings.SplitSeq(h.Get("Subscription-Userinfo"), ";") {
+	for part := range strings.SplitSeq(header.Get("Subscription-Userinfo"), ";") {
 		k, v, ok := strings.Cut(strings.TrimSpace(part), "=")
 		if !ok {
 			continue
 		}
-		n, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+		num, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
 		if err != nil {
 			continue
 		}
 		switch strings.ToLower(k) {
 		case "upload":
-			info.Upload = n
+			info.Upload = num
 		case "download":
-			info.Download = n
+			info.Download = num
 		case "total":
-			info.Total = n
+			info.Total = num
 		case "expire":
-			info.Expire = n
+			info.Expire = num
 		}
 	}
-	if n, err := strconv.Atoi(strings.TrimSpace(h.Get("Profile-Update-Interval"))); err == nil && n > 0 {
+	if n, err := strconv.Atoi(strings.TrimSpace(header.Get("Profile-Update-Interval"))); err == nil && n > 0 {
 		info.UpdateIntervalHours = n
 	}
-	title := strings.TrimSpace(h.Get("Profile-Title"))
+	title := strings.TrimSpace(header.Get("Profile-Title"))
 	if b64, ok := strings.CutPrefix(title, "base64:"); ok {
 		if dec, err := base64.StdEncoding.DecodeString(b64); err == nil {
 			title = string(dec)
 		}
 	}
 	info.Title = title
-	info.ProtocolOrder = protocolOrders(h)
+	info.ProtocolOrder = protocolOrders(header)
 	return info
 }
 
 // fetchNordVPN handles nordvpn://<access token>?country=DE&limit=10: NordLynx
 // (WireGuard) profiles from NordVPN's API. The token may also be given as
 // bearer/basic auth instead of in the URL.
-func fetchNordVPN(ctx context.Context, u *url.URL, req Request, rootCAs *x509.CertPool, dial Dialer) (*Result, error) {
-	token := firstNonEmptyStr(u.Host, u.User.Username(), req.Auth.Token, req.Auth.Password)
-	limit, _ := strconv.Atoi(u.Query().Get("limit"))
+func fetchNordVPN(ctx context.Context, uri *url.URL, req Request, rootCAs *x509.CertPool, dial Dialer) (*Result, error) {
+	token := firstNonEmptyStr(uri.Host, uri.User.Username(), req.Auth.Token, req.Auth.Password)
+	limit, _ := strconv.Atoi(uri.Query().Get("limit"))
 	client := &http.Client{Transport: transportFor(rootCAs, dial), Timeout: 30 * time.Second}
 	defer client.CloseIdleConnections()
-	profiles, err := nordlynx.Profiles(ctx, client, token, u.Query().Get("country"), limit)
+	profiles, err := nordlynx.Profiles(ctx, client, token, uri.Query().Get("country"), limit)
 	if errors.Is(err, nordlynx.ErrAuth) {
 		return nil, fmt.Errorf("%w: %v", ErrAuth, err)
 	}

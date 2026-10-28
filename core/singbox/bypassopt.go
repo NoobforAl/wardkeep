@@ -71,14 +71,14 @@ func (b *BypassList) Optimized() *BypassList {
 	}
 	names := dedupe(b.Suffix)
 	sort.Slice(names, func(i, j int) bool { return strings.Count(names[i], ".") < strings.Count(names[j], ".") })
-	for _, n := range names {
+	for _, name := range names {
 		// The name itself may already be listed through a parent; check parents only.
-		_, parent, hasParent := strings.Cut(n, ".")
-		if hasKeyword(n) || (hasParent && underSuffix(parent)) {
+		_, parent, hasParent := strings.Cut(name, ".")
+		if hasKeyword(name) || (hasParent && underSuffix(parent)) {
 			continue
 		}
-		suffix[n] = true
-		out.Suffix = append(out.Suffix, n)
+		suffix[name] = true
+		out.Suffix = append(out.Suffix, name)
 	}
 	slices.Sort(out.Suffix)
 
@@ -112,11 +112,11 @@ func MergePrefixes(in []netip.Prefix) []netip.Prefix {
 	if len(in) < 2 {
 		return in
 	}
-	var b netipx.IPSetBuilder
+	var builder netipx.IPSetBuilder
 	for _, p := range in {
-		b.AddPrefix(p.Masked())
+		builder.AddPrefix(p.Masked())
 	}
-	set, err := b.IPSet()
+	set, err := builder.IPSet()
 	if err != nil {
 		return in
 	}
@@ -133,16 +133,16 @@ func FitExclusions(base, listed []netip.Prefix, budget int) []netip.Prefix {
 
 	// Routes needed to reach everything except base and the first n listed ranges.
 	cost := func(n int) int {
-		var b netipx.IPSetBuilder
-		b.AddPrefix(netip.MustParsePrefix("0.0.0.0/0"))
-		b.AddPrefix(netip.MustParsePrefix("::/0"))
+		var builder netipx.IPSetBuilder
+		builder.AddPrefix(netip.MustParsePrefix("0.0.0.0/0"))
+		builder.AddPrefix(netip.MustParsePrefix("::/0"))
 		for _, p := range base {
-			b.RemovePrefix(p.Masked())
+			builder.RemovePrefix(p.Masked())
 		}
 		for _, p := range listed[:n] {
-			b.RemovePrefix(p)
+			builder.RemovePrefix(p)
 		}
-		set, err := b.IPSet()
+		set, err := builder.IPSet()
 		if err != nil {
 			return budget + 1
 		}

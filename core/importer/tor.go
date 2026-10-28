@@ -22,14 +22,14 @@ func bridgeLine(line string) (string, bool) {
 	if rest, ok := strings.CutPrefix(line, "Bridge "); ok {
 		line = strings.TrimSpace(rest)
 	}
-	f := strings.Fields(line)
-	if len(f) < 2 {
+	fields := strings.Fields(line)
+	if len(fields) < 2 {
 		return "", false
 	}
-	if slices.Contains(torTransports, f[0]) {
+	if slices.Contains(torTransports, fields[0]) {
 		return line, true
 	}
-	if strings.Contains(f[0], ":") && len(f[1]) == 40 && !strings.Contains(f[0], "/") {
+	if strings.Contains(fields[0], ":") && len(fields[1]) == 40 && !strings.Contains(fields[0], "/") {
 		return line, true
 	}
 	return "", false
@@ -53,14 +53,14 @@ func parseBridgeLines(text string) *profile.Profile {
 	if len(bridges) == 0 {
 		return nil
 	}
-	p := &profile.Profile{
+	prof := &profile.Profile{
 		Name:     "Tor (custom bridges)",
 		Protocol: profile.Tor,
 		Tor:      &profile.TorOpts{Bridges: bridges},
 		Source:   "tor-bridges:" + strings.Join(bridges, "\n"),
 	}
-	p.EnsureID()
-	return p
+	prof.EnsureID()
+	return prof
 }
 
 // parseTorLink parses tor:// (direct), tor://obfs4, tor://snowflake and tor://meek (Tor Browser's built-in
@@ -71,32 +71,32 @@ func parseTorLink(link string) (*profile.Profile, error) {
 	rest, name, _ := strings.Cut(rest, "#")
 	rest, rawQuery, _ := strings.Cut(rest, "?")
 	kind := strings.ToLower(strings.Trim(rest, "/ "))
-	p := &profile.Profile{Name: "Tor", Protocol: profile.Tor, Tor: &profile.TorOpts{}}
+	prof := &profile.Profile{Name: "Tor", Protocol: profile.Tor, Tor: &profile.TorOpts{}}
 	if kind != "" {
 		if !slices.Contains(torBuiltinKinds, kind) {
 			return nil, fmt.Errorf("unknown Tor bridge kind %q (use obfs4, snowflake or meek)", kind)
 		}
-		p.Tor.Builtin = kind
-		p.Name = "Tor (" + kind + ")"
+		prof.Tor.Builtin = kind
+		prof.Name = "Tor (" + kind + ")"
 	}
 	if rawQuery != "" {
-		q, err := url.ParseQuery(rawQuery)
+		query, err := url.ParseQuery(rawQuery)
 		if err != nil {
 			return nil, fmt.Errorf("bad Tor link: %v", err)
 		}
-		for _, b := range q["bridge"] {
+		for _, b := range query["bridge"] {
 			line, ok := bridgeLine(b)
 			if !ok {
 				return nil, fmt.Errorf("not a bridge line: %q", truncate(b, 48))
 			}
-			p.Tor.Bridges = append(p.Tor.Bridges, line)
+			prof.Tor.Bridges = append(prof.Tor.Bridges, line)
 		}
-		if len(p.Tor.Bridges) > 0 && kind == "" {
-			p.Name = "Tor (custom bridges)"
+		if len(prof.Tor.Bridges) > 0 && kind == "" {
+			prof.Name = "Tor (custom bridges)"
 		}
 	}
 	if name, err := url.PathUnescape(name); err == nil && strings.TrimSpace(name) != "" {
-		p.Name = strings.TrimSpace(name)
+		prof.Name = strings.TrimSpace(name)
 	}
-	return p, nil
+	return prof, nil
 }

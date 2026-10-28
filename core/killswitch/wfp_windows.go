@@ -108,10 +108,10 @@ func installRules(rules []Rule) (*wf.Session, error) {
 		return 0
 	})
 	appIDs := map[string]string{}
-	for _, r := range ordered {
-		wr, err := toWF(r, appIDs)
+	for _, rule := range ordered {
+		wr, err := toWF(rule, appIDs)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", r.Name, err)
+			return nil, fmt.Errorf("%s: %w", rule.Name, err)
 		}
 		id, err := windows.GenerateGUID()
 		if err != nil {
@@ -121,7 +121,7 @@ func installRules(rules []Rule) (*wf.Session, error) {
 		wr.Provider = provider
 		wr.Sublayer = sublayer
 		if err := sess.AddRule(wr); err != nil {
-			return nil, fmt.Errorf("add rule %q: %w", r.Name, err)
+			return nil, fmt.Errorf("add rule %q: %w", rule.Name, err)
 		}
 	}
 	ok = true
@@ -130,21 +130,21 @@ func installRules(rules []Rule) (*wf.Session, error) {
 
 // toWF converts a rule to the library's type. appIDs caches path -> WFP
 // application identifier.
-func toWF(r Rule, appIDs map[string]string) (*wf.Rule, error) {
-	out := &wf.Rule{Name: r.Name, Weight: r.Weight}
+func toWF(rule Rule, appIDs map[string]string) (*wf.Rule, error) {
+	out := &wf.Rule{Name: rule.Name, Weight: rule.Weight}
 	switch {
-	case r.Direction == Outbound && r.Family == IPv4:
+	case rule.Direction == Outbound && rule.Family == IPv4:
 		out.Layer = wf.LayerALEAuthConnectV4
-	case r.Direction == Outbound && r.Family == IPv6:
+	case rule.Direction == Outbound && rule.Family == IPv6:
 		out.Layer = wf.LayerALEAuthConnectV6
-	case r.Direction == Inbound && r.Family == IPv4:
+	case rule.Direction == Inbound && rule.Family == IPv4:
 		out.Layer = wf.LayerALEAuthRecvAcceptV4
-	case r.Direction == Inbound && r.Family == IPv6:
+	case rule.Direction == Inbound && rule.Family == IPv6:
 		out.Layer = wf.LayerALEAuthRecvAcceptV6
 	default:
 		return nil, errors.New("unknown direction or family")
 	}
-	switch r.Action {
+	switch rule.Action {
 	case Permit:
 		out.Action = wf.ActionPermit
 	case Block:
@@ -152,7 +152,7 @@ func toWF(r Rule, appIDs map[string]string) (*wf.Rule, error) {
 	default:
 		return nil, errors.New("unknown action")
 	}
-	for _, c := range r.Conditions {
+	for _, c := range rule.Conditions {
 		ms, err := matches(c, appIDs)
 		if err != nil {
 			return nil, err
@@ -162,21 +162,21 @@ func toWF(r Rule, appIDs map[string]string) (*wf.Rule, error) {
 	return out, nil
 }
 
-func matches(c Condition, appIDs map[string]string) ([]*wf.Match, error) {
-	if c.Field == Loopback {
+func matches(cond Condition, appIDs map[string]string) ([]*wf.Match, error) {
+	if cond.Field == Loopback {
 		return []*wf.Match{{Field: wf.FieldFlags, Op: wf.MatchTypeFlagsAllSet, Value: wf.ConditionFlagIsLoopback}}, nil
 	}
-	field, err := wfField(c.Field)
+	field, err := wfField(cond.Field)
 	if err != nil {
 		return nil, err
 	}
 	var out []*wf.Match
-	for _, v := range c.Values {
-		switch c.Field {
+	for _, value := range cond.Values {
+		switch cond.Field {
 		case Application:
-			path, ok := v.(string)
+			path, ok := value.(string)
 			if !ok {
-				return nil, fmt.Errorf("application value %T", v)
+				return nil, fmt.Errorf("application value %T", value)
 			}
 			id, ok := appIDs[path]
 			if !ok {
@@ -185,21 +185,21 @@ func matches(c Condition, appIDs map[string]string) ([]*wf.Match, error) {
 				}
 				appIDs[path] = id
 			}
-			v = id
+			value = id
 		case Protocol:
-			p, ok := v.(uint8)
+			p, ok := value.(uint8)
 			if !ok {
-				return nil, fmt.Errorf("protocol value %T", v)
+				return nil, fmt.Errorf("protocol value %T", value)
 			}
-			v = wf.IPProto(p)
+			value = wf.IPProto(p)
 		}
-		out = append(out, &wf.Match{Field: field, Op: wf.MatchTypeEqual, Value: v})
+		out = append(out, &wf.Match{Field: field, Op: wf.MatchTypeEqual, Value: value})
 	}
 	return out, nil
 }
 
-func wfField(f Field) (wf.FieldID, error) {
-	switch f {
+func wfField(field Field) (wf.FieldID, error) {
+	switch field {
 	case RemoteAddress:
 		return wf.FieldIPRemoteAddress, nil
 	case LocalInterface:
@@ -213,7 +213,7 @@ func wfField(f Field) (wf.FieldID, error) {
 	case RemotePort:
 		return wf.FieldIPRemotePort, nil
 	}
-	return wf.FieldID{}, fmt.Errorf("unknown field %v", f)
+	return wf.FieldID{}, fmt.Errorf("unknown field %v", field)
 }
 
 // tunLUID finds an adapter by its connection name.

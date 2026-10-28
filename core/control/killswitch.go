@@ -9,6 +9,7 @@ import (
 
 	"github.com/NoobforAl/omnitun/core/engine"
 	"github.com/NoobforAl/omnitun/core/killswitch"
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/singbox"
 )
 
@@ -44,8 +45,8 @@ type ksState struct {
 
 // ksPrepare checks a start request that asks for the kill switch and, if
 // asked, raises the early block. It runs before the engine starts.
-func (s *Server) ksPrepare(p StartParams, opts *singbox.Options) error {
-	if !p.KillSwitch {
+func (s *Server) ksPrepare(params StartParams, opts *singbox.Options) error {
+	if !params.KillSwitch {
 		s.ksStop()
 		return nil
 	}
@@ -58,10 +59,10 @@ func (s *Server) ksPrepare(p StartParams, opts *singbox.Options) error {
 	if opts.Mode != singbox.ModeTUN {
 		return fail("it needs VPN (TUN) mode")
 	}
-	if p.BypassOnly {
+	if params.BypassOnly {
 		return fail("it cannot be combined with \"only these use the VPN\"")
 	}
-	if err := killswitch.CheckProfiles(p.Profiles); err != nil {
+	if err := killswitch.CheckProfiles(params.Profiles); err != nil {
 		return fail("%v", err)
 	}
 	resolve := s.cfg.KillSwitchResolver
@@ -70,7 +71,7 @@ func (s *Server) ksPrepare(p StartParams, opts *singbox.Options) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	servers, err := killswitch.ServerAddrs(ctx, p.Profiles, resolve)
+	servers, err := killswitch.ServerAddrs(ctx, params.Profiles, resolve)
 	if err != nil {
 		return fail("%v", err)
 	}
@@ -82,7 +83,7 @@ func (s *Server) ksPrepare(p StartParams, opts *singbox.Options) error {
 		ServerAddrs: servers,
 		Apps:        []string{self},
 		// Local networks stay out of the tunnel unless the user asked to send them through it.
-		AllowLAN: !p.ProxyPrivate,
+		AllowLAN: !params.ProxyPrivate,
 	}
 	if opts.Bypass != nil {
 		// Ranges the user sends around the VPN go straight out of the machine.
@@ -91,7 +92,7 @@ func (s *Server) ksPrepare(p StartParams, opts *singbox.Options) error {
 	if err := base.Validate(); err != nil {
 		return fail("%v", err)
 	}
-	opts.KillSwitch, opts.KillSwitchEarly = true, p.KillSwitchEarly
+	opts.KillSwitch, opts.KillSwitchEarly = true, params.KillSwitchEarly
 	if runtime.GOOS == "windows" {
 		opts.TunName = singbox.WindowsTunName
 	}
@@ -102,12 +103,12 @@ func (s *Server) ksPrepare(p StartParams, opts *singbox.Options) error {
 	s.ks.gen++
 	s.ks.active, s.ks.running, s.ks.base = true, false, base
 	s.ks.mu.Unlock()
-	if p.KillSwitchEarly {
+	if params.KillSwitchEarly {
 		if err := s.cfg.KillSwitch.Arm(base, ""); err != nil {
 			s.ksStopLocked()
 			return fail("%v", err)
 		}
-		s.cfg.Logf("kill switch: blocking until the tunnel is up")
+		s.logf(logrec.LevelInfo, "kill switch: blocking until the tunnel is up")
 	}
 	return nil
 }
@@ -163,12 +164,12 @@ func (s *Server) ksRaise(gen uint64, base killswitch.Options) {
 	err := s.cfg.KillSwitch.Arm(base, singbox.WindowsTunName)
 	if err == nil {
 		s.ks.op.Unlock()
-		s.cfg.Logf("kill switch: only the tunnel (and the VPN servers) can reach the network")
+		s.logf(logrec.LevelInfo, "kill switch: only the tunnel (and the VPN servers) can reach the network")
 		return
 	}
 	s.ksLiftLocked(gen)
 	s.ks.op.Unlock()
-	s.cfg.Logf("kill switch: cannot raise the block, stopping the tunnel: %v", err)
+	s.logf(logrec.LevelError, "kill switch: cannot raise the block, stopping the tunnel: %v", err)
 	s.engine.Stop()
 	s.engine.FailAt(engine.StageTunnelUp, fmt.Errorf("kill switch: %w", err))
 }
@@ -191,7 +192,7 @@ func (s *Server) ksLiftLocked(gen uint64) {
 	s.ks.gen++
 	s.ks.mu.Unlock()
 	if err := s.cfg.KillSwitch.Disarm(); err != nil {
-		s.cfg.Logf("kill switch: cannot remove the block: %v", err)
+		s.logf(logrec.LevelError, "kill switch: cannot remove the block: %v", err)
 	}
 }
 
@@ -212,6 +213,6 @@ func (s *Server) ksStopLocked() {
 	s.ks.gen++
 	s.ks.mu.Unlock()
 	if err := s.cfg.KillSwitch.Disarm(); err != nil {
-		s.cfg.Logf("kill switch: cannot remove the block: %v", err)
+		s.logf(logrec.LevelError, "kill switch: cannot remove the block: %v", err)
 	}
 }

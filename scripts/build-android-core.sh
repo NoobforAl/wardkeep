@@ -7,6 +7,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 TARGETS="${1:-android/arm64,android/arm,android/amd64}"
+# OMNITUN_BUILD_MODE=release (the release workflow) builds with release log levels (core/buildinfo).
+LDFLAGS="-checklinkname=0 -s -w"
+if [[ "${OMNITUN_BUILD_MODE:-}" == "release" ]]; then
+  LDFLAGS="$LDFLAGS -X github.com/NoobforAl/omnitun/core/buildinfo.Mode=release"
+fi
 TAGS="${TAGS:-with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_naive_outbound,badlinkname,tfogo_checklinkname0}"
 
 if [[ -z "${ANDROID_HOME:-}" ]]; then
@@ -26,7 +31,7 @@ export PATH="$BIN:$PATH"
 
 mkdir -p app/android/app/libs
 gomobile bind -target "$TARGETS" -androidapi 29 -javapkg dev.omnitun -libname omnitun \
-  -trimpath -ldflags '-checklinkname=0 -s -w' -tags "$TAGS" \
+  -trimpath -ldflags "$LDFLAGS" -tags "$TAGS" \
   -o app/android/app/libs/omnitun-core.aar ./core/mobile
 rm -rf "$BIN"
 ls -lh app/android/app/libs/omnitun-core.aar

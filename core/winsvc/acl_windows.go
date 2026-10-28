@@ -64,21 +64,21 @@ func secureDir(path, sddl string, trusted []string) error {
 		return fmt.Errorf("create %s: %w", path, err)
 	}
 
-	h, err := windows.CreateFile(p16, windows.READ_CONTROL|windows.WRITE_DAC|windows.WRITE_OWNER,
+	handle, err := windows.CreateFile(p16, windows.READ_CONTROL|windows.WRITE_DAC|windows.WRITE_OWNER,
 		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil, windows.OPEN_EXISTING,
 		windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
 	if err != nil {
 		return fmt.Errorf("open %s: %w", path, err)
 	}
-	defer windows.CloseHandle(h)
+	defer windows.CloseHandle(handle)
 	var info windows.ByHandleFileInformation
-	if err := windows.GetFileInformationByHandle(h, &info); err != nil {
+	if err := windows.GetFileInformationByHandle(handle, &info); err != nil {
 		return err
 	}
 	if err := checkDirAttributes(path, info.FileAttributes); err != nil {
 		return err
 	}
-	cur, err := windows.GetSecurityInfo(h, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION)
+	cur, err := windows.GetSecurityInfo(handle, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func secureDir(path, sddl string, trusted []string) error {
 	if !slices.Contains(trusted, curOwner.String()) {
 		return fmt.Errorf("%s exists and is owned by %s, not by SYSTEM or Administrators; delete it and try again", path, curOwner)
 	}
-	return windows.SetSecurityInfo(h, windows.SE_FILE_OBJECT,
+	return windows.SetSecurityInfo(handle, windows.SE_FILE_OBJECT,
 		windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION|windows.PROTECTED_DACL_SECURITY_INFORMATION,
 		owner, nil, dacl, nil)
 }
@@ -117,7 +117,7 @@ func SecureRoot(l Layout) error {
 // PrepareDirs creates the service's directories with their owner and access
 // lists. The order matters: a directory is locked before anything secret is
 // put in it, and the parent before its children.
-func PrepareDirs(l Layout, cfg Config) error {
+func PrepareDirs(layout Layout, cfg Config) error {
 	if err := cfg.Validate(); err != nil {
 		return err
 	}
@@ -125,20 +125,20 @@ func PrepareDirs(l Layout, cfg Config) error {
 	if err != nil {
 		return err
 	}
-	if err := SecureRoot(l); err != nil {
+	if err := SecureRoot(layout); err != nil {
 		return err
 	}
-	for _, d := range []struct{ path, sddl string }{
-		{l.DataDir, RootSDDL},
-		{l.ControlDir, controlSDDL},
+	for _, dir := range []struct{ path, sddl string }{
+		{layout.DataDir, RootSDDL},
+		{layout.ControlDir, controlSDDL},
 	} {
-		if err := SecureDir(d.path, d.sddl); err != nil {
-			return fmt.Errorf("protect %s: %w", d.path, err)
+		if err := SecureDir(dir.path, dir.sddl); err != nil {
+			return fmt.Errorf("protect %s: %w", dir.path, err)
 		}
 	}
 	// Whatever is left in the control directory is stale (a crashed run) or
 	// planted; only the service may write here, so removing it is safe.
-	for _, f := range []string{l.ControlFile, l.ControlFile + ".tmp"} {
+	for _, f := range []string{layout.ControlFile, layout.ControlFile + ".tmp"} {
 		if err := os.Remove(f); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}

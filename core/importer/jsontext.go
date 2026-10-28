@@ -76,38 +76,38 @@ func stripFences(text string) string {
 // comments and a comma before a closing bracket. It replaces with spaces and keeps the line breaks, so every
 // position in the result is the same as in the text.
 func relaxJSON(text string) string {
-	b := []byte(text)
+	buf := []byte(text)
 	inString, escaped := false, false
-	for i := 0; i < len(b); i++ {
-		c := b[i]
+	for i := 0; i < len(buf); i++ {
+		ch := buf[i]
 		if inString {
 			switch {
 			case escaped:
 				escaped = false
-			case c == '\\':
+			case ch == '\\':
 				escaped = true
-			case c == '"':
+			case ch == '"':
 				inString = false
 			}
 			continue
 		}
 		switch {
-		case c == '"':
+		case ch == '"':
 			inString = true
-		case c == '/' && i+1 < len(b) && b[i+1] == '/':
-			for ; i < len(b) && b[i] != '\n'; i++ {
-				b[i] = ' '
+		case ch == '/' && i+1 < len(buf) && buf[i+1] == '/':
+			for ; i < len(buf) && buf[i] != '\n'; i++ {
+				buf[i] = ' '
 			}
 			i--
-		case c == '/' && i+1 < len(b) && b[i+1] == '*':
-			end := strings.Index(string(b[i+2:]), "*/")
-			stop := len(b)
+		case ch == '/' && i+1 < len(buf) && buf[i+1] == '*':
+			end := strings.Index(string(buf[i+2:]), "*/")
+			stop := len(buf)
 			if end >= 0 {
 				stop = i + 2 + end + 2
 			}
 			for ; i < stop; i++ {
-				if b[i] != '\n' {
-					b[i] = ' '
+				if buf[i] != '\n' {
+					buf[i] = ' '
 				}
 			}
 			i--
@@ -115,35 +115,35 @@ func relaxJSON(text string) string {
 	}
 	// A trailing comma: the next thing after it that is not white space closes an object or an array.
 	inString, escaped = false, false
-	for i := range b {
-		c := b[i]
+	for i := range buf {
+		ch := buf[i]
 		if inString {
 			switch {
 			case escaped:
 				escaped = false
-			case c == '\\':
+			case ch == '\\':
 				escaped = true
-			case c == '"':
+			case ch == '"':
 				inString = false
 			}
 			continue
 		}
-		if c == '"' {
+		if ch == '"' {
 			inString = true
 			continue
 		}
-		if c != ',' {
+		if ch != ',' {
 			continue
 		}
 		j := i + 1
-		for j < len(b) && (b[j] == ' ' || b[j] == '\t' || b[j] == '\r' || b[j] == '\n') {
+		for j < len(buf) && (buf[j] == ' ' || buf[j] == '\t' || buf[j] == '\r' || buf[j] == '\n') {
 			j++
 		}
-		if j < len(b) && (b[j] == '}' || b[j] == ']') {
-			b[i] = ' '
+		if j < len(buf) && (buf[j] == '}' || buf[j] == ']') {
+			buf[i] = ' '
 		}
 	}
-	return string(b)
+	return string(buf)
 }
 
 // jsonSyntax returns nil when text is valid JSON, and a *JSONError saying where it is not.
@@ -213,26 +213,26 @@ func importJSONList(list []any) (*Result, error) {
 		label := "#" + strconv.Itoa(i+1)
 		switch v := item.(type) {
 		case string:
-			r, err := Import(v)
-			if r != nil {
-				res.Profiles = append(res.Profiles, r.Profiles...)
-				for _, e := range r.Errors {
+			result, err := Import(v)
+			if result != nil {
+				res.Profiles = append(res.Profiles, result.Profiles...)
+				for _, e := range result.Errors {
 					res.Errors = append(res.Errors, label+": "+e)
 				}
 			}
-			if err != nil && (r == nil || len(r.Errors) == 0) {
+			if err != nil && (result == nil || len(result.Errors) == 0) {
 				res.Errors = append(res.Errors, label+": "+err.Error())
 			}
 		case map[string]any:
 			raw, _ := json.Marshal(v)
-			r, err := importJSONObject(string(raw))
-			if r != nil {
-				res.Profiles = append(res.Profiles, r.Profiles...)
-				for _, e := range r.Errors {
+			result, err := importJSONObject(string(raw))
+			if result != nil {
+				res.Profiles = append(res.Profiles, result.Profiles...)
+				for _, e := range result.Errors {
 					res.Errors = append(res.Errors, label+": "+e)
 				}
 			}
-			if err != nil && (r == nil || len(r.Errors) == 0) {
+			if err != nil && (result == nil || len(result.Errors) == 0) {
 				res.Errors = append(res.Errors, label+": "+err.Error())
 			}
 		default:
@@ -279,19 +279,19 @@ func finishJSON(text string, res *Result, err error) (*Result, error) {
 // wrapBareOutbound makes {"outbounds":[…]} of a lone outbound, which is what people copy out of a config: an
 // Xray one ({"protocol":"vless","settings":…}) or a sing-box one ({"type":"vless","server":…}).
 func wrapBareOutbound(text string) (string, bool) {
-	var m map[string]json.RawMessage
-	if json.Unmarshal([]byte(text), &m) != nil {
+	var fields map[string]json.RawMessage
+	if json.Unmarshal([]byte(text), &fields) != nil {
 		return "", false
 	}
 	for _, k := range []string{"outbounds", "endpoints", "inbounds", "servers", "extra_links"} {
-		if _, ok := m[k]; ok {
+		if _, ok := fields[k]; ok {
 			return "", false
 		}
 	}
 	var protocol, typ string
-	_ = json.Unmarshal(m["protocol"], &protocol)
-	_ = json.Unmarshal(m["type"], &typ)
-	if protocol == "" && !(typ != "" && (m["server"] != nil || m["peers"] != nil || m["server_port"] != nil)) {
+	_ = json.Unmarshal(fields["protocol"], &protocol)
+	_ = json.Unmarshal(fields["type"], &typ)
+	if protocol == "" && !(typ != "" && (fields["server"] != nil || fields["peers"] != nil || fields["server_port"] != nil)) {
 		return "", false
 	}
 	return `{"outbounds":[` + text + `]}`, true

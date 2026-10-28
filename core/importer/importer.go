@@ -55,18 +55,18 @@ func Import(text string) (*Result, error) {
 		return ImportClash(text)
 	}
 	if looksLikeOVPN(text) {
-		p, err := ParseOVPN(text)
+		prof, err := ParseOVPN(text)
 		if err != nil {
 			return nil, fmt.Errorf("openvpn: %w", err)
 		}
-		return &Result{Profiles: []*profile.Profile{p}}, nil
+		return &Result{Profiles: []*profile.Profile{prof}}, nil
 	}
 	if looksLikeWireGuardConf(text) {
-		p, err := ParseWireGuardConf(text)
+		prof, err := ParseWireGuardConf(text)
 		if err != nil {
 			return nil, err
 		}
-		return &Result{Profiles: []*profile.Profile{p}}, nil
+		return &Result{Profiles: []*profile.Profile{prof}}, nil
 	}
 	if p := parseBridgeLines(text); p != nil {
 		return &Result{Profiles: []*profile.Profile{p}}, nil
@@ -82,12 +82,12 @@ func Import(text string) (*Result, error) {
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
 			continue
 		}
-		p, err := ParseLink(line)
+		prof, err := ParseLink(line)
 		if err != nil {
 			res.Errors = append(res.Errors, fmt.Sprintf("%s: %v", truncate(line, 48), err))
 			continue
 		}
-		res.Profiles = append(res.Profiles, p)
+		res.Profiles = append(res.Profiles, prof)
 	}
 	if len(res.Profiles) == 0 {
 		if len(res.Errors) > 0 {
@@ -105,68 +105,68 @@ func ParseLink(link string) (*profile.Profile, error) {
 		return nil, ErrUnsupported
 	}
 	var (
-		p   *profile.Profile
-		err error
+		prof *profile.Profile
+		err  error
 	)
 	switch strings.ToLower(scheme) {
 	case "vless":
-		p, err = parseVLESS(link)
+		prof, err = parseVLESS(link)
 	case "vmess":
-		p, err = parseVMess(link)
+		prof, err = parseVMess(link)
 	case "trojan":
-		p, err = parseTrojan(link)
+		prof, err = parseTrojan(link)
 	case "ss":
-		p, err = parseShadowsocks(link)
+		prof, err = parseShadowsocks(link)
 	case "hysteria2", "hy2":
-		p, err = parseHysteria2(link)
+		prof, err = parseHysteria2(link)
 	case "tuic":
-		p, err = parseTUIC(link)
+		prof, err = parseTUIC(link)
 	case "wireguard", "wg", "awg":
-		p, err = parseWireGuardLink(link)
+		prof, err = parseWireGuardLink(link)
 	case "hysteria", "hy":
-		p, err = parseHysteria(link)
+		prof, err = parseHysteria(link)
 	case "anytls":
-		p, err = parseAnyTLS(link)
+		prof, err = parseAnyTLS(link)
 	case "ssh":
-		p, err = parseSSH(link)
+		prof, err = parseSSH(link)
 	case "naive+https", "naive+quic", "naive":
-		p, err = parseNaive(link)
+		prof, err = parseNaive(link)
 	case "ikev2":
-		p, err = parseIKEv2(link)
+		prof, err = parseIKEv2(link)
 	case "sstp":
-		p, err = parseSSTP(link)
+		prof, err = parseSSTP(link)
 	case "tor":
-		p, err = parseTorLink(link)
+		prof, err = parseTorLink(link)
 	case "tailscale", "headscale":
-		p, err = parseTailscaleLink(link)
+		prof, err = parseTailscaleLink(link)
 	case "dnstt":
-		p, err = parseDNSTT(link)
+		prof, err = parseDNSTT(link)
 	default:
 		return nil, &UnsupportedError{Scheme: scheme}
 	}
 	if err != nil {
 		return nil, err
 	}
-	p.Source = link
-	if err := p.Validate(); err != nil {
+	prof.Source = link
+	if err := prof.Validate(); err != nil {
 		return nil, err
 	}
-	p.EnsureID()
-	return p, nil
+	prof.EnsureID()
+	return prof, nil
 }
 
 // decodeBase64 accepts standard and URL alphabets, padded or not.
-func decodeBase64(s string) (string, bool) {
-	s = strings.Map(func(r rune) rune {
+func decodeBase64(text string) (string, bool) {
+	text = strings.Map(func(r rune) rune {
 		if r == '\n' || r == '\r' || r == ' ' || r == '\t' {
 			return -1
 		}
 		return r
-	}, s)
+	}, text)
 	for _, enc := range []*base64.Encoding{
 		base64.StdEncoding, base64.RawStdEncoding, base64.URLEncoding, base64.RawURLEncoding,
 	} {
-		if b, err := enc.DecodeString(s); err == nil {
+		if b, err := enc.DecodeString(text); err == nil {
 			return string(b), true
 		}
 	}

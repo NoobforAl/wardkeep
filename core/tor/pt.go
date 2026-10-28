@@ -40,29 +40,29 @@ func StartTransports(stateDir string, names []string, dial DialFunc) (*Transport
 	if dial == nil {
 		dial = net.Dial
 	}
-	t := &Transports{Addrs: map[string]string{}}
+	pts := &Transports{Addrs: map[string]string{}}
 	for _, name := range names {
-		if _, done := t.Addrs[name]; done {
+		if _, done := pts.Addrs[name]; done {
 			continue
 		}
 		tr := transports.Get(name)
 		if tr == nil {
-			t.Close()
+			pts.Close()
 			return nil, fmt.Errorf("unsupported bridge transport %q", name)
 		}
 		factory, err := tr.ClientFactory(stateDir)
 		if err != nil {
-			t.Close()
+			pts.Close()
 			return nil, fmt.Errorf("%s: %w", name, err)
 		}
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
-			t.Close()
+			pts.Close()
 			return nil, err
 		}
-		t.listeners = append(t.listeners, ln)
-		t.Addrs[name] = ln.Addr().String()
-		t.wg.Go(func() {
+		pts.listeners = append(pts.listeners, ln)
+		pts.Addrs[name] = ln.Addr().String()
+		pts.wg.Go(func() {
 			for {
 				conn, err := ln.Accept()
 				if err != nil {
@@ -72,21 +72,21 @@ func StartTransports(stateDir string, names []string, dial DialFunc) (*Transport
 			}
 		})
 	}
-	return t, nil
+	return pts, nil
 }
 
-func handle(f base.ClientFactory, conn net.Conn, dial DialFunc) {
+func handle(factory base.ClientFactory, conn net.Conn, dial DialFunc) {
 	defer conn.Close()
 	req, err := socks5.Handshake(conn)
 	if err != nil {
 		return
 	}
-	args, err := f.ParseArgs(&req.Args)
+	args, err := factory.ParseArgs(&req.Args)
 	if err != nil {
 		_ = req.Reply(socks5.ReplyGeneralFailure)
 		return
 	}
-	remote, err := f.Dial("tcp", req.Target, dial, args)
+	remote, err := factory.Dial("tcp", req.Target, dial, args)
 	if err != nil {
 		_ = req.Reply(socks5.ErrorToReplyCode(err))
 		return

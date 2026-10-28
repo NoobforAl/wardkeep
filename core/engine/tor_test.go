@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
 	"github.com/NoobforAl/omnitun/core/tor"
@@ -54,7 +55,7 @@ func (e errString) Error() string { return string(e) }
 // message the user can act on.
 func TestTorBridgeWithoutFingerprintIsReported(t *testing.T) {
 	var logs []string
-	e := New(Config{DataDir: tempDir(t), OnLog: func(level, msg string) { logs = append(logs, level+" "+msg) }})
+	e := New(Config{DataDir: tempDir(t), OnLog: func(rec logrec.Record) { logs = append(logs, rec.Level.String()+" "+rec.Msg) }})
 	p := &profile.Profile{Name: "Tor", Protocol: profile.Tor, Tor: &profile.TorOpts{
 		Bridges: []string{"meek_lite 192.0.2.20:80 url=https://x.example front=y"},
 	}}

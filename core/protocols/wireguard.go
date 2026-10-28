@@ -33,14 +33,14 @@ func (wireguard) Inbounds(env Env, port int, accts []Account) Config {
 	if env.IPv6 {
 		addresses = append(addresses, wgServerAddress6)
 	}
-	for _, a := range accts {
-		allowed := []string{a.WGAddress}
+	for _, acct := range accts {
+		allowed := []string{acct.WGAddress}
 		if env.IPv6 {
-			if a6, err := WGAddress6(a.WGAddress); err == nil {
+			if a6, err := WGAddress6(acct.WGAddress); err == nil {
 				allowed = append(allowed, a6)
 			}
 		}
-		peers = append(peers, obj{"public_key": a.WGPublicKey, "allowed_ips": allowed})
+		peers = append(peers, obj{"public_key": acct.WGPublicKey, "allowed_ips": allowed})
 	}
 	return Config{Endpoints: []obj{{
 		"type": "wireguard", "tag": "wireguard", "system": false, "name": "wg-server", "mtu": wireguardMTU,
@@ -49,13 +49,13 @@ func (wireguard) Inbounds(env Env, port int, accts []Account) Config {
 	}}}
 }
 
-func (w wireguard) Profile(env Env, port int, u Account) (*profile.Profile, error) {
-	if u.WGPrivateKey == "" || u.WGAddress == "" {
-		return nil, fmt.Errorf("user %s has no WireGuard key or address", u.Name)
+func (w wireguard) Profile(env Env, port int, acct Account) (*profile.Profile, error) {
+	if acct.WGPrivateKey == "" || acct.WGAddress == "" {
+		return nil, fmt.Errorf("user %s has no WireGuard key or address", acct.Name)
 	}
-	address := []string{u.WGAddress}
+	address := []string{acct.WGAddress}
 	if env.IPv6 {
-		a6, err := WGAddress6(u.WGAddress)
+		a6, err := WGAddress6(acct.WGAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +64,7 @@ func (w wireguard) Profile(env Env, port int, u Account) (*profile.Profile, erro
 	return &profile.Profile{
 		Name: profileName(env, w.Spec()), Protocol: profile.WireGuard, Server: env.Host, Port: port,
 		WireGuard: &profile.WG{
-			PrivateKey: u.WGPrivateKey, PeerPublicKey: env.WireGuard.PublicKey,
+			PrivateKey: acct.WGPrivateKey, PeerPublicKey: env.WireGuard.PublicKey,
 			Address: address, AllowedIPs: []string{"0.0.0.0/0", "::/0"},
 			DNS: []string{"1.1.1.1", "8.8.8.8"}, MTU: wireguardMTU, Keepalive: 25,
 		},
@@ -73,18 +73,18 @@ func (w wireguard) Profile(env Env, port int, u Account) (*profile.Profile, erro
 
 // File is the user's wg-quick style configuration, importable by the official
 // WireGuard apps.
-func (w wireguard) File(env Env, port int, u Account) (string, string, error) {
-	p, err := w.Profile(env, port, u)
+func (w wireguard) File(env Env, port int, acct Account) (string, string, error) {
+	prof, err := w.Profile(env, port, acct)
 	if err != nil {
 		return "", "", err
 	}
-	g := p.WireGuard
-	var b strings.Builder
-	fmt.Fprintf(&b, "# %s (WireGuard) for %s\n[Interface]\nPrivateKey = %s\nAddress = %s\nDNS = %s\nMTU = %d\n\n",
-		env.Name, u.Name, g.PrivateKey, strings.Join(g.Address, ", "), strings.Join(g.DNS, ", "), g.MTU)
-	fmt.Fprintf(&b, "[Peer]\nPublicKey = %s\nAllowedIPs = %s\nEndpoint = %s:%d\nPersistentKeepalive = %d\n",
-		g.PeerPublicKey, strings.Join(g.AllowedIPs, ", "), endpointHost(env.Host), port, g.Keepalive)
-	return env.Name + "-wireguard.conf", b.String(), nil
+	wgOpts := prof.WireGuard
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "# %s (WireGuard) for %s\n[Interface]\nPrivateKey = %s\nAddress = %s\nDNS = %s\nMTU = %d\n\n",
+		env.Name, acct.Name, wgOpts.PrivateKey, strings.Join(wgOpts.Address, ", "), strings.Join(wgOpts.DNS, ", "), wgOpts.MTU)
+	fmt.Fprintf(&sb, "[Peer]\nPublicKey = %s\nAllowedIPs = %s\nEndpoint = %s:%d\nPersistentKeepalive = %d\n",
+		wgOpts.PeerPublicKey, strings.Join(wgOpts.AllowedIPs, ", "), endpointHost(env.Host), port, wgOpts.Keepalive)
+	return env.Name + "-wireguard.conf", sb.String(), nil
 }
 
 // endpointHost brackets an IPv6 literal.

@@ -15,12 +15,12 @@ const fallbackDNS = "1.1.1.1"
 // name (AmneziaWG, SSTP and IKEv2 servers, the connectivity check, ...) would fail with
 // "connection refused". This one asks the resolvers of the network the phone is online
 // through, over sockets that bypass the VPN.
-func installResolver(w *platformWrapper) {
+func installResolver(wrapper *platformWrapper) {
 	var next atomic.Uint32
 	dialer := net.Dialer{
 		Control: func(_, _ string, c syscall.RawConn) error {
 			var protectErr error
-			if err := c.Control(func(fd uintptr) { protectErr = w.p.Protect(int32(fd)) }); err != nil {
+			if err := c.Control(func(fd uintptr) { protectErr = wrapper.p.Protect(int32(fd)) }); err != nil {
 				return err
 			}
 			return protectErr
@@ -29,7 +29,7 @@ func installResolver(w *platformWrapper) {
 	net.DefaultResolver = &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
-			servers := w.SystemDNS()
+			servers := wrapper.SystemDNS()
 			if len(servers) == 0 {
 				servers = []string{fallbackDNS}
 			}

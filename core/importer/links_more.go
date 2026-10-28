@@ -12,168 +12,168 @@ import (
 
 // hysteria://host:port?protocol=udp&auth=..&peer=sni&insecure=1&upmbps=10&downmbps=50&alpn=hysteria&obfsParam=..#name
 func parseHysteria(link string) (*profile.Profile, error) {
-	u, host, port, err := parseURL(link)
+	uri, host, port, err := parseURL(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	p := &profile.Profile{
-		Name:     fragmentName(u),
+	query := uri.Query()
+	prof := &profile.Profile{
+		Name:     fragmentName(uri),
 		Protocol: profile.Hysteria,
 		Server:   host,
 		Port:     port,
-		Password: firstNonEmpty(q.Get("auth"), q.Get("auth_str"), u.User.Username()),
+		Password: firstNonEmpty(query.Get("auth"), query.Get("auth_str"), uri.User.Username()),
 		TLS: &profile.TLS{
 			Enabled:    true,
-			ServerName: firstNonEmpty(q.Get("peer"), q.Get("sni")),
-			Insecure:   truthy(q.Get("insecure")) || truthy(q.Get("allowInsecure")),
-			ALPN:       splitList(q.Get("alpn")),
+			ServerName: firstNonEmpty(query.Get("peer"), query.Get("sni")),
+			Insecure:   truthy(query.Get("insecure")) || truthy(query.Get("allowInsecure")),
+			ALPN:       splitList(query.Get("alpn")),
 		},
 	}
-	h := &profile.Hy2{Obfs: firstNonEmpty(q.Get("obfsParam"), q.Get("obfs-password"))}
-	if q.Get("obfs") != "" && q.Get("obfs") != "xplus" && h.Obfs == "" {
-		h.Obfs = q.Get("obfs")
+	hy2 := &profile.Hy2{Obfs: firstNonEmpty(query.Get("obfsParam"), query.Get("obfs-password"))}
+	if query.Get("obfs") != "" && query.Get("obfs") != "xplus" && hy2.Obfs == "" {
+		hy2.Obfs = query.Get("obfs")
 	}
-	h.UpMbps, _ = strconv.Atoi(firstNonEmpty(q.Get("upmbps"), q.Get("up")))
-	h.DownMbps, _ = strconv.Atoi(firstNonEmpty(q.Get("downmbps"), q.Get("down")))
-	p.Hysteria2 = h
-	return p, nil
+	hy2.UpMbps, _ = strconv.Atoi(firstNonEmpty(query.Get("upmbps"), query.Get("up")))
+	hy2.DownMbps, _ = strconv.Atoi(firstNonEmpty(query.Get("downmbps"), query.Get("down")))
+	prof.Hysteria2 = hy2
+	return prof, nil
 }
 
 // anytls://password@host:port/?sni=..&insecure=1&fp=chrome#name
 func parseAnyTLS(link string) (*profile.Profile, error) {
-	u, host, port, err := parseURL(link)
+	uri, host, port, err := parseURL(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	password, _ := url.PathUnescape(u.User.Username())
-	t := &profile.TLS{
+	query := uri.Query()
+	password, _ := url.PathUnescape(uri.User.Username())
+	tlsOpts := &profile.TLS{
 		Enabled:     true,
-		ServerName:  firstNonEmpty(q.Get("sni"), q.Get("peer")),
-		Insecure:    truthy(q.Get("insecure")) || truthy(q.Get("allowInsecure")),
-		ALPN:        splitList(q.Get("alpn")),
-		Fingerprint: q.Get("fp"),
+		ServerName:  firstNonEmpty(query.Get("sni"), query.Get("peer")),
+		Insecure:    truthy(query.Get("insecure")) || truthy(query.Get("allowInsecure")),
+		ALPN:        splitList(query.Get("alpn")),
+		Fingerprint: query.Get("fp"),
 	}
-	tlsExtrasFrom(t, q.Get)
+	tlsExtrasFrom(tlsOpts, query.Get)
 	return &profile.Profile{
-		Name:     fragmentName(u),
+		Name:     fragmentName(uri),
 		Protocol: profile.AnyTLS,
 		Server:   host,
 		Port:     port,
 		Password: password,
-		TLS:      t,
+		TLS:      tlsOpts,
 	}, nil
 }
 
 // ssh://user:password@host:port?pk=<PEM private key>&pkp=<passphrase>&hk=<host key>,<host key>#name
 // (the format used by sing-box based clients such as Hiddify).
 func parseSSH(link string) (*profile.Profile, error) {
-	u, host, port, err := parseURL(link)
+	uri, host, port, err := parseURL(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	password, _ := u.User.Password()
-	o := &profile.SSHOpts{
-		PrivateKey:           firstNonEmpty(q.Get("pk"), q.Get("private_key")),
-		PrivateKeyPassphrase: firstNonEmpty(q.Get("pkp"), q.Get("private_key_passphrase")),
-		HostKey:              splitList(firstNonEmpty(q.Get("hk"), q.Get("host_key"))),
-		ClientVersion:        q.Get("client_version"),
+	query := uri.Query()
+	password, _ := uri.User.Password()
+	opts := &profile.SSHOpts{
+		PrivateKey:           firstNonEmpty(query.Get("pk"), query.Get("private_key")),
+		PrivateKeyPassphrase: firstNonEmpty(query.Get("pkp"), query.Get("private_key_passphrase")),
+		HostKey:              splitList(firstNonEmpty(query.Get("hk"), query.Get("host_key"))),
+		ClientVersion:        query.Get("client_version"),
 	}
-	p := &profile.Profile{
-		Name:     fragmentName(u),
+	prof := &profile.Profile{
+		Name:     fragmentName(uri),
 		Protocol: profile.SSH,
 		Server:   host,
 		Port:     port,
-		Username: u.User.Username(),
+		Username: uri.User.Username(),
 		Password: password,
 	}
-	if o.PrivateKey != "" || len(o.HostKey) > 0 || o.ClientVersion != "" {
-		p.SSH = o
+	if opts.PrivateKey != "" || len(opts.HostKey) > 0 || opts.ClientVersion != "" {
+		prof.SSH = opts
 	}
-	return p, nil
+	return prof, nil
 }
 
 // naive+https://user:pass@host:port/?extra-headers=K%3AV%0D%0AK2%3AV2#name  (naive+quic:// for HTTP/3)
 func parseNaive(link string) (*profile.Profile, error) {
 	quic := strings.HasPrefix(strings.ToLower(link), "naive+quic://")
 	_, rest, _ := strings.Cut(link, "://")
-	u, host, port, err := parseURL("https://" + rest)
+	uri, host, port, err := parseURL("https://" + rest)
 	if err != nil {
 		if !strings.Contains(err.Error(), "invalid port") {
 			return nil, err
 		}
 		// The port is optional (default 443).
-		u, err = url.Parse("https://" + rest)
+		uri, err = url.Parse("https://" + rest)
 		if err != nil {
 			return nil, err
 		}
-		host, port = u.Hostname(), 443
+		host, port = uri.Hostname(), 443
 	}
-	password, _ := u.User.Password()
-	p := &profile.Profile{
-		Name:     fragmentName(u),
+	password, _ := uri.User.Password()
+	prof := &profile.Profile{
+		Name:     fragmentName(uri),
 		Protocol: profile.Naive,
 		Server:   host,
 		Port:     port,
-		Username: u.User.Username(),
+		Username: uri.User.Username(),
 		Password: password,
-		TLS:      &profile.TLS{Enabled: true, ServerName: u.Query().Get("sni")},
+		TLS:      &profile.TLS{Enabled: true, ServerName: uri.Query().Get("sni")},
 	}
-	o := &profile.NaiveOpts{QUIC: quic}
-	if h := u.Query().Get("extra-headers"); h != "" {
-		o.ExtraHeaders = map[string]string{}
+	opts := &profile.NaiveOpts{QUIC: quic}
+	if h := uri.Query().Get("extra-headers"); h != "" {
+		opts.ExtraHeaders = map[string]string{}
 		for line := range strings.SplitSeq(strings.ReplaceAll(h, "\r\n", "\n"), "\n") {
 			if k, v, ok := strings.Cut(line, ":"); ok {
-				o.ExtraHeaders[strings.TrimSpace(k)] = strings.TrimSpace(v)
+				opts.ExtraHeaders[strings.TrimSpace(k)] = strings.TrimSpace(v)
 			}
 		}
 	}
-	if o.QUIC || len(o.ExtraHeaders) > 0 {
-		p.Naive = o
+	if opts.QUIC || len(opts.ExtraHeaders) > 0 {
+		prof.Naive = opts
 	}
-	return p, nil
+	return prof, nil
 }
 
 // ikev2://[user:password@]host[:port]?auth=eap|psk|cert&psk=..&remote_id=..&local_id=..&ca=<PEM>&tcp=1&system=1#name
 // tcp=1 carries IKE/ESP over TCP (RFC 8229, port = the TCP port); system=1
 // uses the OS's IKEv2 client instead of the built-in one.
 func parseIKEv2(link string) (*profile.Profile, error) {
-	u, err := url.Parse(link)
+	uri, err := url.Parse(link)
 	if err != nil {
 		return nil, err
 	}
-	if u.Hostname() == "" {
+	if uri.Hostname() == "" {
 		return nil, errMissingServer
 	}
-	q := u.Query()
+	query := uri.Query()
 	port := 500
-	if v := u.Port(); v != "" {
+	if v := uri.Port(); v != "" {
 		if port, err = strconv.Atoi(v); err != nil {
 			return nil, err
 		}
 	}
-	password, _ := u.User.Password()
-	o := &profile.IKEv2Opts{
-		Auth:     strings.ToLower(q.Get("auth")),
-		PSK:      q.Get("psk"),
-		LocalID:  q.Get("local_id"),
-		RemoteID: q.Get("remote_id"),
-		CACert:   q.Get("ca"),
-		TCP:      truthy(q.Get("tcp")),
-		System:   truthy(q.Get("system")),
+	password, _ := uri.User.Password()
+	opts := &profile.IKEv2Opts{
+		Auth:     strings.ToLower(query.Get("auth")),
+		PSK:      query.Get("psk"),
+		LocalID:  query.Get("local_id"),
+		RemoteID: query.Get("remote_id"),
+		CACert:   query.Get("ca"),
+		TCP:      truthy(query.Get("tcp")),
+		System:   truthy(query.Get("system")),
 	}
-	o.MTU, _ = strconv.Atoi(q.Get("mtu"))
-	if o.Auth == "" {
-		o.Auth = "eap"
-		if o.PSK != "" {
-			o.Auth = "psk"
+	opts.MTU, _ = strconv.Atoi(query.Get("mtu"))
+	if opts.Auth == "" {
+		opts.Auth = "eap"
+		if opts.PSK != "" {
+			opts.Auth = "psk"
 		}
 	}
 	return &profile.Profile{
-		Name: fragmentName(u), Protocol: profile.IKEv2, Server: u.Hostname(), Port: port,
-		Username: u.User.Username(), Password: password, IKEv2: o,
+		Name: fragmentName(uri), Protocol: profile.IKEv2, Server: uri.Hostname(), Port: port,
+		Username: uri.User.Username(), Password: password, IKEv2: opts,
 	}, nil
 }
 
@@ -181,27 +181,27 @@ var errMissingServer = errors.New("missing server address")
 
 // sstp://user:password@host[:port]?insecure=1#name  (port 443 by default)
 func parseSSTP(link string) (*profile.Profile, error) {
-	u, err := url.Parse(link)
+	uri, err := url.Parse(link)
 	if err != nil {
 		return nil, err
 	}
-	if u.Hostname() == "" {
+	if uri.Hostname() == "" {
 		return nil, errMissingServer
 	}
 	port := 443
-	if v := u.Port(); v != "" {
+	if v := uri.Port(); v != "" {
 		if port, err = strconv.Atoi(v); err != nil {
 			return nil, err
 		}
 	}
-	password, _ := u.User.Password()
-	q := u.Query()
+	password, _ := uri.User.Password()
+	query := uri.Query()
 	return &profile.Profile{
-		Name: fragmentName(u), Protocol: profile.SSTP, Server: u.Hostname(), Port: port,
-		Username: u.User.Username(), Password: password,
+		Name: fragmentName(uri), Protocol: profile.SSTP, Server: uri.Hostname(), Port: port,
+		Username: uri.User.Username(), Password: password,
 		// SSTP servers mostly use self-signed certificates; MS-CHAPv2 still
 		// authenticates the server (it must know the password).
-		TLS: &profile.TLS{Enabled: true, Insecure: q.Get("insecure") != "0"},
+		TLS: &profile.TLS{Enabled: true, Insecure: query.Get("insecure") != "0"},
 	}, nil
 }
 
@@ -209,30 +209,30 @@ func parseSSTP(link string) (*profile.Profile, error) {
 // The resolver parameter may repeat or hold a comma-separated list; without one the profile starts with the usual
 // public resolvers.
 func parseDNSTT(link string) (*profile.Profile, error) {
-	u, err := url.Parse(link)
+	uri, err := url.Parse(link)
 	if err != nil {
 		return nil, fmt.Errorf("invalid link: %w", err)
 	}
-	domain := u.Hostname()
+	domain := uri.Hostname()
 	if domain == "" {
 		return nil, fmt.Errorf("missing tunnel domain")
 	}
-	key, _ := url.PathUnescape(u.User.Username())
-	q := u.Query()
+	key, _ := url.PathUnescape(uri.User.Username())
+	query := uri.Query()
 	var resolvers []string
-	for _, v := range q["resolver"] {
+	for _, v := range query["resolver"] {
 		resolvers = append(resolvers, splitList(v)...)
 	}
 	if len(resolvers) == 0 {
 		resolvers = splitList(profile.DefaultDNSTTResolvers)
 	}
 	return &profile.Profile{
-		Name:     fragmentName(u),
+		Name:     fragmentName(uri),
 		Protocol: profile.DNSTT,
 		Server:   domain,
 		Port:     53,
-		Username: q.Get("user"),
-		Password: q.Get("pass"),
+		Username: query.Get("user"),
+		Password: query.Get("pass"),
 		DNSTT:    &profile.DNSTTOpts{Domain: domain, PubKey: strings.TrimSpace(key), Resolvers: resolvers},
 	}, nil
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/NoobforAl/omnitun/core/dnscrypt"
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/singbox"
 	box "github.com/sagernet/sing-box"
 	M "github.com/sagernet/sing/common/metadata"
@@ -66,7 +67,10 @@ func (e *Engine) startDNSCryptLocked(opts *singbox.Options) error {
 		// Tor has no UDP; the same goes for outbounds that cannot carry it,
 		// where the forwarder falls back by itself.
 		TCPOnly: opts.TorSocks != "",
-		Logf:    e.logf,
+		Logf: func(level, format string, args ...any) {
+			parsed, _ := logrec.ParseLevel(level)
+			e.logWith(parsed, logFields{source: logrec.SourceDNSCrypt}, format, args...)
+		},
 	})
 	if err != nil {
 		return err
@@ -81,7 +85,7 @@ func (e *Engine) startDNSCryptLocked(opts *singbox.Options) error {
 	if fwd.Anonymized() {
 		mode = " through a relay (Anonymized DNSCrypt)"
 	}
-	e.logf("info", "DNS: DNSCrypt · %s%s, forwarder on %s", fwd.Resolver(), mode, fwd.Addr())
+	e.logWith(logrec.LevelInfo, logFields{source: logrec.SourceDNSCrypt}, "DNS: DNSCrypt%s", mode)
 	return nil
 }
 
@@ -99,10 +103,11 @@ func (e *Engine) bindDNSCryptLocked(instance *box.Box) {
 		run.fwd.Retry() // queries that came before the tunnel did were refused
 	}
 	go func() {
+		defer e.recoverLoop("connect")
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 		if err := run.fwd.Check(ctx); err != nil {
-			e.logf("error", "DNS unavailable: %v", err)
+			e.logWith(logrec.LevelError, logFields{source: logrec.SourceDNSCrypt, code: ErrDNS, err: err}, "DNS unavailable")
 		}
 	}()
 }

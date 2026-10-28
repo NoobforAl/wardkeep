@@ -72,17 +72,17 @@ func ImportSIP008(text string) (*Result, error) {
 	}
 	res := &Result{}
 	for _, s := range doc.Servers {
-		p := &profile.Profile{
+		prof := &profile.Profile{
 			Name: s.Remarks, Protocol: profile.Shadowsocks, Server: s.Server, Port: s.ServerPort,
 			Method: s.Method, Password: s.Password, Plugin: s.Plugin, PluginOpts: s.PluginOpts,
 			Source: "sip008:" + s.ID + ":" + s.Server + ":" + strconv.Itoa(s.ServerPort),
 		}
-		if err := p.Validate(); err != nil {
+		if err := prof.Validate(); err != nil {
 			res.Errors = append(res.Errors, err.Error())
 			continue
 		}
-		p.EnsureID()
-		res.Profiles = append(res.Profiles, p)
+		prof.EnsureID()
+		res.Profiles = append(res.Profiles, prof)
 	}
 	if len(res.Profiles) == 0 {
 		return res, fmt.Errorf("no valid servers in the SIP008 list")
@@ -123,19 +123,19 @@ type xrayStream struct {
 	} `json:"httpSettings"`
 }
 
-// xrayStreamTo applies streamSettings to p.
-func xrayStreamTo(p *profile.Profile, st *xrayStream) error {
+// xrayStreamTo applies streamSettings to prof.
+func xrayStreamTo(prof *profile.Profile, st *xrayStream) error {
 	if st == nil {
 		return nil
 	}
 	switch st.Security {
 	case "tls":
-		p.TLS = &profile.TLS{
+		prof.TLS = &profile.TLS{
 			Enabled: true, ServerName: st.TLS.ServerName, Insecure: st.TLS.AllowInsecure,
 			ALPN: st.TLS.ALPN, Fingerprint: st.TLS.Fingerprint,
 		}
 	case "reality":
-		p.TLS = &profile.TLS{
+		prof.TLS = &profile.TLS{
 			Enabled: true, ServerName: st.Reality.ServerName, Fingerprint: firstNonEmpty(st.Reality.Fingerprint, "chrome"),
 			Reality: &profile.Reality{PublicKey: st.Reality.PublicKey, ShortID: st.Reality.ShortID},
 		}
@@ -144,17 +144,17 @@ func xrayStreamTo(p *profile.Profile, st *xrayStream) error {
 	case "", "tcp", "raw":
 	case "ws":
 		host := firstNonEmpty(st.WS.Host, st.WS.Headers["Host"], st.WS.Headers["host"])
-		p.Transport = &profile.Transport{Type: "ws", Path: st.WS.Path, Host: host}
+		prof.Transport = &profile.Transport{Type: "ws", Path: st.WS.Path, Host: host}
 	case "httpupgrade":
-		p.Transport = &profile.Transport{Type: "httpupgrade", Path: st.HTTPUpgrade.Path, Host: st.HTTPUpgrade.Host}
+		prof.Transport = &profile.Transport{Type: "httpupgrade", Path: st.HTTPUpgrade.Path, Host: st.HTTPUpgrade.Host}
 	case "grpc":
-		p.Transport = &profile.Transport{Type: "grpc", ServiceName: st.GRPC.ServiceName}
+		prof.Transport = &profile.Transport{Type: "grpc", ServiceName: st.GRPC.ServiceName}
 	case "h2", "http":
 		host := ""
 		if len(st.HTTP.Host) > 0 {
 			host = st.HTTP.Host[0]
 		}
-		p.Transport = &profile.Transport{Type: "http", Path: st.HTTP.Path, Host: host}
+		prof.Transport = &profile.Transport{Type: "http", Path: st.HTTP.Path, Host: host}
 	default:
 		return fmt.Errorf("transport %q is not supported", st.Network)
 	}
@@ -212,21 +212,21 @@ func ImportXray(text string) (*Result, error) {
 		return nil, fmt.Errorf("Xray JSON: %w", err)
 	}
 	res := &Result{}
-	add := func(p *profile.Profile, ob xrayOutbound) {
-		if p.Name == "" {
-			p.Name = firstNonEmpty(ob.Tag, doc.Remarks, net.JoinHostPort(p.Server, strconv.Itoa(p.Port)))
+	add := func(prof *profile.Profile, ob xrayOutbound) {
+		if prof.Name == "" {
+			prof.Name = firstNonEmpty(ob.Tag, doc.Remarks, net.JoinHostPort(prof.Server, strconv.Itoa(prof.Port)))
 		}
-		if err := xrayStreamTo(p, ob.Stream); err != nil {
-			res.Errors = append(res.Errors, p.Name+": "+err.Error())
+		if err := xrayStreamTo(prof, ob.Stream); err != nil {
+			res.Errors = append(res.Errors, prof.Name+": "+err.Error())
 			return
 		}
-		p.Source = "xray:" + p.Protocol + ":" + p.Server + ":" + strconv.Itoa(p.Port) + ":" + p.UUID + p.Password + ob.Tag
-		if err := p.Validate(); err != nil {
+		prof.Source = "xray:" + prof.Protocol + ":" + prof.Server + ":" + strconv.Itoa(prof.Port) + ":" + prof.UUID + prof.Password + ob.Tag
+		if err := prof.Validate(); err != nil {
 			res.Errors = append(res.Errors, err.Error())
 			return
 		}
-		p.EnsureID()
-		res.Profiles = append(res.Profiles, p)
+		prof.EnsureID()
+		res.Profiles = append(res.Profiles, prof)
 	}
 	for _, raw := range doc.Outbounds {
 		var ob xrayOutbound
@@ -234,39 +234,39 @@ func ImportXray(text string) (*Result, error) {
 			res.Errors = append(res.Errors, err.Error())
 			continue
 		}
-		s := ob.Settings
+		settings := ob.Settings
 		switch strings.ToLower(ob.Protocol) {
 		case "vless":
-			if host := jsonString(s.Address); len(s.VNext) == 0 && host != "" {
-				add(&profile.Profile{Protocol: profile.VLESS, Server: host, Port: s.Port, UUID: s.ID, Flow: s.Flow}, ob)
+			if host := jsonString(settings.Address); len(settings.VNext) == 0 && host != "" {
+				add(&profile.Profile{Protocol: profile.VLESS, Server: host, Port: settings.Port, UUID: settings.ID, Flow: settings.Flow}, ob)
 			}
-			for _, v := range s.VNext {
+			for _, v := range settings.VNext {
 				for _, u := range v.Users {
 					add(&profile.Profile{Protocol: profile.VLESS, Server: v.Address, Port: v.Port, UUID: u.ID, Flow: u.Flow}, ob)
 				}
 			}
 		case "vmess":
-			for _, v := range s.VNext {
+			for _, v := range settings.VNext {
 				for _, u := range v.Users {
 					add(&profile.Profile{Protocol: profile.VMess, Server: v.Address, Port: v.Port, UUID: u.ID,
 						AlterID: u.AlterID, Method: firstNonEmpty(u.Security, "auto")}, ob)
 				}
 			}
 		case "trojan":
-			for _, sv := range s.Servers {
+			for _, sv := range settings.Servers {
 				add(&profile.Profile{Protocol: profile.Trojan, Server: sv.Address, Port: sv.Port, Password: sv.Password}, ob)
 			}
 		case "shadowsocks":
-			for _, sv := range s.Servers {
+			for _, sv := range settings.Servers {
 				add(&profile.Profile{Protocol: profile.Shadowsocks, Server: sv.Address, Port: sv.Port,
 					Method: sv.Method, Password: sv.Password}, ob)
 			}
 		case "wireguard":
-			for _, peer := range s.Peers {
+			for _, peer := range settings.Peers {
 				host, port := splitEndpoint(peer.Endpoint)
 				add(&profile.Profile{Protocol: profile.WireGuard, Server: host, Port: port, WireGuard: &profile.WG{
-					PrivateKey: s.SecretKey, PeerPublicKey: peer.PublicKey, PreSharedKey: peer.PreSharedKey,
-					Address: jsonStrings(s.Address), MTU: s.MTU,
+					PrivateKey: settings.SecretKey, PeerPublicKey: peer.PublicKey, PreSharedKey: peer.PreSharedKey,
+					Address: jsonStrings(settings.Address), MTU: settings.MTU,
 				}}, ob)
 			}
 		}

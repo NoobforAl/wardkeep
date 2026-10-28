@@ -27,6 +27,7 @@ import (
 	"github.com/NoobforAl/omnitun/core/importer"
 	"github.com/NoobforAl/omnitun/core/killswitch"
 	"github.com/NoobforAl/omnitun/core/links"
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/netcheck"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
@@ -49,7 +50,10 @@ type ServerConfig struct {
 	Grace time.Duration
 	// Token authenticates clients. Empty generates a random one.
 	Token string
-	// Logf receives daemon diagnostics.
+	// OnLog receives every log record (the engine's and the server's own), after clients are sent it; the
+	// records are already gated by the level and scrubbed.
+	OnLog func(logrec.Record)
+	// Logf receives the server's own messages as text (kill switch, lease). Deprecated: use OnLog.
 	Logf func(format string, args ...any)
 	// NetCheck reports whether the underlying network is up. Nil uses netcheck.Online.
 	NetCheck func(ctx context.Context) error
@@ -113,14 +117,11 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 		}
 		cfg.Token = hex.EncodeToString(b)
 	}
-	if cfg.Logf == nil {
-		cfg.Logf = func(string, ...any) {}
-	}
 	if cfg.NetCheck == nil {
 		cfg.NetCheck = netcheck.Online
 	}
-	s := &Server{cfg: cfg, clients: map[*client]struct{}{}}
-	s.engine = engine.New(engine.Config{
+	srv := &Server{cfg: cfg, clients: map[*client]struct{}{}}
+	srv.engine = engine.New(engine.Config{
 		DataDir:          cfg.DataDir,
 		Platform:         cfg.Platform,
 		Tun:              cfg.Tun,
@@ -128,17 +129,15 @@ func NewServer(cfg ServerConfig) (*Server, error) {
 		CertificateStore: cfg.CertificateStore,
 		SkipHandshake:    cfg.SkipHandshake,
 		OnState: func(st engine.State) {
-			s.ksOnState(st)
-			s.broadcast(Event{Event: "state", Data: st})
+			srv.ksOnState(st)
+			srv.broadcast(Event{Event: "state", Data: st})
 			if cfg.OnState != nil {
 				cfg.OnState(st)
 			}
 		},
-		OnLog: func(level, msg string) {
-			s.broadcast(Event{Event: "log", Data: LogEntry{Time: time.Now(), Level: level, Message: msg}})
-		},
+		OnLog: srv.publishLog,
 	})
-	return s, nil
+	return srv, nil
 }
 
 // Token returns the client authentication token.
@@ -200,7 +199,10 @@ func (s *Server) Serve() error {
 			}
 			return err
 		}
-		go s.handle(conn)
+		go func() {
+			defer s.recoverGoroutine("control")
+			s.handle(conn)
+		}()
 	}
 }
 
@@ -249,13 +251,13 @@ func (s *Server) addClient(c *client) {
 
 // removeClient starts the grace timer when the last client leaves: a tunnel
 // must never outlive the UI that controls it.
-func (s *Server) removeClient(c *client) {
+func (s *Server) removeClient(cl *client) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if _, ok := s.clients[c]; !ok {
+	if _, ok := s.clients[cl]; !ok {
 		return
 	}
-	delete(s.clients, c)
+	delete(s.clients, cl)
 	if len(s.clients) > 0 || s.closed || s.cfg.Grace < 0 {
 		return
 	}
@@ -264,7 +266,7 @@ func (s *Server) removeClient(c *client) {
 		idle := len(s.clients) == 0
 		s.mu.Unlock()
 		if idle && s.engine.State().Status != engine.StatusStopped {
-			s.cfg.Logf("no UI connected for %s, stopping tunnel", s.cfg.Grace)
+			s.logf(logrec.LevelInfo, "no UI connected for %s, stopping tunnel", s.cfg.Grace)
 			s.engine.Stop()
 		}
 		if idle {
@@ -274,23 +276,25 @@ func (s *Server) removeClient(c *client) {
 }
 
 func (s *Server) handle(conn net.Conn) {
-	c := &client{conn: conn, send: make(chan any, sendBuffer), done: make(chan struct{})}
-	defer c.close()
+	cl := &client{conn: conn, send: make(chan any, sendBuffer), done: make(chan struct{})}
+	defer cl.close()
 
 	go func() {
+		defer s.recoverGoroutine("control")
+		defer cl.close()
 		enc := json.NewEncoder(conn)
 		for {
 			select {
-			case <-c.done:
+			case <-cl.done:
 				return
-			case msg := <-c.send:
+			case msg := <-cl.send:
 				if m, ok := msg.(flushMarker); ok {
 					close(m)
 					continue
 				}
 				conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 				if err := enc.Encode(msg); err != nil {
-					c.close()
+					cl.close()
 					return
 				}
 			}
@@ -298,11 +302,11 @@ func (s *Server) handle(conn net.Conn) {
 	}()
 
 	sc := bufio.NewScanner(conn)
-	sc.Buffer(make([]byte, 64<<10), maxLine)
+	sc.Buffer(make([]byte, 4<<10), maxLine)
 	authed := false
 	defer func() {
 		if authed {
-			s.removeClient(c)
+			s.removeClient(cl)
 		}
 	}()
 	for {
@@ -312,23 +316,34 @@ func (s *Server) handle(conn net.Conn) {
 		}
 		var req Request
 		if err := json.Unmarshal(sc.Bytes(), &req); err != nil {
-			s.replyAndClose(c, Response{Error: &Error{Code: CodeBadRequest, Message: err.Error()}})
+			s.replyAndClose(cl, Response{Error: &Error{Code: CodeBadRequest, Message: err.Error()}})
 			return
 		}
 		if !authed {
 			var p HelloParams
 			if req.Method != "hello" || json.Unmarshal(req.Params, &p) != nil ||
 				subtle.ConstantTimeCompare([]byte(p.Token), []byte(s.cfg.Token)) != 1 {
-				s.replyAndClose(c, Response{ID: req.ID, Error: &Error{Code: CodeUnauthorized, Message: "invalid token"}})
+				s.replyAndClose(cl, Response{ID: req.ID, Error: &Error{Code: CodeUnauthorized, Message: "invalid token"}})
 				return
 			}
 			authed = true
-			s.addClient(c)
-			s.reply(c, Response{ID: req.ID, Result: map[string]any{"version": Version, "state": s.engine.State()}})
+			s.addClient(cl)
+			s.reply(cl, Response{ID: req.ID, Result: map[string]any{"version": Version, "state": s.engine.State()}})
 			continue
 		}
 		// Requests run concurrently so a slow latency test doesn't block pings.
 		go func(req Request) {
+			defer func() {
+				// A method that panicked still answers, so the app does not wait for it.
+				if value := recover(); value != nil {
+					rec := logrec.PanicRecord(logrec.SourceCore, req.Method, value)
+					s.publishLog(rec)
+					s.reply(cl, Response{ID: req.ID, Error: &Error{Code: CodeInternal, Message: "internal error"}})
+					if logrec.Repanic {
+						panic(value)
+					}
+				}
+			}()
 			result, err := s.dispatch(req)
 			resp := Response{ID: req.ID, Result: result}
 			if err != nil {
@@ -338,7 +353,7 @@ func (s *Server) handle(conn net.Conn) {
 				}
 				resp.Error, resp.Result = ce, nil
 			}
-			s.reply(c, resp)
+			s.reply(cl, resp)
 		}(req)
 	}
 }
@@ -388,12 +403,20 @@ func (s *Server) dispatch(req Request) (any, error) {
 		return "pong", nil
 	case "state":
 		return s.engine.State(), nil
-	case "import":
-		p, err := decode[ImportParams](req.Params)
+	case "logging.get":
+		return loggingSettings(), nil
+	case "logging.set":
+		params, err := decode[LoggingParams](req.Params)
 		if err != nil {
 			return nil, err
 		}
-		res, err := importer.Import(p.Text)
+		return setLogging(params)
+	case "import":
+		params, err := decode[ImportParams](req.Params)
+		if err != nil {
+			return nil, err
+		}
+		res, err := importer.Import(params.Text)
 		if err != nil {
 			return nil, importFailure(err, res)
 		}
@@ -401,21 +424,21 @@ func (s *Server) dispatch(req Request) (any, error) {
 	case "forms":
 		return profile.Forms(), nil
 	case "build_profile":
-		p, err := decode[BuildProfileParams](req.Params)
+		params, err := decode[BuildProfileParams](req.Params)
 		if err != nil {
 			return nil, err
 		}
 		var built *profile.Profile
-		if p.Profile != nil {
+		if params.Profile != nil {
 			// Editing: apply the values to a copy, then check the whole profile.
-			cp := *p.Profile
+			cp := *params.Profile
 			built = &cp
-			err = built.Apply(p.Values)
+			err = built.Apply(params.Values)
 			if err == nil {
 				err = built.Validate()
 			}
 		} else {
-			built, err = profile.FromValues(p.Protocol, p.Values)
+			built, err = profile.FromValues(params.Protocol, params.Values)
 		}
 		if err == nil {
 			err = checkVia(built)
@@ -425,13 +448,13 @@ func (s *Server) dispatch(req Request) (any, error) {
 		}
 		return built, nil
 	case "profile_values":
-		p, err := decode[ProfileParams](req.Params)
-		if err != nil || p.Profile == nil {
+		params, err := decode[ProfileParams](req.Params)
+		if err != nil || params.Profile == nil {
 			return nil, &Error{Code: CodeBadRequest, Message: "a profile is required"}
 		}
-		return p.Profile.Values(), nil
+		return params.Profile.Values(), nil
 	case "dnstt_scan":
-		p, err := decode[DNSTTScanParams](req.Params)
+		params, err := decode[DNSTTScanParams](req.Params)
 		if err != nil {
 			return nil, err
 		}
@@ -441,36 +464,36 @@ func (s *Server) dispatch(req Request) (any, error) {
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 		defer cancel()
-		res, err := dnstt.Scan(ctx, dnstt.Config{Domain: p.Domain, PubKey: p.PubKey}, p.Resolvers, dnstt.Options{}, 6, 12*time.Second)
+		res, err := dnstt.Scan(ctx, dnstt.Config{Domain: params.Domain, PubKey: params.PubKey}, params.Resolvers, dnstt.Options{}, 6, 12*time.Second)
 		if err != nil && res == nil {
 			return nil, badRequest(err)
 		}
 		return res, nil
 	case "warnings":
-		p, err := decode[ProfileParams](req.Params)
-		if err != nil || p.Profile == nil {
+		params, err := decode[ProfileParams](req.Params)
+		if err != nil || params.Profile == nil {
 			return nil, &Error{Code: CodeBadRequest, Message: "a profile is required"}
 		}
-		return append([]profile.Warning{}, profile.WarningsFor(p.Profile)...), nil
+		return append([]profile.Warning{}, profile.WarningsFor(params.Profile)...), nil
 	case "export_link":
-		p, err := decode[ProfileParams](req.Params)
-		if err != nil || p.Profile == nil {
+		params, err := decode[ProfileParams](req.Params)
+		if err != nil || params.Profile == nil {
 			return nil, &Error{Code: CodeBadRequest, Message: "a profile is required"}
 		}
-		link, err := links.Export(p.Profile)
+		link, err := links.Export(params.Profile)
 		if err != nil {
 			return nil, &Error{Code: CodeBadRequest, Message: err.Error()}
 		}
 		return link, nil
 	case "start":
-		p, err := decode[StartParams](req.Params)
+		params, err := decode[StartParams](req.Params)
 		if err != nil {
 			return nil, err
 		}
-		if err := singbox.CheckDNS(p.DNS); err != nil {
+		if err := singbox.CheckDNS(params.DNS); err != nil {
 			return nil, &Error{Code: CodeBadRequest, Message: "DNS: " + err.Error()}
 		}
-		if err := singbox.CheckDNSRelay(p.DNSRelay); err != nil {
+		if err := singbox.CheckDNSRelay(params.DNSRelay); err != nil {
 			return nil, &Error{Code: CodeBadRequest, Message: "DNS relay: " + err.Error()}
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -481,39 +504,39 @@ func (s *Server) dispatch(req Request) (any, error) {
 			return nil, &Error{Code: CodeNoNetwork, Message: err.Error()}
 		}
 		opts := singbox.Options{
-			Mode:            singbox.Mode(p.Mode),
-			ListenPort:      p.ListenPort,
-			Selected:        p.Selected,
-			ProxyPrivate:    p.ProxyPrivate,
-			SystemProxy:     p.SystemProxy,
-			MTU:             p.MTU,
-			NoIPv6:          p.NoIPv6,
-			DNS:             p.DNS,
-			DNSRelay:        p.DNSRelay,
-			Failover:        p.Failover,
-			IncludePackages: p.IncludePackages,
-			ExcludePackages: p.ExcludePackages,
-			TestURL:         p.TestURL,
-			BypassOnly:      p.BypassOnly,
+			Mode:            singbox.Mode(params.Mode),
+			ListenPort:      params.ListenPort,
+			Selected:        params.Selected,
+			ProxyPrivate:    params.ProxyPrivate,
+			SystemProxy:     params.SystemProxy,
+			MTU:             params.MTU,
+			NoIPv6:          params.NoIPv6,
+			DNS:             params.DNS,
+			DNSRelay:        params.DNSRelay,
+			Failover:        params.Failover,
+			IncludePackages: params.IncludePackages,
+			ExcludePackages: params.ExcludePackages,
+			TestURL:         params.TestURL,
+			BypassOnly:      params.BypassOnly,
 		}
-		if p.Bypass != "" {
+		if params.Bypass != "" {
 			// The app checked the lists when they were added; lines that cannot be used are skipped.
-			opts.Bypass, _ = singbox.ParseBypassList(p.Bypass)
+			opts.Bypass, _ = singbox.ParseBypassList(params.Bypass)
 		}
-		if err := s.ksPrepare(p, &opts); err != nil {
+		if err := s.ksPrepare(params, &opts); err != nil {
 			return nil, err
 		}
-		if err := s.engine.Start(p.Profiles, opts); err != nil {
+		if err := s.engine.Start(params.Profiles, opts); err != nil {
 			s.ksStop()
 			return nil, &Error{Code: CodeStartFailed, Message: err.Error()}
 		}
 		return s.engine.State(), nil
 	case "exit_info":
-		p, err := decode[ExitInfoParams](req.Params)
+		params, err := decode[ExitInfoParams](req.Params)
 		if err != nil {
 			return nil, err
 		}
-		info, err := s.exitInfo(context.Background(), p)
+		info, err := s.exitInfo(context.Background(), params)
 		if errors.Is(err, engine.ErrNoTunnel) {
 			return nil, &Error{Code: CodeNotRunning, Message: err.Error()}
 		}
@@ -522,11 +545,11 @@ func (s *Server) dispatch(req Request) (any, error) {
 		}
 		return info, nil
 	case "parse_bypass":
-		p, err := decode[BypassParams](req.Params)
+		params, err := decode[BypassParams](req.Params)
 		if err != nil {
 			return nil, err
 		}
-		list, issues := singbox.ParseBypassList(p.Text)
+		list, issues := singbox.ParseBypassList(params.Text)
 		return BypassReport{
 			Entries: list.Count(), Ranges: len(list.CIDRs), Domains: list.Count() - len(list.CIDRs), Issues: issues,
 		}, nil
@@ -535,34 +558,34 @@ func (s *Server) dispatch(req Request) (any, error) {
 		s.ksStop() // also lifts a block raised for a start that never got far
 		return s.engine.State(), err
 	case "select":
-		p, err := decode[SelectParams](req.Params)
+		params, err := decode[SelectParams](req.Params)
 		if err != nil {
 			return nil, err
 		}
-		if err := s.engine.Select(p.ID); err != nil {
+		if err := s.engine.Select(params.ID); err != nil {
 			return nil, &Error{Code: CodeNotRunning, Message: err.Error()}
 		}
 		return s.engine.State(), nil
 	case "subscribe":
-		p, err := decode[subscription.Request](req.Params)
+		params, err := decode[subscription.Request](req.Params)
 		if err != nil {
 			return nil, err
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 		defer cancel()
-		res, err := s.fetchSubscription(ctx, p)
+		res, err := s.fetchSubscription(ctx, params)
 		if err != nil {
 			return nil, subscriptionError(err)
 		}
 		return res, nil
 	case "test":
-		p, err := decode[TestParams](req.Params)
+		params, err := decode[TestParams](req.Params)
 		if err != nil {
 			return nil, err
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
-		return s.engine.TestLatency(ctx, p.Profiles, p.URL)
+		return s.engine.TestLatency(ctx, params.Profiles, params.URL)
 	default:
 		if res, handled, err := s.dispatchMesh(req); handled {
 			return res, err
@@ -644,7 +667,7 @@ func (s *Server) rootPool() *x509.CertPool {
 	if s.pool == nil {
 		store, err := certificate.NewStore(context.Background(), logger.NOP(), option.CertificateOptions{Store: s.cfg.CertificateStore})
 		if err != nil {
-			s.cfg.Logf("certificate store %q: %v", s.cfg.CertificateStore, err)
+			s.logf(logrec.LevelError, "certificate store %q: %v", s.cfg.CertificateStore, err)
 			return nil
 		}
 		s.pool = store.Pool()
@@ -654,11 +677,11 @@ func (s *Server) rootPool() *x509.CertPool {
 
 // checkVia reads the proxy under a WireGuard profile, so the editor can say what is wrong with it at once
 // instead of when the tunnel is started.
-func checkVia(p *profile.Profile) error {
-	if p.WireGuard == nil || strings.TrimSpace(p.WireGuard.Via) == "" {
+func checkVia(prof *profile.Profile) error {
+	if prof.WireGuard == nil || strings.TrimSpace(prof.WireGuard.Via) == "" {
 		return nil
 	}
-	if _, err := importer.ParseLink(strings.TrimSpace(p.WireGuard.Via)); err != nil {
+	if _, err := importer.ParseLink(strings.TrimSpace(prof.WireGuard.Via)); err != nil {
 		return fmt.Errorf("the proxy under WireGuard: %w", err)
 	}
 	return nil

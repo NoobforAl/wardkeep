@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/NoobforAl/omnitun/core/awg"
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
 )
@@ -110,44 +111,47 @@ func awgTunRequest(p *profile.Profile, opts singbox.Options) TunRequest {
 	return req
 }
 
-// startAWGLocked brings up an AmneziaWG tunnel for p. e.mu must be held.
-func (e *Engine) startAWGLocked(p *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
+// startAWGLocked brings up an AmneziaWG tunnel for prof. e.mu must be held.
+func (e *Engine) startAWGLocked(prof *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
 	fail := func(stage string, err error) error {
+		e.logWith(logrec.LevelError, logFields{profile: prof.ID, err: err}, "%s failed", stageLabel[stage])
 		err = fmt.Errorf("%s failed: %w", stageLabel[stage], err)
-		e.logf("error", "%v", err)
-		e.setState(State{Status: StatusError, Error: err.Error(), Selected: p.ID, Progress: progress(stage, e.name(p.ID))})
+		e.setState(State{Status: StatusError, Error: err.Error(), Selected: prof.ID, Progress: progress(stage, e.name(prof.ID))})
 		return err
 	}
-	if _, err := awg.UAPI(p, netip.AddrPortFrom(netip.IPv4Unspecified(), 1)); err != nil {
+	if _, err := awg.UAPI(prof, netip.AddrPortFrom(netip.IPv4Unspecified(), 1)); err != nil {
 		return fail(StagePrepare, err)
 	}
-	e.logf("info", "starting %s (AmneziaWG)", e.name(p.ID))
-	e.setState(State{Status: StatusStarting, Selected: p.ID, Progress: progress(StageEngineStart, e.name(p.ID))})
+	e.logWith(logrec.LevelInfo, logFields{profile: prof.ID}, "starting AmneziaWG")
+	e.setState(State{Status: StatusStarting, Selected: prof.ID, Progress: progress(StageEngineStart, e.name(prof.ID))})
 	rctx, rcancel := context.WithTimeout(context.Background(), 10*time.Second)
-	endpoint, err := awg.ResolveEndpoint(rctx, p)
+	endpoint, err := awg.ResolveEndpoint(rctx, prof)
 	rcancel()
 	if err != nil {
 		return fail(StageEngineStart, err)
 	}
-	fd, err := e.cfg.Tun.OpenTun(awgTunRequest(p, opts))
+	fd, err := e.cfg.Tun.OpenTun(awgTunRequest(prof, opts))
 	if err != nil {
 		return fail(StageTunnelUp, err)
 	}
-	tunnel, err := awg.Start(p, endpoint, fd, e.cfg.Tun.Protect, func(format string, args ...any) {
+	tunnel, err := awg.Start(prof, endpoint, fd, e.cfg.Tun.Protect, func(format string, args ...any) {
 		e.logf("warn", format, args...)
 	})
 	if err != nil {
 		return fail(StageTunnelUp, err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	run := &awgRun{tunnel: tunnel, profile: p, profiles: profiles, opts: opts, cancel: cancel}
+	run := &awgRun{tunnel: tunnel, profile: prof, profiles: profiles, opts: opts, cancel: cancel}
 	e.awgRun = run
 	if e.cfg.SkipHandshake {
-		e.setState(State{Status: StatusRunning, Since: time.Now(), Selected: p.ID, Progress: progress(StageConnected, e.name(p.ID))})
+		e.setState(State{Status: StatusRunning, Since: time.Now(), Selected: prof.ID, Progress: progress(StageConnected, e.name(prof.ID))})
 	} else {
-		e.setState(State{Status: StatusStarting, Selected: p.ID, Progress: progress(StageHandshake, e.name(p.ID))})
+		e.setState(State{Status: StatusStarting, Selected: prof.ID, Progress: progress(StageHandshake, e.name(prof.ID))})
 	}
-	go e.awgLoop(ctx, run)
+	go func() {
+		defer e.recoverLoop("connect")
+		e.awgLoop(ctx, run)
+	}()
 	return nil
 }
 
@@ -170,24 +174,24 @@ func (e *Engine) awgLoop(ctx context.Context, run *awgRun) {
 			e.mu.Unlock()
 			return
 		}
-		s := e.state
-		if s.Status == StatusStarting {
+		state := e.state
+		if state.Status == StatusStarting {
 			switch {
 			case !st.LastHandshake.IsZero():
-				s.Status, s.Since, s.Progress = StatusRunning, time.Now(), progress(StageConnected, e.name(run.profile.ID))
-				e.logf("info", "connected to %s", e.name(run.profile.ID))
+				state.Status, state.Since, state.Progress = StatusRunning, time.Now(), progress(StageConnected, e.name(run.profile.ID))
+				e.logWith(logrec.LevelInfo, logFields{profile: run.profile.ID}, "connected")
 			case time.Now().After(deadline):
 				e.awgHandshakeFailedLocked(run)
 				e.mu.Unlock()
 				return
 			}
 		}
-		if s.Status == StatusRunning {
-			s.UpBps, s.DownBps = st.TxBytes-last.TxBytes, st.RxBytes-last.RxBytes
-			s.UpTotal, s.DownTotal = st.TxBytes, st.RxBytes
+		if state.Status == StatusRunning {
+			state.UpBps, state.DownBps = st.TxBytes-last.TxBytes, st.RxBytes-last.RxBytes
+			state.UpTotal, state.DownTotal = st.TxBytes, st.RxBytes
 			last = st
 		}
-		e.setState(s)
+		e.setState(state)
 		e.mu.Unlock()
 	}
 }
@@ -198,7 +202,8 @@ func (e *Engine) awgHandshakeFailedLocked(run *awgRun) {
 	reason := fmt.Errorf("no handshake from %s within %s", e.name(run.profile.ID), awgHandshakeTimeout)
 	if run.opts.Failover && len(run.profiles) > 1 {
 		next := rotateAfter(profileOrder(run.profiles), run.profile.ID)[0]
-		e.logf("warn", "failover: %v, trying %s", reason, e.name(next))
+		e.logWith(logrec.LevelWarn, logFields{profile: run.profile.ID, code: ErrNoHandshake},
+			"failover: no handshake within %s, trying the next profile (%s)", awgHandshakeTimeout, next)
 		e.carryFailover = &FailoverEvent{From: run.profile.ID, To: next, Reason: reason.Error(), At: time.Now()}
 		opts := run.opts
 		opts.Selected = next
@@ -214,6 +219,7 @@ func (e *Engine) awgHandshakeFailedLocked(run *awgRun) {
 	}
 	e.stopLocked()
 	err := fmt.Errorf("%s failed: %w", stageLabel[StageHandshake], reason)
-	e.logf("error", "%v", err)
+	e.logWith(logrec.LevelError, logFields{profile: run.profile.ID, code: ErrNoHandshake},
+		"%s failed: no handshake within %s", stageLabel[StageHandshake], awgHandshakeTimeout)
 	e.setState(State{Status: StatusError, Error: err.Error(), Selected: run.profile.ID, Progress: progress(StageHandshake, e.name(run.profile.ID))})
 }

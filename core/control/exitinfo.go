@@ -39,22 +39,22 @@ type ExitInfo struct {
 // exitInfo asks the service through the running tunnel. It fails when no
 // tunnel that can carry the request is running, so the answer is always about
 // the tunnel's exit and never about this device's own address.
-func (s *Server) exitInfo(ctx context.Context, p ExitInfoParams) (*ExitInfo, error) {
+func (s *Server) exitInfo(ctx context.Context, params ExitInfoParams) (*ExitInfo, error) {
 	dial, err := s.engine.TunnelDialer()
 	if err != nil {
 		return nil, err
 	}
-	target := strings.TrimSpace(p.URL)
+	target := strings.TrimSpace(params.URL)
 	if target == "" {
 		target = DefaultExitInfoURL
 	}
-	u, err := url.Parse(target)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+	uri, err := url.Parse(target)
+	if err != nil || (uri.Scheme != "http" && uri.Scheme != "https") || uri.Host == "" {
 		return nil, fmt.Errorf("invalid address %q", target)
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second) // Tor builds circuits slowly
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -78,13 +78,13 @@ func (s *Server) exitInfo(ctx context.Context, p ExitInfoParams) (*ExitInfo, err
 
 // transportVia is an HTTP transport that opens its connections with dial.
 func (s *Server) transportVia(dial subscription.Dialer) *http.Transport {
-	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.Proxy = nil
-	t.DialContext = dial
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = nil
+	transport.DialContext = dial
 	if pool := s.rootPool(); pool != nil {
-		t.TLSClientConfig = &tls.Config{RootCAs: pool}
+		transport.TLSClientConfig = &tls.Config{RootCAs: pool}
 	}
-	return t
+	return transport
 }
 
 // parseExitInfo reads the answers of the common "what is my IP" services:

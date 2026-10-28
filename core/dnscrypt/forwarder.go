@@ -99,20 +99,20 @@ func NewForwarder(cfg ForwarderConfig) (*Forwarder, error) {
 	if cfg.MaxInflight <= 0 {
 		cfg.MaxInflight = 64
 	}
-	f := &Forwarder{
+	fwd := &Forwarder{
 		cfg: cfg, up: up, name: st.Name(), relayed: uc.Relay != nil,
 		inflight: make(chan struct{}, cfg.MaxInflight),
 		conns:    map[net.Conn]struct{}{},
 	}
-	f.ctx, f.cancel = context.WithCancel(context.Background())
+	fwd.ctx, fwd.cancel = context.WithCancel(context.Background())
 	if cfg.CacheEntries >= 0 {
 		n := cfg.CacheEntries
 		if n == 0 {
 			n = 512
 		}
-		f.cache = newAnswerCache(n)
+		fwd.cache = newAnswerCache(n)
 	}
-	return f, nil
+	return fwd, nil
 }
 
 // Resolver is the resolver's short name, for display.
@@ -136,25 +136,25 @@ func (f *Forwarder) Start() error {
 	}
 	var lastErr error
 	for range 10 {
-		l, err := net.Listen("tcp", f.cfg.Listen)
+		ln, err := net.Listen("tcp", f.cfg.Listen)
 		if err != nil {
 			return err
 		}
 		// A fixed port is tried once; with port 0 another port is picked on a clash.
-		udpAddr := l.Addr().(*net.TCPAddr)
+		udpAddr := ln.Addr().(*net.TCPAddr)
 		pc, err := net.ListenUDP("udp", &net.UDPAddr{IP: udpAddr.IP, Port: udpAddr.Port, Zone: udpAddr.Zone})
 		if err != nil {
-			l.Close()
+			ln.Close()
 			lastErr = err
 			if _, p, _ := net.SplitHostPort(f.cfg.Listen); p != "0" {
 				return err
 			}
 			continue
 		}
-		f.tcp, f.udp = l, pc
+		f.tcp, f.udp = ln, pc
 		f.wg.Add(2)
 		go f.serveUDP(pc)
-		go f.serveTCP(l)
+		go f.serveTCP(ln)
 		return nil
 	}
 	return fmt.Errorf("dnscrypt: no free loopback port: %w", lastErr)
@@ -276,42 +276,42 @@ func (f *Forwarder) serveUDP(pc *net.UDPConn) {
 func (f *Forwarder) serveTCP(l net.Listener) {
 	defer f.wg.Done()
 	for {
-		c, err := l.Accept()
+		conn, err := l.Accept()
 		if err != nil {
 			return
 		}
 		f.mu.Lock()
 		if f.closed {
 			f.mu.Unlock()
-			c.Close()
+			conn.Close()
 			return
 		}
-		f.conns[c] = struct{}{}
+		f.conns[conn] = struct{}{}
 		f.mu.Unlock()
 		f.wg.Add(1)
-		go f.serveTCPConn(c)
+		go f.serveTCPConn(conn)
 	}
 }
 
-func (f *Forwarder) serveTCPConn(c net.Conn) {
+func (f *Forwarder) serveTCPConn(conn net.Conn) {
 	defer f.wg.Done()
 	defer func() {
-		c.Close()
+		conn.Close()
 		f.mu.Lock()
-		delete(f.conns, c)
+		delete(f.conns, conn)
 		f.mu.Unlock()
 	}()
 	var wmu sync.Mutex
 	var queries sync.WaitGroup
 	defer queries.Wait()
 	for {
-		_ = c.SetReadDeadline(time.Now().Add(30 * time.Second))
-		var l [2]byte
-		if _, err := io.ReadFull(c, l[:]); err != nil {
+		_ = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+		var lenBuf [2]byte
+		if _, err := io.ReadFull(conn, lenBuf[:]); err != nil {
 			return
 		}
-		pkt := make([]byte, binary.BigEndian.Uint16(l[:]))
-		if _, err := io.ReadFull(c, pkt); err != nil {
+		pkt := make([]byte, binary.BigEndian.Uint16(lenBuf[:]))
+		if _, err := io.ReadFull(conn, pkt); err != nil {
 			return
 		}
 		f.queries.Add(1)
@@ -322,8 +322,8 @@ func (f *Forwarder) serveTCPConn(c net.Conn) {
 			out := binary.BigEndian.AppendUint16(make([]byte, 0, 2+len(resp)), uint16(len(resp)))
 			out = append(out, resp...)
 			wmu.Lock()
-			_ = c.SetWriteDeadline(time.Now().Add(10 * time.Second))
-			_, _ = c.Write(out)
+			_ = conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			_, _ = conn.Write(out)
 			wmu.Unlock()
 		}
 		select {
@@ -357,33 +357,33 @@ func servfail(pkt []byte) []byte {
 
 // handle answers one packed query: from the cache, or through DNSCrypt.
 func (f *Forwarder) handle(pkt []byte, udp bool) []byte {
-	q := new(dns.Msg)
-	if err := q.Unpack(pkt); err != nil {
+	query := new(dns.Msg)
+	if err := query.Unpack(pkt); err != nil {
 		return nil // not DNS: no answer is better than a wrong one
 	}
-	if q.Response {
+	if query.Response {
 		return nil
 	}
-	if q.Opcode != dns.OpcodeQuery || len(q.Question) != 1 {
-		r := new(dns.Msg)
+	if query.Opcode != dns.OpcodeQuery || len(query.Question) != 1 {
+		resp := new(dns.Msg)
 		code := dns.RcodeNotImplemented
-		if q.Opcode == dns.OpcodeQuery {
+		if query.Opcode == dns.OpcodeQuery {
 			code = dns.RcodeFormatError
 		}
-		r.SetRcode(q, code)
-		b, _ := r.Pack()
+		resp.SetRcode(query, code)
+		b, _ := resp.Pack()
 		return b
 	}
 	limit := dns.MaxMsgSize
 	if udp {
 		limit = dns.MinMsgSize
-		if o := q.IsEdns0(); o != nil && int(o.UDPSize()) > limit {
+		if o := query.IsEdns0(); o != nil && int(o.UDPSize()) > limit {
 			limit = int(o.UDPSize())
 		}
 	}
-	key := cacheKey(q)
+	key := cacheKey(query)
 	if f.cache != nil {
-		if r := f.cache.get(key, q.Id); r != nil {
+		if r := f.cache.get(key, query.Id); r != nil {
 			f.hits.Add(1)
 			return pack(r, limit)
 		}
@@ -396,8 +396,8 @@ func (f *Forwarder) handle(pkt []byte, udp bool) []byte {
 		f.noteFailure(err)
 		return servfail(pkt)
 	}
-	r := new(dns.Msg)
-	if err := r.Unpack(raw); err != nil {
+	resp := new(dns.Msg)
+	if err := resp.Unpack(raw); err != nil {
 		f.failed.Add(1)
 		f.noteFailure(fmt.Errorf("unreadable answer: %w", err))
 		return servfail(pkt)
@@ -405,9 +405,9 @@ func (f *Forwarder) handle(pkt []byte, udp bool) []byte {
 	f.answered.Add(1)
 	f.noteOK()
 	if f.cache != nil {
-		f.cache.put(key, r)
+		f.cache.put(key, resp)
 	}
-	return pack(r, limit)
+	return pack(resp, limit)
 }
 
 func (f *Forwarder) timeout() time.Duration {
@@ -467,13 +467,13 @@ func cacheKey(q *dns.Msg) string {
 }
 
 // ttlOf is how long an answer may be kept; 0 means not at all.
-func ttlOf(r *dns.Msg) time.Duration {
-	if r.Truncated || (r.Rcode != dns.RcodeSuccess && r.Rcode != dns.RcodeNameError) {
+func ttlOf(msg *dns.Msg) time.Duration {
+	if msg.Truncated || (msg.Rcode != dns.RcodeSuccess && msg.Rcode != dns.RcodeNameError) {
 		return 0
 	}
 	min := uint32(0)
 	seen := false
-	for _, section := range [][]dns.RR{r.Answer, r.Ns} {
+	for _, section := range [][]dns.RR{msg.Answer, msg.Ns} {
 		for _, rr := range section {
 			if rr.Header().Rrtype == dns.TypeOPT {
 				continue
@@ -483,23 +483,23 @@ func ttlOf(r *dns.Msg) time.Duration {
 			}
 		}
 	}
-	d := time.Duration(min) * time.Second
-	if !seen || len(r.Answer) == 0 {
-		d = cacheNegTTL
-		if seen && time.Duration(min)*time.Second < d {
-			d = time.Duration(min) * time.Second
+	ttl := time.Duration(min) * time.Second
+	if !seen || len(msg.Answer) == 0 {
+		ttl = cacheNegTTL
+		if seen && time.Duration(min)*time.Second < ttl {
+			ttl = time.Duration(min) * time.Second
 		}
 	}
-	if d > cacheMaxTTL {
-		d = cacheMaxTTL
+	if ttl > cacheMaxTTL {
+		ttl = cacheMaxTTL
 	}
-	if d < cacheMinTTL {
+	if ttl < cacheMinTTL {
 		if min == 0 && seen {
 			return 0 // the resolver said do not cache
 		}
-		d = cacheMinTTL
+		ttl = cacheMinTTL
 	}
-	return d
+	return ttl
 }
 
 func (c *answerCache) put(key string, r *dns.Msg) {
@@ -508,13 +508,13 @@ func (c *answerCache) put(key string, r *dns.Msg) {
 		return
 	}
 	now := time.Now()
-	e := &cacheEntry{key: key, msg: r.Copy(), stored: now, expires: now.Add(ttl)}
+	entry := &cacheEntry{key: key, msg: r.Copy(), stored: now, expires: now.Add(ttl)}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if old, ok := c.items[key]; ok {
 		c.order.Remove(old)
 	}
-	c.items[key] = c.order.PushFront(e)
+	c.items[key] = c.order.PushFront(entry)
 	for c.order.Len() > c.max {
 		last := c.order.Back()
 		c.order.Remove(last)
@@ -531,31 +531,31 @@ func (c *answerCache) get(key string, id uint16) *dns.Msg {
 		c.mu.Unlock()
 		return nil
 	}
-	e := el.Value.(*cacheEntry)
+	entry := el.Value.(*cacheEntry)
 	now := time.Now()
-	if !now.Before(e.expires) {
+	if !now.Before(entry.expires) {
 		c.order.Remove(el)
 		delete(c.items, key)
 		c.mu.Unlock()
 		return nil
 	}
 	c.order.MoveToFront(el)
-	r := e.msg.Copy()
-	age := uint32(now.Sub(e.stored) / time.Second)
+	msg := entry.msg.Copy()
+	age := uint32(now.Sub(entry.stored) / time.Second)
 	c.mu.Unlock()
-	r.Id = id
-	for _, section := range [][]dns.RR{r.Answer, r.Ns, r.Extra} {
+	msg.Id = id
+	for _, section := range [][]dns.RR{msg.Answer, msg.Ns, msg.Extra} {
 		for _, rr := range section {
-			h := rr.Header()
-			if h.Rrtype == dns.TypeOPT {
+			hdr := rr.Header()
+			if hdr.Rrtype == dns.TypeOPT {
 				continue
 			}
-			if h.Ttl > age {
-				h.Ttl -= age
+			if hdr.Ttl > age {
+				hdr.Ttl -= age
 			} else {
-				h.Ttl = 1
+				hdr.Ttl = 1
 			}
 		}
 	}
-	return r
+	return msg
 }

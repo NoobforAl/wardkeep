@@ -70,11 +70,11 @@ func (vlessReality) Inbounds(env Env, port int, accts []Account) Config {
 	return Config{Inbounds: []obj{in}}
 }
 
-func (v vlessReality) Profile(env Env, port int, u Account) (*profile.Profile, error) {
+func (v vlessReality) Profile(env Env, port int, acct Account) (*profile.Profile, error) {
 	sni, _ := SplitHostPort(env.Reality.Handshake, 443)
 	return &profile.Profile{
 		Name: profileName(env, v.Spec()), Protocol: profile.VLESS, Server: env.Host, Port: port,
-		UUID: u.UUID, Flow: "xtls-rprx-vision",
+		UUID: acct.UUID, Flow: "xtls-rprx-vision",
 		TLS: &profile.TLS{Enabled: true, ServerName: sni, Fingerprint: "chrome",
 			Reality: &profile.Reality{PublicKey: env.Reality.PublicKey, ShortID: env.Reality.ShortID}},
 	}, nil
@@ -255,18 +255,18 @@ func (shadowTLS) Inbounds(env Env, port int, accts []Account) Config {
 	return Config{Inbounds: []obj{inner, in}}
 }
 
-func (s shadowTLS) Profile(env Env, port int, u Account) (*profile.Profile, error) {
-	if err := safeField("password", u.Password, unsafeInOpts); err != nil {
+func (s shadowTLS) Profile(env Env, port int, acct Account) (*profile.Profile, error) {
+	if err := safeField("password", acct.Password, unsafeInOpts); err != nil {
 		return nil, err
 	}
 	sni, _ := SplitHostPort(env.Reality.Handshake, 443)
-	opts := fmt.Sprintf("host=%s;password=%s;version=3", sni, u.Password)
+	opts := fmt.Sprintf("host=%s;password=%s;version=3", sni, acct.Password)
 	if env.SelfSigned {
 		opts += ";insecure=1"
 	}
 	return &profile.Profile{
 		Name: profileName(env, s.Spec()), Protocol: profile.Shadowsocks, Server: env.Host, Port: port,
-		Method: ssMethod, Password: env.SSServerKey + ":" + u.SSKey,
+		Method: ssMethod, Password: env.SSServerKey + ":" + acct.SSKey,
 		Plugin: "shadow-tls", PluginOpts: opts,
 	}, nil
 }
@@ -293,16 +293,16 @@ func (naive) Inbounds(env Env, port int, accts []Account) Config {
 }
 
 func (n naive) Profile(env Env, port int, u Account) (*profile.Profile, error) {
-	p := &profile.Profile{
+	prof := &profile.Profile{
 		Name: profileName(env, n.Spec()), Protocol: profile.Naive, Server: env.Host, Port: port,
 		Username: u.Name, Password: u.Password, TLS: &profile.TLS{Enabled: true},
 	}
 	// Chromium rejects an untrusted certificate even with "insecure"; pin the
 	// self-signed one instead (a share link can't carry it, a profile can).
 	if env.SelfSigned && env.CertPEM != "" {
-		p.TLS.Certificate = env.CertPEM
+		prof.TLS.Certificate = env.CertPEM
 	}
-	return p, nil
+	return prof, nil
 }
 
 // Characters that break out of the text formats a secret is written into: a
@@ -375,12 +375,12 @@ func (o openvpn) Inbounds(env Env, port int, accts []Account) Config {
 
 // File is the user's single-file OpenVPN client config with the credentials
 // inline (OpenVPN 2.6+ and Wardkeep).
-func (o openvpn) File(env Env, port int, u Account) (string, string, error) {
+func (o openvpn) File(env Env, port int, acct Account) (string, string, error) {
 	// The credentials are written as two lines of the config file.
-	if err := safeField("user name", u.Name, unsafeInLines); err != nil {
+	if err := safeField("user name", acct.Name, unsafeInLines); err != nil {
 		return "", "", err
 	}
-	if err := safeField("password", u.Password, unsafeInLines); err != nil {
+	if err := safeField("password", acct.Password, unsafeInLines); err != nil {
 		return "", "", err
 	}
 	cfg := fmt.Sprintf(`# %s (%s) for %s
@@ -404,16 +404,16 @@ auth-user-pass
 %s</ca>
 <tls-crypt>
 %s</tls-crypt>
-`, env.Name, o.key(), u.Name, o.network(), env.Host, port, u.Name, u.Password, env.OpenVPN.CA, env.OpenVPN.TLSCrypt)
+`, env.Name, o.key(), acct.Name, o.network(), env.Host, port, acct.Name, acct.Password, env.OpenVPN.CA, env.OpenVPN.TLSCrypt)
 	return env.Name + "-" + o.key() + ".ovpn", cfg, nil
 }
 
 func (o openvpn) Profile(env Env, port int, u Account) (*profile.Profile, error) {
 	_, text, _ := o.File(env, port, u)
-	p, err := importer.ParseOVPN(text)
+	prof, err := importer.ParseOVPN(text)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", o.key(), err)
 	}
-	p.Name = env.Name + " OpenVPN " + strings.ToUpper(o.network())
-	return p, nil
+	prof.Name = env.Name + " OpenVPN " + strings.ToUpper(o.network())
+	return prof, nil
 }

@@ -94,7 +94,7 @@ func TestECHPEM(t *testing.T) {
 	}
 	long := strings.Repeat("A", 152)
 	pem := ECHPEM(long)
-	for _, line := range strings.Split(pem, "\n") {
+	for line := range strings.SplitSeq(pem, "\n") {
 		if len(line) > 64 && !strings.HasPrefix(line, "-----") {
 			t.Errorf("line longer than 64: %q", line)
 		}

@@ -69,12 +69,12 @@ func ServerAddrs(ctx context.Context, profiles []*profile.Profile, resolve Resol
 		}
 		return nil
 	}
-	for _, p := range profiles {
-		if err := add(p.Server); err != nil {
+	for _, prof := range profiles {
+		if err := add(prof.Server); err != nil {
 			return nil, err
 		}
-		if p.OpenVPN != nil {
-			for _, r := range p.OpenVPN.Remotes {
+		if prof.OpenVPN != nil {
+			for _, r := range prof.OpenVPN.Remotes {
 				if err := add(r.Server); err != nil {
 					return nil, err
 				}

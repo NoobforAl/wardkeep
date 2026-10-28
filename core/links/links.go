@@ -22,43 +22,43 @@ import (
 // a config file).
 var ErrNoLink = errors.New("this protocol has no share link; export it as a config file")
 
-// Export returns the share link for p.
-func Export(p *profile.Profile) (string, error) {
-	switch p.Protocol {
+// Export returns the share link for prof.
+func Export(prof *profile.Profile) (string, error) {
+	switch prof.Protocol {
 	case profile.VLESS:
-		return vless(p), nil
+		return vless(prof), nil
 	case profile.VMess:
-		return vmess(p)
+		return vmess(prof)
 	case profile.Trojan:
-		return trojan(p), nil
+		return trojan(prof), nil
 	case profile.Shadowsocks:
-		return shadowsocks(p), nil
+		return shadowsocks(prof), nil
 	case profile.Hysteria2:
-		return hysteria2(p), nil
+		return hysteria2(prof), nil
 	case profile.Hysteria:
-		return hysteria(p), nil
+		return hysteria(prof), nil
 	case profile.TUIC:
-		return tuic(p), nil
+		return tuic(prof), nil
 	case profile.AnyTLS:
-		return anytls(p), nil
+		return anytls(prof), nil
 	case profile.SSH:
-		return ssh(p), nil
+		return ssh(prof), nil
 	case profile.Naive:
-		return naive(p), nil
+		return naive(prof), nil
 	case profile.IKEv2:
-		return ikev2(p), nil
+		return ikev2(prof), nil
 	case profile.SSTP:
-		return sstp(p), nil
+		return sstp(prof), nil
 	case profile.Tor:
-		return tor(p), nil
+		return tor(prof), nil
 	case profile.Tailscale:
-		return tailscale(p)
+		return tailscale(prof)
 	case profile.DNSTT:
-		return dnstt(p), nil
+		return dnstt(prof), nil
 	case profile.WireGuard, profile.AmneziaWG:
-		return wireguard(p)
+		return wireguard(prof)
 	}
-	return "", fmt.Errorf("%w (%s)", ErrNoLink, p.Protocol)
+	return "", fmt.Errorf("%w (%s)", ErrNoLink, prof.Protocol)
 }
 
 func hostPort(p *profile.Profile) string {
@@ -82,31 +82,31 @@ func (q *query) addFlag(k string, on bool) {
 }
 
 func (q *query) String() string {
-	var b strings.Builder
+	var sb strings.Builder
 	for i, k := range q.keys {
 		if i > 0 {
-			b.WriteByte('&')
+			sb.WriteByte('&')
 		}
-		b.WriteString(url.QueryEscape(k) + "=" + url.QueryEscape(q.vals[i]))
+		sb.WriteString(url.QueryEscape(k) + "=" + url.QueryEscape(q.vals[i]))
 	}
-	return b.String()
+	return sb.String()
 }
 
 // build assembles scheme://userinfo@host:port/path?query#name.
-func build(scheme, userinfo, host, path string, q *query, name string) string {
-	var b strings.Builder
-	b.WriteString(scheme + "://")
+func build(scheme, userinfo, host, path string, params *query, name string) string {
+	var sb strings.Builder
+	sb.WriteString(scheme + "://")
 	if userinfo != "" {
-		b.WriteString(userinfo + "@")
+		sb.WriteString(userinfo + "@")
 	}
-	b.WriteString(host + path)
-	if s := q.String(); s != "" {
-		b.WriteString("?" + s)
+	sb.WriteString(host + path)
+	if s := params.String(); s != "" {
+		sb.WriteString("?" + s)
 	}
 	if name != "" {
-		b.WriteString("#" + url.PathEscape(name))
+		sb.WriteString("#" + url.PathEscape(name))
 	}
-	return b.String()
+	return sb.String()
 }
 
 // insecure adds the flag under the names different clients read.
@@ -119,167 +119,167 @@ func insecure(q *query, t *profile.TLS, names ...string) {
 }
 
 // tlsExtraQuery writes the handshake options: tlsfrag=1, recfrag=1, ech=<base64 config | 1> and echsni.
-func tlsExtraQuery(q *query, t *profile.TLS) {
-	if t == nil {
+func tlsExtraQuery(params *query, tlsOpts *profile.TLS) {
+	if tlsOpts == nil {
 		return
 	}
-	q.addFlag("tlsfrag", t.Fragment)
-	q.addFlag("recfrag", t.RecordFragment)
-	if e := t.ECH; e.On() {
-		if c := profile.ECHBase64(e.Config); c != "" {
-			q.add("ech", c)
+	params.addFlag("tlsfrag", tlsOpts.Fragment)
+	params.addFlag("recfrag", tlsOpts.RecordFragment)
+	if ech := tlsOpts.ECH; ech.On() {
+		if c := profile.ECHBase64(ech.Config); c != "" {
+			params.add("ech", c)
 		} else {
-			q.add("ech", "1")
+			params.add("ech", "1")
 		}
-		q.add("echsni", e.QueryServerName)
+		params.add("echsni", ech.QueryServerName)
 	}
 }
 
 // tlsQuery writes the v2rayN-style TLS/Reality parameters.
-func tlsQuery(q *query, t *profile.TLS, flow string) {
+func tlsQuery(params *query, tlsOpts *profile.TLS, flow string) {
 	switch {
-	case t == nil || !t.Enabled:
-		q.add("security", "none")
+	case tlsOpts == nil || !tlsOpts.Enabled:
+		params.add("security", "none")
 		return
-	case t.Reality != nil:
-		q.add("security", "reality")
+	case tlsOpts.Reality != nil:
+		params.add("security", "reality")
 	default:
-		q.add("security", "tls")
+		params.add("security", "tls")
 	}
-	q.add("flow", flow)
-	q.add("sni", t.ServerName)
-	q.add("fp", t.Fingerprint)
-	q.add("alpn", strings.Join(t.ALPN, ","))
-	if t.Reality != nil {
-		q.add("pbk", t.Reality.PublicKey)
-		q.add("sid", t.Reality.ShortID)
+	params.add("flow", flow)
+	params.add("sni", tlsOpts.ServerName)
+	params.add("fp", tlsOpts.Fingerprint)
+	params.add("alpn", strings.Join(tlsOpts.ALPN, ","))
+	if tlsOpts.Reality != nil {
+		params.add("pbk", tlsOpts.Reality.PublicKey)
+		params.add("sid", tlsOpts.Reality.ShortID)
 	}
-	insecure(q, t, "insecure", "allowInsecure", "allow_insecure")
-	tlsExtraQuery(q, t)
+	insecure(params, tlsOpts, "insecure", "allowInsecure", "allow_insecure")
+	tlsExtraQuery(params, tlsOpts)
 }
 
-func transportQuery(q *query, tr *profile.Transport) {
+func transportQuery(params *query, tr *profile.Transport) {
 	if tr == nil {
-		q.add("type", "tcp")
+		params.add("type", "tcp")
 		return
 	}
-	q.add("type", tr.Type)
-	q.add("host", tr.Host)
-	q.add("path", tr.Path)
-	q.add("serviceName", tr.ServiceName)
+	params.add("type", tr.Type)
+	params.add("host", tr.Host)
+	params.add("path", tr.Path)
+	params.add("serviceName", tr.ServiceName)
 }
 
 // muxQuery writes the multiplexing parameters: mux=<protocol>, muxpad=1, muxconn, muxmin, muxmax.
-func muxQuery(q *query, m *profile.Mux) {
-	if !m.Enabled() {
+func muxQuery(params *query, mux *profile.Mux) {
+	if !mux.Enabled() {
 		return
 	}
-	q.add("mux", m.Protocol)
-	q.addFlag("muxpad", m.Padding)
-	if m.MaxConnections > 0 {
-		q.add("muxconn", strconv.Itoa(m.MaxConnections))
+	params.add("mux", mux.Protocol)
+	params.addFlag("muxpad", mux.Padding)
+	if mux.MaxConnections > 0 {
+		params.add("muxconn", strconv.Itoa(mux.MaxConnections))
 	}
-	if m.MinStreams > 0 {
-		q.add("muxmin", strconv.Itoa(m.MinStreams))
+	if mux.MinStreams > 0 {
+		params.add("muxmin", strconv.Itoa(mux.MinStreams))
 	}
-	if m.MaxStreams > 0 {
-		q.add("muxmax", strconv.Itoa(m.MaxStreams))
+	if mux.MaxStreams > 0 {
+		params.add("muxmax", strconv.Itoa(mux.MaxStreams))
 	}
 }
 
-func vless(p *profile.Profile) string {
-	q := &query{}
-	transportQuery(q, p.Transport)
-	tlsQuery(q, p.TLS, p.Flow)
-	if p.TLS == nil || !p.TLS.Enabled {
-		q.add("flow", p.Flow)
+func vless(prof *profile.Profile) string {
+	params := &query{}
+	transportQuery(params, prof.Transport)
+	tlsQuery(params, prof.TLS, prof.Flow)
+	if prof.TLS == nil || !prof.TLS.Enabled {
+		params.add("flow", prof.Flow)
 	}
-	muxQuery(q, p.Multiplex)
-	return build("vless", url.PathEscape(p.UUID), hostPort(p), "", q, p.Name)
+	muxQuery(params, prof.Multiplex)
+	return build("vless", url.PathEscape(prof.UUID), hostPort(prof), "", params, prof.Name)
 }
 
-func trojan(p *profile.Profile) string {
-	q := &query{}
-	if p.Transport != nil {
-		transportQuery(q, p.Transport)
+func trojan(prof *profile.Profile) string {
+	params := &query{}
+	if prof.Transport != nil {
+		transportQuery(params, prof.Transport)
 	}
-	tlsQuery(q, p.TLS, "")
-	muxQuery(q, p.Multiplex)
-	return build("trojan", url.PathEscape(p.Password), hostPort(p), "", q, p.Name)
+	tlsQuery(params, prof.TLS, "")
+	muxQuery(params, prof.Multiplex)
+	return build("trojan", url.PathEscape(prof.Password), hostPort(prof), "", params, prof.Name)
 }
 
-func vmess(p *profile.Profile) (string, error) {
-	v := map[string]any{
-		"v": "2", "ps": p.Name, "add": p.Server, "port": strconv.Itoa(p.Port), "id": p.UUID,
-		"aid": strconv.Itoa(p.AlterID), "scy": orDefault(p.Method, "auto"), "net": "tcp", "type": "none",
+func vmess(prof *profile.Profile) (string, error) {
+	fields := map[string]any{
+		"v": "2", "ps": prof.Name, "add": prof.Server, "port": strconv.Itoa(prof.Port), "id": prof.UUID,
+		"aid": strconv.Itoa(prof.AlterID), "scy": orDefault(prof.Method, "auto"), "net": "tcp", "type": "none",
 	}
-	if tr := p.Transport; tr != nil {
-		v["net"] = tr.Type
+	if tr := prof.Transport; tr != nil {
+		fields["net"] = tr.Type
 		switch tr.Type {
 		case "grpc":
-			v["path"] = tr.ServiceName
+			fields["path"] = tr.ServiceName
 		default:
-			v["path"], v["host"] = tr.Path, tr.Host
+			fields["path"], fields["host"] = tr.Path, tr.Host
 		}
 	}
-	if t := p.TLS; t != nil && t.Enabled {
-		v["tls"], v["sni"], v["fp"], v["alpn"] = "tls", t.ServerName, t.Fingerprint, strings.Join(t.ALPN, ",")
+	if t := prof.TLS; t != nil && t.Enabled {
+		fields["tls"], fields["sni"], fields["fp"], fields["alpn"] = "tls", t.ServerName, t.Fingerprint, strings.Join(t.ALPN, ",")
 	}
-	if t := p.TLS; t != nil && t.Enabled {
-		if t.Fragment {
-			v["tlsfrag"] = "1"
+	if tlsOpts := prof.TLS; tlsOpts != nil && tlsOpts.Enabled {
+		if tlsOpts.Fragment {
+			fields["tlsfrag"] = "1"
 		}
-		if t.RecordFragment {
-			v["recfrag"] = "1"
+		if tlsOpts.RecordFragment {
+			fields["recfrag"] = "1"
 		}
-		if e := t.ECH; e.On() {
-			v["ech"], v["echsni"] = orDefault(profile.ECHBase64(e.Config), "1"), e.QueryServerName
+		if e := tlsOpts.ECH; e.On() {
+			fields["ech"], fields["echsni"] = orDefault(profile.ECHBase64(e.Config), "1"), e.QueryServerName
 		}
 	}
-	if m := p.Multiplex; m.Enabled() {
-		v["mux"] = m.Protocol
-		if m.Padding {
-			v["muxpad"] = "1"
+	if mux := prof.Multiplex; mux.Enabled() {
+		fields["mux"] = mux.Protocol
+		if mux.Padding {
+			fields["muxpad"] = "1"
 		}
-		for k, n := range map[string]int{"muxconn": m.MaxConnections, "muxmin": m.MinStreams, "muxmax": m.MaxStreams} {
+		for k, n := range map[string]int{"muxconn": mux.MaxConnections, "muxmin": mux.MinStreams, "muxmax": mux.MaxStreams} {
 			if n > 0 {
-				v[k] = strconv.Itoa(n)
+				fields[k] = strconv.Itoa(n)
 			}
 		}
 	}
-	raw, err := json.Marshal(v)
+	raw, err := json.Marshal(fields)
 	if err != nil {
 		return "", err
 	}
 	return "vmess://" + base64.StdEncoding.EncodeToString(raw), nil
 }
 
-func shadowsocks(p *profile.Profile) string {
-	userinfo := base64.RawURLEncoding.EncodeToString([]byte(p.Method + ":" + p.Password))
-	q := &query{}
-	if p.Plugin != "" {
-		plugin := p.Plugin
-		if p.PluginOpts != "" {
-			plugin += ";" + p.PluginOpts
+func shadowsocks(prof *profile.Profile) string {
+	userinfo := base64.RawURLEncoding.EncodeToString([]byte(prof.Method + ":" + prof.Password))
+	params := &query{}
+	if prof.Plugin != "" {
+		plugin := prof.Plugin
+		if prof.PluginOpts != "" {
+			plugin += ";" + prof.PluginOpts
 		}
-		q.add("plugin", plugin)
+		params.add("plugin", plugin)
 	}
-	muxQuery(q, p.Multiplex)
-	return build("ss", userinfo, hostPort(p), "", q, p.Name)
+	muxQuery(params, prof.Multiplex)
+	return build("ss", userinfo, hostPort(prof), "", params, prof.Name)
 }
 
-func hysteria2(p *profile.Profile) string {
-	q := &query{}
-	if p.TLS != nil {
-		q.add("sni", p.TLS.ServerName)
-		q.add("alpn", strings.Join(p.TLS.ALPN, ","))
-		insecure(q, p.TLS, "insecure", "allowInsecure", "allow_insecure")
+func hysteria2(prof *profile.Profile) string {
+	params := &query{}
+	if prof.TLS != nil {
+		params.add("sni", prof.TLS.ServerName)
+		params.add("alpn", strings.Join(prof.TLS.ALPN, ","))
+		insecure(params, prof.TLS, "insecure", "allowInsecure", "allow_insecure")
 	}
-	if h := p.Hysteria2; h != nil {
-		q.add("obfs", h.Obfs)
-		q.add("obfs-password", h.ObfsPassword)
+	if h := prof.Hysteria2; h != nil {
+		params.add("obfs", h.Obfs)
+		params.add("obfs-password", h.ObfsPassword)
 	}
-	return build("hysteria2", userinfoPassword(p.Password), hostPort(p), "", q, p.Name)
+	return build("hysteria2", userinfoPassword(prof.Password), hostPort(prof), "", params, prof.Name)
 }
 
 // userinfoPassword escapes a password that may contain "user:pass".
@@ -291,148 +291,148 @@ func userinfoPassword(pw string) string {
 	return url.PathEscape(user) + ":" + url.PathEscape(pass)
 }
 
-func hysteria(p *profile.Profile) string {
-	q := &query{}
-	q.add("protocol", "udp")
-	q.add("auth", p.Password)
-	if p.TLS != nil {
-		q.add("peer", p.TLS.ServerName)
-		q.add("alpn", strings.Join(p.TLS.ALPN, ","))
-		insecure(q, p.TLS, "insecure")
+func hysteria(prof *profile.Profile) string {
+	params := &query{}
+	params.add("protocol", "udp")
+	params.add("auth", prof.Password)
+	if prof.TLS != nil {
+		params.add("peer", prof.TLS.ServerName)
+		params.add("alpn", strings.Join(prof.TLS.ALPN, ","))
+		insecure(params, prof.TLS, "insecure")
 	}
-	if h := p.Hysteria2; h != nil {
-		if h.UpMbps > 0 {
-			q.add("upmbps", strconv.Itoa(h.UpMbps))
+	if hy2 := prof.Hysteria2; hy2 != nil {
+		if hy2.UpMbps > 0 {
+			params.add("upmbps", strconv.Itoa(hy2.UpMbps))
 		}
-		if h.DownMbps > 0 {
-			q.add("downmbps", strconv.Itoa(h.DownMbps))
+		if hy2.DownMbps > 0 {
+			params.add("downmbps", strconv.Itoa(hy2.DownMbps))
 		}
-		q.add("obfsParam", h.Obfs)
+		params.add("obfsParam", hy2.Obfs)
 	}
-	return build("hysteria", "", hostPort(p), "", q, p.Name)
+	return build("hysteria", "", hostPort(prof), "", params, prof.Name)
 }
 
-func tuic(p *profile.Profile) string {
-	q := &query{}
-	if t := p.TUIC; t != nil {
-		q.add("congestion_control", t.CongestionControl)
-		q.add("udp_relay_mode", t.UDPRelayMode)
+func tuic(prof *profile.Profile) string {
+	params := &query{}
+	if t := prof.TUIC; t != nil {
+		params.add("congestion_control", t.CongestionControl)
+		params.add("udp_relay_mode", t.UDPRelayMode)
 	}
-	if p.TLS != nil {
-		q.add("alpn", strings.Join(p.TLS.ALPN, ","))
-		q.add("sni", p.TLS.ServerName)
-		insecure(q, p.TLS, "insecure", "allowInsecure", "allow_insecure")
+	if prof.TLS != nil {
+		params.add("alpn", strings.Join(prof.TLS.ALPN, ","))
+		params.add("sni", prof.TLS.ServerName)
+		insecure(params, prof.TLS, "insecure", "allowInsecure", "allow_insecure")
 	}
-	return build("tuic", url.PathEscape(p.UUID)+":"+url.PathEscape(p.Password), hostPort(p), "", q, p.Name)
+	return build("tuic", url.PathEscape(prof.UUID)+":"+url.PathEscape(prof.Password), hostPort(prof), "", params, prof.Name)
 }
 
-func anytls(p *profile.Profile) string {
-	q := &query{}
-	if p.TLS != nil {
-		q.add("sni", p.TLS.ServerName)
-		q.add("fp", p.TLS.Fingerprint)
-		q.add("alpn", strings.Join(p.TLS.ALPN, ","))
-		insecure(q, p.TLS, "insecure", "allowInsecure", "allow_insecure")
-		tlsExtraQuery(q, p.TLS)
+func anytls(prof *profile.Profile) string {
+	params := &query{}
+	if prof.TLS != nil {
+		params.add("sni", prof.TLS.ServerName)
+		params.add("fp", prof.TLS.Fingerprint)
+		params.add("alpn", strings.Join(prof.TLS.ALPN, ","))
+		insecure(params, prof.TLS, "insecure", "allowInsecure", "allow_insecure")
+		tlsExtraQuery(params, prof.TLS)
 	}
-	return build("anytls", url.PathEscape(p.Password), hostPort(p), "/", q, p.Name)
+	return build("anytls", url.PathEscape(prof.Password), hostPort(prof), "/", params, prof.Name)
 }
 
-func ssh(p *profile.Profile) string {
-	q := &query{}
-	if o := p.SSH; o != nil {
-		q.add("pk", o.PrivateKey)
-		q.add("pkp", o.PrivateKeyPassphrase)
-		q.add("hk", strings.Join(o.HostKey, ","))
-		q.add("client_version", o.ClientVersion)
+func ssh(prof *profile.Profile) string {
+	params := &query{}
+	if opts := prof.SSH; opts != nil {
+		params.add("pk", opts.PrivateKey)
+		params.add("pkp", opts.PrivateKeyPassphrase)
+		params.add("hk", strings.Join(opts.HostKey, ","))
+		params.add("client_version", opts.ClientVersion)
 	}
-	userinfo := url.PathEscape(p.Username)
-	if p.Password != "" {
-		userinfo += ":" + url.PathEscape(p.Password)
+	userinfo := url.PathEscape(prof.Username)
+	if prof.Password != "" {
+		userinfo += ":" + url.PathEscape(prof.Password)
 	}
-	return build("ssh", userinfo, hostPort(p), "", q, p.Name)
+	return build("ssh", userinfo, hostPort(prof), "", params, prof.Name)
 }
 
-func naive(p *profile.Profile) string {
-	scheme, q := "naive+https", &query{}
-	if p.TLS != nil {
-		q.add("sni", p.TLS.ServerName)
+func naive(prof *profile.Profile) string {
+	scheme, params := "naive+https", &query{}
+	if prof.TLS != nil {
+		params.add("sni", prof.TLS.ServerName)
 	}
-	if o := p.Naive; o != nil {
-		if o.QUIC {
+	if opts := prof.Naive; opts != nil {
+		if opts.QUIC {
 			scheme = "naive+quic"
 		}
-		if len(o.ExtraHeaders) > 0 {
-			keys := make([]string, 0, len(o.ExtraHeaders))
-			for k := range o.ExtraHeaders {
+		if len(opts.ExtraHeaders) > 0 {
+			keys := make([]string, 0, len(opts.ExtraHeaders))
+			for k := range opts.ExtraHeaders {
 				keys = append(keys, k)
 			}
 			sort.Strings(keys)
 			lines := make([]string, len(keys))
 			for i, k := range keys {
-				lines[i] = k + ": " + o.ExtraHeaders[k]
+				lines[i] = k + ": " + opts.ExtraHeaders[k]
 			}
-			q.add("extra-headers", strings.Join(lines, "\r\n"))
+			params.add("extra-headers", strings.Join(lines, "\r\n"))
 		}
 	}
-	userinfo := url.PathEscape(p.Username) + ":" + url.PathEscape(p.Password)
-	return build(scheme, userinfo, hostPort(p), "/", q, p.Name)
+	userinfo := url.PathEscape(prof.Username) + ":" + url.PathEscape(prof.Password)
+	return build(scheme, userinfo, hostPort(prof), "/", params, prof.Name)
 }
 
-func ikev2(p *profile.Profile) string {
-	q := &query{}
-	o := p.IKEv2
-	if o == nil {
-		o = &profile.IKEv2Opts{Auth: "eap"}
+func ikev2(prof *profile.Profile) string {
+	params := &query{}
+	opts := prof.IKEv2
+	if opts == nil {
+		opts = &profile.IKEv2Opts{Auth: "eap"}
 	}
-	q.add("auth", o.Auth)
-	q.add("psk", o.PSK)
-	q.add("remote_id", o.RemoteID)
-	q.add("local_id", o.LocalID)
-	q.add("ca", o.CACert)
-	if o.MTU > 0 {
-		q.add("mtu", strconv.Itoa(o.MTU))
+	params.add("auth", opts.Auth)
+	params.add("psk", opts.PSK)
+	params.add("remote_id", opts.RemoteID)
+	params.add("local_id", opts.LocalID)
+	params.add("ca", opts.CACert)
+	if opts.MTU > 0 {
+		params.add("mtu", strconv.Itoa(opts.MTU))
 	}
-	q.addFlag("tcp", o.TCP)
-	q.addFlag("system", o.System)
+	params.addFlag("tcp", opts.TCP)
+	params.addFlag("system", opts.System)
 	userinfo := ""
-	if p.Username != "" {
-		userinfo = url.PathEscape(p.Username)
-		if p.Password != "" {
-			userinfo += ":" + url.PathEscape(p.Password)
+	if prof.Username != "" {
+		userinfo = url.PathEscape(prof.Username)
+		if prof.Password != "" {
+			userinfo += ":" + url.PathEscape(prof.Password)
 		}
 	}
-	return build("ikev2", userinfo, hostPort(p), "", q, p.Name)
+	return build("ikev2", userinfo, hostPort(prof), "", params, prof.Name)
 }
 
-func sstp(p *profile.Profile) string {
-	q := &query{}
-	if p.TLS != nil && !p.TLS.Insecure {
-		q.add("insecure", "0") // the parser's default is insecure=1
+func sstp(prof *profile.Profile) string {
+	params := &query{}
+	if prof.TLS != nil && !prof.TLS.Insecure {
+		params.add("insecure", "0") // the parser's default is insecure=1
 	}
-	userinfo := url.PathEscape(p.Username) + ":" + url.PathEscape(p.Password)
-	return build("sstp", userinfo, hostPort(p), "", q, p.Name)
+	userinfo := url.PathEscape(prof.Username) + ":" + url.PathEscape(prof.Password)
+	return build("sstp", userinfo, hostPort(prof), "", params, prof.Name)
 }
 
 // tor is one line, so a Tor profile with the user's own bridges can sit in a list of links (a shared group).
-func tor(p *profile.Profile) string {
+func tor(prof *profile.Profile) string {
 	kind, bridges := "", []string(nil)
-	if p.Tor != nil {
-		kind, bridges = p.Tor.Builtin, p.Tor.Bridges
+	if prof.Tor != nil {
+		kind, bridges = prof.Tor.Builtin, prof.Tor.Bridges
 	}
-	q := &query{}
+	params := &query{}
 	for _, b := range bridges {
-		q.add("bridge", b)
+		params.add("bridge", b)
 	}
 	// The name a link without one would get back: no need to carry it.
-	name := p.Name
+	name := prof.Name
 	switch {
 	case kind != "" && name == "Tor ("+kind+")",
 		kind == "" && len(bridges) == 0 && name == "Tor",
 		kind == "" && len(bridges) > 0 && name == "Tor (custom bridges)":
 		name = ""
 	}
-	return build("tor", "", kind, "", q, name)
+	return build("tor", "", kind, "", params, name)
 }
 
 func orDefault(s, d string) string {
@@ -442,60 +442,60 @@ func orDefault(s, d string) string {
 	return s
 }
 
-func wireguard(p *profile.Profile) (string, error) {
-	g := p.WireGuard
-	if g == nil || g.PrivateKey == "" {
+func wireguard(prof *profile.Profile) (string, error) {
+	wgOpts := prof.WireGuard
+	if wgOpts == nil || wgOpts.PrivateKey == "" {
 		return "", errors.New("the WireGuard profile has no private key")
 	}
-	q := &query{}
-	q.add("publickey", g.PeerPublicKey)
-	q.add("presharedkey", g.PreSharedKey)
-	q.add("address", strings.Join(g.Address, ","))
-	q.add("allowedips", strings.Join(g.AllowedIPs, ","))
-	q.add("dns", strings.Join(g.DNS, ","))
-	if g.MTU > 0 {
-		q.add("mtu", strconv.Itoa(g.MTU))
+	params := &query{}
+	params.add("publickey", wgOpts.PeerPublicKey)
+	params.add("presharedkey", wgOpts.PreSharedKey)
+	params.add("address", strings.Join(wgOpts.Address, ","))
+	params.add("allowedips", strings.Join(wgOpts.AllowedIPs, ","))
+	params.add("dns", strings.Join(wgOpts.DNS, ","))
+	if wgOpts.MTU > 0 {
+		params.add("mtu", strconv.Itoa(wgOpts.MTU))
 	}
-	if g.Keepalive > 0 {
-		q.add("keepalive", strconv.Itoa(g.Keepalive))
+	if wgOpts.Keepalive > 0 {
+		params.add("keepalive", strconv.Itoa(wgOpts.Keepalive))
 	}
-	if p.Protocol == profile.WireGuard {
-		q.add("via", g.Via)
+	if prof.Protocol == profile.WireGuard {
+		params.add("via", wgOpts.Via)
 	}
-	if len(g.Reserved) > 0 {
-		parts := make([]string, len(g.Reserved))
-		for i, r := range g.Reserved {
+	if len(wgOpts.Reserved) > 0 {
+		parts := make([]string, len(wgOpts.Reserved))
+		for i, r := range wgOpts.Reserved {
 			parts[i] = strconv.Itoa(r)
 		}
-		q.add("reserved", strings.Join(parts, ","))
+		params.add("reserved", strings.Join(parts, ","))
 	}
 	scheme := "wireguard"
-	if p.Protocol == profile.AmneziaWG {
+	if prof.Protocol == profile.AmneziaWG {
 		scheme = "awg"
-		keys := make([]string, 0, len(g.Amnezia))
-		for k := range g.Amnezia {
+		keys := make([]string, 0, len(wgOpts.Amnezia))
+		for k := range wgOpts.Amnezia {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
 		for _, k := range keys {
-			q.add(k, g.Amnezia[k])
+			params.add(k, wgOpts.Amnezia[k])
 		}
 	}
-	return build(scheme, url.PathEscape(g.PrivateKey), hostPort(p), "", q, p.Name), nil
+	return build(scheme, url.PathEscape(wgOpts.PrivateKey), hostPort(prof), "", params, prof.Name), nil
 }
 
 // dnstt is dnstt://<server key>@<domain>?resolver=...&resolver=...&user=...&pass=...#name. The key is public, so it
 // travels as the user part of the link, the way a host-and-key pair is written elsewhere.
-func dnstt(p *profile.Profile) string {
-	o := p.DNSTT
-	if o == nil {
-		o = &profile.DNSTTOpts{}
+func dnstt(prof *profile.Profile) string {
+	opts := prof.DNSTT
+	if opts == nil {
+		opts = &profile.DNSTTOpts{}
 	}
-	q := &query{}
-	for _, r := range o.Resolvers {
-		q.add("resolver", r)
+	params := &query{}
+	for _, r := range opts.Resolvers {
+		params.add("resolver", r)
 	}
-	q.add("user", p.Username)
-	q.add("pass", p.Password)
-	return build("dnstt", url.PathEscape(o.PubKey), o.Domain, "", q, p.Name)
+	params.add("user", prof.Username)
+	params.add("pass", prof.Password)
+	return build("dnstt", url.PathEscape(opts.PubKey), opts.Domain, "", params, prof.Name)
 }

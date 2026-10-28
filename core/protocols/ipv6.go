@@ -38,11 +38,11 @@ func WGAddress6(wgAddress string) (string, error) { return address6(wgAddress, W
 func AWGAddress6(wgAddress string) (string, error) { return address6(wgAddress, AWGPool6) }
 
 func address6(wgAddress, pool string) (string, error) {
-	p, err := netip.ParsePrefix(wgAddress)
-	if err != nil || !p.Addr().Is4() {
+	prefix, err := netip.ParsePrefix(wgAddress)
+	if err != nil || !prefix.Addr().Is4() {
 		return "", fmt.Errorf("%q is not an IPv4 tunnel address", wgAddress)
 	}
-	v4 := p.Addr().As4()
+	v4 := prefix.Addr().As4()
 	b := netip.MustParsePrefix(pool).Addr().As16()
 	b[14], b[15] = v4[2], v4[3]
 	return netip.PrefixFrom(netip.AddrFrom16(b), 128).String(), nil

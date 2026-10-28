@@ -7,6 +7,7 @@ import (
 
 	box "github.com/sagernet/sing-box"
 
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/singbox"
 )
 
@@ -42,34 +43,37 @@ func (e *Engine) handshake(ctx context.Context, instance *box.Box, order []strin
 				return
 			}
 			if i > 0 {
-				e.logf("warn", "failover: %s did not respond, using %s", e.name(selected), e.name(tag))
+				e.logWith(logrec.LevelWarn, logFields{profile: selected, err: firstErr}, "failover: the profile did not respond, using %s", tag)
 				e.selectLocked(tag, &FailoverEvent{From: selected, To: tag, Reason: firstErr.Error(), At: time.Now()})
 			}
 			s := e.state
 			s.Status, s.Since, s.Error, s.Progress = StatusRunning, time.Now(), "", progress(StageConnected, e.name(tag))
 			e.setState(s)
 			e.mu.Unlock()
-			e.logf("info", "connected via %s", e.nameLocked(tag))
+			e.logWith(logrec.LevelInfo, logFields{profile: tag}, "connected")
 			if opts.Failover {
-				go e.failoverLoop(ctx, instance, order, opts)
+				go func() {
+					defer e.recoverLoop("connect")
+					e.failoverLoop(ctx, instance, order, opts)
+				}()
 			}
 			return
 		}
 		if firstErr == nil {
 			firstErr = err
 		}
-		e.logf("warn", "handshake with %s failed: %v", e.nameLocked(tag), err)
+		e.logWith(logrec.LevelWarn, logFields{profile: tag, err: err}, "handshake failed")
 		if ctx.Err() != nil {
 			return
 		}
 	}
 
 	// Nothing answered: tell "offline" apart from "servers unreachable".
-	e.logf("error", "%s failed: %v", stageLabel[StageHandshake], firstErr)
 	msg := fmt.Sprintf("%s failed: %s", stageLabel[StageHandshake], plainError(firstErr))
 	if nerr := e.netCheck(ctx, instance); nerr != nil {
 		msg = msgNoInternet
 	}
+	e.logWith(logrec.LevelError, logFields{code: errorCode(msg), err: firstErr}, "%s failed", stageLabel[StageHandshake])
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.instance != instance {
@@ -81,14 +85,14 @@ func (e *Engine) handshake(ctx context.Context, instance *box.Box, order []strin
 }
 
 // updateProgress sets the progress if instance is still running; it reports whether it was.
-func (e *Engine) updateProgress(instance *box.Box, p *Progress) bool {
+func (e *Engine) updateProgress(instance *box.Box, prog *Progress) bool {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.instance != instance {
 		return false
 	}
 	s := e.state
-	s.Progress = p
+	s.Progress = prog
 	e.setState(s)
 	return true
 }

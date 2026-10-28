@@ -97,17 +97,17 @@ func ImportClash(text string) (*Result, error) {
 	}
 	res := &Result{}
 	for _, cp := range doc.Proxies {
-		p, err := clashToProfile(cp)
+		prof, err := clashToProfile(cp)
 		if err != nil {
 			res.Errors = append(res.Errors, fmt.Sprintf("%s: %v", cp.str("name"), err))
 			continue
 		}
-		if err := p.Validate(); err != nil {
+		if err := prof.Validate(); err != nil {
 			res.Errors = append(res.Errors, err.Error())
 			continue
 		}
-		p.EnsureID()
-		res.Profiles = append(res.Profiles, p)
+		prof.EnsureID()
+		res.Profiles = append(res.Profiles, prof)
 	}
 	if len(res.Profiles) == 0 {
 		if len(res.Errors) > 0 {
@@ -119,18 +119,18 @@ func ImportClash(text string) (*Result, error) {
 }
 
 func clashToProfile(cp clashProxy) (*profile.Profile, error) {
-	p := &profile.Profile{
+	prof := &profile.Profile{
 		Name:   cp.str("name"),
 		Server: cp.str("server"),
 		Port:   cp.num("port"),
 	}
 	// A stable source so IDs survive re-imports of the same proxy.
-	p.Source = fmt.Sprintf("clash:%s:%s:%d:%s", cp.str("type"), p.Server, p.Port, p.Name)
+	prof.Source = fmt.Sprintf("clash:%s:%s:%d:%s", cp.str("type"), prof.Server, prof.Port, prof.Name)
 	tls := func(defaultOn bool) *profile.TLS {
 		if !defaultOn && !cp.boolean("tls") && cp.sub("reality-opts")["public-key"] == nil {
 			return nil
 		}
-		t := &profile.TLS{
+		tlsOpts := &profile.TLS{
 			Enabled:     true,
 			ServerName:  cp.str("servername", "sni"),
 			Insecure:    cp.boolean("skip-cert-verify"),
@@ -138,15 +138,15 @@ func clashToProfile(cp clashProxy) (*profile.Profile, error) {
 			Fingerprint: cp.str("client-fingerprint"),
 		}
 		if ro := cp.sub("reality-opts"); ro.str("public-key") != "" {
-			t.Reality = &profile.Reality{PublicKey: ro.str("public-key"), ShortID: ro.str("short-id")}
-			if t.Fingerprint == "" {
-				t.Fingerprint = "chrome"
+			tlsOpts.Reality = &profile.Reality{PublicKey: ro.str("public-key"), ShortID: ro.str("short-id")}
+			if tlsOpts.Fingerprint == "" {
+				tlsOpts.Fingerprint = "chrome"
 			}
 		}
-		if eo := cp.sub("ech-opts"); eo.boolean("enable") && t.Reality == nil {
-			t.ECH = &profile.ECH{Enabled: true, Config: profile.ECHPEM(eo.str("config")), QueryServerName: eo.str("query-server-name")}
+		if eo := cp.sub("ech-opts"); eo.boolean("enable") && tlsOpts.Reality == nil {
+			tlsOpts.ECH = &profile.ECH{Enabled: true, Config: profile.ECHPEM(eo.str("config")), QueryServerName: eo.str("query-server-name")}
 		}
-		return t
+		return tlsOpts
 	}
 	transport := func() *profile.Transport {
 		switch cp.str("network") {
@@ -156,16 +156,16 @@ func clashToProfile(cp clashProxy) (*profile.Profile, error) {
 		case "grpc":
 			return &profile.Transport{Type: "grpc", ServiceName: cp.sub("grpc-opts").str("grpc-service-name")}
 		case "h2", "http":
-			h := cp.sub("h2-opts")
-			if len(h) == 0 {
-				h = cp.sub("http-opts")
+			h2Opts := cp.sub("h2-opts")
+			if len(h2Opts) == 0 {
+				h2Opts = cp.sub("http-opts")
 			}
-			path := h.str("path")
-			if l := h.list("path"); len(l) > 0 {
+			path := h2Opts.str("path")
+			if l := h2Opts.list("path"); len(l) > 0 {
 				path = l[0]
 			}
 			host := ""
-			if l := h.list("host"); len(l) > 0 {
+			if l := h2Opts.list("host"); len(l) > 0 {
 				host = strings.Join(l, ",")
 			}
 			return &profile.Transport{Type: "http", Path: path, Host: host}
@@ -178,21 +178,21 @@ func clashToProfile(cp clashProxy) (*profile.Profile, error) {
 
 	switch typ := cp.str("type"); typ {
 	case "ss":
-		p.Protocol = profile.Shadowsocks
-		p.Method = cp.str("cipher")
-		p.Password = cp.str("password")
+		prof.Protocol = profile.Shadowsocks
+		prof.Method = cp.str("cipher")
+		prof.Password = cp.str("password")
 		// Clash plugin-opts → SIP003 plugin option strings.
 		po := cp.sub("plugin-opts")
 		switch cp.str("plugin") {
 		case "":
 		case "obfs":
-			p.Plugin = "obfs-local"
-			p.PluginOpts = "obfs=" + po.str("mode")
+			prof.Plugin = "obfs-local"
+			prof.PluginOpts = "obfs=" + po.str("mode")
 			if h := po.str("host"); h != "" {
-				p.PluginOpts += ";obfs-host=" + h
+				prof.PluginOpts += ";obfs-host=" + h
 			}
 		case "v2ray-plugin":
-			p.Plugin = "v2ray-plugin"
+			prof.Plugin = "v2ray-plugin"
 			opts := []string{"mode=" + po.str("mode")}
 			if po.boolean("tls") {
 				opts = append(opts, "tls")
@@ -202,65 +202,65 @@ func clashToProfile(cp clashProxy) (*profile.Profile, error) {
 					opts = append(opts, k+"="+v)
 				}
 			}
-			p.PluginOpts = strings.Join(opts, ";")
+			prof.PluginOpts = strings.Join(opts, ";")
 		case "shadow-tls":
-			p.Plugin = "shadow-tls"
-			p.PluginOpts = fmt.Sprintf("host=%s;password=%s;version=%s", po.str("host"), po.str("password"), firstNonEmpty(po.str("version"), "2"))
+			prof.Plugin = "shadow-tls"
+			prof.PluginOpts = fmt.Sprintf("host=%s;password=%s;version=%s", po.str("host"), po.str("password"), firstNonEmpty(po.str("version"), "2"))
 		default:
 			return nil, fmt.Errorf("unsupported shadowsocks plugin %q", cp.str("plugin"))
 		}
 	case "vmess":
-		p.Protocol = profile.VMess
-		p.UUID = cp.str("uuid")
-		p.AlterID = cp.num("alterId")
-		p.Method = cp.str("cipher")
-		p.TLS, p.Transport = tls(false), transport()
+		prof.Protocol = profile.VMess
+		prof.UUID = cp.str("uuid")
+		prof.AlterID = cp.num("alterId")
+		prof.Method = cp.str("cipher")
+		prof.TLS, prof.Transport = tls(false), transport()
 	case "vless":
-		p.Protocol = profile.VLESS
-		p.UUID = cp.str("uuid")
-		p.Flow = cp.str("flow")
-		p.TLS, p.Transport = tls(false), transport()
+		prof.Protocol = profile.VLESS
+		prof.UUID = cp.str("uuid")
+		prof.Flow = cp.str("flow")
+		prof.TLS, prof.Transport = tls(false), transport()
 	case "trojan":
-		p.Protocol = profile.Trojan
-		p.Password = cp.str("password")
-		p.TLS, p.Transport = tls(true), transport()
+		prof.Protocol = profile.Trojan
+		prof.Password = cp.str("password")
+		prof.TLS, prof.Transport = tls(true), transport()
 	case "hysteria2", "hy2":
-		p.Protocol = profile.Hysteria2
-		p.Password = cp.str("password", "auth")
-		p.TLS = tls(true)
+		prof.Protocol = profile.Hysteria2
+		prof.Password = cp.str("password", "auth")
+		prof.TLS = tls(true)
 		if obfs := cp.str("obfs"); obfs != "" {
-			p.Hysteria2 = &profile.Hy2{Obfs: obfs, ObfsPassword: cp.str("obfs-password")}
+			prof.Hysteria2 = &profile.Hy2{Obfs: obfs, ObfsPassword: cp.str("obfs-password")}
 		}
 	case "tuic":
-		p.Protocol = profile.TUIC
-		p.UUID = cp.str("uuid")
-		p.Password = cp.str("password")
-		p.TLS = tls(true)
-		p.TUIC = &profile.TUICOpts{
+		prof.Protocol = profile.TUIC
+		prof.UUID = cp.str("uuid")
+		prof.Password = cp.str("password")
+		prof.TLS = tls(true)
+		prof.TUIC = &profile.TUICOpts{
 			CongestionControl: cp.str("congestion-controller"),
 			UDPRelayMode:      cp.str("udp-relay-mode"),
 		}
 	case "hysteria":
-		p.Protocol = profile.Hysteria
-		p.Password = cp.str("auth-str", "auth_str", "auth")
-		p.TLS = tls(true)
+		prof.Protocol = profile.Hysteria
+		prof.Password = cp.str("auth-str", "auth_str", "auth")
+		prof.TLS = tls(true)
 		h := &profile.Hy2{Obfs: cp.str("obfs")}
 		h.UpMbps, h.DownMbps = cp.num("up"), cp.num("down")
-		p.Hysteria2 = h
+		prof.Hysteria2 = h
 	case "anytls":
-		p.Protocol = profile.AnyTLS
-		p.Password = cp.str("password")
-		p.TLS = tls(true)
+		prof.Protocol = profile.AnyTLS
+		prof.Password = cp.str("password")
+		prof.TLS = tls(true)
 	case "ssh":
-		p.Protocol = profile.SSH
-		p.Username = cp.str("username", "user")
-		p.Password = cp.str("password")
+		prof.Protocol = profile.SSH
+		prof.Username = cp.str("username", "user")
+		prof.Password = cp.str("password")
 		o := &profile.SSHOpts{PrivateKey: cp.str("private-key"), PrivateKeyPassphrase: cp.str("private-key-passphrase"), HostKey: cp.list("host-key")}
 		if o.PrivateKey != "" || len(o.HostKey) > 0 {
-			p.SSH = o
+			prof.SSH = o
 		}
 	case "wireguard":
-		p.Protocol = profile.WireGuard
+		prof.Protocol = profile.WireGuard
 		wg := &profile.WG{
 			PrivateKey:    cp.str("private-key"),
 			PeerPublicKey: cp.str("public-key"),
@@ -280,16 +280,16 @@ func clashToProfile(cp clashProxy) (*profile.Profile, error) {
 			}
 		}
 		if len(cp.list("amnezia-wg-option")) > 0 || len(cp.sub("amnezia-wg-option")) > 0 {
-			p.Protocol = profile.AmneziaWG
+			prof.Protocol = profile.AmneziaWG
 		}
-		p.WireGuard = wg
+		prof.WireGuard = wg
 	default:
 		return nil, fmt.Errorf("unsupported proxy type %q", typ)
 	}
-	dropUnusableTLSExtras(p)
+	dropUnusableTLSExtras(prof)
 	if sm := cp.sub("smux"); sm.boolean("enabled") {
-		attachMux(p, &profile.Mux{Protocol: firstNonEmpty(sm.str("protocol"), "smux"), MaxConnections: sm.num("max-connections"),
+		attachMux(prof, &profile.Mux{Protocol: firstNonEmpty(sm.str("protocol"), "smux"), MaxConnections: sm.num("max-connections"),
 			MinStreams: sm.num("min-streams"), MaxStreams: sm.num("max-streams"), Padding: sm.boolean("padding")})
 	}
-	return p, nil
+	return prof, nil
 }

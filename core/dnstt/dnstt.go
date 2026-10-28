@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/third_party/dnstt/client"
 	"github.com/NoobforAl/omnitun/third_party/dnstt/dns"
 	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
@@ -49,7 +50,7 @@ func validDomain(s string) bool {
 	if _, err := dns.ParseName(s); err != nil {
 		return false
 	}
-	for _, label := range strings.Split(s, ".") {
+	for label := range strings.SplitSeq(s, ".") {
 		if label == "" || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
 			return false
 		}
@@ -91,6 +92,9 @@ type Options struct {
 	Deferred bool
 	// Logf receives the tunnel's log lines (nil: none).
 	Logf func(format string, args ...any)
+	// OnPanic receives the fatal record of a panic in the tunnel's goroutines; the tunnel then ends (Done closes)
+	// instead of the process.
+	OnPanic func(logrec.Record)
 }
 
 // Process is a running tunnel: a local port that carries connections to the server.
@@ -98,10 +102,11 @@ type Process struct {
 	// Addr is the local TCP address (127.0.0.1:port); every connection to it is carried to the server's upstream.
 	Addr string
 
-	cfg  Config
-	key  []byte
-	logf func(string, ...any)
-	ln   *net.TCPListener
+	cfg     Config
+	key     []byte
+	logf    func(string, ...any)
+	onPanic func(logrec.Record)
+	ln      *net.TCPListener
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -133,21 +138,21 @@ func Start(parent context.Context, cfg Config, opts Options) (*Process, error) {
 		return nil, fmt.Errorf("opening the local port: %w", err)
 	}
 	ctx, cancel := context.WithCancel(parent)
-	p := &Process{
+	proc := &Process{
 		Addr: ln.Addr().String(), cfg: cfg, key: key, ln: ln, ctx: ctx, cancel: cancel,
 		done: make(chan struct{}), bound: make(chan struct{}), ready: make(chan struct{}),
-		dial: opts.Dial, listen: opts.ListenPacket, logf: opts.Logf,
+		dial: opts.Dial, listen: opts.ListenPacket, logf: opts.Logf, onPanic: opts.OnPanic,
 	}
-	if p.logf == nil {
-		p.logf = func(string, ...any) {}
+	if proc.logf == nil {
+		proc.logf = func(string, ...any) {}
 	}
-	p.cond = sync.NewCond(&p.mu)
+	proc.cond = sync.NewCond(&proc.mu)
 	if !opts.Deferred {
-		p.bindOnce.Do(func() { close(p.bound) })
+		proc.bindOnce.Do(func() { close(proc.bound) })
 	}
-	go p.accept()
-	go p.run()
-	return p, nil
+	go proc.accept()
+	go proc.run()
+	return proc, nil
 }
 
 // Bind gives a deferred tunnel the functions that open its sockets, and lets it start connecting.
@@ -268,7 +273,7 @@ func (p *Process) openAny(start int) (*client.Session, int, error) {
 		err  error
 	}
 	ch := make(chan result, k)
-	for j := 0; j < k; j++ {
+	for j := range k {
 		idx := (start + j) % n
 		go func() {
 			sess, err := client.Open(ctx, p.clientConfig(p.cfg.Resolvers[idx]))
@@ -280,18 +285,18 @@ func (p *Process) openAny(start int) (*client.Session, int, error) {
 	}
 	var winner *result
 	var firstErr error
-	for j := 0; j < k; j++ {
-		r := <-ch
+	for range k {
+		res := <-ch
 		switch {
-		case r.err != nil:
+		case res.err != nil:
 			if firstErr == nil {
-				firstErr = r.err
+				firstErr = res.err
 			}
 		case winner == nil:
-			winner = &r
+			winner = &res
 			cancel() // the others are not needed
 		default:
-			r.sess.Close()
+			res.sess.Close()
 		}
 	}
 	if winner == nil {
@@ -304,6 +309,7 @@ func (p *Process) openAny(start int) (*client.Session, int, error) {
 // and moves on to the next ones when none of the first few connect.
 func (p *Process) run() {
 	defer close(p.done)
+	defer logrec.Recover(logrec.SourceDNSTT, "connect", p.panicked)
 	start, failures := 0, 0
 	for p.ctx.Err() == nil {
 		sess, idx, err := p.openAny(start)
@@ -346,6 +352,16 @@ func (p *Process) run() {
 	}
 }
 
+// panicked reports a panic of the tunnel and ends it: a tunnel whose goroutine died would only hang.
+func (p *Process) panicked(rec logrec.Record) {
+	p.setErr(errors.New("the DNS tunnel crashed"))
+	p.cancel()
+	p.ln.Close()
+	if p.onPanic != nil {
+		p.onPanic(rec)
+	}
+}
+
 func (p *Process) setErr(err error) {
 	p.mu.Lock()
 	p.lastErr = err
@@ -371,8 +387,9 @@ func (p *Process) session(wait time.Duration) *client.Session {
 
 // accept hands each local connection to the current session.
 func (p *Process) accept() {
+	defer logrec.Recover(logrec.SourceDNSTT, "connect", p.panicked)
 	for {
-		c, err := p.ln.AcceptTCP()
+		conn, err := p.ln.AcceptTCP()
 		if err != nil {
 			if p.ctx.Err() != nil || errors.Is(err, net.ErrClosed) {
 				return
@@ -380,13 +397,14 @@ func (p *Process) accept() {
 			continue
 		}
 		go func() {
-			defer c.Close()
+			defer conn.Close()
+			defer logrec.Recover(logrec.SourceDNSTT, "connect", p.panicked)
 			// A connection that arrives while the tunnel is still coming up waits for it, up to a limit.
 			sess := p.session(30 * time.Second)
 			if sess == nil {
 				return
 			}
-			if err := sess.Forward(c); err != nil {
+			if err := sess.Forward(conn); err != nil {
 				p.logf("DNS tunnel: %v", err)
 			}
 		}()
@@ -434,9 +452,9 @@ func Scan(ctx context.Context, cfg Config, candidates []string, opts Options, pa
 	results := make([]ScanResult, len(candidates))
 	sem := make(chan struct{}, parallel)
 	var wg sync.WaitGroup
-	for i, r := range candidates {
-		results[i].Resolver = r
-		if _, err := client.ParseResolver(r); err != nil {
+	for i, resolver := range candidates {
+		results[i].Resolver = resolver
+		if _, err := client.ParseResolver(resolver); err != nil {
 			results[i].Err = err.Error()
 			continue
 		}
@@ -447,14 +465,14 @@ func Scan(ctx context.Context, cfg Config, candidates []string, opts Options, pa
 			defer func() { <-sem }()
 			cctx, cancel := context.WithTimeout(ctx, perResolver)
 			defer cancel()
-			d, err := client.Probe(cctx, client.Config{
-				Domain: cfg.Domain, PubKey: key, Resolver: r, UTLS: cfg.UTLS, Dial: opts.Dial, ListenPacket: opts.ListenPacket,
+			elapsed, err := client.Probe(cctx, client.Config{
+				Domain: cfg.Domain, PubKey: key, Resolver: resolver, UTLS: cfg.UTLS, Dial: opts.Dial, ListenPacket: opts.ListenPacket,
 			})
 			if err != nil {
 				results[i].Err = err.Error()
 				return
 			}
-			results[i].Ms = max(int(d.Milliseconds()), 1)
+			results[i].Ms = max(int(elapsed.Milliseconds()), 1)
 		}()
 	}
 	wg.Wait()

@@ -84,15 +84,15 @@ func text(key, label string, ptr strPtr, opts ...func(*Field)) Field {
 			}
 			return ""
 		},
-		set: func(p *Profile, v string) error {
-			v = strings.TrimSpace(v)
-			if v == "" {
-				if s := ptr(p, false); s != nil {
+		set: func(profile *Profile, value string) error {
+			value = strings.TrimSpace(value)
+			if value == "" {
+				if s := ptr(profile, false); s != nil {
 					*s = ""
 				}
 				return nil
 			}
-			*ptr(p, true) = v
+			*ptr(profile, true) = value
 			return nil
 		},
 	}.with(opts...)
@@ -118,19 +118,19 @@ func number(key, label string, ptr intPtr, opts ...func(*Field)) Field {
 			}
 			return ""
 		},
-		set: func(p *Profile, v string) error {
-			v = strings.TrimSpace(v)
-			if v == "" {
-				if n := ptr(p, false); n != nil {
+		set: func(profile *Profile, value string) error {
+			value = strings.TrimSpace(value)
+			if value == "" {
+				if n := ptr(profile, false); n != nil {
 					*n = 0
 				}
 				return nil
 			}
-			n, err := strconv.Atoi(v)
+			n, err := strconv.Atoi(value)
 			if err != nil || n < 0 {
 				return formErr(FormNotNumber, "%s must be a whole number", label).arg("label", label)
 			}
-			*ptr(p, true) = n
+			*ptr(profile, true) = n
 			return nil
 		},
 	}.with(opts...)
@@ -145,12 +145,12 @@ func toggle(key, label string, ptr boolPtr, opts ...func(*Field)) Field {
 			}
 			return "false"
 		},
-		set: func(p *Profile, v string) error {
+		set: func(profile *Profile, v string) error {
 			switch strings.ToLower(strings.TrimSpace(v)) {
 			case "true", "1", "yes", "on":
-				*ptr(p, true) = true
+				*ptr(profile, true) = true
 			case "", "false", "0", "no", "off":
-				if b := ptr(p, false); b != nil {
+				if b := ptr(profile, false); b != nil {
 					*b = false
 				}
 			default:
@@ -181,15 +181,15 @@ func list(key, label string, ptr listPtr, sep string, opts ...func(*Field)) Fiel
 			}
 			return ""
 		},
-		set: func(p *Profile, v string) error {
+		set: func(profile *Profile, v string) error {
 			items := splitList(v)
 			if len(items) == 0 {
-				if l := ptr(p, false); l != nil {
+				if l := ptr(profile, false); l != nil {
 					*l = nil
 				}
 				return nil
 			}
-			*ptr(p, true) = items
+			*ptr(profile, true) = items
 			return nil
 		},
 	}.with(opts...)
@@ -197,11 +197,11 @@ func list(key, label string, ptr listPtr, sep string, opts ...func(*Field)) Fiel
 
 // -------------------------------------------------- nested structure access
 
-func tlsOf(p *Profile, create bool) *TLS {
-	if p.TLS == nil && create {
-		p.TLS = &TLS{Enabled: true}
+func tlsOf(profile *Profile, create bool) *TLS {
+	if profile.TLS == nil && create {
+		profile.TLS = &TLS{Enabled: true}
 	}
-	return p.TLS
+	return profile.TLS
 }
 
 func tlsStr(sel func(*TLS) *string) strPtr {
@@ -215,37 +215,37 @@ func tlsStr(sel func(*TLS) *string) strPtr {
 
 func realityStr(sel func(*Reality) *string) strPtr {
 	return func(p *Profile, create bool) *string {
-		t := tlsOf(p, create)
-		if t == nil {
+		tlsOpts := tlsOf(p, create)
+		if tlsOpts == nil {
 			return nil
 		}
-		if t.Reality == nil {
+		if tlsOpts.Reality == nil {
 			if !create {
 				return nil
 			}
-			t.Reality = &Reality{}
+			tlsOpts.Reality = &Reality{}
 		}
-		return sel(t.Reality)
+		return sel(tlsOpts.Reality)
 	}
 }
 
 func transportStr(sel func(*Transport) *string) strPtr {
-	return func(p *Profile, create bool) *string {
-		if p.Transport == nil {
+	return func(profile *Profile, create bool) *string {
+		if profile.Transport == nil {
 			if !create {
 				return nil
 			}
-			p.Transport = &Transport{}
+			profile.Transport = &Transport{}
 		}
-		return sel(p.Transport)
+		return sel(profile.Transport)
 	}
 }
 
-func wgOf(p *Profile, create bool) *WG {
-	if p.WireGuard == nil && create {
-		p.WireGuard = &WG{}
+func wgOf(profile *Profile, create bool) *WG {
+	if profile.WireGuard == nil && create {
+		profile.WireGuard = &WG{}
 	}
-	return p.WireGuard
+	return profile.WireGuard
 }
 
 func wgStr(sel func(*WG) *string) strPtr {
@@ -270,11 +270,11 @@ func wgList(sel func(*WG) *[]string) listPtr {
 	}
 }
 
-func muxOf(p *Profile, create bool) *Mux {
-	if p.Multiplex == nil && create {
-		p.Multiplex = &Mux{}
+func muxOf(profile *Profile, create bool) *Mux {
+	if profile.Multiplex == nil && create {
+		profile.Multiplex = &Mux{}
 	}
-	return p.Multiplex
+	return profile.Multiplex
 }
 
 func muxStr(sel func(*Mux) *string) strPtr {
@@ -314,11 +314,11 @@ func muxFields() []Field {
 	}
 }
 
-func hy2Of(p *Profile, create bool) *Hy2 {
-	if p.Hysteria2 == nil && create {
-		p.Hysteria2 = &Hy2{}
+func hy2Of(profile *Profile, create bool) *Hy2 {
+	if profile.Hysteria2 == nil && create {
+		profile.Hysteria2 = &Hy2{}
 	}
-	return p.Hysteria2
+	return profile.Hysteria2
 }
 
 func hy2Str(sel func(*Hy2) *string) strPtr {
@@ -340,22 +340,22 @@ func hy2Int(sel func(*Hy2) *int) intPtr {
 }
 
 func tuicStr(sel func(*TUICOpts) *string) strPtr {
-	return func(p *Profile, create bool) *string {
-		if p.TUIC == nil {
+	return func(profile *Profile, create bool) *string {
+		if profile.TUIC == nil {
 			if !create {
 				return nil
 			}
-			p.TUIC = &TUICOpts{}
+			profile.TUIC = &TUICOpts{}
 		}
-		return sel(p.TUIC)
+		return sel(profile.TUIC)
 	}
 }
 
-func ovpnOf(p *Profile, create bool) *OVPN {
-	if p.OpenVPN == nil && create {
-		p.OpenVPN = &OVPN{Network: "udp"}
+func ovpnOf(profile *Profile, create bool) *OVPN {
+	if profile.OpenVPN == nil && create {
+		profile.OpenVPN = &OVPN{Network: "udp"}
 	}
-	return p.OpenVPN
+	return profile.OpenVPN
 }
 
 func ovpnStr(sel func(*OVPN) *string) strPtr {
@@ -367,11 +367,11 @@ func ovpnStr(sel func(*OVPN) *string) strPtr {
 	}
 }
 
-func ikeOf(p *Profile, create bool) *IKEv2Opts {
-	if p.IKEv2 == nil && create {
-		p.IKEv2 = &IKEv2Opts{Auth: "eap"}
+func ikeOf(profile *Profile, create bool) *IKEv2Opts {
+	if profile.IKEv2 == nil && create {
+		profile.IKEv2 = &IKEv2Opts{Auth: "eap"}
 	}
-	return p.IKEv2
+	return profile.IKEv2
 }
 
 func ikeStr(sel func(*IKEv2Opts) *string) strPtr {
@@ -383,11 +383,11 @@ func ikeStr(sel func(*IKEv2Opts) *string) strPtr {
 	}
 }
 
-func sshOf(p *Profile, create bool) *SSHOpts {
-	if p.SSH == nil && create {
-		p.SSH = &SSHOpts{}
+func sshOf(profile *Profile, create bool) *SSHOpts {
+	if profile.SSH == nil && create {
+		profile.SSH = &SSHOpts{}
 	}
-	return p.SSH
+	return profile.SSH
 }
 
 func sshStr(sel func(*SSHOpts) *string) strPtr {
@@ -399,11 +399,11 @@ func sshStr(sel func(*SSHOpts) *string) strPtr {
 	}
 }
 
-func tsOf(p *Profile, create bool) *TailscaleOpts {
-	if p.Tailscale == nil && create {
-		p.Tailscale = &TailscaleOpts{}
+func tsOf(profile *Profile, create bool) *TailscaleOpts {
+	if profile.Tailscale == nil && create {
+		profile.Tailscale = &TailscaleOpts{}
 	}
-	return p.Tailscale
+	return profile.Tailscale
 }
 
 func tsStr(sel func(*TailscaleOpts) *string) strPtr {
@@ -424,11 +424,11 @@ func tsBool(sel func(*TailscaleOpts) *bool) boolPtr {
 	}
 }
 
-func torOf(p *Profile, create bool) *TorOpts {
-	if p.Tor == nil && create {
-		p.Tor = &TorOpts{}
+func torOf(profile *Profile, create bool) *TorOpts {
+	if profile.Tor == nil && create {
+		profile.Tor = &TorOpts{}
 	}
-	return p.Tor
+	return profile.Tor
 }
 
 // amnezia is an AmneziaWG parameter stored in a map.
@@ -436,25 +436,25 @@ func amnezia(key, label string, opts ...func(*Field)) Field {
 	k := strings.TrimPrefix(key, "amnezia.")
 	return Field{
 		Key: key, Label: label, Kind: FieldText, Advanced: true,
-		get: func(p *Profile) string {
-			if p.WireGuard == nil {
+		get: func(profile *Profile) string {
+			if profile.WireGuard == nil {
 				return ""
 			}
-			return p.WireGuard.Amnezia[k]
+			return profile.WireGuard.Amnezia[k]
 		},
-		set: func(p *Profile, v string) error {
-			v = strings.TrimSpace(v)
-			if v == "" {
-				if p.WireGuard != nil {
-					delete(p.WireGuard.Amnezia, k)
+		set: func(profile *Profile, value string) error {
+			value = strings.TrimSpace(value)
+			if value == "" {
+				if profile.WireGuard != nil {
+					delete(profile.WireGuard.Amnezia, k)
 				}
 				return nil
 			}
-			w := wgOf(p, true)
-			if w.Amnezia == nil {
-				w.Amnezia = map[string]string{}
+			wgOpts := wgOf(profile, true)
+			if wgOpts.Amnezia == nil {
+				wgOpts.Amnezia = map[string]string{}
 			}
-			w.Amnezia[k] = v
+			wgOpts.Amnezia[k] = value
 			return nil
 		},
 	}.with(opts...)
@@ -469,33 +469,33 @@ func security(withReality bool) Field {
 	}
 	return Field{
 		Key: "security", Label: "Security", Kind: FieldChoice, Choices: ch, Default: "tls",
-		get: func(p *Profile) string {
+		get: func(profile *Profile) string {
 			switch {
-			case p.TLS == nil || !p.TLS.Enabled:
+			case profile.TLS == nil || !profile.TLS.Enabled:
 				return "none"
-			case p.TLS.Reality != nil:
+			case profile.TLS.Reality != nil:
 				return "reality"
 			}
 			return "tls"
 		},
-		set: func(p *Profile, v string) error {
-			switch strings.TrimSpace(v) {
+		set: func(profile *Profile, value string) error {
+			switch strings.TrimSpace(value) {
 			case "none":
-				p.TLS = nil
+				profile.TLS = nil
 			case "tls", "":
-				t := tlsOf(p, true)
+				t := tlsOf(profile, true)
 				t.Enabled, t.Reality = true, nil
 			case "reality":
 				if !withReality {
 					return formErr(FormRealityOnlyVLESS, "reality is only available for VLESS")
 				}
-				t := tlsOf(p, true)
+				t := tlsOf(profile, true)
 				t.Enabled = true
 				if t.Reality == nil {
 					t.Reality = &Reality{}
 				}
 			default:
-				return formErr(FormUnknownSecurity, "unknown security %q", v).arg("value", v)
+				return formErr(FormUnknownSecurity, "unknown security %q", value).arg("value", value)
 			}
 			return nil
 		},
@@ -507,21 +507,21 @@ func reserved() Field {
 	return Field{
 		Key: "reserved", Label: "Reserved bytes", Kind: FieldList, Advanced: true,
 		Help: "Three numbers, as WARP configurations list them",
-		get: func(p *Profile) string {
-			if p.WireGuard == nil || len(p.WireGuard.Reserved) == 0 {
+		get: func(profile *Profile) string {
+			if profile.WireGuard == nil || len(profile.WireGuard.Reserved) == 0 {
 				return ""
 			}
-			parts := make([]string, len(p.WireGuard.Reserved))
-			for i, n := range p.WireGuard.Reserved {
+			parts := make([]string, len(profile.WireGuard.Reserved))
+			for i, n := range profile.WireGuard.Reserved {
 				parts[i] = strconv.Itoa(n)
 			}
 			return strings.Join(parts, ", ")
 		},
-		set: func(p *Profile, v string) error {
+		set: func(profile *Profile, v string) error {
 			items := splitList(v)
 			if len(items) == 0 {
-				if p.WireGuard != nil {
-					p.WireGuard.Reserved = nil
+				if profile.WireGuard != nil {
+					profile.WireGuard.Reserved = nil
 				}
 				return nil
 			}
@@ -533,7 +533,7 @@ func reserved() Field {
 				}
 				out = append(out, n)
 			}
-			wgOf(p, true).Reserved = out
+			wgOf(profile, true).Reserved = out
 			return nil
 		},
 	}
@@ -579,14 +579,14 @@ func tlsFields(withSecurity, withReality bool) []Field {
 }
 
 func echOf(p *Profile, create bool) *ECH {
-	t := tlsOf(p, create)
-	if t == nil {
+	tlsOpts := tlsOf(p, create)
+	if tlsOpts == nil {
 		return nil
 	}
-	if t.ECH == nil && create {
-		t.ECH = &ECH{}
+	if tlsOpts.ECH == nil && create {
+		tlsOpts.ECH = &ECH{}
 	}
-	return t.ECH
+	return tlsOpts.ECH
 }
 
 func echStr(sel func(*ECH) *string) strPtr {
@@ -748,14 +748,14 @@ func protocolFields(protocol string) ([]Field, bool) {
 		return append(append([]Field{password(required)}, tlsFields(false, false)...), tlsExtraFields()...), true
 	case Naive:
 		fs := []Field{username(required), password(required),
-			toggle("naive.quic", "Use HTTP/3 (QUIC)", func(p *Profile, c bool) *bool {
-				if p.Naive == nil {
+			toggle("naive.quic", "Use HTTP/3 (QUIC)", func(profile *Profile, c bool) *bool {
+				if profile.Naive == nil {
 					if !c {
 						return nil
 					}
-					p.Naive = &NaiveOpts{}
+					profile.Naive = &NaiveOpts{}
 				}
-				return &p.Naive.QUIC
+				return &profile.Naive.QUIC
 			}, advanced)}
 		return append(fs, tlsFields(false, false)...), true
 	case SSH:
@@ -914,20 +914,20 @@ func New(protocol string) (*Profile, error) {
 	if _, ok := FormFor(protocol); !ok {
 		return nil, fmt.Errorf("there is no editor for %q", protocol)
 	}
-	p := &Profile{Protocol: protocol, Port: defaultPorts[protocol]}
+	profile := &Profile{Protocol: protocol, Port: defaultPorts[protocol]}
 	switch protocol {
 	case Trojan, Hysteria2, Hysteria, TUIC, AnyTLS, Naive:
-		p.TLS = &TLS{Enabled: true}
+		profile.TLS = &TLS{Enabled: true}
 	case VMess:
-		p.Method = "auto"
+		profile.Method = "auto"
 	case IKEv2:
-		p.IKEv2 = &IKEv2Opts{Auth: "eap"}
+		profile.IKEv2 = &IKEv2Opts{Auth: "eap"}
 	case OpenVPN:
-		p.OpenVPN = &OVPN{Network: "udp"}
+		profile.OpenVPN = &OVPN{Network: "udp"}
 	case SSTP:
-		p.TLS = &TLS{Enabled: true}
+		profile.TLS = &TLS{Enabled: true}
 	}
-	return p, nil
+	return profile, nil
 }
 
 // Values returns the profile's field values by key (every field of its form,
@@ -963,16 +963,16 @@ func (p *Profile) Apply(values map[string]string) error {
 		sort.Strings(unknown)
 		return fmt.Errorf("%s has no setting %q", p.Protocol, unknown[0])
 	}
-	for _, f := range fs {
-		v, given := values[f.Key]
+	for _, field := range fs {
+		value, given := values[field.Key]
 		if !given {
 			continue
 		}
-		if f.Kind == FieldChoice && v != "" && !slices.Contains(f.Choices, v) {
-			return formErr(FormBadChoice, "%s: %q is not one of %s", f.Label, v, strings.Join(f.Choices, ", ")).
-				arg("label", f.Label).arg("value", v).arg("choices", strings.Join(f.Choices, ", "))
+		if field.Kind == FieldChoice && value != "" && !slices.Contains(field.Choices, value) {
+			return formErr(FormBadChoice, "%s: %q is not one of %s", field.Label, value, strings.Join(field.Choices, ", ")).
+				arg("label", field.Label).arg("value", value).arg("choices", strings.Join(field.Choices, ", "))
 		}
-		if err := f.set(p, v); err != nil {
+		if err := field.set(p, value); err != nil {
 			return err
 		}
 	}
@@ -988,31 +988,31 @@ func (p *Profile) Apply(values map[string]string) error {
 // FromValues builds a profile from an editor's values: defaults, the values,
 // the required fields and the protocol's own checks.
 func FromValues(protocol string, values map[string]string) (*Profile, error) {
-	p, err := New(protocol)
+	profile, err := New(protocol)
 	if err != nil {
 		return nil, err
 	}
-	if err := p.Apply(values); err != nil {
+	if err := profile.Apply(values); err != nil {
 		return nil, err
 	}
 	fs, _ := FormFor(protocol)
 	for _, f := range fs {
-		if f.Required && strings.TrimSpace(f.get(p)) == "" {
+		if f.Required && strings.TrimSpace(f.get(profile)) == "" {
 			return nil, formErr(FormRequired, "%s is required", f.Label).arg("label", f.Label)
 		}
 	}
-	if p.TLS != nil && p.TLS.Reality != nil && p.TLS.Reality.PublicKey == "" {
+	if profile.TLS != nil && profile.TLS.Reality != nil && profile.TLS.Reality.PublicKey == "" {
 		return nil, formErr(FormRealityKeyRequired, "Reality public key is required when Security is reality")
 	}
-	if p.Name == "" {
-		p.Name = p.Server
-		if p.Name == "" {
-			p.Name = protocol
+	if profile.Name == "" {
+		profile.Name = profile.Server
+		if profile.Name == "" {
+			profile.Name = protocol
 		}
 	}
-	if err := p.Validate(); err != nil {
+	if err := profile.Validate(); err != nil {
 		return nil, err
 	}
-	p.EnsureID()
-	return p, nil
+	profile.EnsureID()
+	return profile, nil
 }

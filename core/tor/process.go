@@ -18,6 +18,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/NoobforAl/omnitun/core/logrec"
 )
 
 // Config starts Tor.
@@ -36,8 +39,12 @@ type Config struct {
 	// OnPath receives the circuit the traffic rides whenever it changes: the relays in order, each with
 	// its role and (when known) country.
 	OnPath func(path []Hop)
-	// Logf receives Arti's warnings.
-	Logf func(format string, args ...any)
+	// OnLog receives omnitun-tor's log records (its stdout "log" events, with their own level and extra keys) and,
+	// as errors, anything it writes to stderr (which it does only when something unexpected happens).
+	OnLog func(logrec.Record)
+	// LogLevel is passed as --log-level (trace, debug, info, warn, error, fatal); empty leaves omnitun-tor's default
+	// (error).
+	LogLevel string
 }
 
 // Process is a running Tor client.
@@ -112,6 +119,9 @@ func Start(cfg Config) (*Process, error) {
 		return nil, err
 	}
 	args := []string{"--data", cfg.DataDir, "--socks-port", "0"}
+	if cfg.LogLevel != "" {
+		args = append(args, "--log-level", cfg.LogLevel)
+	}
 	var bridges []string
 	for _, b := range cfg.Bridges {
 		if b = NormalizeBridge(b); b != "" {
@@ -119,13 +129,13 @@ func Start(cfg Config) (*Process, error) {
 			args = append(args, "--bridge", b)
 		}
 	}
-	p := &Process{ready: make(chan error, 1), done: make(chan struct{})}
+	proc := &Process{ready: make(chan error, 1), done: make(chan struct{})}
 	if names := TransportsFor(bridges); len(names) > 0 {
 		pts, err := StartTransports(filepath.Join(cfg.DataDir, "pt"), names, cfg.Dial)
 		if err != nil {
 			return nil, err
 		}
-		p.pts = pts
+		proc.pts = pts
 		keys := make([]string, 0, len(pts.Addrs))
 		for k := range pts.Addrs {
 			keys = append(keys, k)
@@ -136,26 +146,29 @@ func Start(cfg Config) (*Process, error) {
 		}
 	}
 
-	p.cmd = exec.Command(bin, args...)
-	hideWindow(p.cmd)
-	stdout, err := p.cmd.StdoutPipe()
+	proc.cmd = exec.Command(bin, args...)
+	hideWindow(proc.cmd)
+	stdout, err := proc.cmd.StdoutPipe()
 	if err != nil {
-		p.closeTransports()
+		proc.closeTransports()
 		return nil, err
 	}
 	// Closing stdin tells omnitun-tor to exit (also when this process dies).
-	if p.stdin, err = p.cmd.StdinPipe(); err != nil {
-		p.closeTransports()
+	if proc.stdin, err = proc.cmd.StdinPipe(); err != nil {
+		proc.closeTransports()
 		return nil, err
 	}
-	stderr, _ := p.cmd.StderrPipe()
-	if err := p.cmd.Start(); err != nil {
-		p.closeTransports()
+	stderr, _ := proc.cmd.StderrPipe()
+	if err := proc.cmd.Start(); err != nil {
+		proc.closeTransports()
 		return nil, fmt.Errorf("start Tor: %w", err)
 	}
 
 	listening := make(chan string, 1)
 	go func() {
+		// A panic here (in a handler) must not leave Tor blocked on a full pipe: the rest is drained unread.
+		defer io.Copy(io.Discard, stdout)
+		defer logrec.Recover(logrec.SourceTor, "run", cfg.OnLog)
 		sc := bufio.NewScanner(stdout)
 		for sc.Scan() {
 			var ev event
@@ -163,6 +176,12 @@ func Start(cfg Config) (*Process, error) {
 				continue
 			}
 			switch ev.Event {
+			case "log":
+				if cfg.OnLog != nil {
+					if rec, ok := parseLogEvent(sc.Bytes()); ok {
+						cfg.OnLog(rec)
+					}
+				}
 			case "listening":
 				listening <- ev.Socks
 			case "bootstrap":
@@ -185,40 +204,64 @@ func Start(cfg Config) (*Process, error) {
 					cfg.OnPath(path)
 				}
 			case "ready":
-				p.ready <- nil
+				proc.ready <- nil
 			case "error":
-				p.ready <- errors.New(ev.Message)
+				proc.ready <- errors.New(ev.Message)
 			}
 		}
 	}()
 	if stderr != nil {
 		go func() {
+			defer io.Copy(io.Discard, stderr)
+			defer logrec.Recover(logrec.SourceTor, "run", cfg.OnLog)
 			sc := bufio.NewScanner(stderr)
 			for sc.Scan() {
-				if cfg.Logf != nil {
-					cfg.Logf("tor: %s", sc.Text())
+				if cfg.OnLog != nil && strings.TrimSpace(sc.Text()) != "" {
+					cfg.OnLog(stderrRecord(sc.Text()))
 				}
 			}
 		}()
 	}
 	go func() {
-		err := p.cmd.Wait()
-		p.err = err
+		err := proc.cmd.Wait()
+		proc.err = err
 		select {
-		case p.ready <- fmt.Errorf("Tor exited: %v", err):
+		case proc.ready <- fmt.Errorf("Tor exited: %v", err):
 		default:
 		}
-		close(p.done)
+		close(proc.done)
 	}()
 
 	select {
 	case addr := <-listening:
-		p.SocksAddr = addr
-		return p, nil
-	case <-p.done:
-		p.closeTransports()
-		return nil, fmt.Errorf("Tor exited at start: %v", p.err)
+		proc.SocksAddr = addr
+		return proc, nil
+	case <-proc.done:
+		proc.closeTransports()
+		return nil, fmt.Errorf("Tor exited at start: %v", proc.err)
 	}
+}
+
+// parseLogEvent reads a stdout line {"event":"log", <record keys>} into a record; keys outside the contract stay
+// in Extra (without "event").
+func parseLogEvent(line []byte) (logrec.Record, bool) {
+	var rec logrec.Record
+	if json.Unmarshal(line, &rec) != nil {
+		return rec, false
+	}
+	delete(rec.Extra, "event")
+	if rec.Source == "" {
+		rec.Source = logrec.SourceTor
+	}
+	if rec.Time.IsZero() {
+		rec.Time = time.Now()
+	}
+	return rec, true
+}
+
+// stderrRecord is a line omnitun-tor wrote to stderr: only unexpected output goes there, so it is an error.
+func stderrRecord(line string) logrec.Record {
+	return logrec.Record{Time: time.Now(), Level: logrec.LevelError, Source: logrec.SourceTor, Msg: strings.TrimSpace(line)}
 }
 
 // Ready waits for the bootstrap to finish.
@@ -233,6 +276,16 @@ func (p *Process) Ready(ctx context.Context) error {
 
 // Done is closed when the Tor process exits.
 func (p *Process) Done() <-chan struct{} { return p.done }
+
+// Err is how the Tor process exited, once Done is closed (nil before).
+func (p *Process) Err() error {
+	select {
+	case <-p.done:
+		return p.err
+	default:
+		return nil
+	}
+}
 
 // Stop ends Tor and its transports.
 func (p *Process) Stop() {

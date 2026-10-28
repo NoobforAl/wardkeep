@@ -87,7 +87,7 @@ func TestDNSTTEditor(t *testing.T) {
 	// The editor's default resolvers are valid ones.
 	for _, f := range fs {
 		if f.Key == "dnstt.resolvers" {
-			for _, r := range strings.Split(f.Default, ",") {
+			for r := range strings.SplitSeq(f.Default, ",") {
 				if err := CheckDNSTTResolver(strings.TrimSpace(r)); err != nil {
 					t.Errorf("default resolver %q: %v", r, err)
 				}

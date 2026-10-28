@@ -45,13 +45,13 @@ func (sstp) Spec() Spec {
 	}
 }
 
-func (s sstp) Profile(env Env, port int, u Account) (*profile.Profile, error) {
-	if err := safeField("password", u.Password, unsafeInLines); err != nil {
+func (s sstp) Profile(env Env, port int, acct Account) (*profile.Profile, error) {
+	if err := safeField("password", acct.Password, unsafeInLines); err != nil {
 		return nil, err
 	}
 	return &profile.Profile{
 		Name: profileName(env, s.Spec()), Protocol: profile.SSTP, Server: env.Host, Port: port,
-		Username: u.Name, Password: u.Password, TLS: serverTLS(env),
+		Username: acct.Name, Password: acct.Password, TLS: serverTLS(env),
 	}, nil
 }
 
@@ -73,8 +73,8 @@ func (ikev2) Listens(port int) []PortUse {
 	return []PortUse{{500, "udp"}, {port, "udp"}, {port, "tcp"}}
 }
 
-func (i ikev2) Profile(env Env, port int, u Account) (*profile.Profile, error) {
-	if err := safeField("password", u.Password, unsafeInLines); err != nil {
+func (i ikev2) Profile(env Env, port int, acct Account) (*profile.Profile, error) {
+	if err := safeField("password", acct.Password, unsafeInLines); err != nil {
 		return nil, err
 	}
 	// EAP identifies the user; the server proves itself with its certificate
@@ -90,6 +90,6 @@ func (i ikev2) Profile(env Env, port int, u Account) (*profile.Profile, error) {
 	}
 	return &profile.Profile{
 		Name: profileName(env, i.Spec()), Protocol: profile.IKEv2, Server: env.Host, Port: port,
-		Username: u.Name, Password: u.Password, IKEv2: opts,
+		Username: acct.Name, Password: acct.Password, IKEv2: opts,
 	}, nil
 }

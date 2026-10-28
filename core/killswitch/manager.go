@@ -48,22 +48,22 @@ func NewManagerWith(b Backend, resolveTun func(string) (uint64, error)) *Manager
 // stub of systems without a kill switch, and for a nil manager).
 func (m *Manager) Supported() bool { return m != nil && m.supported }
 
-// Arm installs the rules for o. If tunName is not empty the adapter of that
-// name is looked up and its traffic permitted; with an empty name (or o.TunLUID
+// Arm installs the rules for opts. If tunName is not empty the adapter of that
+// name is looked up and its traffic permitted; with an empty name (or opts.TunLUID
 // already set) the rules cover the time before the tunnel exists. Arming again
 // replaces the earlier rules.
-func (m *Manager) Arm(o Options, tunName string) error {
+func (m *Manager) Arm(opts Options, tunName string) error {
 	if m == nil {
 		return ErrUnsupported
 	}
-	if o.TunLUID == 0 && tunName != "" {
+	if opts.TunLUID == 0 && tunName != "" {
 		luid, err := m.resolveTun(tunName)
 		if err != nil {
 			return fmt.Errorf("killswitch: find the tunnel adapter %q: %w", tunName, err)
 		}
-		o.TunLUID = luid
+		opts.TunLUID = luid
 	}
-	rules, err := Build(o)
+	rules, err := Build(opts)
 	if err != nil {
 		return err
 	}

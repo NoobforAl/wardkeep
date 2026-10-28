@@ -126,40 +126,40 @@ func Profiles(ctx context.Context, client *http.Client, token, country string, l
 	if creds.PrivateKey == "" {
 		return nil, errors.New("NordVPN returned no NordLynx key (is the subscription active?)")
 	}
-	q := url.Values{}
-	q.Set("filters[servers_technologies][identifier]", "wireguard_udp")
-	q.Set("limit", strconv.Itoa(limit))
+	query := url.Values{}
+	query.Set("filters[servers_technologies][identifier]", "wireguard_udp")
+	query.Set("limit", strconv.Itoa(limit))
 	if country != "" {
 		id, err := countryID(ctx, client, country)
 		if err != nil {
 			return nil, err
 		}
-		q.Set("filters[country_id]", strconv.Itoa(id))
+		query.Set("filters[country_id]", strconv.Itoa(id))
 	}
 	var servers []server
-	if err := get(ctx, client, "/v1/servers/recommendations", q, "", &servers); err != nil {
+	if err := get(ctx, client, "/v1/servers/recommendations", query, "", &servers); err != nil {
 		return nil, err
 	}
 	var out []*profile.Profile
-	for _, s := range servers {
-		key := s.publicKey()
-		if key == "" || s.Station == "" {
+	for _, srv := range servers {
+		key := srv.publicKey()
+		if key == "" || srv.Station == "" {
 			continue
 		}
-		name := s.Name
+		name := srv.Name
 		if name == "" {
-			name = s.Hostname
+			name = srv.Hostname
 		}
-		p := &profile.Profile{
-			Name: "NordLynx " + name, Protocol: profile.WireGuard, Server: s.Station, Port: port,
+		prof := &profile.Profile{
+			Name: "NordLynx " + name, Protocol: profile.WireGuard, Server: srv.Station, Port: port,
 			WireGuard: &profile.WG{
 				PrivateKey: creds.PrivateKey, PeerPublicKey: key,
 				Address: []string{address}, DNS: dns, AllowedIPs: []string{"0.0.0.0/0", "::/0"},
 			},
-			Source: "nordlynx:" + s.Hostname,
+			Source: "nordlynx:" + srv.Hostname,
 		}
-		p.EnsureID()
-		out = append(out, p)
+		prof.EnsureID()
+		out = append(out, prof)
 	}
 	if len(out) == 0 {
 		return nil, errors.New("NordVPN returned no WireGuard servers")

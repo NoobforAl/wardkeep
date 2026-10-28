@@ -7,8 +7,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sync/atomic"
 	"time"
 
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
 	"github.com/NoobforAl/omnitun/core/tor"
@@ -31,6 +33,11 @@ type torRun struct {
 	proc     *tor.Process
 	// path is the circuit the traffic rides, as last reported by Tor (guarded by Engine.mu).
 	path []TorHop
+	// inUse is set once the tunnel runs on this Tor client; before, its failures are retried and the state reports
+	// the last one, so its records do not notify.
+	inUse atomic.Bool
+	// notified is set once one of its records told the user (a crash of omnitun-tor), so watchTor does not again.
+	notified atomic.Bool
 }
 
 func (r *torRun) stop() {
@@ -52,17 +59,17 @@ func withoutTor(profiles []*profile.Profile) []*profile.Profile {
 }
 
 // torBridges lists the bridge lines a Tor profile uses.
-func torBridges(p *profile.Profile) ([]string, error) {
-	if p.Tor == nil {
+func torBridges(prof *profile.Profile) ([]string, error) {
+	if prof.Tor == nil {
 		return nil, nil
 	}
-	bridges := append([]string{}, p.Tor.Bridges...)
+	bridges := append([]string{}, prof.Tor.Bridges...)
 	for _, b := range bridges {
 		if !hasFingerprint(b) {
 			return nil, errNoFingerprint
 		}
 	}
-	if k := p.Tor.Builtin; k != "" {
+	if k := prof.Tor.Builtin; k != "" {
 		b := tor.Builtin(k)
 		if len(b) == 0 {
 			return nil, fmt.Errorf("unknown built-in bridge kind %q", k)
@@ -79,11 +86,11 @@ func hasFingerprint(line string) bool { return fingerprintRE.MatchString(line) }
 
 // startTorLocked starts Tor in the background and reports its bootstrap as
 // connection progress; the tunnel starts once Tor is ready. e.mu must be held.
-func (e *Engine) startTorLocked(p *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
+func (e *Engine) startTorLocked(prof *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
 	if opts.Mode != singbox.ModeTUN && opts.Mode != singbox.ModeProxy {
 		return e.failLocked(StagePrepare, fmt.Errorf("unknown mode %q", opts.Mode))
 	}
-	bridges, err := torBridges(p)
+	bridges, err := torBridges(prof)
 	if err != nil {
 		return e.failLocked(StagePrepare, err)
 	}
@@ -98,20 +105,21 @@ func (e *Engine) startTorLocked(p *profile.Profile, profiles []*profile.Profile,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), torAttempts*torAttemptTimeout+30*time.Second)
-	run := &torRun{profile: p, profiles: profiles, opts: opts, cancel: cancel}
+	run := &torRun{profile: prof, profiles: profiles, opts: opts, cancel: cancel}
 	e.torRun = run
-	name := e.name(p.ID)
-	e.logf("info", "starting Tor (%s)", name)
-	e.setState(State{Status: StatusStarting, Selected: p.ID, Progress: &Progress{
+	name := e.name(prof.ID)
+	e.logWith(logrec.LevelInfo, logFields{source: logrec.SourceTor, op: "bootstrap"}, "starting Tor")
+	e.setState(State{Status: StatusStarting, Selected: prof.ID, Progress: &Progress{
 		Stage: StageEngineStart, Percent: torPercentFrom, Profile: name, Detail: "Starting Tor", DetailCode: DetailTorStarting,
 	}})
 
 	// Each Tor profile keeps its own directory cache. Guard state is dropped on
 	// every connect: on a network that blocks Tor, earlier failures mark every
 	// guard "down" and Arti would refuse to try them again for a long time.
-	torDir := filepath.Join(e.dataDir(), "tor", p.ID)
+	torDir := filepath.Join(e.dataDir(), "tor", prof.ID)
 	os.RemoveAll(filepath.Join(torDir, "state"))
 	go func() {
+		defer e.recoverLoop("bootstrap")
 		var proc *tor.Process
 		var err error
 		for attempt := 1; attempt <= torAttempts; attempt++ {
@@ -125,7 +133,7 @@ func (e *Engine) startTorLocked(p *profile.Profile, profiles []*profile.Profile,
 			if err == nil || ctx.Err() != nil || e.currentTor() != run {
 				break
 			}
-			e.logf("warn", "Tor attempt %d/%d failed: %v", attempt, torAttempts, err)
+			e.logWith(logrec.LevelWarn, logFields{source: logrec.SourceTor, op: "bootstrap", err: err}, "Tor attempt %d/%d failed", attempt, torAttempts)
 		}
 		if err == nil {
 			e.mu.Lock()
@@ -151,13 +159,17 @@ func (e *Engine) startTorLocked(p *profile.Profile, profiles []*profile.Profile,
 		}
 		opts := run.opts
 		opts.TorSocks = run.proc.SocksAddr
-		e.logf("info", "Tor is ready on %s", opts.TorSocks)
+		e.logWith(logrec.LevelInfo, logFields{source: logrec.SourceTor, op: "bootstrap"}, "Tor is ready")
 		if err := e.startSingboxLocked(run.profiles, opts, run.profile.ID); err != nil {
 			run.stop()
 			e.torRun = nil
 			return
 		}
-		go e.watchTor(run)
+		run.inUse.Store(true)
+		go func() {
+			defer e.recoverLoop("connect")
+			e.watchTor(run)
+		}()
 	}()
 	return nil
 }
@@ -189,7 +201,7 @@ func (e *Engine) torProgress(run *torRun, name string, percent int, detail Progr
 	if e.torRun != run || e.state.Status != StatusStarting {
 		return
 	}
-	s := e.state
+	state := e.state
 	detail.Stage, detail.Profile = StageEngineStart, name
 	detail.Percent = torRingPercent(percent)
 	if detail.DetailCode == DetailTorBootstrap {
@@ -198,23 +210,26 @@ func (e *Engine) torProgress(run *torRun, name string, percent int, detail Progr
 		detail.DetailN = detail.Percent
 		detail.Detail = fmt.Sprintf("Connecting to Tor %d%%", detail.Percent)
 	}
-	s.Progress = &detail
-	e.setState(s)
+	state.Progress = &detail
+	e.setState(state)
 }
 
 // startTorOnce starts Tor and waits until it can carry a connection: its
 // bootstrap finishes and a test connection through a fresh circuit works.
 func (e *Engine) startTorOnce(ctx context.Context, run *torRun, dir string, bridges []string, name string) (*tor.Process, error) {
 	// Snowflake and the other transports log through the standard logger; only their problems reach the app log.
-	tor.SetTransportLog(func(line string) { e.logf("warn", "%s", line) })
+	tor.SetTransportLog(func(line string) {
+		e.logWith(logrec.LevelWarn, logFields{source: logrec.SourceTor, target: "transport", op: "bootstrap"}, "%s", line)
+	})
 	proc, err := tor.Start(tor.Config{
-		DataDir: dir,
-		Bridges: bridges,
+		DataDir:  dir,
+		Bridges:  bridges,
+		LogLevel: torLogLevel(),
 		OnBootstrap: func(percent int, status string) {
 			e.torProgress(run, name, percent*9/10, Progress{DetailCode: DetailTorBootstrap})
 		},
 		OnPath: func(path []tor.Hop) { e.torPath(run, path) },
-		Logf:   func(format string, args ...any) { e.logf("warn", format, args...) },
+		OnLog:  func(rec logrec.Record) { e.torRecord(run, rec) },
 	})
 	if err != nil {
 		return nil, err
@@ -249,15 +264,37 @@ func (e *Engine) torPath(run *torRun, path []tor.Hop) {
 	}
 }
 
-// watchTor ends the tunnel when the Tor process dies while connected.
+// torRecord passes on a record of omnitun-tor (it is scrubbed on the way, like every record). While Tor is still
+// bootstrapping a failure is retried, so it does not notify then.
+func (e *Engine) torRecord(run *torRun, rec logrec.Record) {
+	if rec.Level < logrec.LevelFatal && !logrec.Enabled(rec.Level) && !rec.Notify {
+		return
+	}
+	if rec.Notify && !run.inUse.Load() {
+		rec.Notify = false
+	}
+	if rec.Notify {
+		run.notified.Store(true)
+	}
+	e.deliver(rec, false)
+}
+
+// watchTor ends the tunnel when the Tor process dies while connected: nothing else would tell the user.
 func (e *Engine) watchTor(run *torRun) {
 	<-run.proc.Done()
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.torRun != run {
-		return
+		return // stopped by the engine
 	}
-	e.torFailedLocked(run, errors.New("the Tor client stopped"))
+	cause := errors.New("the Tor client stopped")
+	if !run.notified.Load() {
+		e.logWith(logrec.LevelError, logFields{source: logrec.SourceTor, code: ErrTorExited, err: run.proc.Err(), notify: true},
+			"the Tor client stopped on its own")
+	}
+	e.dropReported = true
+	e.torFailedLocked(run, cause)
+	e.dropReported = false
 }
 
 // torFailedLocked reports a failed Tor bootstrap or a dead Tor client,
@@ -272,7 +309,7 @@ func (e *Engine) torFailedLocked(run *torRun, cause error) {
 	run.stop()
 	bridges, _ := torBridges(run.profile)
 	reason := torErrorText(cause, len(bridges) > 0)
-	e.logf("error", "%s failed: %v", stageLabel[StageEngineStart], cause)
 	msg := fmt.Sprintf("%s failed: %s", stageLabel[StageEngineStart], reason)
+	e.logWith(logrec.LevelError, logFields{source: logrec.SourceTor, code: errorCode(msg), err: cause}, "%s failed", stageLabel[StageEngineStart])
 	e.setState(State{Status: StatusError, Error: msg, Selected: run.profile.ID, Progress: progress(StageEngineStart, e.name(run.profile.ID))})
 }

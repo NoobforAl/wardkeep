@@ -6,11 +6,22 @@
 // Server push:       {"event":"state","data":{...}}  /  {"event":"log","data":{...}}
 //
 // The first request on a connection must be "hello" with the token.
+//
+// A "log" event's data is one record of docs/logging.md (LogEntry):
+//
+//	{"time":"2026-10-29T01:02:03.456Z","level":"error","source":"tor","msg":"...","op":"connect","conn":"7f3a2c",
+//	 "profile":"p_19","code":"TOR_EXITED","err":"...","notify":true,"message":"..."}
+//
+// "message" repeats "msg" for apps that predate the record (one release). notify:true means nothing handled
+// the failure and the user should be told; the same conn and code notify once.
+//
+// Log level: "logging.get" -> LoggingSettings {"level","default","mode","until"}; "logging.set" with
+// LoggingParams {"level","until"} -> LoggingSettings (level "" = the default; until, RFC 3339, returns to the
+// default then).
 package control
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
@@ -53,6 +64,7 @@ const (
 	CodeAuthFailed         = "AUTH_FAILED"
 	CodeLookupFailed       = "LOOKUP_FAILED"
 	CodeMeshFailed         = "MESH_FAILED" // a mesh call failed (the device is offline, does not offer an exit, ...)
+	CodeInternal           = "INTERNAL"    // the method panicked (a bug; the log has a fatal record with the stack)
 
 	// Specific failures of import and subscriptions (the Message is English;
 	// see Error.Args for the numbers a translation needs).
@@ -164,13 +176,6 @@ type SelectParams struct {
 type TestParams struct {
 	Profiles []*profile.Profile `json:"profiles"`
 	URL      string             `json:"url,omitempty"`
-}
-
-// LogEntry is pushed as a "log" event.
-type LogEntry struct {
-	Time    time.Time `json:"time"`
-	Level   string    `json:"level"`
-	Message string    `json:"message"`
 }
 
 // ControlFile is written by the daemon so clients can find and authenticate to it.

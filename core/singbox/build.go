@@ -185,38 +185,38 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		skipped   []error
 		meshTags  []string
 	)
-	for _, p := range profiles {
-		p.EnsureID()
+	for _, prof := range profiles {
+		prof.EnsureID()
 		var (
 			out        obj
 			isEndpoint bool
 			extras     []obj
 			err        error
 		)
-		if p.Protocol == profile.Tor {
-			out, err = torOutbound(opts.TorSocks, p.ID)
-		} else if p.Protocol == profile.DNSTT {
-			out, err = helperOutbound(opts.Helpers[p.ID], p.ID)
-		} else if p.Protocol == profile.Tailscale {
+		if prof.Protocol == profile.Tor {
+			out, err = torOutbound(opts.TorSocks, prof.ID)
+		} else if prof.Protocol == profile.DNSTT {
+			out, err = helperOutbound(opts.Helpers[prof.ID], prof.ID)
+		} else if prof.Protocol == profile.Tailscale {
 			// A mesh device is online only while its profile is the selected one.
-			if p.ID != opts.Selected {
+			if prof.ID != opts.Selected {
 				continue
 			}
 			if !meshSupported {
 				return nil, skipped, ErrMeshNotBuilt
 			}
 			var group obj
-			out, group = meshProfile(p, opts.StateDir)
+			out, group = meshProfile(prof, opts.StateDir)
 			meshTags = append(meshTags, out["tag"].(string))
-			tags = append(tags, p.ID)
+			tags = append(tags, prof.ID)
 			endpoints = append(endpoints, out)
 			outbounds = append(outbounds, group)
 			continue
 		} else {
-			out, isEndpoint, extras, err = convert(p, p.ID)
+			out, isEndpoint, extras, err = convert(prof, prof.ID)
 		}
 		if err != nil {
-			skipped = append(skipped, fmt.Errorf("%s: %w", p.DisplayName(), err))
+			skipped = append(skipped, fmt.Errorf("%s: %w", prof.DisplayName(), err))
 			continue
 		}
 		if isEndpoint {
@@ -227,7 +227,7 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		for _, x := range extras {
 			outbounds = append(outbounds, x)
 		}
-		tags = append(tags, p.ID)
+		tags = append(tags, prof.ID)
 	}
 	if len(tags) == 0 {
 		return nil, skipped, fmt.Errorf("no usable profiles")
@@ -454,70 +454,70 @@ func convert(p *profile.Profile, tag string) (out obj, isEndpoint bool, extras [
 	return
 }
 
-func convertProfile(p *profile.Profile, tag string) (out obj, isEndpoint bool, extras []obj, err error) {
-	base := obj{"server": p.Server, "server_port": p.Port}
-	switch p.Protocol {
+func convertProfile(prof *profile.Profile, tag string) (out obj, isEndpoint bool, extras []obj, err error) {
+	base := obj{"server": prof.Server, "server_port": prof.Port}
+	switch prof.Protocol {
 	case profile.VLESS:
 		base["type"] = "vless"
-		base["uuid"] = p.UUID
-		if p.Flow != "" {
-			base["flow"] = p.Flow
+		base["uuid"] = prof.UUID
+		if prof.Flow != "" {
+			base["flow"] = prof.Flow
 		}
-		addTLS(base, p.TLS)
-		addTransport(base, p.Transport)
-		addMultiplex(base, p.Multiplex)
+		addTLS(base, prof.TLS)
+		addTransport(base, prof.Transport)
+		addMultiplex(base, prof.Multiplex)
 	case profile.VMess:
 		base["type"] = "vmess"
-		base["uuid"] = p.UUID
-		base["security"] = orDefault(p.Method, "auto")
-		base["alter_id"] = p.AlterID
-		addTLS(base, p.TLS)
-		addTransport(base, p.Transport)
-		addMultiplex(base, p.Multiplex)
+		base["uuid"] = prof.UUID
+		base["security"] = orDefault(prof.Method, "auto")
+		base["alter_id"] = prof.AlterID
+		addTLS(base, prof.TLS)
+		addTransport(base, prof.Transport)
+		addMultiplex(base, prof.Multiplex)
 	case profile.Trojan:
 		base["type"] = "trojan"
-		base["password"] = p.Password
-		addTLS(base, p.TLS)
-		addTransport(base, p.Transport)
-		addMultiplex(base, p.Multiplex)
+		base["password"] = prof.Password
+		addTLS(base, prof.TLS)
+		addTransport(base, prof.Transport)
+		addMultiplex(base, prof.Multiplex)
 	case profile.Shadowsocks:
 		base["type"] = "shadowsocks"
-		base["method"] = p.Method
-		base["password"] = p.Password
-		addMultiplex(base, p.Multiplex)
-		switch p.Plugin {
+		base["method"] = prof.Method
+		base["password"] = prof.Password
+		addMultiplex(base, prof.Multiplex)
+		switch prof.Plugin {
 		case "":
 		case "shadow-tls":
-			stls, err := shadowTLSOutbound(p, tag+"-shadowtls")
+			stls, err := shadowTLSOutbound(prof, tag+"-shadowtls")
 			if err != nil {
 				return nil, false, nil, err
 			}
 			base["detour"] = stls["tag"]
 			extras = append(extras, stls)
 		default:
-			base["plugin"] = p.Plugin
-			base["plugin_opts"] = p.PluginOpts
+			base["plugin"] = prof.Plugin
+			base["plugin_opts"] = prof.PluginOpts
 		}
 	case profile.Hysteria2:
 		base["type"] = "hysteria2"
-		base["password"] = p.Password
-		if h := p.Hysteria2; h != nil {
-			if h.Obfs != "" {
-				base["obfs"] = obj{"type": h.Obfs, "password": h.ObfsPassword}
+		base["password"] = prof.Password
+		if hy2 := prof.Hysteria2; hy2 != nil {
+			if hy2.Obfs != "" {
+				base["obfs"] = obj{"type": hy2.Obfs, "password": hy2.ObfsPassword}
 			}
-			if h.UpMbps > 0 {
-				base["up_mbps"] = h.UpMbps
+			if hy2.UpMbps > 0 {
+				base["up_mbps"] = hy2.UpMbps
 			}
-			if h.DownMbps > 0 {
-				base["down_mbps"] = h.DownMbps
+			if hy2.DownMbps > 0 {
+				base["down_mbps"] = hy2.DownMbps
 			}
 		}
-		addTLS(base, tlsOrDefault(p.TLS))
+		addTLS(base, tlsOrDefault(prof.TLS))
 	case profile.TUIC:
 		base["type"] = "tuic"
-		base["uuid"] = p.UUID
-		base["password"] = p.Password
-		if t := p.TUIC; t != nil {
+		base["uuid"] = prof.UUID
+		base["password"] = prof.Password
+		if t := prof.TUIC; t != nil {
 			if t.CongestionControl != "" {
 				base["congestion_control"] = t.CongestionControl
 			}
@@ -525,117 +525,117 @@ func convertProfile(p *profile.Profile, tag string) (out obj, isEndpoint bool, e
 				base["udp_relay_mode"] = t.UDPRelayMode
 			}
 		}
-		addTLS(base, tlsOrDefault(p.TLS))
+		addTLS(base, tlsOrDefault(prof.TLS))
 	case profile.Hysteria:
 		base["type"] = "hysteria"
-		if p.Password != "" {
-			base["auth_str"] = p.Password
+		if prof.Password != "" {
+			base["auth_str"] = prof.Password
 		}
 		// Hysteria v1 needs bandwidth hints; these defaults suit mobile links.
 		up, down := 10, 50
-		if h := p.Hysteria2; h != nil {
-			if h.Obfs != "" {
-				base["obfs"] = h.Obfs
+		if hy2 := prof.Hysteria2; hy2 != nil {
+			if hy2.Obfs != "" {
+				base["obfs"] = hy2.Obfs
 			}
-			if h.UpMbps > 0 {
-				up = h.UpMbps
+			if hy2.UpMbps > 0 {
+				up = hy2.UpMbps
 			}
-			if h.DownMbps > 0 {
-				down = h.DownMbps
+			if hy2.DownMbps > 0 {
+				down = hy2.DownMbps
 			}
 		}
 		base["up_mbps"], base["down_mbps"] = up, down
-		t := tlsOrDefault(p.TLS)
-		if len(t.ALPN) == 0 {
-			c := *t
+		tlsOpts := tlsOrDefault(prof.TLS)
+		if len(tlsOpts.ALPN) == 0 {
+			c := *tlsOpts
 			c.ALPN = []string{"hysteria"}
-			t = &c
+			tlsOpts = &c
 		}
-		addTLS(base, t)
+		addTLS(base, tlsOpts)
 	case profile.AnyTLS:
 		base["type"] = "anytls"
-		base["password"] = p.Password
-		addTLS(base, tlsOrDefault(p.TLS))
+		base["password"] = prof.Password
+		addTLS(base, tlsOrDefault(prof.TLS))
 	case profile.SSH:
 		base["type"] = "ssh"
-		base["user"] = p.Username
-		if p.Password != "" {
-			base["password"] = p.Password
+		base["user"] = prof.Username
+		if prof.Password != "" {
+			base["password"] = prof.Password
 		}
-		if o := p.SSH; o != nil {
-			if o.PrivateKey != "" {
-				base["private_key"] = o.PrivateKey
+		if opts := prof.SSH; opts != nil {
+			if opts.PrivateKey != "" {
+				base["private_key"] = opts.PrivateKey
 			}
-			if o.PrivateKeyPassphrase != "" {
-				base["private_key_passphrase"] = o.PrivateKeyPassphrase
+			if opts.PrivateKeyPassphrase != "" {
+				base["private_key_passphrase"] = opts.PrivateKeyPassphrase
 			}
-			if len(o.HostKey) > 0 {
-				base["host_key"] = o.HostKey
+			if len(opts.HostKey) > 0 {
+				base["host_key"] = opts.HostKey
 			}
-			if o.ClientVersion != "" {
-				base["client_version"] = o.ClientVersion
+			if opts.ClientVersion != "" {
+				base["client_version"] = opts.ClientVersion
 			}
 		}
 	case profile.Naive:
 		// Naive runs on Chromium's network stack (cronet): it takes only the
 		// server name and an optional pinned certificate, no other TLS options.
 		base["type"] = "naive"
-		base["username"], base["password"] = p.Username, p.Password
+		base["username"], base["password"] = prof.Username, prof.Password
 		tls := obj{"enabled": true}
-		if p.TLS != nil {
-			if p.TLS.ServerName != "" {
-				tls["server_name"] = p.TLS.ServerName
+		if prof.TLS != nil {
+			if prof.TLS.ServerName != "" {
+				tls["server_name"] = prof.TLS.ServerName
 			}
-			if p.TLS.Certificate != "" {
-				tls["certificate"] = p.TLS.Certificate
+			if prof.TLS.Certificate != "" {
+				tls["certificate"] = prof.TLS.Certificate
 			}
-			if p.TLS.Insecure && p.TLS.Certificate == "" {
+			if prof.TLS.Insecure && prof.TLS.Certificate == "" {
 				return nil, false, nil, fmt.Errorf("naive can't skip certificate checks; pin the server certificate instead")
 			}
 		}
 		base["tls"] = tls
-		if o := p.Naive; o != nil {
-			if o.QUIC {
+		if opts := prof.Naive; opts != nil {
+			if opts.QUIC {
 				base["quic"] = true
 			}
-			if len(o.ExtraHeaders) > 0 {
-				base["extra_headers"] = o.ExtraHeaders
+			if len(opts.ExtraHeaders) > 0 {
+				base["extra_headers"] = opts.ExtraHeaders
 			}
 		}
 	case profile.WireGuard:
-		ep, extras, err := wireguardEndpoint(p, tag)
+		ep, extras, err := wireguardEndpoint(prof, tag)
 		return ep, true, extras, err
 	case profile.OpenVPN:
-		ep, err := openvpnEndpoint(p)
+		ep, err := openvpnEndpoint(prof)
 		return ep, true, nil, err
 	case profile.AmneziaWG:
 		return nil, false, nil, fmt.Errorf("%w: amneziawg runs on the dedicated AWG engine (not sing-box)", ErrOtherEngine)
 	case profile.IKEv2, profile.SSTP:
-		return nil, false, nil, fmt.Errorf("%w: %s runs on the built-in classic VPN engine (not sing-box)", ErrOtherEngine, p.Protocol)
+		return nil, false, nil, fmt.Errorf("%w: %s runs on the built-in classic VPN engine (not sing-box)", ErrOtherEngine, prof.Protocol)
 	case profile.DNSTT:
 		return nil, false, nil, fmt.Errorf("%w: a DNS tunnel runs as a helper next to sing-box", ErrOtherEngine)
 	default:
-		return nil, false, nil, fmt.Errorf("protocol %q is not supported by the sing-box engine", p.Protocol)
+		return nil, false, nil, fmt.Errorf("protocol %q is not supported by the sing-box engine", prof.Protocol)
 	}
 	return base, false, extras, nil
 }
 
 // addMultiplex turns on sing-box's multiplexing for an outbound.
-func addMultiplex(out obj, m *profile.Mux) {
-	if !m.Enabled() {
+func addMultiplex(out obj, muxOpts *profile.Mux) {
+	if !muxOpts.Enabled() {
 		return
 	}
-	mux := obj{"enabled": true, "protocol": m.Protocol}
-	if m.MaxConnections > 0 {
-		mux["max_connections"] = m.MaxConnections
+	mux := obj{"enabled": true, "protocol": muxOpts.Protocol}
+	if muxOpts.MaxConnections > 0 {
+		mux["max_connections"] = muxOpts.MaxConnections
 	}
-	if m.MinStreams > 0 {
-		mux["min_streams"] = m.MinStreams
+	if muxOpts.MinStreams > 0 {
+		mux["min_streams"] = muxOpts.MinStreams
 	}
-	if m.MaxStreams > 0 {
-		mux["max_streams"] = m.MaxStreams
+	if muxOpts.MaxStreams > 0 {
+		mux["max_streams"] = muxOpts.MaxStreams
 	}
-	if m.Padding {
+	if muxOpts.Padding {
 		mux["padding"] = true
 	}
 	out["multiplex"] = mux
@@ -643,9 +643,9 @@ func addMultiplex(out obj, m *profile.Mux) {
 
 // shadowTLSOutbound is the ShadowTLS layer under a Shadowsocks profile whose
 // plugin is "shadow-tls" (options "host=<sni>;password=<pw>;version=<1-3>").
-func shadowTLSOutbound(p *profile.Profile, tag string) (obj, error) {
+func shadowTLSOutbound(prof *profile.Profile, tag string) (obj, error) {
 	opts := map[string]string{}
-	for kv := range strings.SplitSeq(p.PluginOpts, ";") {
+	for kv := range strings.SplitSeq(prof.PluginOpts, ";") {
 		k, v, _ := strings.Cut(strings.TrimSpace(kv), "=")
 		if k != "" {
 			opts[k] = v
@@ -666,7 +666,7 @@ func shadowTLSOutbound(p *profile.Profile, tag string) (obj, error) {
 	if opts["insecure"] == "1" || opts["insecure"] == "true" {
 		tls["insecure"] = true
 	}
-	out := obj{"type": "shadowtls", "tag": tag, "server": p.Server, "server_port": p.Port, "version": version, "tls": tls}
+	out := obj{"type": "shadowtls", "tag": tag, "server": prof.Server, "server_port": prof.Port, "version": version, "tls": tls}
 	if version > 1 {
 		if opts["password"] == "" {
 			return nil, fmt.Errorf("shadow-tls: missing password")
@@ -678,15 +678,15 @@ func shadowTLSOutbound(p *profile.Profile, tag string) (obj, error) {
 
 // wireguardEndpoint is the WireGuard endpoint. With a proxy under it (WireGuard.Via), the proxy's outbound comes
 // back as an extra and the endpoint detours through it.
-func wireguardEndpoint(p *profile.Profile, tag string) (obj, []obj, error) {
-	wg := p.WireGuard
+func wireguardEndpoint(prof *profile.Profile, tag string) (obj, []obj, error) {
+	wg := prof.WireGuard
 	allowed := wg.AllowedIPs
 	if len(allowed) == 0 {
 		allowed = []string{"0.0.0.0/0", "::/0"}
 	}
 	peer := obj{
-		"address":     p.Server,
-		"port":        p.Port,
+		"address":     prof.Server,
+		"port":        prof.Port,
 		"public_key":  wg.PeerPublicKey,
 		"allowed_ips": allowed,
 	}
@@ -733,56 +733,56 @@ func wireguardEndpoint(p *profile.Profile, tag string) (obj, []obj, error) {
 }
 
 // openvpnEndpoint maps an OpenVPN profile to sing-box's openvpn-client endpoint.
-func openvpnEndpoint(p *profile.Profile) (obj, error) {
-	o := p.OpenVPN
-	if o == nil {
+func openvpnEndpoint(prof *profile.Profile) (obj, error) {
+	opts := prof.OpenVPN
+	if opts == nil {
 		return nil, fmt.Errorf("missing OpenVPN settings")
 	}
-	if o.NeedsAuth && (p.Username == "" || p.Password == "") {
+	if opts.NeedsAuth && (prof.Username == "" || prof.Password == "") {
 		return nil, profile.ErrNeedsCredentials
 	}
 	ep := obj{"type": "openvpn-client"}
-	if len(o.Remotes) == 0 {
-		ep["server"], ep["server_port"], ep["network"] = p.Server, p.Port, orDefault(o.Network, "udp")
+	if len(opts.Remotes) == 0 {
+		ep["server"], ep["server_port"], ep["network"] = prof.Server, prof.Port, orDefault(opts.Network, "udp")
 	} else {
-		servers := []any{obj{"server": p.Server, "server_port": p.Port, "network": orDefault(o.Network, "udp")}}
-		for _, r := range o.Remotes {
+		servers := []any{obj{"server": prof.Server, "server_port": prof.Port, "network": orDefault(opts.Network, "udp")}}
+		for _, r := range opts.Remotes {
 			servers = append(servers, obj{"server": r.Server, "server_port": r.Port, "network": orDefault(r.Network, "udp")})
 		}
 		ep["servers"] = servers
 	}
-	if o.RemoteRandom {
+	if opts.RemoteRandom {
 		ep["remote_random"] = true
 	}
-	if p.Username != "" {
-		ep["username"], ep["password"] = p.Username, p.Password
+	if prof.Username != "" {
+		ep["username"], ep["password"] = prof.Username, prof.Password
 	}
-	tls := obj{"certificate": []string{o.CA}}
-	if o.Cert != "" {
-		tls["client_certificate"] = []string{o.Cert}
-		tls["client_key"] = []string{o.Key}
+	tls := obj{"certificate": []string{opts.CA}}
+	if opts.Cert != "" {
+		tls["client_certificate"] = []string{opts.Cert}
+		tls["client_key"] = []string{opts.Key}
 	}
-	if o.VerifyX509Name != "" {
-		tls["server_name"] = o.VerifyX509Name
-		if o.VerifyX509Type != "" {
-			tls["server_name_type"] = o.VerifyX509Type
+	if opts.VerifyX509Name != "" {
+		tls["server_name"] = opts.VerifyX509Name
+		if opts.VerifyX509Type != "" {
+			tls["server_name_type"] = opts.VerifyX509Type
 		} else {
 			tls["server_name_type"] = "subject"
 		}
 	}
-	if o.RemoteCertTLS != "" {
-		tls["remote_certificate_tls"] = o.RemoteCertTLS
+	if opts.RemoteCertTLS != "" {
+		tls["remote_certificate_tls"] = opts.RemoteCertTLS
 	}
-	if o.TLSVersionMin != "" {
-		tls["version_min"] = o.TLSVersionMin
+	if opts.TLSVersionMin != "" {
+		tls["version_min"] = opts.TLSVersionMin
 	}
-	if o.TLSCipher != "" {
-		tls["cipher"] = o.TLSCipher
+	if opts.TLSCipher != "" {
+		tls["cipher"] = opts.TLSCipher
 	}
-	if o.ControlWrap != "" {
-		cw := obj{"type": strings.ReplaceAll(o.ControlWrap, "-", "_"), "key": []string{o.ControlWrapKey}}
-		if o.ControlWrap == "tls-auth" {
-			switch o.KeyDirection {
+	if opts.ControlWrap != "" {
+		cw := obj{"type": strings.ReplaceAll(opts.ControlWrap, "-", "_"), "key": []string{opts.ControlWrapKey}}
+		if opts.ControlWrap == "tls-auth" {
+			switch opts.KeyDirection {
 			case "1":
 				cw["direction"] = "client"
 			case "0":
@@ -792,27 +792,27 @@ func openvpnEndpoint(p *profile.Profile) (obj, error) {
 		tls["control_wrap"] = cw
 	}
 	ep["tls"] = tls
-	if len(o.DataCiphers) > 0 {
-		ep["data_ciphers"] = o.DataCiphers
+	if len(opts.DataCiphers) > 0 {
+		ep["data_ciphers"] = opts.DataCiphers
 	}
 	// In TLS mode a client's `cipher` is the fallback for servers without cipher negotiation.
-	if fb := orDefault(o.DataCiphersFallback, o.Cipher); fb != "" {
+	if fb := orDefault(opts.DataCiphersFallback, opts.Cipher); fb != "" {
 		ep["data_ciphers_fallback"] = fb
 	}
-	if o.Auth != "" {
-		ep["auth"] = o.Auth
+	if opts.Auth != "" {
+		ep["auth"] = opts.Auth
 	}
-	if o.Compression != "" {
-		ep["compression"] = o.Compression
+	if opts.Compression != "" {
+		ep["compression"] = opts.Compression
 	}
-	if o.CompressionLZO != "" {
-		ep["compression_lzo"] = o.CompressionLZO
+	if opts.CompressionLZO != "" {
+		ep["compression_lzo"] = opts.CompressionLZO
 	}
-	if o.MTU > 0 {
-		ep["mtu"] = o.MTU
+	if opts.MTU > 0 {
+		ep["mtu"] = opts.MTU
 	}
-	if o.MSSFix > 0 {
-		ep["mss_fix"] = o.MSSFix
+	if opts.MSSFix > 0 {
+		ep["mss_fix"] = opts.MSSFix
 	}
 	return ep, nil
 }
@@ -833,57 +833,57 @@ func normalizePrefixes(addrs []string) []string {
 	return out
 }
 
-func addTLS(out obj, t *profile.TLS) {
-	if t == nil || !t.Enabled {
+func addTLS(out obj, tlsOpts *profile.TLS) {
+	if tlsOpts == nil || !tlsOpts.Enabled {
 		return
 	}
 	tls := obj{"enabled": true}
-	if t.ServerName != "" {
-		tls["server_name"] = t.ServerName
+	if tlsOpts.ServerName != "" {
+		tls["server_name"] = tlsOpts.ServerName
 	}
-	if t.Insecure {
+	if tlsOpts.Insecure {
 		tls["insecure"] = true
 	}
-	if len(t.ALPN) > 0 {
-		tls["alpn"] = t.ALPN
+	if len(tlsOpts.ALPN) > 0 {
+		tls["alpn"] = tlsOpts.ALPN
 	}
-	if t.Fingerprint != "" {
-		tls["utls"] = obj{"enabled": true, "fingerprint": t.Fingerprint}
+	if tlsOpts.Fingerprint != "" {
+		tls["utls"] = obj{"enabled": true, "fingerprint": tlsOpts.Fingerprint}
 	}
-	if r := t.Reality; r != nil {
+	if r := tlsOpts.Reality; r != nil {
 		tls["reality"] = obj{"enabled": true, "public_key": r.PublicKey, "short_id": r.ShortID}
 	}
-	if t.Certificate != "" {
-		tls["certificate"] = t.Certificate
+	if tlsOpts.Certificate != "" {
+		tls["certificate"] = tlsOpts.Certificate
 	}
-	if t.Fragment {
+	if tlsOpts.Fragment {
 		tls["fragment"] = true
 	}
-	if t.RecordFragment {
+	if tlsOpts.RecordFragment {
 		tls["record_fragment"] = true
 	}
-	if e := t.ECH; e.On() {
+	if echOpts := tlsOpts.ECH; echOpts.On() {
 		ech := obj{"enabled": true}
-		if c := strings.TrimSpace(e.Config); c != "" {
+		if c := strings.TrimSpace(echOpts.Config); c != "" {
 			ech["config"] = strings.Split(strings.ReplaceAll(c, "\r\n", "\n"), "\n")
 		}
-		if e.QueryServerName != "" {
-			ech["query_server_name"] = e.QueryServerName
+		if echOpts.QueryServerName != "" {
+			ech["query_server_name"] = echOpts.QueryServerName
 		}
 		tls["ech"] = ech
 	}
 	out["tls"] = tls
 }
 
-func addTransport(out obj, t *profile.Transport) {
-	if t == nil {
+func addTransport(out obj, transport *profile.Transport) {
+	if transport == nil {
 		return
 	}
-	switch t.Type {
+	switch transport.Type {
 	case "ws":
-		tr := obj{"type": "ws", "path": orDefault(t.Path, "/")}
-		if t.Host != "" {
-			tr["headers"] = obj{"Host": t.Host}
+		tr := obj{"type": "ws", "path": orDefault(transport.Path, "/")}
+		if transport.Host != "" {
+			tr["headers"] = obj{"Host": transport.Host}
 		}
 		// v2ray links carry early data as ?ed=2048 in the path.
 		if path, ed, ok := strings.Cut(tr["path"].(string), "?ed="); ok {
@@ -895,20 +895,20 @@ func addTransport(out obj, t *profile.Transport) {
 		}
 		out["transport"] = tr
 	case "httpupgrade":
-		tr := obj{"type": "httpupgrade", "path": orDefault(t.Path, "/")}
-		if t.Host != "" {
-			tr["host"] = t.Host
+		tr := obj{"type": "httpupgrade", "path": orDefault(transport.Path, "/")}
+		if transport.Host != "" {
+			tr["host"] = transport.Host
 		}
 		out["transport"] = tr
 	case "grpc":
-		out["transport"] = obj{"type": "grpc", "service_name": t.ServiceName}
+		out["transport"] = obj{"type": "grpc", "service_name": transport.ServiceName}
 	case "http":
 		tr := obj{"type": "http"}
-		if t.Path != "" {
-			tr["path"] = t.Path
+		if transport.Path != "" {
+			tr["path"] = transport.Path
 		}
-		if t.Host != "" {
-			tr["host"] = splitComma(t.Host)
+		if transport.Host != "" {
+			tr["host"] = splitComma(transport.Host)
 		}
 		out["transport"] = tr
 	}
@@ -919,38 +919,38 @@ func dnsServer(raw string) (obj, error) {
 	if !strings.Contains(raw, "://") {
 		raw = "udp://" + raw
 	}
-	u, err := url.Parse(raw)
-	if err != nil || u.Hostname() == "" {
+	uri, err := url.Parse(raw)
+	if err != nil || uri.Hostname() == "" {
 		return nil, fmt.Errorf("invalid DNS server %q", raw)
 	}
-	server := obj{"server": u.Hostname()}
-	if p := u.Port(); p != "" {
+	server := obj{"server": uri.Hostname()}
+	if p := uri.Port(); p != "" {
 		port, err := strconv.Atoi(p)
 		if err != nil {
 			return nil, fmt.Errorf("invalid DNS server port %q", p)
 		}
 		server["server_port"] = port
 	}
-	switch u.Scheme {
+	switch uri.Scheme {
 	case "https":
 		server["type"] = "https"
-		if u.Path != "" && u.Path != "/dns-query" {
-			server["path"] = u.Path
+		if uri.Path != "" && uri.Path != "/dns-query" {
+			server["path"] = uri.Path
 		}
 	case "tls", "tcp", "udp":
-		server["type"] = u.Scheme
+		server["type"] = uri.Scheme
 	default:
-		return nil, fmt.Errorf("unsupported DNS scheme %q (use https, tls, tcp or udp)", u.Scheme)
+		return nil, fmt.Errorf("unsupported DNS scheme %q (use https, tls, tcp or udp)", uri.Scheme)
 	}
 	return server, nil
 }
 
-func tlsOrDefault(t *profile.TLS) *profile.TLS {
-	if t == nil {
+func tlsOrDefault(tlsOpts *profile.TLS) *profile.TLS {
+	if tlsOpts == nil {
 		return &profile.TLS{Enabled: true}
 	}
-	t.Enabled = true
-	return t
+	tlsOpts.Enabled = true
+	return tlsOpts
 }
 
 func splitComma(s string) []string {
@@ -979,18 +979,18 @@ func Outbound(p *profile.Profile, tag string) (out map[string]any, isEndpoint bo
 
 // torOutbound routes a Tor profile into the local Tor client's SOCKS5 port.
 // helperOutbound routes a profile into a helper tunnel's local SOCKS5 port, logging in as the profile says.
-func helperOutbound(h HelperSocks, tag string) (obj, error) {
-	host, port, err := net.SplitHostPort(h.Addr)
-	if err != nil || h.Addr == "" {
+func helperOutbound(helper HelperSocks, tag string) (obj, error) {
+	host, port, err := net.SplitHostPort(helper.Addr)
+	if err != nil || helper.Addr == "" {
 		return nil, fmt.Errorf("the tunnel is not running")
 	}
 	n, err := strconv.Atoi(port)
 	if err != nil {
-		return nil, fmt.Errorf("bad tunnel address %q", h.Addr)
+		return nil, fmt.Errorf("bad tunnel address %q", helper.Addr)
 	}
 	out := obj{"type": "socks", "tag": tag, "server": host, "server_port": n, "version": "5"}
-	if h.Username != "" || h.Password != "" {
-		out["username"], out["password"] = h.Username, h.Password
+	if helper.Username != "" || helper.Password != "" {
+		out["username"], out["password"] = helper.Username, helper.Password
 	}
 	return out, nil
 }

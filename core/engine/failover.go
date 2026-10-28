@@ -11,6 +11,7 @@ import (
 	"github.com/sagernet/sing-box/common/urltest"
 	M "github.com/sagernet/sing/common/metadata"
 
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/netcheck"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
@@ -81,7 +82,7 @@ func (e *Engine) failoverLoop(ctx context.Context, instance *box.Box, order []st
 			continue
 		}
 		failures++
-		e.logf("warn", "health check %s failed (%d/%d): %v", e.nameLocked(current), failures, failThreshold, err)
+		e.logWith(logrec.LevelWarn, logFields{profile: current, err: err}, "health check failed (%d/%d)", failures, failThreshold)
 		if failures < failThreshold {
 			// Confirm quickly instead of waiting a full interval.
 			timer.Reset(min(5*time.Second, interval))
@@ -89,7 +90,7 @@ func (e *Engine) failoverLoop(ctx context.Context, instance *box.Box, order []st
 		}
 
 		if nerr := e.netCheck(ctx, instance); nerr != nil {
-			e.logf("warn", "no internet connection, not switching: %v", nerr)
+			e.logWith(logrec.LevelWarn, logFields{code: ErrNoNetwork, err: nerr}, "no internet connection, not switching")
 			e.updateState(instance, func(s *State) { s.NoNetwork = true })
 			continue
 		}
@@ -103,14 +104,13 @@ func (e *Engine) failoverLoop(ctx context.Context, instance *box.Box, order []st
 			}
 		}
 		if next == "" {
-			e.logf("error", "all profiles are unreachable")
+			e.logWith(logrec.LevelError, logFields{err: err}, "all profiles are unreachable")
 			e.updateState(instance, func(s *State) { s.Error = "all profiles are unreachable" })
 			continue
 		}
 		e.mu.Lock()
 		if e.instance == instance {
-			reason := fmt.Sprintf("%s stopped responding: %v", e.name(current), err)
-			e.logf("warn", "failover: %s", reason)
+			e.logWith(logrec.LevelWarn, logFields{profile: current, err: err}, "failover: the profile stopped responding, switching to %s", next)
 			e.selectLocked(next, &FailoverEvent{From: current, To: next, Reason: err.Error(), At: time.Now()})
 		}
 		e.mu.Unlock()
@@ -138,14 +138,14 @@ func rotateAfter(order []string, current string) []string {
 }
 
 // updateState mutates the state if instance is still the running one.
-func (e *Engine) updateState(instance *box.Box, f func(*State)) {
+func (e *Engine) updateState(instance *box.Box, mutate func(*State)) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.instance != instance {
 		return
 	}
 	s := e.state
-	f(&s)
+	mutate(&s)
 	e.setState(s)
 }
 

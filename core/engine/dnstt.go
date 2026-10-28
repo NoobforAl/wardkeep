@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync/atomic"
 
 	box "github.com/sagernet/sing-box"
 	M "github.com/sagernet/sing/common/metadata"
 
 	"github.com/NoobforAl/omnitun/core/dnstt"
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
 	dnsttclient "github.com/NoobforAl/omnitun/third_party/dnstt/client"
@@ -22,6 +24,8 @@ type dnsttRun struct {
 	profile *profile.Profile
 	proc    *dnstt.Process
 	cancel  context.CancelFunc
+	// notified is set once a panic of the tunnel told the user, so watchDNSTT does not again.
+	notified atomic.Bool
 }
 
 func (r *dnsttRun) stop() {
@@ -42,45 +46,87 @@ func withoutDNSTT(profiles []*profile.Profile) []*profile.Profile {
 
 // dnsttConfig is the tunnel's configuration from a profile.
 func dnsttConfig(p *profile.Profile) (dnstt.Config, error) {
-	o := p.DNSTT
-	if o == nil {
+	opts := p.DNSTT
+	if opts == nil {
 		return dnstt.Config{}, fmt.Errorf("the profile has no DNS tunnel settings")
 	}
-	return dnstt.Config{Domain: o.Domain, PubKey: o.PubKey, Resolvers: o.Resolvers}, nil
+	return dnstt.Config{Domain: opts.Domain, PubKey: opts.PubKey, Resolvers: opts.Resolvers}, nil
 }
 
 // startDNSTTLocked starts the tunnel process and the sing-box tunnel that routes into it. The process connects once
 // sing-box is up (bindDNSTTLocked), and the tunnel is reported connected when the handshake through it works.
 // e.mu must be held.
-func (e *Engine) startDNSTTLocked(p *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
-	cfg, err := dnsttConfig(p)
+func (e *Engine) startDNSTTLocked(prof *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
+	cfg, err := dnsttConfig(prof)
 	if err != nil {
 		return e.failLocked(StagePrepare, err)
 	}
 	// Fail closed: a DNS tunnel profile never silently falls back to another profile.
 	opts.Failover = false
 	ctx, cancel := context.WithCancel(context.Background())
-	dnsttclient.SetLogf(func(format string, args ...any) { e.logf("debug", "DNS tunnel: "+format, args...) })
+	dnsttclient.SetLogf(func(format string, args ...any) {
+		e.logWith(logrec.LevelDebug, logFields{source: logrec.SourceDNSTT}, format, args...)
+	})
+	var run *dnsttRun
 	proc, err := dnstt.Start(ctx, cfg, dnstt.Options{
 		Deferred: true,
-		Logf:     func(format string, args ...any) { e.logf("info", format, args...) },
+		Logf: func(format string, args ...any) {
+			e.logWith(logrec.LevelInfo, logFields{source: logrec.SourceDNSTT}, format, args...)
+		},
+		OnPanic: func(rec logrec.Record) {
+			rec.Source = logrec.SourceDNSTT
+			e.deliver(rec, false)
+			if run != nil {
+				run.notified.Store(true)
+			}
+		},
 	})
 	if err != nil {
 		cancel()
 		return e.failLocked(StagePrepare, err)
 	}
-	run := &dnsttRun{profile: p, proc: proc, cancel: cancel}
+	run = &dnsttRun{profile: prof, proc: proc, cancel: cancel}
 	e.dnsttRun = run
-	opts.Helpers = map[string]singbox.HelperSocks{p.ID: {Addr: proc.Addr, Username: p.Username, Password: p.Password}}
-	e.logf("info", "starting the DNS tunnel (%s), local port %s", e.name(p.ID), proc.Addr)
-	if err := e.startSingboxLocked(profiles, opts, p.ID); err != nil {
+	opts.Helpers = map[string]singbox.HelperSocks{prof.ID: {Addr: proc.Addr, Username: prof.Username, Password: prof.Password}}
+	e.logWith(logrec.LevelInfo, logFields{source: logrec.SourceDNSTT}, "starting the DNS tunnel")
+	if err := e.startSingboxLocked(profiles, opts, prof.ID); err != nil {
 		if e.dnsttRun == run {
 			e.dnsttRun = nil
 		}
 		run.stop()
 		return err
 	}
+	go func() {
+		defer e.recoverLoop("connect")
+		e.watchDNSTT(run)
+	}()
 	return nil
+}
+
+// watchDNSTT ends the tunnel when the DNS tunnel ends while the engine did not stop it (it only does after a
+// panic): nothing else would tell the user.
+func (e *Engine) watchDNSTT(run *dnsttRun) {
+	<-run.proc.Done()
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.dnsttRun != run {
+		return // stopped by the engine
+	}
+	e.dnsttRun = nil
+	if !run.notified.Load() {
+		e.logWith(logrec.LevelError, logFields{source: logrec.SourceDNSTT, code: ErrDNSTTExited, err: run.proc.Err(), notify: true},
+			"the DNS tunnel stopped on its own")
+	}
+	wasRunning := e.state.Status == StatusRunning
+	e.teardownLocked()
+	run.cancel()
+	e.dropReported = true
+	stage := StageHandshake
+	if wasRunning {
+		stage = StageConnected
+	}
+	e.setState(State{Status: StatusError, Error: "the DNS tunnel stopped", Selected: run.profile.ID, Progress: progress(stage, e.name(run.profile.ID))})
+	e.dropReported = false
 }
 
 // bindDNSTTLocked gives the tunnel its sockets once the sing-box tunnel is up: connections and UDP sockets that
@@ -93,7 +139,7 @@ func (e *Engine) bindDNSTTLocked(instance *box.Box) {
 	}
 	direct, ok := lookupDialer(instance, singbox.TagDirect)
 	if !ok {
-		e.logf("error", "the DNS tunnel has no way out: sing-box has no direct outbound")
+		e.logWith(logrec.LevelError, logFields{source: logrec.SourceDNSTT}, "the DNS tunnel has no way out: sing-box has no direct outbound")
 		return
 	}
 	run.proc.Bind(

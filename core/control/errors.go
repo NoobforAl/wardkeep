@@ -25,70 +25,70 @@ const maxImportDetails = 10
 // importFailure is importError for an import that came back with reasons for the entries that failed: they go
 // along in Args["details"], one per line, so the UI can show why and not only that it failed.
 func importFailure(err error, res *importer.Result) *Error {
-	e := importError(err)
+	rpcErr := importError(err)
 	if res != nil && len(res.Errors) > 0 {
-		if e.Args == nil {
-			e.Args = map[string]string{}
+		if rpcErr.Args == nil {
+			rpcErr.Args = map[string]string{}
 		}
-		e.Args["details"] = strings.Join(res.Errors[:min(len(res.Errors), maxImportDetails)], "\n")
+		rpcErr.Args["details"] = strings.Join(res.Errors[:min(len(res.Errors), maxImportDetails)], "\n")
 	}
-	return e
+	return rpcErr
 }
 
 // importError is the error reply for text that could not be imported.
 func importError(err error) *Error {
-	e := &Error{Code: CodeImportFailed, Message: err.Error()}
+	rpcErr := &Error{Code: CodeImportFailed, Message: err.Error()}
 	var ue *importer.UnsupportedError
 	var je *importer.JSONError
 	var ns *importer.NoServerError
 	switch {
 	case errors.As(err, &je) && je.Found == "":
-		e.Code = CodeImportJSONEnd
-		e.Args = map[string]string{"line": strconv.Itoa(je.Line), "column": strconv.Itoa(je.Col)}
+		rpcErr.Code = CodeImportJSONEnd
+		rpcErr.Args = map[string]string{"line": strconv.Itoa(je.Line), "column": strconv.Itoa(je.Col)}
 	case errors.As(err, &je):
-		e.Code = CodeImportJSONSyntax
-		e.Args = map[string]string{"line": strconv.Itoa(je.Line), "column": strconv.Itoa(je.Col), "found": je.Found}
+		rpcErr.Code = CodeImportJSONSyntax
+		rpcErr.Args = map[string]string{"line": strconv.Itoa(je.Line), "column": strconv.Itoa(je.Col), "found": je.Found}
 	case errors.As(err, &ns):
-		e.Code = CodeImportJSONNoServer
-		e.Args = map[string]string{"found": ns.Found}
+		rpcErr.Code = CodeImportJSONNoServer
+		rpcErr.Args = map[string]string{"found": ns.Found}
 	case errors.Is(err, importer.ErrTooLarge):
-		e.Code = CodeImportTooLarge
-		e.Args = map[string]string{"limit": strconv.Itoa(importer.MaxTextSize >> 20)}
+		rpcErr.Code = CodeImportTooLarge
+		rpcErr.Args = map[string]string{"limit": strconv.Itoa(importer.MaxTextSize >> 20)}
 	case errors.Is(err, importer.ErrXrayServer):
-		e.Code = CodeImportXrayServer
+		rpcErr.Code = CodeImportXrayServer
 	case errors.Is(err, importer.ErrNoProfiles):
-		e.Code = CodeImportNothing
+		rpcErr.Code = CodeImportNothing
 	case errors.As(err, &ue):
-		e.Code = CodeImportUnsupported
-		e.Args = map[string]string{"scheme": ue.Scheme}
+		rpcErr.Code = CodeImportUnsupported
+		rpcErr.Args = map[string]string{"scheme": ue.Scheme}
 	case errors.Is(err, importer.ErrUnsupported):
-		e.Code = CodeImportUnsupported
+		rpcErr.Code = CodeImportUnsupported
 	}
-	return e
+	return rpcErr
 }
 
 // subscriptionError is the error reply for a subscription that could not be fetched.
 func subscriptionError(err error) *Error {
-	e := &Error{Code: CodeSubscriptionFailed, Message: err.Error()}
+	rpcErr := &Error{Code: CodeSubscriptionFailed, Message: err.Error()}
 	var he *subscription.HTTPError
 	switch {
 	case errors.Is(err, subscription.ErrAuth):
-		e.Code = CodeAuthFailed
+		rpcErr.Code = CodeAuthFailed
 	case errors.As(err, &he):
-		e.Code = CodeSubHTTP
-		e.Args = map[string]string{"status": strconv.Itoa(he.Status)}
+		rpcErr.Code = CodeSubHTTP
+		rpcErr.Args = map[string]string{"status": strconv.Itoa(he.Status)}
 	case errors.Is(err, subscription.ErrTooLarge):
-		e.Code = CodeSubTooLarge
+		rpcErr.Code = CodeSubTooLarge
 	case errors.Is(err, subscription.ErrBadURL):
-		e.Code = CodeSubBadURL
+		rpcErr.Code = CodeSubBadURL
 	case errors.Is(err, subscription.ErrUnsigned):
-		e.Code = CodeSubUnsigned
+		rpcErr.Code = CodeSubUnsigned
 	case errors.Is(err, subscription.ErrBadSignature):
-		e.Code = CodeSubBadSignature
+		rpcErr.Code = CodeSubBadSignature
 	case errors.Is(err, subscription.ErrStale):
-		e.Code = CodeSubStale
+		rpcErr.Code = CodeSubStale
 	case errors.Is(err, subscription.ErrBadKey):
-		e.Code = CodeSubBadKey
+		rpcErr.Code = CodeSubBadKey
 	}
-	return e
+	return rpcErr
 }

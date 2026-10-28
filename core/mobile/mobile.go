@@ -74,7 +74,7 @@ func Start(dataDir string, platform Platform) (string, error) {
 	}
 	wrapper := newPlatformWrapper(platform)
 	installResolver(wrapper)
-	s, err := control.NewServer(control.ServerConfig{
+	server, err := control.NewServer(control.ServerConfig{
 		DataDir: dataDir,
 		// Android pauses apps in the background, so a quiet UI connection means
 		// nothing; the VPN service stops the tunnel when the task is removed.
@@ -94,13 +94,13 @@ func Start(dataDir string, platform Platform) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	addr, err := s.Listen("127.0.0.1:0")
+	addr, err := server.Listen("127.0.0.1:0")
 	if err != nil {
 		return "", err
 	}
-	go s.Serve()
-	b, _ := json.Marshal(map[string]string{"addr": addr.String(), "token": s.Token()})
-	srv, info = s, string(b)
+	go server.Serve()
+	b, _ := json.Marshal(map[string]string{"addr": addr.String(), "token": server.Token()})
+	srv, info = server, string(b)
 	return info, nil
 }
 
@@ -125,16 +125,16 @@ func StopTunnel() {
 // tunnel is already running or starting.
 func StartTunnelFromJSON(request string) error {
 	mu.Lock()
-	s := srv
+	server := srv
 	mu.Unlock()
-	if s == nil {
+	if server == nil {
 		return errors.New("the core is not running")
 	}
-	switch s.Engine().State().Status {
+	switch server.Engine().State().Status {
 	case engine.StatusRunning, engine.StatusStarting:
 		return nil
 	}
-	_, err := s.Call("start", json.RawMessage(request))
+	_, err := server.Call("start", json.RawMessage(request))
 	return err
 }
 

@@ -66,16 +66,16 @@ type Tunnel struct {
 	tmp     string
 }
 
-// Dial connects p and creates its device with open. Only one Dial may run at a time.
-func Dial(ctx context.Context, p *profile.Profile, open Opener, logf func(string, ...any)) (*Tunnel, error) {
-	t := &Tunnel{}
+// Dial connects prof and creates its device with open. Only one Dial may run at a time.
+func Dial(ctx context.Context, prof *profile.Profile, open Opener, logf func(string, ...any)) (*Tunnel, error) {
+	tunnel := &Tunnel{}
 	mu.Lock()
 	clientOpener = func(req Interface) (Device, error) {
 		dev, err := open(req)
 		if err != nil {
 			return nil, err
 		}
-		return &counting{Device: dev, t: t, logf: logf}, nil
+		return &counting{Device: dev, t: tunnel, logf: logf}, nil
 	}
 	mu.Unlock()
 	defer func() {
@@ -86,56 +86,56 @@ func Dial(ctx context.Context, p *profile.Profile, open Opener, logf func(string
 	logger := slog.New(logHandler{logf: logf})
 
 	var err error
-	switch p.Protocol {
+	switch prof.Protocol {
 	case profile.SSTP:
-		t.session, t.Result, err = sstp.Dial(ctx, sstp.Config{
-			Server: p.Server, Port: p.Port, Username: p.Username, Password: p.Password,
-			SkipVerify: p.TLS != nil && p.TLS.Insecure, Logger: logger,
+		tunnel.session, tunnel.Result, err = sstp.Dial(ctx, sstp.Config{
+			Server: prof.Server, Port: prof.Port, Username: prof.Username, Password: prof.Password,
+			SkipVerify: prof.TLS != nil && prof.TLS.Insecure, Logger: logger,
 		})
 	case profile.IKEv2:
 		var cfg ikev2.Config
-		if cfg, err = t.ikev2Config(p); err == nil {
+		if cfg, err = tunnel.ikev2Config(prof); err == nil {
 			cfg.Logger = logger
-			t.session, t.Result, err = ikev2.Dial(ctx, cfg)
+			tunnel.session, tunnel.Result, err = ikev2.Dial(ctx, cfg)
 		}
 	default:
-		err = fmt.Errorf("classicvpn: unsupported protocol %q", p.Protocol)
+		err = fmt.Errorf("classicvpn: unsupported protocol %q", prof.Protocol)
 	}
 	if err != nil {
-		t.cleanup()
+		tunnel.cleanup()
 		if errors.Is(err, client.ErrAuth) {
 			return nil, fmt.Errorf("the server rejected the credentials: %w", err)
 		}
 		return nil, err
 	}
-	return t, nil
+	return tunnel, nil
 }
 
-func (t *Tunnel) ikev2Config(p *profile.Profile) (ikev2.Config, error) {
-	o := p.IKEv2
-	if o == nil {
+func (t *Tunnel) ikev2Config(prof *profile.Profile) (ikev2.Config, error) {
+	opts := prof.IKEv2
+	if opts == nil {
 		return ikev2.Config{}, errors.New("missing IKEv2 settings")
 	}
-	cfg := ikev2.Config{Server: p.Server, Port: p.Port, ServerID: o.RemoteID, TCP: o.TCP}
-	if cfg.Port == 500 && !o.TCP {
+	cfg := ikev2.Config{Server: prof.Server, Port: prof.Port, ServerID: opts.RemoteID, TCP: opts.TCP}
+	if cfg.Port == 500 && !opts.TCP {
 		cfg.Port = 0 // default
 	}
-	cfg.LocalID = o.LocalID
-	switch o.Auth {
+	cfg.LocalID = opts.LocalID
+	switch opts.Auth {
 	case "psk":
-		cfg.PSK = o.PSK
+		cfg.PSK = opts.PSK
 	case "eap":
-		cfg.PSK = o.PSK // optional: authenticates the server instead of its certificate
-		cfg.EAPUser, cfg.EAPPassword = p.Username, p.Password
+		cfg.PSK = opts.PSK // optional: authenticates the server instead of its certificate
+		cfg.EAPUser, cfg.EAPPassword = prof.Username, prof.Password
 		if cfg.EAPUser == "" || cfg.EAPPassword == "" {
 			return cfg, profile.ErrNeedsCredentials
 		}
 	case "cert":
 	default:
-		return cfg, fmt.Errorf("unknown IKEv2 auth %q", o.Auth)
+		return cfg, fmt.Errorf("unknown IKEv2 auth %q", opts.Auth)
 	}
 	if cfg.LocalID == "" {
-		cfg.LocalID = p.Username
+		cfg.LocalID = prof.Username
 	}
 	if cfg.LocalID == "" {
 		cfg.LocalID = "omnitun"
@@ -156,14 +156,14 @@ func (t *Tunnel) ikev2Config(p *profile.Profile) (ikev2.Config, error) {
 		return path, os.WriteFile(path, []byte(pem), 0o600)
 	}
 	var err error
-	if cfg.CAFile, err = write("ca.pem", o.CACert); err != nil {
+	if cfg.CAFile, err = write("ca.pem", opts.CACert); err != nil {
 		return cfg, err
 	}
-	if o.Auth == "cert" {
-		if cfg.CertFile, err = write("cert.pem", o.ClientCert); err != nil {
+	if opts.Auth == "cert" {
+		if cfg.CertFile, err = write("cert.pem", opts.ClientCert); err != nil {
 			return cfg, err
 		}
-		if cfg.KeyFile, err = write("key.pem", o.ClientKey); err != nil {
+		if cfg.KeyFile, err = write("key.pem", opts.ClientKey); err != nil {
 			return cfg, err
 		}
 	}
@@ -227,13 +227,13 @@ func (h logHandler) Enabled(_ context.Context, l slog.Level) bool {
 	return h.logf != nil && l >= slog.LevelWarn
 }
 func (h logHandler) Handle(_ context.Context, r slog.Record) error {
-	var b strings.Builder
-	b.WriteString(r.Message)
+	var sb strings.Builder
+	sb.WriteString(r.Message)
 	r.Attrs(func(a slog.Attr) bool {
-		fmt.Fprintf(&b, " %s=%v", a.Key, a.Value)
+		fmt.Fprintf(&sb, " %s=%v", a.Key, a.Value)
 		return true
 	})
-	h.logf("%s", b.String())
+	h.logf("%s", sb.String())
 	return nil
 }
 func (h logHandler) WithAttrs([]slog.Attr) slog.Handler { return h }

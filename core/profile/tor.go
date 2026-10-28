@@ -11,22 +11,22 @@ var bridgeFingerprint = regexp.MustCompile(`(?i)(^|\s)(fingerprint=)?[0-9a-f]{40
 
 // validateTor checks a Tor profile when it is made or edited, so a bad bridge is reported then and not as a
 // failed connection later.
-func validateTor(p *Profile) error {
-	if p.Tor == nil {
+func validateTor(profile *Profile) error {
+	if profile.Tor == nil {
 		return nil
 	}
-	switch p.Tor.Builtin {
+	switch profile.Tor.Builtin {
 	case "", "obfs4", "snowflake", "meek":
 	default:
-		return fmt.Errorf("profile %q: unknown built-in bridge kind %q (use obfs4, snowflake or meek)", p.Name, p.Tor.Builtin)
+		return fmt.Errorf("profile %q: unknown built-in bridge kind %q (use obfs4, snowflake or meek)", profile.Name, profile.Tor.Builtin)
 	}
-	for i, b := range p.Tor.Bridges {
-		b = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(b), "Bridge "))
-		if b == "" {
-			return fmt.Errorf("profile %q: bridge line %d is empty", p.Name, i+1)
+	for i, bridge := range profile.Tor.Bridges {
+		bridge = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(bridge), "Bridge "))
+		if bridge == "" {
+			return fmt.Errorf("profile %q: bridge line %d is empty", profile.Name, i+1)
 		}
-		if !bridgeFingerprint.MatchString(b) {
-			return fmt.Errorf("profile %q: bridge line %d has no relay fingerprint (40 hexadecimal characters)", p.Name, i+1)
+		if !bridgeFingerprint.MatchString(bridge) {
+			return fmt.Errorf("profile %q: bridge line %d has no relay fingerprint (40 hexadecimal characters)", profile.Name, i+1)
 		}
 	}
 	return nil

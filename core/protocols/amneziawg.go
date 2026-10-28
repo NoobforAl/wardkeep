@@ -30,11 +30,11 @@ func AWGServerAddress() string { return awgServerAddress }
 // AWGAddress maps a user's WireGuard address (10.30.a.b/32) to their
 // AmneziaWG address (10.31.a.b/32).
 func AWGAddress(wgAddress string) (string, error) {
-	p, err := netip.ParsePrefix(wgAddress)
-	if err != nil || !p.Addr().Is4() {
+	prefix, err := netip.ParsePrefix(wgAddress)
+	if err != nil || !prefix.Addr().Is4() {
 		return "", fmt.Errorf("%q is not an IPv4 tunnel address", wgAddress)
 	}
-	b := p.Addr().As4()
+	b := prefix.Addr().As4()
 	b[1] = 31
 	return netip.PrefixFrom(netip.AddrFrom4(b), 32).String(), nil
 }
@@ -50,20 +50,20 @@ func (amneziawg) Spec() Spec {
 	}
 }
 
-func (a amneziawg) Profile(env Env, port int, u Account) (*profile.Profile, error) {
-	if u.WGPrivateKey == "" || u.WGAddress == "" {
-		return nil, fmt.Errorf("user %s has no WireGuard key or address", u.Name)
+func (a amneziawg) Profile(env Env, port int, acct Account) (*profile.Profile, error) {
+	if acct.WGPrivateKey == "" || acct.WGAddress == "" {
+		return nil, fmt.Errorf("user %s has no WireGuard key or address", acct.Name)
 	}
 	if env.AWG.PublicKey == "" || len(env.AWG.Params) == 0 {
 		return nil, fmt.Errorf("the server has no AmneziaWG identity")
 	}
-	addr, err := AWGAddress(u.WGAddress)
+	addr, err := AWGAddress(acct.WGAddress)
 	if err != nil {
 		return nil, err
 	}
 	address := []string{addr}
 	if env.IPv6 {
-		a6, err := AWGAddress6(u.WGAddress)
+		a6, err := AWGAddress6(acct.WGAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func (a amneziawg) Profile(env Env, port int, u Account) (*profile.Profile, erro
 	return &profile.Profile{
 		Name: profileName(env, a.Spec()), Protocol: profile.AmneziaWG, Server: env.Host, Port: port,
 		WireGuard: &profile.WG{
-			PrivateKey: u.WGPrivateKey, PeerPublicKey: env.AWG.PublicKey,
+			PrivateKey: acct.WGPrivateKey, PeerPublicKey: env.AWG.PublicKey,
 			Address: address, AllowedIPs: []string{"0.0.0.0/0", "::/0"},
 			DNS: []string{"1.1.1.1", "8.8.8.8"}, MTU: wireguardMTU, Keepalive: 25, Amnezia: params,
 		},
@@ -83,25 +83,25 @@ func (a amneziawg) Profile(env Env, port int, u Account) (*profile.Profile, erro
 
 // File is the user's AmneziaWG .conf (WireGuard's format plus the obfuscation
 // parameters), importable by the AmneziaWG and Amnezia VPN apps.
-func (a amneziawg) File(env Env, port int, u Account) (string, string, error) {
-	p, err := a.Profile(env, port, u)
+func (a amneziawg) File(env Env, port int, acct Account) (string, string, error) {
+	prof, err := a.Profile(env, port, acct)
 	if err != nil {
 		return "", "", err
 	}
-	g := p.WireGuard
-	var b strings.Builder
-	fmt.Fprintf(&b, "# %s (AmneziaWG) for %s\n[Interface]\nPrivateKey = %s\nAddress = %s\nDNS = %s\nMTU = %d\n",
-		env.Name, u.Name, g.PrivateKey, strings.Join(g.Address, ", "), strings.Join(g.DNS, ", "), g.MTU)
-	keys := make([]string, 0, len(g.Amnezia))
-	for k := range g.Amnezia {
+	wgOpts := prof.WireGuard
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "# %s (AmneziaWG) for %s\n[Interface]\nPrivateKey = %s\nAddress = %s\nDNS = %s\nMTU = %d\n",
+		env.Name, acct.Name, wgOpts.PrivateKey, strings.Join(wgOpts.Address, ", "), strings.Join(wgOpts.DNS, ", "), wgOpts.MTU)
+	keys := make([]string, 0, len(wgOpts.Amnezia))
+	for k := range wgOpts.Amnezia {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
 		// Config files spell them Jc, Jmin, ... S1, H1.
-		fmt.Fprintf(&b, "%s = %s\n", strings.ToUpper(k[:1])+k[1:], g.Amnezia[k])
+		fmt.Fprintf(&sb, "%s = %s\n", strings.ToUpper(k[:1])+k[1:], wgOpts.Amnezia[k])
 	}
-	fmt.Fprintf(&b, "\n[Peer]\nPublicKey = %s\nAllowedIPs = %s\nEndpoint = %s:%d\nPersistentKeepalive = %d\n",
-		g.PeerPublicKey, strings.Join(g.AllowedIPs, ", "), endpointHost(env.Host), port, g.Keepalive)
-	return env.Name + "-amneziawg.conf", b.String(), nil
+	fmt.Fprintf(&sb, "\n[Peer]\nPublicKey = %s\nAllowedIPs = %s\nEndpoint = %s:%d\nPersistentKeepalive = %d\n",
+		wgOpts.PeerPublicKey, strings.Join(wgOpts.AllowedIPs, ", "), endpointHost(env.Host), port, wgOpts.Keepalive)
+	return env.Name + "-amneziawg.conf", sb.String(), nil
 }

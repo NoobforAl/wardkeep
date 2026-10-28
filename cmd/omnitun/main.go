@@ -13,6 +13,7 @@ import (
 
 	"github.com/NoobforAl/omnitun/core/engine"
 	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/singbox"
 )
 
@@ -105,7 +106,7 @@ func run(cmd string, args []string) error {
 					fmt.Fprintf(os.Stderr, "state: %s %s\n", s.Status, s.Error)
 				}
 			},
-			OnLog: func(level, msg string) { fmt.Fprintf(os.Stderr, "[%s] %s\n", level, msg) },
+			OnLog: logrec.NewLogger(os.Stderr, logrec.SourceCore).Emit,
 		})
 		if err := eng.Start(res.Profiles, opts); err != nil {
 			return err

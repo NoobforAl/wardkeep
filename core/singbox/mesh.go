@@ -35,42 +35,42 @@ const meshDNSTag = "mesh-dns"
 //
 // stateDir is where Tailscale keeps this device's identity; it is kept per
 // profile, so reconnecting does not register a new device each time.
-func meshProfile(p *profile.Profile, stateDir string) (endpoint obj, group obj) {
-	o := p.Tailscale
-	if o == nil {
-		o = &profile.TailscaleOpts{}
+func meshProfile(prof *profile.Profile, stateDir string) (endpoint obj, group obj) {
+	opts := prof.Tailscale
+	if opts == nil {
+		opts = &profile.TailscaleOpts{}
 	}
 	ep := obj{
 		"type":      "tailscale",
-		"tag":       MeshEndpointTag(p.ID),
-		"auth_key":  p.Password,
-		"ephemeral": o.Ephemeral,
+		"tag":       MeshEndpointTag(prof.ID),
+		"auth_key":  prof.Password,
+		"ephemeral": opts.Ephemeral,
 	}
 	if stateDir != "" {
-		ep["state_directory"] = filepath.Join(stateDir, p.ID)
+		ep["state_directory"] = filepath.Join(stateDir, prof.ID)
 	} else {
-		ep["state_directory"] = "tailscale-" + p.ID
+		ep["state_directory"] = "tailscale-" + prof.ID
 	}
-	if o.ControlURL != "" {
-		ep["control_url"] = o.ControlURL
+	if opts.ControlURL != "" {
+		ep["control_url"] = opts.ControlURL
 	}
-	if o.Hostname != "" {
-		ep["hostname"] = o.Hostname
+	if opts.Hostname != "" {
+		ep["hostname"] = opts.Hostname
 	}
-	if o.ExitNode != "" {
-		ep["exit_node"] = o.ExitNode
+	if opts.ExitNode != "" {
+		ep["exit_node"] = opts.ExitNode
 	}
-	if o.AcceptRoutes {
+	if opts.AcceptRoutes {
 		ep["accept_routes"] = true
 	}
 	def := TagDirect
-	if o.ExitNode != "" {
-		def = MeshEndpointTag(p.ID)
+	if opts.ExitNode != "" {
+		def = MeshEndpointTag(prof.ID)
 	}
 	group = obj{
 		"type":      "selector",
-		"tag":       p.ID,
-		"outbounds": []string{MeshEndpointTag(p.ID), TagDirect},
+		"tag":       prof.ID,
+		"outbounds": []string{MeshEndpointTag(prof.ID), TagDirect},
 		"default":   def,
 	}
 	return ep, group

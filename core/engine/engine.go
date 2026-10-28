@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	box "github.com/sagernet/sing-box"
@@ -24,6 +25,7 @@ import (
 	M "github.com/sagernet/sing/common/metadata"
 	"github.com/sagernet/sing/service"
 
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/netcheck"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
@@ -79,8 +81,9 @@ type Config struct {
 	DataDir string
 	// OnState is called on every state change and once per second with traffic while running.
 	OnState func(State)
-	// OnLog receives sing-box log lines.
-	OnLog func(level, message string)
+	// OnLog receives the engine's log records (its own, sing-box's and its helpers': Tor, the DNS tunnel,
+	// DNSCrypt), already gated by the level (core/logrec) and scrubbed of addresses.
+	OnLog func(logrec.Record)
 	// Platform provides TUN, socket protection and interface monitoring on
 	// mobile OSes (see core/mobile). Nil on desktop.
 	Platform adapter.PlatformInterface
@@ -159,8 +162,13 @@ type Engine struct {
 	// restarts when switching to or from an AmneziaWG profile.
 	profiles []*profile.Profile
 	opts     singbox.Options
-	// names maps profile IDs to display names for log messages.
+	// names maps profile IDs to display names for the state.
 	names map[string]string
+	// attempt is the current connect attempt, whose conn id and profile its log records carry.
+	attempt atomic.Pointer[attempt]
+	// dropReported is set while a failure that already logged its notify record moves the state to error, so
+	// setState does not report it a second time. Guarded by mu.
+	dropReported bool
 }
 
 // New returns an idle engine.
@@ -176,40 +184,36 @@ func (e *Engine) State() State {
 }
 
 // setState must be called with e.mu held.
-func (e *Engine) setState(s State) {
-	if s.Selected != "" {
-		s.ProfileName = e.name(s.Selected)
+func (e *Engine) setState(state State) {
+	if state.Selected != "" {
+		state.ProfileName = e.name(state.Selected)
 	} else {
-		s.ProfileName = ""
+		state.ProfileName = ""
 	}
-	if e.carryFailover != nil && (s.Status == StatusRunning || s.Failover != nil) {
-		if s.Failover == nil {
-			s.Failover = e.carryFailover
+	if e.carryFailover != nil && (state.Status == StatusRunning || state.Failover != nil) {
+		if state.Failover == nil {
+			state.Failover = e.carryFailover
 		} else {
 			// Later hops failed too: report the switch from the profile the user picked.
-			f := *s.Failover
+			f := *state.Failover
 			f.From, f.Reason = e.carryFailover.From, e.carryFailover.Reason
-			s.Failover = &f
+			state.Failover = &f
 		}
 		e.carryFailover = nil
 	}
 	// The Tor circuit belongs to the running Tor profile, whichever code replaces the state.
-	if s.Status == StatusRunning && e.torRun != nil && len(s.TorPath) == 0 {
-		s.TorPath = e.torRun.path
+	if state.Status == StatusRunning && e.torRun != nil && len(state.TorPath) == 0 {
+		state.TorPath = e.torRun.path
 	}
-	s.ErrorCode = ""
-	if s.Status == StatusError {
-		s.ErrorCode = errorCode(s.Error)
+	state.ErrorCode = ""
+	if state.Status == StatusError {
+		state.ErrorCode = errorCode(state.Error)
 	}
-	e.state = s
+	prev := e.state.Status
+	e.state = state
+	e.notifyDropLocked(prev, state)
 	if e.cfg.OnState != nil {
-		e.cfg.OnState(s)
-	}
-}
-
-func (e *Engine) logf(level, format string, args ...any) {
-	if e.cfg.OnLog != nil {
-		e.cfg.OnLog(level, fmt.Sprintf(format, args...))
+		e.cfg.OnState(state)
 	}
 }
 
@@ -224,7 +228,7 @@ func (e *Engine) systemDNS() string {
 	if len(servers) == 0 {
 		// Never leave a phone with the resolver that cannot work (it asks [::1]:53 and every
 		// server name fails): a public one is better than none.
-		e.logf("warn", "the network reports no DNS server; using %s for server names", fallbackLocalDNS)
+		e.logf("warn", "the network reports no DNS server; using a public resolver for server names")
 		return fallbackLocalDNS
 	}
 	if strings.Contains(servers[0], ":") {
@@ -256,14 +260,20 @@ type logWriter struct{ e *Engine }
 var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
 func (w logWriter) WriteMessage(level log.Level, message string) {
-	// sing-box hands the platform writer every level, including per-connection
-	// info/debug lines; forward only warnings and errors so the UI log stays readable.
-	if level > log.LevelWarn {
+	// sing-box hands the platform writer every level, including per-connection info and debug lines (which name
+	// destinations: the record is scrubbed); the gate keeps what the chosen level asks for.
+	recLevel := singboxLevel(level)
+	fatal := recLevel == logrec.LevelFatal
+	if w.e.cfg.OnLog == nil || (!fatal && !logrec.Enabled(recLevel)) {
 		return
 	}
-	if w.e.cfg.OnLog != nil {
-		w.e.cfg.OnLog(log.FormatLevel(level), ansiEscape.ReplaceAllString(message, ""))
+	target, text := splitSingboxLine(ansiEscape.ReplaceAllString(message, ""))
+	rec := logrec.Record{Time: time.Now(), Level: recLevel, Source: logrec.SourceSingBox, Target: target, Msg: text}
+	if fatal {
+		// sing-box stops on a fatal error, and nothing else reports why.
+		rec.Code, rec.Notify = ErrEngineFatal, true
 	}
+	w.e.deliver(rec, false)
 }
 
 func (e *Engine) dataDir() string {
@@ -306,6 +316,11 @@ func (e *Engine) Start(profiles []*profile.Profile, opts singbox.Options) error 
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.carryFailover = nil
+	selected := opts.Selected
+	if selected == "" {
+		selected = singbox.TagAuto
+	}
+	e.beginAttemptLocked(selected)
 	return e.startLocked(profiles, opts)
 }
 
@@ -350,8 +365,9 @@ func (e *Engine) startLocked(profiles []*profile.Profile, opts singbox.Options) 
 
 // failLocked reports a failure at a connection stage. e.mu must be held.
 func (e *Engine) failLocked(stage string, err error) error {
-	e.logf("error", "%s failed: %v", stageLabel[stage], err)
-	e.setState(State{Status: StatusError, Error: fmt.Sprintf("%s failed: %s", stageLabel[stage], plainError(err)), Progress: progress(stage, "")})
+	message := fmt.Sprintf("%s failed: %s", stageLabel[stage], plainError(err))
+	e.logWith(logrec.LevelError, logFields{code: errorCode(message), err: err}, "%s failed", stageLabel[stage])
+	e.setState(State{Status: StatusError, Error: message, Progress: progress(stage, "")})
 	return fmt.Errorf("%s failed: %w", stageLabel[stage], err)
 }
 
@@ -374,6 +390,10 @@ func (e *Engine) startSingboxLocked(profiles []*profile.Profile, opts singbox.Op
 	if opts.LocalDNS == "" {
 		opts.LocalDNS = e.systemDNS()
 	}
+	if opts.LogLevel == "" {
+		// A level changed with logging.set reaches sing-box here, at its next start.
+		opts.LogLevel = singboxLogLevel()
+	}
 	if err := e.startDNSCryptLocked(&opts); err != nil {
 		return fail(StagePrepare, err)
 	}
@@ -385,7 +405,7 @@ func (e *Engine) startSingboxLocked(profiles []*profile.Profile, opts singbox.Op
 	var skippedMsgs []string
 	for _, s := range skipped {
 		skippedMsgs = append(skippedMsgs, s.Error())
-		e.logf("warn", "skipped profile: %v", s)
+		e.logWith(logrec.LevelWarn, logFields{op: "connect", err: s}, "skipped a profile")
 	}
 	e.logf("info", "starting %d profile(s) in %s mode", len(profiles)-len(skipped), orMode(opts.Mode))
 
@@ -415,17 +435,26 @@ func (e *Engine) startSingboxLocked(profiles []*profile.Profile, opts singbox.Op
 		e.stopLocked()
 		return fail(StageTunnelUp, err)
 	}
-	go e.trafficLoop(ctx, instance)
+	go func() {
+		defer e.recoverLoop("connect")
+		e.trafficLoop(ctx, instance)
+	}()
 
 	if e.cfg.SkipHandshake {
 		e.setState(State{Status: StatusRunning, Since: time.Now(), Skipped: skippedMsgs, Selected: selected, Progress: progress(StageConnected, "")})
 		if opts.Failover {
-			go e.failoverLoop(ctx, instance, profileOrder(profiles), opts)
+			go func() {
+				defer e.recoverLoop("connect")
+				e.failoverLoop(ctx, instance, profileOrder(profiles), opts)
+			}()
 		}
 		return nil
 	}
 	e.setState(State{Status: StatusStarting, Skipped: skippedMsgs, Selected: selected, Progress: progress(StageTunnelUp, "")})
-	go e.handshake(ctx, instance, profileOrder(profiles), selected, opts)
+	go func() {
+		defer e.recoverLoop("connect")
+		e.handshake(ctx, instance, profileOrder(profiles), selected, opts)
+	}()
 	return nil
 }
 
@@ -482,6 +511,7 @@ func (e *Engine) Select(tag string) error {
 		opts := e.opts
 		opts.Selected = tag
 		e.carryFailover = nil
+		e.beginAttemptLocked(tag)
 		return e.startLocked(e.profiles, opts)
 	}
 	return e.selectLocked(tag, nil)
@@ -542,14 +572,14 @@ func (e *Engine) selectLocked(tag string, failover *FailoverEvent) error {
 	if !ok || !sel.SelectOutbound(tag) {
 		return fmt.Errorf("unknown profile %q", tag)
 	}
-	s := e.state
-	s.Selected = tag
-	s.Error, s.NoNetwork = "", false
+	state := e.state
+	state.Selected = tag
+	state.Error, state.NoNetwork = "", false
 	if failover != nil {
-		s.Failover = failover
+		state.Failover = failover
 	}
-	e.setState(s)
-	e.logf("info", "switched to %s", e.name(tag))
+	e.setState(state)
+	e.logWith(logrec.LevelInfo, logFields{profile: tag}, "switched profile")
 	return nil
 }
 
@@ -568,6 +598,7 @@ func (e *Engine) stopLocked() error {
 	err := e.teardownLocked()
 	e.setState(State{Status: StatusStopped})
 	e.logf("info", "stopped")
+	e.attempt.Store(nil)
 	return err
 }
 
@@ -653,7 +684,7 @@ func (e *Engine) TestLatency(ctx context.Context, profiles []*profile.Profile, t
 			continue
 		}
 		wg.Add(1)
-		go func(r *LatencyResult) {
+		go func(res *LatencyResult) {
 			defer wg.Done()
 			// Derive from the box context: urltest reads the configured root CA pool from it.
 			tctx, tcancel := context.WithTimeout(boxCtx, 8*time.Second)
@@ -662,20 +693,20 @@ func (e *Engine) TestLatency(ctx context.Context, profiles []*profile.Profile, t
 			defer tcancel()
 			ms, err := urltest.URLTest(tctx, testURL, dialer)
 			if err != nil {
-				r.Error = err.Error()
+				res.Error = err.Error()
 				return
 			}
-			r.Ms = int(ms)
+			res.Ms = int(ms)
 		}(&results[i])
 	}
 	wg.Wait()
 	for _, r := range results {
 		if r.Error != "" {
-			e.logf("warn", "latency test %s: %s", r.ID, r.Error)
+			e.logWith(logrec.LevelWarn, logFields{op: "test", profile: r.ID, err: errors.New(r.Error), detached: true}, "latency test failed")
 		}
 	}
 	for _, s := range skipped {
-		e.logf("warn", "latency test skipped: %v", s)
+		e.logWith(logrec.LevelWarn, logFields{op: "test", err: s, detached: true}, "latency test skipped a profile")
 	}
 	return results, nil
 }

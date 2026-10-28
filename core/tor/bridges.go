@@ -49,15 +49,15 @@ func Transport(line string) string {
 
 // IsBridgeLine reports whether line looks like a Tor bridge line.
 func IsBridgeLine(line string) bool {
-	f := strings.Fields(NormalizeBridge(line))
-	if len(f) < 2 {
+	fields := strings.Fields(NormalizeBridge(line))
+	if len(fields) < 2 {
 		return false
 	}
 	if t := Transport(line); t != "" {
-		return slices.Contains(Supported, t) && strings.Contains(f[1], ":")
+		return slices.Contains(Supported, t) && strings.Contains(fields[1], ":")
 	}
 	// Vanilla bridge: "IP:PORT FINGERPRINT".
-	return strings.Contains(f[0], ":") && len(f[1]) == 40
+	return strings.Contains(fields[0], ":") && len(fields[1]) == 40
 }
 
 // TransportsFor lists the distinct transports needed by bridges.

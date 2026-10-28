@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
 )
@@ -33,25 +34,25 @@ type platformRun struct {
 	timer    *time.Timer
 }
 
-// startPlatformLocked asks the OS to start p. e.mu must be held.
-func (e *Engine) startPlatformLocked(p *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
+// startPlatformLocked asks the OS to start prof. e.mu must be held.
+func (e *Engine) startPlatformLocked(prof *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
 	fail := func(stage string, err error) error {
+		e.logWith(logrec.LevelError, logFields{profile: prof.ID, err: err}, "%s failed", stageLabel[stage])
 		err = fmt.Errorf("%s failed: %w", stageLabel[stage], err)
-		e.logf("error", "%v", err)
-		e.setState(State{Status: StatusError, Error: err.Error(), Selected: p.ID, Progress: progress(stage, e.name(p.ID))})
+		e.setState(State{Status: StatusError, Error: err.Error(), Selected: prof.ID, Progress: progress(stage, e.name(prof.ID))})
 		return err
 	}
 	if e.cfg.PlatformVPN == nil {
 		return fail(StagePrepare, errors.New("IKEv2 needs Android 11 or newer (the system's IKEv2 client)"))
 	}
-	raw, err := json.Marshal(p)
+	raw, err := json.Marshal(prof)
 	if err != nil {
 		return fail(StagePrepare, err)
 	}
-	e.logf("info", "starting %s (system IKEv2 client)", e.name(p.ID))
-	run := &platformRun{profile: p, profiles: profiles, opts: opts}
+	e.logWith(logrec.LevelInfo, logFields{profile: prof.ID}, "starting the system IKEv2 client")
+	run := &platformRun{profile: prof, profiles: profiles, opts: opts}
 	e.platformRun = run
-	e.setState(State{Status: StatusStarting, Selected: p.ID, Progress: progress(StageHandshake, e.name(p.ID))})
+	e.setState(State{Status: StatusStarting, Selected: prof.ID, Progress: progress(StageHandshake, e.name(prof.ID))})
 	if err := e.cfg.PlatformVPN.StartPlatformVPN(string(raw)); err != nil {
 		e.platformRun = nil
 		return fail(StageTunnelUp, err)
@@ -75,7 +76,7 @@ func (e *Engine) PlatformVPNStatus(status, message string) {
 	case "connected":
 		run.timer.Stop()
 		if e.state.Status != StatusRunning {
-			e.logf("info", "connected via %s", e.name(run.profile.ID))
+			e.logWith(logrec.LevelInfo, logFields{profile: run.profile.ID}, "connected")
 			e.setState(State{Status: StatusRunning, Since: time.Now(), Selected: run.profile.ID, Progress: progress(StageConnected, e.name(run.profile.ID))})
 		}
 	case "failed", "disconnected":
@@ -89,7 +90,7 @@ func (e *Engine) PlatformVPNStatus(status, message string) {
 		e.cfg.PlatformVPN.StopPlatformVPN()
 		if run.opts.Failover && len(run.profiles) > 1 {
 			next := rotateAfter(profileOrder(run.profiles), run.profile.ID)[0]
-			e.logf("warn", "failover: %s: %s, trying %s", e.name(run.profile.ID), reason, e.name(next))
+			e.logWith(logrec.LevelWarn, logFields{profile: run.profile.ID, err: errors.New(reason)}, "failover: trying the next profile (%s)", next)
 			e.carryFailover = &FailoverEvent{From: run.profile.ID, To: next, Reason: reason, At: time.Now()}
 			opts := run.opts
 			opts.Selected = next
@@ -107,7 +108,7 @@ func (e *Engine) PlatformVPNStatus(status, message string) {
 			stage = StageConnected
 		}
 		err := fmt.Sprintf("%s failed: %s", stageLabel[StageHandshake], reason)
-		e.logf("error", "%s", err)
+		e.logWith(logrec.LevelError, logFields{profile: run.profile.ID, code: errorCode(err), err: errors.New(reason)}, "%s failed", stageLabel[StageHandshake])
 		e.setState(State{Status: StatusError, Error: err, Selected: run.profile.ID, Progress: progress(stage, e.name(run.profile.ID))})
 	}
 }

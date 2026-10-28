@@ -175,41 +175,41 @@ func ParseStamp(s string) (Stamp, error) {
 	if len(raw) == 0 {
 		return Stamp{}, badStamp("the stamp is empty")
 	}
-	r := &stampReader{b: raw, pos: 1}
+	reader := &stampReader{b: raw, pos: 1}
 	st := Stamp{Kind: Kind(raw[0])}
 	switch st.Kind {
 	case KindPlain, KindDNSCrypt, KindDoH, KindDoT, KindDoQ:
 		var props [8]byte
-		copy(props[:], r.take(8))
+		copy(props[:], reader.take(8))
 		st.Props = Props(binary.LittleEndian.Uint64(props[:]))
-		st.Addr = string(r.lp())
+		st.Addr = string(reader.lp())
 	case KindRelay:
-		st.Addr = string(r.lp())
+		st.Addr = string(reader.lp())
 	default:
 		return Stamp{}, badStamp("this stamp type (0x%02x) is not supported", raw[0])
 	}
 	switch st.Kind {
 	case KindDNSCrypt:
-		st.PublicKey = append([]byte(nil), r.lp()...)
-		st.ProviderName = string(r.lp())
+		st.PublicKey = append([]byte(nil), reader.lp()...)
+		st.ProviderName = string(reader.lp())
 	case KindDoH:
-		st.Hashes = r.vlp()
-		st.Host = string(r.lp())
-		st.Path = string(r.lp())
-		if !r.atEnd() {
-			st.Bootstrap = ipStrings(r.vlp())
+		st.Hashes = reader.vlp()
+		st.Host = string(reader.lp())
+		st.Path = string(reader.lp())
+		if !reader.atEnd() {
+			st.Bootstrap = ipStrings(reader.vlp())
 		}
 	case KindDoT, KindDoQ:
-		st.Hashes = r.vlp()
-		st.Host = string(r.lp())
-		if !r.atEnd() {
-			st.Bootstrap = ipStrings(r.vlp())
+		st.Hashes = reader.vlp()
+		st.Host = string(reader.lp())
+		if !reader.atEnd() {
+			st.Bootstrap = ipStrings(reader.vlp())
 		}
 	}
-	if r.err != nil {
-		return Stamp{}, r.err
+	if reader.err != nil {
+		return Stamp{}, reader.err
 	}
-	if !r.atEnd() {
+	if !reader.atEnd() {
 		return Stamp{}, badStamp("the stamp has extra data at its end")
 	}
 	return st, st.resolve()
@@ -277,17 +277,17 @@ func (st *Stamp) resolve() error {
 
 // splitHostPort splits "host", "host:port", "ip", "[v6]" and "[v6]:port"; port
 // is 0 when absent.
-func splitHostPort(s string) (host string, port int, ok bool) {
-	if s == "" {
+func splitHostPort(addr string) (host string, port int, ok bool) {
+	if addr == "" {
 		return "", 0, true
 	}
-	if strings.HasPrefix(s, "[") {
-		end := strings.Index(s, "]")
+	if strings.HasPrefix(addr, "[") {
+		end := strings.Index(addr, "]")
 		if end < 0 {
 			return "", 0, false
 		}
-		host = s[1:end]
-		rest := s[end+1:]
+		host = addr[1:end]
+		rest := addr[end+1:]
 		if rest == "" {
 			return host, 0, true
 		}
@@ -300,20 +300,20 @@ func splitHostPort(s string) (host string, port int, ok bool) {
 		}
 		return host, p, true
 	}
-	if _, err := netip.ParseAddr(s); err == nil {
-		return s, 0, true // a bare IP (v4, or v6 without brackets)
+	if _, err := netip.ParseAddr(addr); err == nil {
+		return addr, 0, true // a bare IP (v4, or v6 without brackets)
 	}
-	if i := strings.LastIndex(s, ":"); i >= 0 {
-		if strings.Contains(s[:i], ":") {
+	if i := strings.LastIndex(addr, ":"); i >= 0 {
+		if strings.Contains(addr[:i], ":") {
 			return "", 0, false
 		}
-		p, err := strconv.Atoi(s[i+1:])
+		p, err := strconv.Atoi(addr[i+1:])
 		if err != nil || p <= 0 || p > 65535 {
 			return "", 0, false
 		}
-		return s[:i], p, true
+		return addr[:i], p, true
 	}
-	return s, 0, true
+	return addr, 0, true
 }
 
 // HostAddr returns the address to connect to as "host:port" ("[v6]:port" for
@@ -368,15 +368,15 @@ func (st Stamp) Name() string {
 
 // String encodes the stamp.
 func (st Stamp) String() string {
-	var b []byte
-	b = append(b, byte(st.Kind))
+	var out []byte
+	out = append(out, byte(st.Kind))
 	lp := func(s []byte) {
-		b = append(b, byte(len(s)))
-		b = append(b, s...)
+		out = append(out, byte(len(s)))
+		out = append(out, s...)
 	}
 	vlp := func(items [][]byte) {
 		if len(items) == 0 {
-			b = append(b, 0)
+			out = append(out, 0)
 			return
 		}
 		for i, it := range items {
@@ -384,14 +384,14 @@ func (st Stamp) String() string {
 			if i < len(items)-1 {
 				l |= 0x80
 			}
-			b = append(b, l)
-			b = append(b, it...)
+			out = append(out, l)
+			out = append(out, it...)
 		}
 	}
 	if st.Kind != KindRelay {
 		var p [8]byte
 		binary.LittleEndian.PutUint64(p[:], uint64(st.Props))
-		b = append(b, p[:]...)
+		out = append(out, p[:]...)
 	}
 	lp([]byte(st.Addr))
 	switch st.Kind {
@@ -416,7 +416,7 @@ func (st Stamp) String() string {
 			vlp(items)
 		}
 	}
-	return StampPrefix + base64.RawURLEncoding.EncodeToString(b)
+	return StampPrefix + base64.RawURLEncoding.EncodeToString(out)
 }
 
 // ErrNotDNSCrypt is returned where a DNSCrypt stamp is needed.
@@ -436,10 +436,10 @@ func ParseDNSCryptStamp(s string) (Stamp, error) {
 
 // ParseRelayStamp reads the address of a relay: a relay stamp, or a plain
 // "ip:port" address.
-func ParseRelayStamp(s string) (Stamp, error) {
-	s = strings.TrimSpace(s)
-	if !strings.HasPrefix(s, StampPrefix) {
-		host, port, ok := splitHostPort(s)
+func ParseRelayStamp(text string) (Stamp, error) {
+	text = strings.TrimSpace(text)
+	if !strings.HasPrefix(text, StampPrefix) {
+		host, port, ok := splitHostPort(text)
 		if !ok || host == "" || !validHostname(host) {
 			return Stamp{}, badStamp("a relay is a relay stamp (sdns://...) or an address like 203.0.113.5:443")
 		}
@@ -449,7 +449,7 @@ func ParseRelayStamp(s string) (Stamp, error) {
 		st := Stamp{Kind: KindRelay, Addr: net.JoinHostPort(host, strconv.Itoa(port)), Port: port}
 		return st, nil
 	}
-	st, err := ParseStamp(s)
+	st, err := ParseStamp(text)
 	if err != nil {
 		return st, err
 	}
@@ -460,14 +460,14 @@ func ParseRelayStamp(s string) (Stamp, error) {
 }
 
 // validHostname accepts an IP address or a plausible DNS name.
-func validHostname(h string) bool {
-	if _, err := netip.ParseAddr(h); err == nil {
+func validHostname(host string) bool {
+	if _, err := netip.ParseAddr(host); err == nil {
 		return true
 	}
-	if h == "" || len(h) > 253 {
+	if host == "" || len(host) > 253 {
 		return false
 	}
-	for _, c := range h {
+	for _, c := range host {
 		switch {
 		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9', c == '-', c == '.', c == '_':
 		default:

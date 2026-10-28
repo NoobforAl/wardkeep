@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/NoobforAl/omnitun/core/classicvpn"
+	"github.com/NoobforAl/omnitun/core/logrec"
 	"github.com/NoobforAl/omnitun/core/profile"
 	"github.com/NoobforAl/omnitun/core/singbox"
 )
@@ -31,16 +32,16 @@ func (r *classicRun) stop() {
 	}
 }
 
-// usesClassic reports whether the core runs p with classicvpn.
-func usesClassic(p *profile.Profile) bool {
-	if p.Protocol == profile.IKEv2 && p.IKEv2 != nil && p.IKEv2.System {
+// usesClassic reports whether the core runs prof with classicvpn.
+func usesClassic(prof *profile.Profile) bool {
+	if prof.Protocol == profile.IKEv2 && prof.IKEv2 != nil && prof.IKEv2.System {
 		return false
 	}
-	return classicvpn.Supported(p.Protocol)
+	return classicvpn.Supported(prof.Protocol)
 }
 
 // classicTunRequest describes the VPN interface for the negotiated addresses.
-func classicTunRequest(p *profile.Profile, iface classicvpn.Interface, opts singbox.Options) TunRequest {
+func classicTunRequest(prof *profile.Profile, iface classicvpn.Interface, opts singbox.Options) TunRequest {
 	req := TunRequest{
 		MTU: uint32(iface.MTU), AutoRoute: true,
 		Inet4Address: []string{}, Inet6Address: []string{},
@@ -54,8 +55,8 @@ func classicTunRequest(p *profile.Profile, iface classicvpn.Interface, opts sing
 	if req.MTU == 0 {
 		req.MTU = 1400
 	}
-	if p.IKEv2 != nil && p.IKEv2.MTU >= 1280 {
-		req.MTU = uint32(p.IKEv2.MTU)
+	if prof.IKEv2 != nil && prof.IKEv2.MTU >= 1280 {
+		req.MTU = uint32(prof.IKEv2.MTU)
 	}
 	if len(req.IncludePackage) == 0 {
 		req.ExcludePackage = append([]string{}, opts.ExcludePackages...)
@@ -85,19 +86,22 @@ func classicTunRequest(p *profile.Profile, iface classicvpn.Interface, opts sing
 
 // startClassicLocked begins an SSTP/IKEv2 connection. The handshake runs in
 // the background; e.mu must be held.
-func (e *Engine) startClassicLocked(p *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
+func (e *Engine) startClassicLocked(prof *profile.Profile, profiles []*profile.Profile, opts singbox.Options) error {
 	if opts.Mode != singbox.ModeTUN || e.cfg.Tun == nil {
-		err := fmt.Errorf("%s failed: %s works in VPN mode on Android (desktop support comes later)", stageLabel[StagePrepare], p.Protocol)
-		e.logf("error", "%v", err)
-		e.setState(State{Status: StatusError, Error: err.Error(), Selected: p.ID, Progress: progress(StagePrepare, e.name(p.ID))})
+		err := fmt.Errorf("%s failed: %s works in VPN mode on Android (desktop support comes later)", stageLabel[StagePrepare], prof.Protocol)
+		e.logWith(logrec.LevelError, logFields{profile: prof.ID}, "%v", err)
+		e.setState(State{Status: StatusError, Error: err.Error(), Selected: prof.ID, Progress: progress(StagePrepare, e.name(prof.ID))})
 		return err
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	run := &classicRun{profile: p, profiles: profiles, opts: opts, cancel: cancel}
+	run := &classicRun{profile: prof, profiles: profiles, opts: opts, cancel: cancel}
 	e.classicRun = run
-	e.logf("info", "starting %s (%s)", e.name(p.ID), p.Protocol)
-	e.setState(State{Status: StatusStarting, Selected: p.ID, Progress: progress(StageHandshake, e.name(p.ID))})
-	go e.classicDial(ctx, run)
+	e.logWith(logrec.LevelInfo, logFields{profile: prof.ID}, "starting %s", prof.Protocol)
+	e.setState(State{Status: StatusStarting, Selected: prof.ID, Progress: progress(StageHandshake, e.name(prof.ID))})
+	go func() {
+		defer e.recoverLoop("connect")
+		e.classicDial(ctx, run)
+	}()
 	return nil
 }
 
@@ -128,9 +132,12 @@ func (e *Engine) classicDial(ctx context.Context, run *classicRun) {
 		return
 	}
 	run.tunnel = tunnel
-	e.logf("info", "connected via %s", e.name(run.profile.ID))
+	e.logWith(logrec.LevelInfo, logFields{profile: run.profile.ID}, "connected")
 	e.setState(State{Status: StatusRunning, Since: time.Now(), Selected: run.profile.ID, Progress: progress(StageConnected, e.name(run.profile.ID))})
-	go e.classicLoop(ctx, run)
+	go func() {
+		defer e.recoverLoop("connect")
+		e.classicLoop(ctx, run)
+	}()
 }
 
 // classicLoop publishes traffic and notices when the tunnel ends.
@@ -178,7 +185,7 @@ func (e *Engine) classicFailedLocked(run *classicRun, cause error) {
 	run.stop()
 	if run.opts.Failover && len(run.profiles) > 1 {
 		next := rotateAfter(profileOrder(run.profiles), run.profile.ID)[0]
-		e.logf("warn", "failover: %s: %v, trying %s", e.name(run.profile.ID), cause, e.name(next))
+		e.logWith(logrec.LevelWarn, logFields{profile: run.profile.ID, err: cause}, "failover: trying the next profile (%s)", next)
 		e.carryFailover = &FailoverEvent{From: run.profile.ID, To: next, Reason: cause.Error(), At: time.Now()}
 		opts := run.opts
 		opts.Selected = next
@@ -195,8 +202,8 @@ func (e *Engine) classicFailedLocked(run *classicRun, cause error) {
 	if wasRunning {
 		stage = StageConnected
 	}
-	e.logf("error", "%s failed: %v", stageLabel[StageHandshake], cause)
 	msg := fmt.Sprintf("%s failed: %s", stageLabel[StageHandshake], plainError(cause))
+	e.logWith(logrec.LevelError, logFields{profile: run.profile.ID, code: errorCode(msg), err: cause}, "%s failed", stageLabel[StageHandshake])
 	e.setState(State{Status: StatusError, Error: msg, Selected: run.profile.ID, Progress: progress(stage, e.name(run.profile.ID))})
 }
 
@@ -206,9 +213,9 @@ func tunFile(fd int) (classicvpn.Device, error) {
 	if err != nil {
 		return nil, err
 	}
-	f := os.NewFile(uintptr(dup), "tun")
-	if f == nil {
+	file := os.NewFile(uintptr(dup), "tun")
+	if file == nil {
 		return nil, errors.New("invalid TUN descriptor")
 	}
-	return f, nil
+	return file, nil
 }

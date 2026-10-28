@@ -93,13 +93,13 @@ func writersOfAncestor(owner string, entries []aceEntry) []string {
 // the root of the drive: for C:.exe it is C:, C:, C:\.
 func ancestorDirs(file string) []string {
 	var out []string
-	for d := filepath.Dir(file); ; {
-		out = append(out, d)
-		parent := filepath.Dir(d)
-		if parent == d {
+	for dir := filepath.Dir(file); ; {
+		out = append(out, dir)
+		parent := filepath.Dir(dir)
+		if parent == dir {
 			return out
 		}
-		d = parent
+		dir = parent
 	}
 }
 

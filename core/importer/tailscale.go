@@ -14,37 +14,37 @@ import (
 // The control server is a Headscale (or other) address; without one the
 // profile uses Tailscale's own. The scheme is https unless the link says http.
 func parseTailscaleLink(link string) (*profile.Profile, error) {
-	u, err := url.Parse(link)
+	uri, err := url.Parse(link)
 	if err != nil {
 		return nil, err
 	}
-	q := u.Query()
-	key := u.User.Username()
-	if pw, ok := u.User.Password(); ok {
+	query := uri.Query()
+	key := uri.User.Username()
+	if pw, ok := uri.User.Password(); ok {
 		key += ":" + pw
 	}
 	if key == "" {
-		key = q.Get("authkey")
+		key = query.Get("authkey")
 	}
-	o := &profile.TailscaleOpts{
-		Hostname:     q.Get("hostname"),
-		ExitNode:     firstNonEmpty(q.Get("exit"), q.Get("exit_node")),
-		AcceptRoutes: truthy(q.Get("routes")),
-		Ephemeral:    truthy(q.Get("ephemeral")),
+	opts := &profile.TailscaleOpts{
+		Hostname:     query.Get("hostname"),
+		ExitNode:     firstNonEmpty(query.Get("exit"), query.Get("exit_node")),
+		AcceptRoutes: truthy(query.Get("routes")),
+		Ephemeral:    truthy(query.Get("ephemeral")),
 	}
-	if u.Host != "" {
+	if uri.Host != "" {
 		scheme := "https"
-		if strings.EqualFold(q.Get("scheme"), "http") {
+		if strings.EqualFold(query.Get("scheme"), "http") {
 			scheme = "http"
 		}
-		o.ControlURL = scheme + "://" + u.Host
+		opts.ControlURL = scheme + "://" + uri.Host
 	}
-	name := fragmentName(u)
+	name := fragmentName(uri)
 	if name == "" {
 		name = "Tailscale"
-		if u.Hostname() != "" {
-			name = u.Hostname()
+		if uri.Hostname() != "" {
+			name = uri.Hostname()
 		}
 	}
-	return &profile.Profile{Name: name, Protocol: profile.Tailscale, Password: key, Tailscale: o}, nil
+	return &profile.Profile{Name: name, Protocol: profile.Tailscale, Password: key, Tailscale: opts}, nil
 }

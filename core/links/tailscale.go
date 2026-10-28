@@ -8,29 +8,29 @@ import (
 )
 
 // tailscale is the share link of a mesh profile; see importer.parseTailscaleLink.
-func tailscale(p *profile.Profile) (string, error) {
-	o := p.Tailscale
-	if o == nil {
-		o = &profile.TailscaleOpts{}
+func tailscale(prof *profile.Profile) (string, error) {
+	opts := prof.Tailscale
+	if opts == nil {
+		opts = &profile.TailscaleOpts{}
 	}
-	q := &query{}
+	params := &query{}
 	host := ""
-	if o.ControlURL != "" {
-		u, err := url.Parse(o.ControlURL)
+	if opts.ControlURL != "" {
+		uri, err := url.Parse(opts.ControlURL)
 		if err != nil {
 			return "", err
 		}
-		if u.Host == "" {
-			return "", fmt.Errorf("the control server %q has no host", o.ControlURL)
+		if uri.Host == "" {
+			return "", fmt.Errorf("the control server %q has no host", opts.ControlURL)
 		}
-		host = u.Host
-		if u.Scheme == "http" {
-			q.add("scheme", "http")
+		host = uri.Host
+		if uri.Scheme == "http" {
+			params.add("scheme", "http")
 		}
 	}
-	q.add("hostname", o.Hostname)
-	q.add("exit", o.ExitNode)
-	q.addFlag("routes", o.AcceptRoutes)
-	q.addFlag("ephemeral", o.Ephemeral)
-	return build("tailscale", url.PathEscape(p.Password), host, "", q, p.Name), nil
+	params.add("hostname", opts.Hostname)
+	params.add("exit", opts.ExitNode)
+	params.addFlag("routes", opts.AcceptRoutes)
+	params.addFlag("ephemeral", opts.Ephemeral)
+	return build("tailscale", url.PathEscape(prof.Password), host, "", params, prof.Name), nil
 }

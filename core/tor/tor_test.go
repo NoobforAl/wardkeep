@@ -10,6 +10,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/NoobforAl/omnitun/core/logrec"
 )
 
 func TestBridgeLines(t *testing.T) {
@@ -79,7 +81,7 @@ func TestLiveTor(t *testing.T) {
 			t.Logf("circuit: %+v", path)
 			pathCh <- path
 		},
-		Logf: t.Logf,
+		OnLog: func(rec logrec.Record) { t.Logf("%s %s: %s", rec.Level, rec.Source, rec.Msg) },
 	})
 	if err != nil {
 		t.Fatal(err)

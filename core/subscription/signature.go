@@ -133,10 +133,10 @@ func Sign(priv ed25519.PrivateKey, body []byte, h http.Header, target string, no
 	h.Set(SignatureHeader, signaturePrefix+base64.StdEncoding.EncodeToString(ed25519.Sign(priv, signedMessage(body, h, target, at))))
 }
 
-// Verify checks the signature in h against body, the request target that was asked for and the key. It returns when the
+// Verify checks the signature in header against body, the request target that was asked for and the key. It returns when the
 // answer was signed.
-func Verify(pub ed25519.PublicKey, body []byte, h http.Header, target string) (signedAt int64, err error) {
-	v := strings.TrimSpace(h.Get(SignatureHeader))
+func Verify(pub ed25519.PublicKey, body []byte, header http.Header, target string) (signedAt int64, err error) {
+	v := strings.TrimSpace(header.Get(SignatureHeader))
 	if v == "" {
 		return 0, ErrUnsigned
 	}
@@ -148,11 +148,11 @@ func Verify(pub ed25519.PublicKey, body []byte, h http.Header, target string) (s
 	if err != nil || len(sig) != ed25519.SignatureSize {
 		return 0, ErrBadSignature
 	}
-	signedAt, err = strconv.ParseInt(strings.TrimSpace(h.Get(SignatureTimeHeader)), 10, 64)
+	signedAt, err = strconv.ParseInt(strings.TrimSpace(header.Get(SignatureTimeHeader)), 10, 64)
 	if err != nil || signedAt <= 0 {
 		return 0, fmt.Errorf("%w: no signing time", ErrBadSignature)
 	}
-	if !ed25519.Verify(pub, signedMessage(body, h, target, signedAt), sig) {
+	if !ed25519.Verify(pub, signedMessage(body, header, target, signedAt), sig) {
 		return 0, ErrBadSignature
 	}
 	return signedAt, nil

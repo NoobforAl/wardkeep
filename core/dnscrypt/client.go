@@ -102,34 +102,34 @@ type UpstreamConfig struct {
 }
 
 // NewUpstream checks the stamps and returns an Upstream. Nothing is sent yet.
-func NewUpstream(c UpstreamConfig) (*Upstream, error) {
-	if c.Stamp.Kind != KindDNSCrypt {
-		return nil, badStamp("expected a DNSCrypt stamp, this one is %s", c.Stamp.Kind)
+func NewUpstream(cfg UpstreamConfig) (*Upstream, error) {
+	if cfg.Stamp.Kind != KindDNSCrypt {
+		return nil, badStamp("expected a DNSCrypt stamp, this one is %s", cfg.Stamp.Kind)
 	}
-	u := &Upstream{stamp: c.Stamp, relay: c.Relay, dial: c.Dial, tcpOnly: c.TCPOnly, timeout: c.Timeout, logf: c.Logf}
-	if u.dial == nil {
-		u.dial = func(ctx context.Context, network, address string) (net.Conn, error) {
+	up := &Upstream{stamp: cfg.Stamp, relay: cfg.Relay, dial: cfg.Dial, tcpOnly: cfg.TCPOnly, timeout: cfg.Timeout, logf: cfg.Logf}
+	if up.dial == nil {
+		up.dial = func(ctx context.Context, network, address string) (net.Conn, error) {
 			var d net.Dialer
 			return d.DialContext(ctx, network, address)
 		}
 	}
-	if u.timeout <= 0 {
-		u.timeout = defaultTimeout
+	if up.timeout <= 0 {
+		up.timeout = defaultTimeout
 	}
-	u.target = c.Stamp.HostAddr()
-	if c.Relay != nil {
-		if c.Relay.Kind != KindRelay {
-			return nil, badStamp("expected a relay stamp, this one is %s", c.Relay.Kind)
+	up.target = cfg.Stamp.HostAddr()
+	if cfg.Relay != nil {
+		if cfg.Relay.Kind != KindRelay {
+			return nil, badStamp("expected a relay stamp, this one is %s", cfg.Relay.Kind)
 		}
-		host, _, _ := splitHostPort(c.Stamp.Addr)
+		host, _, _ := splitHostPort(cfg.Stamp.Addr)
 		ip, err := netip.ParseAddr(host)
 		if err != nil {
 			return nil, ErrNeedIP
 		}
-		u.header = relayHeader(netip.AddrPortFrom(ip, uint16(c.Stamp.Port)))
-		u.target = c.Relay.HostAddr()
+		up.header = relayHeader(netip.AddrPortFrom(ip, uint16(cfg.Stamp.Port)))
+		up.target = cfg.Relay.HostAddr()
 	}
-	return u, nil
+	return up, nil
 }
 
 // Stamp returns the resolver's stamp.
@@ -144,11 +144,11 @@ func (u *Upstream) log(level, format string, args ...any) {
 // relayHeader is what Anonymized DNSCrypt puts in front of a packet: eight
 // 0xff bytes, two zero bytes, the resolver's address as 16 bytes, its port.
 func relayHeader(ap netip.AddrPort) []byte {
-	h := make([]byte, 0, 28)
-	h = append(h, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0)
+	header := make([]byte, 0, 28)
+	header = append(header, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0)
 	a16 := ap.Addr().As16()
-	h = append(h, a16[:]...)
-	return binary.BigEndian.AppendUint16(h, ap.Port())
+	header = append(header, a16[:]...)
+	return binary.BigEndian.AppendUint16(header, ap.Port())
 }
 
 // Close drops the open connections.
@@ -213,11 +213,11 @@ func isTimeout(err error) bool {
 	return errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &ne) && ne.Timeout())
 }
 
-func (u *Upstream) markStale(s *session) {
+func (u *Upstream) markStale(sess *session) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	if u.sess == s && time.Since(s.fetched) > certRetryAfter {
-		s.refreshAt = time.Time{}
+	if u.sess == sess && time.Since(sess.fetched) > certRetryAfter {
+		sess.refreshAt = time.Time{}
 	}
 }
 
@@ -226,24 +226,24 @@ func (u *Upstream) markStale(s *session) {
 // valid, the old one is kept.
 func (u *Upstream) session(ctx context.Context) (*session, error) {
 	u.mu.Lock()
-	s := u.sess
+	sess := u.sess
 	u.mu.Unlock()
-	if s != nil && time.Now().Before(s.refreshAt) {
-		return s, nil
+	if sess != nil && time.Now().Before(sess.refreshAt) {
+		return sess, nil
 	}
 	u.fetchMu.Lock()
 	defer u.fetchMu.Unlock()
 	u.mu.Lock()
-	s = u.sess
-	if s != nil && time.Now().Before(s.refreshAt) {
+	sess = u.sess
+	if sess != nil && time.Now().Before(sess.refreshAt) {
 		u.mu.Unlock()
-		return s, nil
+		return sess, nil
 	}
 	if u.failErr != nil && time.Since(u.failAt) < certRetryAfter {
 		err := u.failErr
 		u.mu.Unlock()
-		if s != nil && time.Now().Before(time.Unix(int64(s.cert.NotAfter), 0)) {
-			return s, nil
+		if sess != nil && time.Now().Before(time.Unix(int64(sess.cert.NotAfter), 0)) {
+			return sess, nil
 		}
 		return nil, err
 	}
@@ -254,9 +254,9 @@ func (u *Upstream) session(ctx context.Context) (*session, error) {
 	defer u.mu.Unlock()
 	if err != nil {
 		u.failErr, u.failAt = err, time.Now()
-		if s != nil && time.Now().Before(time.Unix(int64(s.cert.NotAfter), 0)) {
+		if sess != nil && time.Now().Before(time.Unix(int64(sess.cert.NotAfter), 0)) {
 			u.log("warn", "DNSCrypt: could not renew the certificate of %s: %v", u.stamp.Name(), err)
-			return s, nil
+			return sess, nil
 		}
 		return nil, err
 	}
@@ -269,9 +269,9 @@ func (u *Upstream) session(ctx context.Context) (*session, error) {
 // signed with the key from the stamp, and derives the shared key.
 func (u *Upstream) fetchSession(ctx context.Context) (*session, error) {
 	name := dns.Fqdn(u.stamp.ProviderName)
-	q := new(dns.Msg)
-	q.SetQuestion(name, dns.TypeTXT)
-	packed, err := q.Pack()
+	msg := new(dns.Msg)
+	msg.SetQuestion(name, dns.TypeTXT)
+	packed, err := msg.Pack()
 	if err != nil {
 		return nil, fmt.Errorf("dnscrypt: provider name %q: %w", u.stamp.ProviderName, err)
 	}
@@ -280,7 +280,7 @@ func (u *Upstream) fetchSession(ctx context.Context) (*session, error) {
 	for _, tcp := range u.networks() {
 		raw, err := u.roundTrip(ctx, tcp, packed, func(b []byte) (any, error) {
 			m := new(dns.Msg)
-			if err := m.Unpack(b); err != nil || m.Id != q.Id || !m.Response {
+			if err := m.Unpack(b); err != nil || m.Id != msg.Id || !m.Response {
 				return nil, ErrBadResponse
 			}
 			return m, nil
@@ -336,27 +336,27 @@ func (u *Upstream) fetchSession(ctx context.Context) (*session, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &session{cert: best, fetched: time.Now()}
-	copy(s.pk[:], pk)
+	sess := &session{cert: best, fetched: time.Now()}
+	copy(sess.pk[:], pk)
 	switch best.EsVersion {
 	case dc.XChacha20Poly1305:
-		s.shared, err = xsecretbox.SharedKey(sk, best.ResolverPk)
+		sess.shared, err = xsecretbox.SharedKey(sk, best.ResolverPk)
 		if err != nil {
 			return nil, err
 		}
 	case dc.XSalsa20Poly1305:
-		box.Precompute(&s.shared, &best.ResolverPk, &sk)
+		box.Precompute(&sess.shared, &best.ResolverPk, &sk)
 	default:
 		return nil, dc.ErrEsVersion
 	}
 	end := time.Unix(int64(best.NotAfter), 0)
-	s.refreshAt = end.Add(-10 * time.Minute)
-	if limit := time.Now().Add(6 * time.Hour); s.refreshAt.After(limit) {
-		s.refreshAt = limit
+	sess.refreshAt = end.Add(-10 * time.Minute)
+	if limit := time.Now().Add(6 * time.Hour); sess.refreshAt.After(limit) {
+		sess.refreshAt = limit
 	}
 	u.log("info", "DNSCrypt: certificate of %s accepted (serial %d, %s, valid until %s)",
 		u.stamp.Name(), best.Serial, best.EsVersion, end.Format(time.RFC3339))
-	return s, nil
+	return sess, nil
 }
 
 // parseCertTXT reads one certificate from the text of a TXT record and checks
@@ -377,30 +377,30 @@ func parseCertTXT(txt string, providerKey []byte) (*dc.Cert, error) {
 }
 
 // unescapeTXT undoes the presentation escapes of a TXT string (\DDD, \t, \r, \n, \x).
-func unescapeTXT(s string) []byte {
-	out := make([]byte, 0, len(s))
-	for i := 0; i < len(s); i++ {
-		c := s[i]
+func unescapeTXT(txt string) []byte {
+	out := make([]byte, 0, len(txt))
+	for i := 0; i < len(txt); i++ {
+		c := txt[i]
 		if c != '\\' {
 			out = append(out, c)
 			continue
 		}
 		i++
-		if i >= len(s) {
+		if i >= len(txt) {
 			break
 		}
 		switch {
-		case i+2 < len(s) && isDigit(s[i]) && isDigit(s[i+1]) && isDigit(s[i+2]):
-			out = append(out, (s[i]-'0')*100+(s[i+1]-'0')*10+(s[i+2]-'0'))
+		case i+2 < len(txt) && isDigit(txt[i]) && isDigit(txt[i+1]) && isDigit(txt[i+2]):
+			out = append(out, (txt[i]-'0')*100+(txt[i+1]-'0')*10+(txt[i+2]-'0'))
 			i += 2
-		case s[i] == 't':
+		case txt[i] == 't':
 			out = append(out, '\t')
-		case s[i] == 'r':
+		case txt[i] == 'r':
 			out = append(out, '\r')
-		case s[i] == 'n':
+		case txt[i] == 'n':
 			out = append(out, '\n')
 		default:
-			out = append(out, s[i])
+			out = append(out, txt[i])
 		}
 	}
 	return out
@@ -418,12 +418,12 @@ func (u *Upstream) networks() []bool {
 
 // exchangeWith encrypts one query, sends it, and decrypts the answer. It tries UDP
 // first and switches to TCP when the answer is cut short or too large to ask for.
-func (u *Upstream) exchangeWith(ctx context.Context, s *session, query []byte) ([]byte, error) {
+func (u *Upstream) exchangeWith(ctx context.Context, sess *session, query []byte) ([]byte, error) {
 	var lastErr error
 	for _, tcp := range u.networks() {
-		eq := dc.EncryptedQuery{EsVersion: s.cert.EsVersion, ClientMagic: s.cert.ClientMagic, ClientPk: s.pk}
+		eq := dc.EncryptedQuery{EsVersion: sess.cert.EsVersion, ClientMagic: sess.cert.ClientMagic, ClientPk: sess.pk}
 		// Encrypt pads in place, so it gets its own copy.
-		enc, err := eq.Encrypt(append(make([]byte, 0, len(query)+300), query...), s.shared)
+		enc, err := eq.Encrypt(append(make([]byte, 0, len(query)+300), query...), sess.shared)
 		if err != nil {
 			return nil, err
 		}
@@ -431,8 +431,8 @@ func (u *Upstream) exchangeWith(ctx context.Context, s *session, query []byte) (
 			continue
 		}
 		raw, err := u.roundTrip(ctx, tcp, enc, func(b []byte) (any, error) {
-			er := dc.EncryptedResponse{EsVersion: s.cert.EsVersion}
-			plain, err := er.Decrypt(b, s.shared)
+			er := dc.EncryptedResponse{EsVersion: sess.cert.EsVersion}
+			plain, err := er.Decrypt(b, sess.shared)
 			if err != nil || !bytes.Equal(er.Nonce[:12], eq.Nonce[:12]) || len(plain) < 12 || plain[0] != query[0] || plain[1] != query[1] {
 				return nil, ErrBadResponse
 			}
@@ -527,11 +527,11 @@ func (u *Upstream) tcpExchange(ctx context.Context, conn net.Conn, frame []byte,
 	if _, err := conn.Write(out); err != nil {
 		return nil, err
 	}
-	var l [2]byte
-	if _, err := io.ReadFull(conn, l[:]); err != nil {
+	var lenBuf [2]byte
+	if _, err := io.ReadFull(conn, lenBuf[:]); err != nil {
 		return nil, err
 	}
-	buf := make([]byte, binary.BigEndian.Uint16(l[:]))
+	buf := make([]byte, binary.BigEndian.Uint16(lenBuf[:]))
 	if _, err := io.ReadFull(conn, buf); err != nil {
 		return nil, err
 	}
@@ -542,27 +542,27 @@ func (u *Upstream) tcpExchange(ctx context.Context, conn net.Conn, frame []byte,
 func (u *Upstream) tcpConn(ctx context.Context) (conn net.Conn, reused bool, err error) {
 	u.mu.Lock()
 	for len(u.idle) > 0 {
-		c := u.idle[len(u.idle)-1]
+		idle := u.idle[len(u.idle)-1]
 		u.idle = u.idle[:len(u.idle)-1]
-		if time.Since(c.at) > tcpIdleTime {
-			c.conn.Close()
+		if time.Since(idle.at) > tcpIdleTime {
+			idle.conn.Close()
 			continue
 		}
 		u.mu.Unlock()
-		return c.conn, true, nil
+		return idle.conn, true, nil
 	}
 	u.mu.Unlock()
 	conn, err = u.dial(ctx, "tcp", u.target)
 	return conn, false, err
 }
 
-func (u *Upstream) putConn(c net.Conn) {
+func (u *Upstream) putConn(conn net.Conn) {
 	u.mu.Lock()
 	if u.closed || len(u.idle) >= maxIdleTCP {
 		u.mu.Unlock()
-		c.Close()
+		conn.Close()
 		return
 	}
-	u.idle = append(u.idle, idleConn{conn: c, at: time.Now()})
+	u.idle = append(u.idle, idleConn{conn: conn, at: time.Now()})
 	u.mu.Unlock()
 }

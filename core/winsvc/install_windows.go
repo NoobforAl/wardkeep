@@ -41,8 +41,8 @@ type Status struct {
 	Path      string // the registered program, when it could be read
 }
 
-func stateName(s svc.State) string {
-	switch s {
+func stateName(state svc.State) string {
+	switch state {
 	case svc.Stopped:
 		return "stopped"
 	case svc.StartPending:
@@ -58,32 +58,32 @@ func stateName(s svc.State) string {
 	case svc.Paused:
 		return "paused"
 	}
-	return fmt.Sprintf("state %d", s)
+	return fmt.Sprintf("state %d", state)
 }
 
 // QueryStatus asks the Service Control Manager. It needs no special rights.
 func QueryStatus() (Status, error) {
-	m, err := windows.OpenSCManager(nil, nil, windows.SC_MANAGER_CONNECT)
+	scm, err := windows.OpenSCManager(nil, nil, windows.SC_MANAGER_CONNECT)
 	if err != nil {
 		return Status{}, fmt.Errorf("open the service manager: %w", err)
 	}
-	defer windows.CloseServiceHandle(m)
+	defer windows.CloseServiceHandle(scm)
 	name, _ := windows.UTF16PtrFromString(ServiceName)
-	h, err := windows.OpenService(m, name, windows.SERVICE_QUERY_STATUS|windows.SERVICE_QUERY_CONFIG)
+	handle, err := windows.OpenService(scm, name, windows.SERVICE_QUERY_STATUS|windows.SERVICE_QUERY_CONFIG)
 	if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
 		return Status{}, nil
 	}
 	if err != nil {
 		return Status{}, fmt.Errorf("open the service: %w", err)
 	}
-	s := &mgr.Service{Name: ServiceName, Handle: h}
-	defer s.Close()
-	st, err := s.Query()
+	service := &mgr.Service{Name: ServiceName, Handle: handle}
+	defer service.Close()
+	st, err := service.Query()
 	if err != nil {
 		return Status{Installed: true}, err
 	}
 	res := Status{Installed: true, State: stateName(st.State)}
-	if cfg, err := s.Config(); err == nil {
+	if cfg, err := service.Config(); err == nil {
 		res.Path = cfg.BinaryPathName
 	}
 	return res, nil
@@ -99,15 +99,15 @@ func connect() (*mgr.Mgr, error) {
 // Install registers the service (or updates it), prepares its directories and
 // the access list of the control directory, and copies the program into the
 // install directory. It does not start the service.
-func Install(o InstallOptions, logf func(string, ...any)) error {
-	m, err := connect()
+func Install(opts InstallOptions, logf func(string, ...any)) error {
+	manager, err := connect()
 	if err != nil {
 		return err
 	}
-	defer m.Disconnect()
-	l := DefaultLayout()
+	defer manager.Disconnect()
+	layout := DefaultLayout()
 
-	exe := o.Exe
+	exe := opts.Exe
 	if exe == "" {
 		if exe, err = os.Executable(); err != nil {
 			return err
@@ -119,7 +119,7 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 	// Decide what is copied, and check where it comes from, before anything on
 	// the machine is changed.
 	var sources []*sourceFile
-	if !o.NoCopy {
+	if !opts.NoCopy {
 		plan, err := planInstall(exe)
 		if err != nil {
 			return err
@@ -131,7 +131,7 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 		}
 		defer closeAll(sources)
 		if unsafe != nil {
-			if !o.UnsafeSource {
+			if !opts.UnsafeSource {
 				return unsafe
 			}
 			logf("WARNING (--unsafe-source): %v", unsafe)
@@ -139,11 +139,11 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 	}
 
 	// Who may use the service.
-	cfg, err := LoadConfig(l.Config)
+	cfg, err := LoadConfig(layout.Config)
 	if err != nil {
 		return err
 	}
-	users := o.Users
+	users := opts.Users
 	if len(users) == 0 && len(cfg.AllowedSIDs) == 0 {
 		me, err := CurrentUserSID()
 		if err != nil {
@@ -151,12 +151,12 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 		}
 		users = []string{me}
 	}
-	for _, u := range users {
-		sid, err := ResolveSID(u)
+	for _, user := range users {
+		sid, err := ResolveSID(user)
 		if err != nil {
 			return err
 		}
-		logf("allowing the account %s (%s) to use the service", u, sid)
+		logf("allowing the account %s (%s) to use the service", user, sid)
 		cfg.Add(sid)
 	}
 	if err := cfg.Validate(); err != nil {
@@ -165,29 +165,29 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 
 	// An installed, running service holds its program open: stop it first.
 	wasRunning := false
-	if s, err := m.OpenService(ServiceName); err == nil {
-		if st, err := s.Query(); err == nil && st.State != svc.Stopped {
+	if service, err := manager.OpenService(ServiceName); err == nil {
+		if st, err := service.Query(); err == nil && st.State != svc.Stopped {
 			wasRunning = true
 			logf("the service is running, stopping it to update it")
-			if err := stopAndWait(s, 30*time.Second); err != nil {
-				s.Close()
+			if err := stopAndWait(service, 30*time.Second); err != nil {
+				service.Close()
 				return err
 			}
 		}
-		s.Close()
+		service.Close()
 	}
 
-	logf("preparing %s", l.Common)
-	if err := PrepareDirs(l, cfg); err != nil {
+	logf("preparing %s", layout.Common)
+	if err := PrepareDirs(layout, cfg); err != nil {
 		return err
 	}
-	if err := SaveConfig(l.Config, cfg); err != nil {
+	if err := SaveConfig(layout.Config, cfg); err != nil {
 		return err
 	}
 
 	target := exe
-	if !o.NoCopy {
-		if target, err = copyProgram(sources, l.InstallDir, logf); err != nil {
+	if !opts.NoCopy {
+		if target, err = copyProgram(sources, layout.InstallDir, logf); err != nil {
 			return err
 		}
 	} else {
@@ -200,29 +200,29 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 		StartType:    mgr.StartAutomatic,
 		ErrorControl: mgr.ErrorNormal,
 	}
-	s, err := m.OpenService(ServiceName)
+	service, err := manager.OpenService(ServiceName)
 	if err == nil {
-		defer s.Close()
-		cur, err := s.Config()
+		defer service.Close()
+		cur, err := service.Config()
 		if err != nil {
 			return err
 		}
 		cur.BinaryPathName = quoted(target) + " service"
 		cur.DisplayName, cur.Description, cur.StartType, cur.ErrorControl = sc.DisplayName, sc.Description, sc.StartType, sc.ErrorControl
-		if err := s.UpdateConfig(cur); err != nil {
+		if err := service.UpdateConfig(cur); err != nil {
 			return fmt.Errorf("update the service: %w", err)
 		}
 		logf("updated the service %s", ServiceName)
 	} else {
-		s, err = m.CreateService(ServiceName, target, sc, "service")
+		service, err = manager.CreateService(ServiceName, target, sc, "service")
 		if err != nil {
 			return fmt.Errorf("create the service: %w", err)
 		}
-		defer s.Close()
+		defer service.Close()
 		logf("created the service %s (starts automatically, runs as LocalSystem)", ServiceName)
 	}
 	// If the core dies, bring it back: the app reconnects by itself.
-	if err := s.SetRecoveryActions([]mgr.RecoveryAction{
+	if err := service.SetRecoveryActions([]mgr.RecoveryAction{
 		{Type: mgr.ServiceRestart, Delay: 5 * time.Second},
 		{Type: mgr.ServiceRestart, Delay: 15 * time.Second},
 		{Type: mgr.NoAction},
@@ -231,21 +231,21 @@ func Install(o InstallOptions, logf func(string, ...any)) error {
 	}
 	if wasRunning {
 		logf("starting the service again")
-		return s.Start("service")
+		return service.Start("service")
 	}
 	return nil
 }
 
 func quoted(p string) string { return `"` + p + `"` }
 
-func stopAndWait(s *mgr.Service, timeout time.Duration) error {
-	st, err := s.Query()
+func stopAndWait(service *mgr.Service, timeout time.Duration) error {
+	st, err := service.Query()
 	if err != nil {
 		return err
 	}
 	if st.State != svc.Stopped {
 		if st.State != svc.StopPending {
-			if st, err = s.Control(svc.Stop); err != nil {
+			if st, err = service.Control(svc.Stop); err != nil {
 				return fmt.Errorf("stop the service: %w", err)
 			}
 		}
@@ -255,7 +255,7 @@ func stopAndWait(s *mgr.Service, timeout time.Duration) error {
 				return errors.New("the service did not stop in time")
 			}
 			time.Sleep(300 * time.Millisecond)
-			if st, err = s.Query(); err != nil {
+			if st, err = service.Query(); err != nil {
 				return err
 			}
 		}
@@ -266,20 +266,20 @@ func stopAndWait(s *mgr.Service, timeout time.Duration) error {
 // Uninstall stops and removes the service and the files it installed. With
 // purge it also removes %ProgramData%\omnitun (settings, data, log).
 func Uninstall(purge bool, logf func(string, ...any)) error {
-	m, err := connect()
+	manager, err := connect()
 	if err != nil {
 		return err
 	}
-	defer m.Disconnect()
-	l := DefaultLayout()
-	s, err := m.OpenService(ServiceName)
+	defer manager.Disconnect()
+	layout := DefaultLayout()
+	service, err := manager.OpenService(ServiceName)
 	switch {
 	case err == nil:
-		defer s.Close()
-		if err := stopAndWait(s, 30*time.Second); err != nil {
+		defer service.Close()
+		if err := stopAndWait(service, 30*time.Second); err != nil {
 			return err
 		}
-		if err := s.Delete(); err != nil {
+		if err := service.Delete(); err != nil {
 			return fmt.Errorf("delete the service: %w", err)
 		}
 		logf("removed the service %s", ServiceName)
@@ -289,7 +289,7 @@ func Uninstall(purge bool, logf func(string, ...any)) error {
 		return err
 	}
 	// The core removes its own control file when it stops; make sure.
-	os.Remove(l.ControlFile)
+	os.Remove(layout.ControlFile)
 	removeAll := func(path string) {
 		if err := os.RemoveAll(path); err != nil {
 			logf("could not remove %s: %v", path, err)
@@ -298,28 +298,28 @@ func Uninstall(purge bool, logf func(string, ...any)) error {
 		}
 	}
 	// The running program cannot always be deleted; a failure is only reported.
-	if _, err := os.Stat(l.InstallDir); err == nil {
-		removeAll(l.InstallDir)
+	if _, err := os.Stat(layout.InstallDir); err == nil {
+		removeAll(layout.InstallDir)
 	}
 	if purge {
-		removeAll(l.Common)
+		removeAll(layout.Common)
 	}
 	return nil
 }
 
 // Start starts the service and waits until it runs.
 func Start(logf func(string, ...any)) error {
-	m, err := connect()
+	manager, err := connect()
 	if err != nil {
 		return err
 	}
-	defer m.Disconnect()
-	s, err := m.OpenService(ServiceName)
+	defer manager.Disconnect()
+	service, err := manager.OpenService(ServiceName)
 	if err != nil {
 		return fmt.Errorf("the service is not installed: %w", err)
 	}
-	defer s.Close()
-	st, err := s.Query()
+	defer service.Close()
+	st, err := service.Query()
 	if err != nil {
 		return err
 	}
@@ -327,12 +327,12 @@ func Start(logf func(string, ...any)) error {
 		logf("the service is already running")
 		return nil
 	}
-	if err := s.Start("service"); err != nil {
+	if err := service.Start("service"); err != nil {
 		return fmt.Errorf("start the service: %w", err)
 	}
 	deadline := time.Now().Add(30 * time.Second)
 	for {
-		if st, err = s.Query(); err != nil {
+		if st, err = service.Query(); err != nil {
 			return err
 		}
 		if st.State == svc.Running {
@@ -347,17 +347,17 @@ func Start(logf func(string, ...any)) error {
 
 // Stop stops the service and waits until it has stopped.
 func Stop(logf func(string, ...any)) error {
-	m, err := connect()
+	manager, err := connect()
 	if err != nil {
 		return err
 	}
-	defer m.Disconnect()
-	s, err := m.OpenService(ServiceName)
+	defer manager.Disconnect()
+	service, err := manager.OpenService(ServiceName)
 	if err != nil {
 		return fmt.Errorf("the service is not installed: %w", err)
 	}
-	defer s.Close()
-	if err := stopAndWait(s, 30*time.Second); err != nil {
+	defer service.Close()
+	if err := stopAndWait(service, 30*time.Second); err != nil {
 		return err
 	}
 	logf("the service is stopped")

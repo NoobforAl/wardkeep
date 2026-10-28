@@ -42,13 +42,13 @@ func (dnsttServer) Inbounds(env Env, _ int, accts []Account) Config {
 	return Config{Inbounds: []obj{in}}
 }
 
-func (d dnsttServer) Profile(env Env, port int, u Account) (*profile.Profile, error) {
+func (d dnsttServer) Profile(env Env, port int, acct Account) (*profile.Profile, error) {
 	if env.DNSTT.Domain == "" {
 		return nil, ErrNoDNSTTDomain
 	}
 	return &profile.Profile{
 		Name: profileName(env, d.Spec()), Protocol: profile.DNSTT, Server: env.DNSTT.Domain, Port: port,
-		Username: u.Name, Password: u.Password,
+		Username: acct.Name, Password: acct.Password,
 		DNSTT: &profile.DNSTTOpts{Domain: env.DNSTT.Domain, PubKey: env.DNSTT.PublicKey, Resolvers: dnsttDefaultResolvers()},
 	}, nil
 }

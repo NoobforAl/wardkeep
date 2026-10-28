@@ -138,18 +138,18 @@ func (e *Engine) MeshStatus(ctx context.Context) (*MeshStatus, error) {
 	}
 }
 
-func convertMeshStatus(s *adapter.TailscaleEndpointStatus) *MeshStatus {
-	out := &MeshStatus{State: s.BackendState, AuthURL: s.AuthURL, Network: s.NetworkName, Domain: s.MagicDNSSuffix, Devices: []MeshDevice{}}
-	if s.Self != nil {
-		d := convertMeshDevice(s.Self, "")
+func convertMeshStatus(status *adapter.TailscaleEndpointStatus) *MeshStatus {
+	out := &MeshStatus{State: status.BackendState, AuthURL: status.AuthURL, Network: status.NetworkName, Domain: status.MagicDNSSuffix, Devices: []MeshDevice{}}
+	if status.Self != nil {
+		d := convertMeshDevice(status.Self, "")
 		out.Self = &d
 	}
-	for _, g := range s.UserGroups {
-		owner := g.DisplayName
+	for _, group := range status.UserGroups {
+		owner := group.DisplayName
 		if owner == "" {
-			owner = g.LoginName
+			owner = group.LoginName
 		}
-		for _, p := range g.Peers {
+		for _, p := range group.Peers {
 			out.Devices = append(out.Devices, convertMeshDevice(p, owner))
 		}
 	}
@@ -163,9 +163,9 @@ func convertMeshStatus(s *adapter.TailscaleEndpointStatus) *MeshStatus {
 		}
 		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
 	})
-	if s.ExitNode != nil {
+	if status.ExitNode != nil {
 		for i := range out.Devices {
-			if out.Devices[i].ID == s.ExitNode.StableID {
+			if out.Devices[i].ID == status.ExitNode.StableID {
 				out.Devices[i].Exit = true
 			}
 		}
@@ -173,11 +173,11 @@ func convertMeshStatus(s *adapter.TailscaleEndpointStatus) *MeshStatus {
 	return out
 }
 
-func convertMeshDevice(p *adapter.TailscalePeer, owner string) MeshDevice {
+func convertMeshDevice(peer *adapter.TailscalePeer, owner string) MeshDevice {
 	return MeshDevice{
-		ID: p.StableID, Name: p.HostName, DNSName: strings.TrimSuffix(p.DNSName, "."), OS: p.OS,
-		Addresses: p.TailscaleIPs, Online: p.Online, ExitOption: p.ExitNodeOption, Exit: p.ExitNode,
-		LastSeen: p.LastSeen, Owner: owner,
+		ID: peer.StableID, Name: peer.HostName, DNSName: strings.TrimSuffix(peer.DNSName, "."), OS: peer.OS,
+		Addresses: peer.TailscaleIPs, Online: peer.Online, ExitOption: peer.ExitNodeOption, Exit: peer.ExitNode,
+		LastSeen: peer.LastSeen, Owner: owner,
 	}
 }
 

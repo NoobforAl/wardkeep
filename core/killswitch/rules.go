@@ -229,20 +229,20 @@ var (
 
 // Build returns the rules for opts, deterministically. The rule set is the
 // same shape for both directions and both IP versions.
-func Build(o Options) ([]Rule, error) {
-	if err := o.Validate(); err != nil {
+func Build(opts Options) ([]Rule, error) {
+	if err := opts.Validate(); err != nil {
 		return nil, err
 	}
 	var rules []Rule
 	for _, fam := range []Family{IPv4, IPv6} {
 		for _, dir := range []Direction{Outbound, Inbound} {
-			rules = append(rules, buildFor(o, fam, dir)...)
+			rules = append(rules, buildFor(opts, fam, dir)...)
 		}
 	}
 	return rules, nil
 }
 
-func buildFor(o Options, fam Family, dir Direction) []Rule {
+func buildFor(opts Options, fam Family, dir Direction) []Rule {
 	name := func(what string) string { return fmt.Sprintf("Wardkeep kill switch: %s (IPv%d %s)", what, fam, dir) }
 	mk := func(what string, action Action, weight uint64, conds ...Condition) Rule {
 		return Rule{Name: name(what), Direction: dir, Family: fam, Action: action, Weight: weight, Conditions: conds}
@@ -251,19 +251,19 @@ func buildFor(o Options, fam Family, dir Direction) []Rule {
 
 	rules = append(rules, mk("block everything else", Block, weightBlock))
 	rules = append(rules, mk("loopback", Permit, weightLoopback, Condition{Field: Loopback}))
-	if o.TunLUID != 0 {
+	if opts.TunLUID != 0 {
 		rules = append(rules, mk("tunnel adapter", Permit, weightTunnel,
-			Condition{Field: LocalInterface, Values: []any{o.TunLUID}}))
+			Condition{Field: LocalInterface, Values: []any{opts.TunLUID}}))
 	}
-	if len(o.Apps) > 0 {
-		apps := make([]any, len(o.Apps))
-		for i, a := range o.Apps {
+	if len(opts.Apps) > 0 {
+		apps := make([]any, len(opts.Apps))
+		for i, a := range opts.Apps {
 			apps[i] = a
 		}
 		rules = append(rules, mk("programs", Permit, weightApps, Condition{Field: Application, Values: apps}))
 	}
 	var servers []any
-	for _, a := range o.ServerAddrs {
+	for _, a := range opts.ServerAddrs {
 		a = a.Unmap()
 		if (fam == IPv4) == a.Is4() {
 			servers = append(servers, netip.PrefixFrom(a, a.BitLen()))
@@ -314,7 +314,7 @@ func buildFor(o Options, fam Family, dir Direction) []Rule {
 			Condition{Field: LocalPort, Values: []any{uint16(133), uint16(134), uint16(135), uint16(136), uint16(137)}}))
 	}
 
-	if o.AllowLAN {
+	if opts.AllowLAN {
 		local := lan4
 		if fam == IPv6 {
 			local = lan6
@@ -322,7 +322,7 @@ func buildFor(o Options, fam Family, dir Direction) []Rule {
 		rules = append(rules, mk("local network", Permit, weightLAN, Condition{Field: RemoteAddress, Values: prefixValues(local)}))
 	}
 	var extra []any
-	for _, p := range o.AllowRanges {
+	for _, p := range opts.AllowRanges {
 		p = netip.PrefixFrom(p.Addr().Unmap(), p.Bits()).Masked()
 		if (fam == IPv4) == p.Addr().Is4() {
 			extra = append(extra, p)

@@ -32,16 +32,16 @@ var tunAddresses = []string{"172.19.0.1/30", "fdfe:dcba:9876::1/126"}
 // BypassPrefixes returns LocalPrefixes minus keep: ranges a tunnel really
 // routes (its own subnet, DNS servers, WireGuard AllowedIPs) stay in the VPN.
 func BypassPrefixes(keep []netip.Prefix) []netip.Prefix {
-	var b netipx.IPSetBuilder
+	var builder netipx.IPSetBuilder
 	for _, p := range LocalPrefixes {
-		b.AddPrefix(p)
+		builder.AddPrefix(p)
 	}
 	for _, p := range keep {
 		if p.IsValid() {
-			b.RemovePrefix(p.Masked())
+			builder.RemovePrefix(p.Masked())
 		}
 	}
-	set, err := b.IPSet()
+	set, err := builder.IPSet()
 	if err != nil {
 		return LocalPrefixes
 	}
@@ -50,14 +50,14 @@ func BypassPrefixes(keep []netip.Prefix) []netip.Prefix {
 
 // SubtractPrefixes returns routes minus exclude (both may mix IPv4 and IPv6).
 func SubtractPrefixes(routes, exclude []netip.Prefix) []netip.Prefix {
-	var b netipx.IPSetBuilder
+	var builder netipx.IPSetBuilder
 	for _, p := range routes {
-		b.AddPrefix(p.Masked())
+		builder.AddPrefix(p.Masked())
 	}
 	for _, p := range exclude {
-		b.RemovePrefix(p.Masked())
+		builder.RemovePrefix(p.Masked())
 	}
-	set, err := b.IPSet()
+	set, err := builder.IPSet()
 	if err != nil {
 		return routes
 	}
@@ -85,16 +85,16 @@ func isDefaultRoute(p netip.Prefix) bool { return p.Bits() == 0 }
 // AllowedIPs narrower than a default route), plus the TUN's own subnet.
 func profileKeep(profiles []*profile.Profile) []netip.Prefix {
 	keep := ParsePrefixes(tunAddresses)
-	for _, p := range profiles {
-		if p.WireGuard == nil {
+	for _, prof := range profiles {
+		if prof.WireGuard == nil {
 			continue
 		}
-		for _, a := range ParsePrefixes(p.WireGuard.AllowedIPs) {
+		for _, a := range ParsePrefixes(prof.WireGuard.AllowedIPs) {
 			if !isDefaultRoute(a) {
 				keep = append(keep, a)
 			}
 		}
-		keep = append(keep, ParsePrefixes(p.WireGuard.DNS)...)
+		keep = append(keep, ParsePrefixes(prof.WireGuard.DNS)...)
 	}
 	return keep
 }

@@ -92,12 +92,12 @@ func WarningsForProtocol(protocol string) []Warning {
 // WarningsFor lists the warnings of a saved profile: the protocol's own plus
 // the ones its settings cause. Later settings (multiplexing, fragmenting, ECH,
 // a proxy under WireGuard, a DNS tunnel) add theirs in warningsFromOptions.
-func WarningsFor(p *Profile) []Warning {
-	if p == nil {
+func WarningsFor(profile *Profile) []Warning {
+	if profile == nil {
 		return nil
 	}
-	out := slices.Clone(WarningsForProtocol(p.Protocol))
-	if p.Protocol == Shadowsocks && p.Plugin != "" {
+	out := slices.Clone(WarningsForProtocol(profile.Protocol))
+	if profile.Protocol == Shadowsocks && profile.Plugin != "" {
 		out = slices.DeleteFunc(out, func(w Warning) bool { return w.Code == WarnSSPlain })
 	}
 	add := func(w Warning) {
@@ -105,35 +105,35 @@ func WarningsFor(p *Profile) []Warning {
 			out = append(out, w)
 		}
 	}
-	switch p.Protocol {
+	switch profile.Protocol {
 	case VLESS, VMess, Trojan:
-		if p.TLS == nil || !p.TLS.Enabled {
+		if profile.TLS == nil || !profile.TLS.Enabled {
 			add(wNoTLS)
 		}
 	}
-	if p.TLS != nil && p.TLS.Insecure && p.Protocol != SSTP {
+	if profile.TLS != nil && profile.TLS.Insecure && profile.Protocol != SSTP {
 		add(wInsecure)
 	}
-	warningsFromOptions(p, add)
+	warningsFromOptions(profile, add)
 	return out
 }
 
 // warningsFromOptions is where the optional settings report themselves.
-func warningsFromOptions(p *Profile, add func(Warning)) {
-	if p.Multiplex.Enabled() {
+func warningsFromOptions(profile *Profile, add func(Warning)) {
+	if profile.Multiplex.Enabled() {
 		add(wMux)
 	}
-	if p.Protocol == DNSTT && p.Username == "" && p.Password == "" {
+	if profile.Protocol == DNSTT && profile.Username == "" && profile.Password == "" {
 		add(wDNSTTOpen)
 	}
-	if w := p.WireGuard; w != nil && w.Via != "" {
+	if w := profile.WireGuard; w != nil && w.Via != "" {
 		add(wWGChain)
 	}
-	if t := p.TLS; t != nil {
-		if t.Fragment || t.RecordFragment {
+	if tlsOpts := profile.TLS; tlsOpts != nil {
+		if tlsOpts.Fragment || tlsOpts.RecordFragment {
 			add(wFragment)
 		}
-		if t.ECH.On() {
+		if tlsOpts.ECH.On() {
 			add(wECH)
 		}
 	}

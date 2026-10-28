@@ -126,43 +126,43 @@ func ImportSingBoxJSON(text string) (*Result, error) {
 		case "direct", "block", "dns", "selector", "urltest", "shadowtls", "":
 			continue
 		}
-		var p *profile.Profile
+		var prof *profile.Profile
 		var err error
 		switch head.Type {
 		case "openvpn-client":
-			p, err = sbOpenVPNToProfile(raw)
+			prof, err = sbOpenVPNToProfile(raw)
 		case "hysteria":
-			p, err = sbHysteriaToProfile(raw)
+			prof, err = sbHysteriaToProfile(raw)
 		case "ssh":
-			p, err = sbSSHToProfile(raw)
+			prof, err = sbSSHToProfile(raw)
 		default:
 			var o sbOutbound
 			if err = json.Unmarshal(raw, &o); err == nil {
-				p, err = sbToProfile(o)
+				prof, err = sbToProfile(o)
 			}
 		}
 		if err == nil && head.Detour != "" {
-			if st, ok := shadowTLS[head.Detour]; ok && p.Protocol == profile.Shadowsocks {
+			if st, ok := shadowTLS[head.Detour]; ok && prof.Protocol == profile.Shadowsocks {
 				// The ShadowTLS server is the address clients actually dial.
-				p.Server, p.Port = st.Server, st.ServerPort
-				p.Plugin = "shadow-tls"
-				p.PluginOpts = fmt.Sprintf("host=%s;password=%s;version=%d", st.TLS.ServerName, st.Password, max(st.Version, 1))
+				prof.Server, prof.Port = st.Server, st.ServerPort
+				prof.Plugin = "shadow-tls"
+				prof.PluginOpts = fmt.Sprintf("host=%s;password=%s;version=%d", st.TLS.ServerName, st.Password, max(st.Version, 1))
 				if st.TLS.Insecure {
-					p.PluginOpts += ";insecure=1"
+					prof.PluginOpts += ";insecure=1"
 				}
 			} else {
 				err = fmt.Errorf("detour %q is not supported", head.Detour)
 			}
 		}
 		if err == nil {
-			err = p.Validate()
+			err = prof.Validate()
 		}
 		if err != nil {
 			res.Errors = append(res.Errors, fmt.Sprintf("%s: %v", head.Tag, err))
 			continue
 		}
-		p.EnsureID()
-		res.Profiles = append(res.Profiles, p)
+		prof.EnsureID()
+		res.Profiles = append(res.Profiles, prof)
 	}
 	for _, link := range doc.ExtraLinks {
 		if p, err := ParseLink(link); err == nil {
@@ -180,28 +180,28 @@ func ImportSingBoxJSON(text string) (*Result, error) {
 	return res, nil
 }
 
-func sbToProfile(o sbOutbound) (*profile.Profile, error) {
-	p := &profile.Profile{
-		Name:   o.Tag,
-		Server: o.Server,
-		Port:   o.ServerPort,
-		UUID:   o.UUID, Password: o.Password, Flow: o.Flow, AlterID: o.AlterID,
+func sbToProfile(outbound sbOutbound) (*profile.Profile, error) {
+	prof := &profile.Profile{
+		Name:   outbound.Tag,
+		Server: outbound.Server,
+		Port:   outbound.ServerPort,
+		UUID:   outbound.UUID, Password: outbound.Password, Flow: outbound.Flow, AlterID: outbound.AlterID,
 	}
-	p.Source = fmt.Sprintf("sing-box:%s:%s:%d:%s", o.Type, o.Server, o.ServerPort, o.Tag)
-	if t := o.TLS; t != nil && t.Enabled {
-		p.TLS = &profile.TLS{Enabled: true, ServerName: t.ServerName, Insecure: t.Insecure, ALPN: t.ALPN, Certificate: t.Certificate.joined()}
-		if t.UTLS != nil {
-			p.TLS.Fingerprint = t.UTLS.Fingerprint
+	prof.Source = fmt.Sprintf("sing-box:%s:%s:%d:%s", outbound.Type, outbound.Server, outbound.ServerPort, outbound.Tag)
+	if tlsOpts := outbound.TLS; tlsOpts != nil && tlsOpts.Enabled {
+		prof.TLS = &profile.TLS{Enabled: true, ServerName: tlsOpts.ServerName, Insecure: tlsOpts.Insecure, ALPN: tlsOpts.ALPN, Certificate: tlsOpts.Certificate.joined()}
+		if tlsOpts.UTLS != nil {
+			prof.TLS.Fingerprint = tlsOpts.UTLS.Fingerprint
 		}
-		if t.Reality != nil && t.Reality.PublicKey != "" {
-			p.TLS.Reality = &profile.Reality{PublicKey: t.Reality.PublicKey, ShortID: t.Reality.ShortID}
+		if tlsOpts.Reality != nil && tlsOpts.Reality.PublicKey != "" {
+			prof.TLS.Reality = &profile.Reality{PublicKey: tlsOpts.Reality.PublicKey, ShortID: tlsOpts.Reality.ShortID}
 		}
-		p.TLS.Fragment, p.TLS.RecordFragment = t.Fragment, t.RecordFragment
-		if e := t.ECH; e != nil && e.Enabled && p.TLS.Reality == nil {
-			p.TLS.ECH = &profile.ECH{Enabled: true, Config: profile.ECHPEM(e.Config.joined()), QueryServerName: e.QueryServerName}
+		prof.TLS.Fragment, prof.TLS.RecordFragment = tlsOpts.Fragment, tlsOpts.RecordFragment
+		if e := tlsOpts.ECH; e != nil && e.Enabled && prof.TLS.Reality == nil {
+			prof.TLS.ECH = &profile.ECH{Enabled: true, Config: profile.ECHPEM(e.Config.joined()), QueryServerName: e.QueryServerName}
 		}
 	}
-	if tr := o.Transport; tr != nil {
+	if tr := outbound.Transport; tr != nil {
 		pt := &profile.Transport{Type: tr.Type, Path: tr.Path, ServiceName: tr.ServiceName}
 		switch h := tr.Host.(type) {
 		case string:
@@ -216,55 +216,55 @@ func sbToProfile(o sbOutbound) (*profile.Profile, error) {
 		if hv, ok := tr.Headers["Host"]; ok && pt.Host == "" {
 			pt.Host = fmt.Sprint(hv)
 		}
-		p.Transport = pt
+		prof.Transport = pt
 	}
-	switch o.Type {
+	switch outbound.Type {
 	case "vless":
-		p.Protocol = profile.VLESS
+		prof.Protocol = profile.VLESS
 	case "vmess":
-		p.Protocol = profile.VMess
-		p.Method = o.Security
+		prof.Protocol = profile.VMess
+		prof.Method = outbound.Security
 	case "trojan":
-		p.Protocol = profile.Trojan
+		prof.Protocol = profile.Trojan
 	case "anytls":
-		p.Protocol = profile.AnyTLS
+		prof.Protocol = profile.AnyTLS
 	case "naive":
-		p.Protocol = profile.Naive
-		p.Username = o.Username
-		if o.QUIC || len(o.ExtraHeaders) > 0 {
-			p.Naive = &profile.NaiveOpts{QUIC: o.QUIC, ExtraHeaders: o.ExtraHeaders}
+		prof.Protocol = profile.Naive
+		prof.Username = outbound.Username
+		if outbound.QUIC || len(outbound.ExtraHeaders) > 0 {
+			prof.Naive = &profile.NaiveOpts{QUIC: outbound.QUIC, ExtraHeaders: outbound.ExtraHeaders}
 		}
 	case "shadowsocks":
-		p.Protocol = profile.Shadowsocks
-		p.Method, p.Plugin, p.PluginOpts = o.Method, o.Plugin, o.PluginOpts
+		prof.Protocol = profile.Shadowsocks
+		prof.Method, prof.Plugin, prof.PluginOpts = outbound.Method, outbound.Plugin, outbound.PluginOpts
 	case "hysteria2":
-		p.Protocol = profile.Hysteria2
-		if o.Obfs != nil && o.Obfs.Type != "" {
-			p.Hysteria2 = &profile.Hy2{Obfs: o.Obfs.Type, ObfsPassword: o.Obfs.Password}
+		prof.Protocol = profile.Hysteria2
+		if outbound.Obfs != nil && outbound.Obfs.Type != "" {
+			prof.Hysteria2 = &profile.Hy2{Obfs: outbound.Obfs.Type, ObfsPassword: outbound.Obfs.Password}
 		}
 	case "tuic":
-		p.Protocol = profile.TUIC
-		p.TUIC = &profile.TUICOpts{CongestionControl: o.CongestionControl, UDPRelayMode: o.UDPRelayMode}
+		prof.Protocol = profile.TUIC
+		prof.TUIC = &profile.TUICOpts{CongestionControl: outbound.CongestionControl, UDPRelayMode: outbound.UDPRelayMode}
 	case "wireguard":
-		if len(o.Peers) == 0 {
+		if len(outbound.Peers) == 0 {
 			return nil, fmt.Errorf("wireguard without peers")
 		}
-		peer := o.Peers[0]
-		p.Protocol = profile.WireGuard
-		p.Server, p.Port = peer.Address, peer.Port
-		p.WireGuard = &profile.WG{
-			PrivateKey: o.PrivateKey, PeerPublicKey: peer.PublicKey, PreSharedKey: peer.PreShared,
-			Address: o.Address, AllowedIPs: peer.AllowedIPs, Reserved: peer.Reserved, MTU: o.MTU,
+		peer := outbound.Peers[0]
+		prof.Protocol = profile.WireGuard
+		prof.Server, prof.Port = peer.Address, peer.Port
+		prof.WireGuard = &profile.WG{
+			PrivateKey: outbound.PrivateKey, PeerPublicKey: peer.PublicKey, PreSharedKey: peer.PreShared,
+			Address: outbound.Address, AllowedIPs: peer.AllowedIPs, Reserved: peer.Reserved, MTU: outbound.MTU,
 		}
 	default:
-		return nil, fmt.Errorf("unsupported outbound type %q", o.Type)
+		return nil, fmt.Errorf("unsupported outbound type %q", outbound.Type)
 	}
-	dropUnusableTLSExtras(p)
-	if m := o.Multiplex; m != nil && m.Enabled {
-		attachMux(p, &profile.Mux{Protocol: firstNonEmpty(m.Protocol, "smux"), MaxConnections: m.MaxConnections,
+	dropUnusableTLSExtras(prof)
+	if m := outbound.Multiplex; m != nil && m.Enabled {
+		attachMux(prof, &profile.Mux{Protocol: firstNonEmpty(m.Protocol, "smux"), MaxConnections: m.MaxConnections,
 			MinStreams: m.MinStreams, MaxStreams: m.MaxStreams, Padding: m.Padding})
 	}
-	return p, nil
+	return prof, nil
 }
 
 // sbOpenVPN is sing-box's openvpn-client endpoint (the fields Wardkeep maps).
@@ -325,44 +325,44 @@ func (l *stringList) UnmarshalJSON(b []byte) error {
 func (l stringList) joined() string { return strings.Join(l, "\n") }
 
 func sbOpenVPNToProfile(raw json.RawMessage) (*profile.Profile, error) {
-	var v sbOpenVPN
-	if err := json.Unmarshal(raw, &v); err != nil {
+	var ovpn sbOpenVPN
+	if err := json.Unmarshal(raw, &ovpn); err != nil {
 		return nil, err
 	}
-	if v.TLS.Certificate == nil {
+	if ovpn.TLS.Certificate == nil {
 		return nil, fmt.Errorf("only certificate-based (TLS mode) OpenVPN is supported")
 	}
-	o := &profile.OVPN{
-		Network: orDefault(v.Network, "udp"), RemoteRandom: v.RemoteRandom,
-		CA: v.TLS.Certificate.joined(), Cert: v.TLS.ClientCertificate.joined(), Key: v.TLS.ClientKey.joined(),
-		VerifyX509Name: v.TLS.ServerName, VerifyX509Type: v.TLS.ServerNameType,
-		RemoteCertTLS: v.TLS.RemoteCertificateTLS, TLSVersionMin: v.TLS.VersionMin, TLSCipher: v.TLS.Cipher,
-		DataCiphers: v.DataCiphers, DataCiphersFallback: v.DataCiphersFallback, Auth: v.Auth,
-		Compression: v.Compression, CompressionLZO: v.CompressionLZO, MTU: v.MTU, MSSFix: v.MSSFix,
-		NeedsAuth: v.Username != "",
+	opts := &profile.OVPN{
+		Network: orDefault(ovpn.Network, "udp"), RemoteRandom: ovpn.RemoteRandom,
+		CA: ovpn.TLS.Certificate.joined(), Cert: ovpn.TLS.ClientCertificate.joined(), Key: ovpn.TLS.ClientKey.joined(),
+		VerifyX509Name: ovpn.TLS.ServerName, VerifyX509Type: ovpn.TLS.ServerNameType,
+		RemoteCertTLS: ovpn.TLS.RemoteCertificateTLS, TLSVersionMin: ovpn.TLS.VersionMin, TLSCipher: ovpn.TLS.Cipher,
+		DataCiphers: ovpn.DataCiphers, DataCiphersFallback: ovpn.DataCiphersFallback, Auth: ovpn.Auth,
+		Compression: ovpn.Compression, CompressionLZO: ovpn.CompressionLZO, MTU: ovpn.MTU, MSSFix: ovpn.MSSFix,
+		NeedsAuth: ovpn.Username != "",
 	}
-	if cw := v.TLS.ControlWrap; cw != nil && cw.Type != "" {
-		o.ControlWrap, o.ControlWrapKey = strings.ReplaceAll(cw.Type, "_", "-"), cw.Key.joined()
+	if cw := ovpn.TLS.ControlWrap; cw != nil && cw.Type != "" {
+		opts.ControlWrap, opts.ControlWrapKey = strings.ReplaceAll(cw.Type, "_", "-"), cw.Key.joined()
 		switch cw.Direction {
 		case "client":
-			o.KeyDirection = "1"
+			opts.KeyDirection = "1"
 		case "server":
-			o.KeyDirection = "0"
+			opts.KeyDirection = "0"
 		}
 	}
-	p := &profile.Profile{
-		Name: v.Tag, Protocol: profile.OpenVPN, Server: v.Server, Port: v.ServerPort,
-		Username: v.Username, Password: v.Password, OpenVPN: o,
+	prof := &profile.Profile{
+		Name: ovpn.Tag, Protocol: profile.OpenVPN, Server: ovpn.Server, Port: ovpn.ServerPort,
+		Username: ovpn.Username, Password: ovpn.Password, OpenVPN: opts,
 	}
-	for i, r := range v.Servers {
-		if i == 0 && p.Server == "" {
-			p.Server, p.Port, o.Network = r.Server, r.ServerPort, orDefault(r.Network, "udp")
+	for i, r := range ovpn.Servers {
+		if i == 0 && prof.Server == "" {
+			prof.Server, prof.Port, opts.Network = r.Server, r.ServerPort, orDefault(r.Network, "udp")
 			continue
 		}
-		o.Remotes = append(o.Remotes, profile.OVPNRemote{Server: r.Server, Port: r.ServerPort, Network: orDefault(r.Network, "udp")})
+		opts.Remotes = append(opts.Remotes, profile.OVPNRemote{Server: r.Server, Port: r.ServerPort, Network: orDefault(r.Network, "udp")})
 	}
-	p.Source = fmt.Sprintf("sing-box:openvpn:%s:%d:%s", p.Server, p.Port, p.Name)
-	return p, nil
+	prof.Source = fmt.Sprintf("sing-box:openvpn:%s:%d:%s", prof.Server, prof.Port, prof.Name)
+	return prof, nil
 }
 
 type sbShadowTLS struct {
@@ -379,7 +379,7 @@ type sbShadowTLS struct {
 }
 
 func sbHysteriaToProfile(raw json.RawMessage) (*profile.Profile, error) {
-	var v struct {
+	var outbound struct {
 		Tag        string `json:"tag"`
 		Server     string `json:"server"`
 		ServerPort int    `json:"server_port"`
@@ -389,23 +389,23 @@ func sbHysteriaToProfile(raw json.RawMessage) (*profile.Profile, error) {
 		DownMbps   int    `json:"down_mbps"`
 		TLS        *sbTLS `json:"tls"`
 	}
-	if err := json.Unmarshal(raw, &v); err != nil {
+	if err := json.Unmarshal(raw, &outbound); err != nil {
 		return nil, err
 	}
-	p := &profile.Profile{
-		Name: v.Tag, Protocol: profile.Hysteria, Server: v.Server, Port: v.ServerPort, Password: v.AuthStr,
-		Hysteria2: &profile.Hy2{Obfs: v.Obfs, UpMbps: v.UpMbps, DownMbps: v.DownMbps},
+	prof := &profile.Profile{
+		Name: outbound.Tag, Protocol: profile.Hysteria, Server: outbound.Server, Port: outbound.ServerPort, Password: outbound.AuthStr,
+		Hysteria2: &profile.Hy2{Obfs: outbound.Obfs, UpMbps: outbound.UpMbps, DownMbps: outbound.DownMbps},
 		TLS:       &profile.TLS{Enabled: true},
 	}
-	if t := v.TLS; t != nil {
-		p.TLS.ServerName, p.TLS.Insecure, p.TLS.ALPN = t.ServerName, t.Insecure, t.ALPN
+	if t := outbound.TLS; t != nil {
+		prof.TLS.ServerName, prof.TLS.Insecure, prof.TLS.ALPN = t.ServerName, t.Insecure, t.ALPN
 	}
-	p.Source = fmt.Sprintf("sing-box:hysteria:%s:%d:%s", p.Server, p.Port, p.Name)
-	return p, nil
+	prof.Source = fmt.Sprintf("sing-box:hysteria:%s:%d:%s", prof.Server, prof.Port, prof.Name)
+	return prof, nil
 }
 
 func sbSSHToProfile(raw json.RawMessage) (*profile.Profile, error) {
-	var v struct {
+	var outbound struct {
 		Tag                  string     `json:"tag"`
 		Server               string     `json:"server"`
 		ServerPort           int        `json:"server_port"`
@@ -416,20 +416,20 @@ func sbSSHToProfile(raw json.RawMessage) (*profile.Profile, error) {
 		HostKey              stringList `json:"host_key"`
 		ClientVersion        string     `json:"client_version"`
 	}
-	if err := json.Unmarshal(raw, &v); err != nil {
+	if err := json.Unmarshal(raw, &outbound); err != nil {
 		return nil, err
 	}
-	port := v.ServerPort
+	port := outbound.ServerPort
 	if port == 0 {
 		port = 22
 	}
-	p := &profile.Profile{Name: v.Tag, Protocol: profile.SSH, Server: v.Server, Port: port, Username: v.User, Password: v.Password}
-	if len(v.PrivateKey) > 0 || len(v.HostKey) > 0 || v.ClientVersion != "" {
-		p.SSH = &profile.SSHOpts{
-			PrivateKey: v.PrivateKey.joined(), PrivateKeyPassphrase: v.PrivateKeyPassphrase,
-			HostKey: v.HostKey, ClientVersion: v.ClientVersion,
+	prof := &profile.Profile{Name: outbound.Tag, Protocol: profile.SSH, Server: outbound.Server, Port: port, Username: outbound.User, Password: outbound.Password}
+	if len(outbound.PrivateKey) > 0 || len(outbound.HostKey) > 0 || outbound.ClientVersion != "" {
+		prof.SSH = &profile.SSHOpts{
+			PrivateKey: outbound.PrivateKey.joined(), PrivateKeyPassphrase: outbound.PrivateKeyPassphrase,
+			HostKey: outbound.HostKey, ClientVersion: outbound.ClientVersion,
 		}
 	}
-	p.Source = fmt.Sprintf("sing-box:ssh:%s:%d:%s", p.Server, p.Port, p.Name)
-	return p, nil
+	prof.Source = fmt.Sprintf("sing-box:ssh:%s:%d:%s", prof.Server, prof.Port, prof.Name)
+	return prof, nil
 }
