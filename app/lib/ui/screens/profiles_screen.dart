@@ -375,8 +375,6 @@ class _UserGroupHeader extends ConsumerWidget {
           bytes: Uint8List.fromList(utf8.encode(text)),
           mimeType: 'text/plain',
           dialogTitle: l.menuShareGroupFile,
-          type: FileType.custom,
-          allowedExtensions: const ['txt'],
         );
       } catch (e) {
         messenger.showSnackBar(SnackBar(content: Text(describeFileProblem(l, e))));
