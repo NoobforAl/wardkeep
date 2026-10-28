@@ -56,26 +56,26 @@ func (x awgServer) Usage() []Usage {
 	var out []Usage
 	cur := -1
 	for line := range strings.SplitSeq(raw, "\n") {
-		k, v, ok := strings.Cut(line, "=")
+		k, value, ok := strings.Cut(line, "=")
 		if !ok {
 			continue
 		}
 		switch k {
 		case "public_key":
-			out = append(out, Usage{User: x.users[v]})
+			out = append(out, Usage{User: x.users[value]})
 			cur = len(out) - 1
 		case "rx_bytes":
 			if cur >= 0 {
-				out[cur].Up, _ = strconv.ParseUint(v, 10, 64)
+				out[cur].Up, _ = strconv.ParseUint(value, 10, 64)
 			}
 		case "tx_bytes":
 			if cur >= 0 {
-				out[cur].Down, _ = strconv.ParseUint(v, 10, 64)
+				out[cur].Down, _ = strconv.ParseUint(value, 10, 64)
 			}
 		case "last_handshake_time_sec":
 			// WireGuard has no sessions; a peer that shook hands within the
 			// last session lifetime is the closest thing to "connected".
-			if at, _ := strconv.ParseInt(v, 10, 64); cur >= 0 && at > 0 && time.Since(time.Unix(at, 0)) < awgSessionLife {
+			if at, _ := strconv.ParseInt(value, 10, 64); cur >= 0 && at > 0 && time.Since(time.Unix(at, 0)) < awgSessionLife {
 				out[cur].Sessions = 1
 			}
 		}
@@ -116,56 +116,56 @@ func hexKey(b64 string) (string, error) {
 // parameters and one peer per user (their WireGuard key, an address in the
 // AmneziaWG network).
 func awgUAPI(cfg Config) (string, map[string]string, error) {
-	a := cfg.Env.AWG
-	priv, err := hexKey(a.PrivateKey)
+	awgEnv := cfg.Env.AWG
+	priv, err := hexKey(awgEnv.PrivateKey)
 	if err != nil {
 		return "", nil, fmt.Errorf("amneziawg: server private key: %w", err)
 	}
-	var b strings.Builder
-	fmt.Fprintf(&b, "private_key=%s\nlisten_port=%d\n", priv, cfg.Port)
+	var uapi strings.Builder
+	fmt.Fprintf(&uapi, "private_key=%s\nlisten_port=%d\n", priv, cfg.Port)
 	for _, k := range awgParamKeys {
-		if _, ok := a.Params[k]; !ok {
+		if _, ok := awgEnv.Params[k]; !ok {
 			return "", nil, fmt.Errorf("amneziawg: parameter %s is missing", k)
 		}
 	}
-	if err := awg.CheckParams(a.Params); err != nil {
+	if err := awg.CheckParams(awgEnv.Params); err != nil {
 		return "", nil, fmt.Errorf("amneziawg: %w", err)
 	}
 	for _, k := range append(append([]string{}, awgParamKeys...), awgOptionalKeys...) {
-		if v, ok := a.Params[k]; ok {
-			fmt.Fprintf(&b, "%s=%s\n", k, strings.TrimSpace(v))
+		if v, ok := awgEnv.Params[k]; ok {
+			fmt.Fprintf(&uapi, "%s=%s\n", k, strings.TrimSpace(v))
 		}
 	}
-	b.WriteString("replace_peers=true\n")
+	uapi.WriteString("replace_peers=true\n")
 	peers := 0
 	owners := map[string]string{}
-	for _, u := range cfg.Users {
-		if u.WGPublicKey == "" || u.WGAddress == "" {
+	for _, user := range cfg.Users {
+		if user.WGPublicKey == "" || user.WGAddress == "" {
 			continue
 		}
-		pub, err := hexKey(u.WGPublicKey)
+		pub, err := hexKey(user.WGPublicKey)
 		if err != nil {
-			return "", nil, fmt.Errorf("amneziawg: user %s: public key: %w", u.Name, err)
+			return "", nil, fmt.Errorf("amneziawg: user %s: public key: %w", user.Name, err)
 		}
-		addr, err := protocols.AWGAddress(u.WGAddress)
+		addr, err := protocols.AWGAddress(user.WGAddress)
 		if err != nil {
-			return "", nil, fmt.Errorf("amneziawg: user %s: %w", u.Name, err)
+			return "", nil, fmt.Errorf("amneziawg: user %s: %w", user.Name, err)
 		}
-		fmt.Fprintf(&b, "public_key=%s\nreplace_allowed_ips=true\nallowed_ip=%s\n", pub, addr)
+		fmt.Fprintf(&uapi, "public_key=%s\nreplace_allowed_ips=true\nallowed_ip=%s\n", pub, addr)
 		if cfg.Env.IPv6 {
-			a6, err := protocols.AWGAddress6(u.WGAddress)
+			a6, err := protocols.AWGAddress6(user.WGAddress)
 			if err != nil {
-				return "", nil, fmt.Errorf("amneziawg: user %s: %w", u.Name, err)
+				return "", nil, fmt.Errorf("amneziawg: user %s: %w", user.Name, err)
 			}
-			fmt.Fprintf(&b, "allowed_ip=%s\n", a6)
+			fmt.Fprintf(&uapi, "allowed_ip=%s\n", a6)
 		}
-		owners[pub] = u.Name
+		owners[pub] = user.Name
 		peers++
 	}
 	if peers == 0 {
 		return "", nil, fmt.Errorf("amneziawg: no user has a WireGuard key")
 	}
-	return b.String(), owners, nil
+	return uapi.String(), owners, nil
 }
 
 func startAWG(cfg Config) (Server, error) {
@@ -173,11 +173,11 @@ func startAWG(cfg Config) (Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := cfg.Runner
-	if r == nil {
-		r = ExecRunner{}
+	runner := cfg.Runner
+	if runner == nil {
+		runner = ExecRunner{}
 	}
-	t, err := openTUN(awgInterface, awgMTU)
+	tunDev, err := openTUN(awgInterface, awgMTU)
 	if err != nil {
 		return nil, fmt.Errorf("amneziawg: open TUN device: %w", err)
 	}
@@ -186,7 +186,7 @@ func startAWG(cfg Config) (Server, error) {
 			cfg.Logf("amneziawg: "+f, args...)
 		}
 	}}
-	dev := device.NewDevice(t, conn.NewDefaultBind(), logger)
+	dev := device.NewDevice(tunDev, conn.NewDefaultBind(), logger)
 	fail := func(err error) (Server, error) { dev.Close(); return nil, err }
 	if err := dev.IpcSet(uapi); err != nil {
 		return fail(fmt.Errorf("amneziawg: configure: %w", err))
@@ -195,20 +195,20 @@ func startAWG(cfg Config) (Server, error) {
 		return fail(fmt.Errorf("amneziawg: bring up: %w", err))
 	}
 	name := awgInterface
-	if n, err := t.Name(); err == nil && n != "" {
+	if n, err := tunDev.Name(); err == nil && n != "" {
 		name = n
 	}
 	// The kernel interface needs the server's address and to be up.
-	if err := r.Run("ip", "addr", "add", protocols.AWGServerAddress(), "dev", name); err != nil {
+	if err := runner.Run("ip", "addr", "add", protocols.AWGServerAddress(), "dev", name); err != nil {
 		return fail(fmt.Errorf("amneziawg: %w", err))
 	}
-	if err := r.Run("ip", "link", "set", "dev", name, "up"); err != nil {
+	if err := runner.Run("ip", "link", "set", "dev", name, "up"); err != nil {
 		return fail(fmt.Errorf("amneziawg: %w", err))
 	}
 	if cfg.Env.IPv6 {
-		if err := r.Run("ip", "-6", "addr", "add", protocols.AWGServerAddress6(), "dev", name); err != nil {
+		if err := runner.Run("ip", "-6", "addr", "add", protocols.AWGServerAddress6(), "dev", name); err != nil {
 			return fail(fmt.Errorf("amneziawg: %w", err))
 		}
 	}
-	return awgServer{dev: dev, r: r, users: owners, ipv6: cfg.Env.IPv6}, nil
+	return awgServer{dev: dev, r: runner, users: owners, ipv6: cfg.Env.IPv6}, nil
 }

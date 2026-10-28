@@ -25,8 +25,8 @@ func (f *installFlags) add(cmd *cobra.Command) {
 }
 
 // options turns the flags and the server's configuration into install options.
-func (f *installFlags) options(o *options, needServer bool) (install.Options, error) {
-	opts := install.Options{BinDir: f.binDir, DataDir: o.dataDir, Firewall: f.firewall}
+func (f *installFlags) options(global *options, needServer bool) (install.Options, error) {
+	opts := install.Options{BinDir: f.binDir, DataDir: global.dataDir, Firewall: f.firewall}
 	if f.user != "root" {
 		opts.User = f.user
 	}
@@ -40,8 +40,8 @@ func (f *installFlags) options(o *options, needServer bool) (install.Options, er
 		return opts, err
 	}
 	opts.Binary = exe
-	opts.HostServers = hostServers(o)
-	rules, err := o.manager().FirewallPorts()
+	opts.HostServers = hostServers(global)
+	rules, err := global.manager().FirewallPorts()
 	if err != nil {
 		if needServer {
 			return opts, err
@@ -74,8 +74,8 @@ func (f *installFlags) run(plan install.Plan, runner install.Runner) error {
 	return nil
 }
 
-func newInstallCmd(o *options) *cobra.Command {
-	var f installFlags
+func newInstallCmd(global *options) *cobra.Command {
+	var flags installFlags
 	cmd := &cobra.Command{
 		Use:   "install",
 		Short: "Install as a systemd service and open the firewall (Linux, run as root)",
@@ -91,7 +91,7 @@ changing anything. If you change protocols or ports later, run
 "omnitun-server firewall" to open the new ones.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts, err := f.options(o, true)
+			opts, err := flags.options(global, true)
 			if err != nil {
 				return err
 			}
@@ -100,48 +100,48 @@ changing anything. If you change protocols or ports later, run
 			if err != nil {
 				return err
 			}
-			return f.run(plan, runner)
+			return flags.run(plan, runner)
 		},
 	}
-	f.add(cmd)
+	flags.add(cmd)
 	return cmd
 }
 
-func newUninstallCmd(o *options) *cobra.Command {
-	var f installFlags
+func newUninstallCmd(global *options) *cobra.Command {
+	var flags installFlags
 	cmd := &cobra.Command{
 		Use:   "uninstall",
 		Short: "Stop and remove the service and its firewall rules (keeps the data)",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts, err := f.options(o, false)
+			opts, err := flags.options(global, false)
 			if err != nil {
 				return err
 			}
 			runner := install.ExecRunner{}
-			return f.run(install.BuildRemovalPlan(opts, install.Detect(runner)), runner)
+			return flags.run(install.BuildRemovalPlan(opts, install.Detect(runner)), runner)
 		},
 	}
-	f.add(cmd)
+	flags.add(cmd)
 	return cmd
 }
 
-func newFirewallCmd(o *options) *cobra.Command {
-	var f installFlags
+func newFirewallCmd(global *options) *cobra.Command {
+	var flags installFlags
 	cmd := &cobra.Command{
 		Use:   "firewall",
 		Short: "Open the ports the enabled protocols need in ufw or firewalld",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts, err := f.options(o, true)
+			opts, err := flags.options(global, true)
 			if err != nil {
 				return err
 			}
 			runner := install.ExecRunner{}
-			return f.run(install.FirewallPlan(opts, install.Detect(runner)), runner)
+			return flags.run(install.FirewallPlan(opts, install.Detect(runner)), runner)
 		},
 	}
-	f.add(cmd)
+	flags.add(cmd)
 	cmd.Flags().Lookup("user").Hidden = true
 	cmd.Flags().Lookup("bin-dir").Hidden = true
 	return cmd

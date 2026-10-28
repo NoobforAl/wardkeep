@@ -45,11 +45,11 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
-	c, err := control.Dial(ctx, cf.Addr, cf.Token)
+	client, err := control.Dial(ctx, cf.Addr, cf.Token)
 	if err != nil {
 		fail("%v", err)
 	}
-	defer c.Close()
+	defer client.Close()
 
 	var result any
 	switch args[0] {
@@ -67,7 +67,7 @@ func main() {
 		}
 		p := res.Profiles[0]
 		start := control.StartParams{Profiles: res.Profiles, Selected: p.ID, ListenPort: port, Mode: "proxy"}
-		if err := c.Call(ctx, "start", start, &result); err != nil {
+		if err := client.Call(ctx, "start", start, &result); err != nil {
 			fail("start: %v", err)
 		}
 	case "call":
@@ -77,7 +77,7 @@ func main() {
 				fail("params: %v", err)
 			}
 		}
-		if err := c.Call(ctx, args[1], params, &result); err != nil {
+		if err := client.Call(ctx, args[1], params, &result); err != nil {
 			fail("%s: %v", args[1], err)
 		}
 	default:

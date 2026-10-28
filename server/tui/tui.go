@@ -16,6 +16,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/NoobforAl/omnitun/server/logs"
 	"github.com/NoobforAl/omnitun/server/manager"
 	"github.com/NoobforAl/omnitun/server/qrterm"
 	"github.com/NoobforAl/omnitun/server/store"
@@ -28,10 +29,11 @@ const (
 	viewProtocols
 	viewServer
 	viewLogs
+	viewAlerts
 	viewUser // links and QR codes of one user
 )
 
-var tabs = []string{"Users", "Protocols", "Server", "Logs"}
+var tabs = []string{"Users", "Protocols", "Server", "Logs", "Alerts"}
 
 // prompt is a pending single-line input or yes/no question.
 type prompt struct {
@@ -61,7 +63,13 @@ type model struct {
 	users  []manager.UserInfo
 	api    store.API
 	cert   *manager.CertInfo
-	logs   []string
+	logs   []logs.Record
+
+	logLevel       logs.Level   // the lowest level the log view shows
+	alerts         []logs.Alert // newest first
+	unacknowledged int          // shown as a badge on every screen
+	alertCursor    int
+	alertDetail    bool // the selected alert is expanded
 
 	view    view
 	table   table.Model
@@ -96,7 +104,7 @@ func Run(s *store.Store) error {
 }
 
 func newModel(mgr *manager.Manager) (*model, error) {
-	t := table.New(
+	tbl := table.New(
 		table.WithColumns([]table.Column{
 			{Title: "Name", Width: 16},
 			{Title: "Status", Width: 10},
@@ -111,10 +119,11 @@ func newModel(mgr *manager.Manager) (*model, error) {
 	)
 	in := textinput.New()
 	in.CharLimit = 64
-	m := &model{mgr: mgr, table: t, input: in}
+	m := &model{mgr: mgr, table: tbl, input: in}
 	if err := m.load(); err != nil {
 		return nil, err
 	}
+	m.loadAlerts()
 	return m, nil
 }
 
@@ -184,18 +193,18 @@ func expiry(u manager.UserInfo) string {
 }
 
 // humanBytes formats a byte count (1 GB = 2^30 bytes, like quotas).
-func humanBytes(n int64) string {
+func humanBytes(size int64) string {
 	const k = 1024.0
-	f := float64(n)
+	value := float64(size)
 	switch {
-	case f >= k*k*k:
-		return fmt.Sprintf("%.2f GB", f/(k*k*k))
-	case f >= k*k:
-		return fmt.Sprintf("%.1f MB", f/(k*k))
-	case f >= k:
-		return fmt.Sprintf("%.1f KB", f/k)
+	case value >= k*k*k:
+		return fmt.Sprintf("%.2f GB", value/(k*k*k))
+	case value >= k*k:
+		return fmt.Sprintf("%.1f MB", value/(k*k))
+	case value >= k:
+		return fmt.Sprintf("%.1f KB", value/k)
 	}
-	return fmt.Sprintf("%d B", n)
+	return fmt.Sprintf("%d B", size)
 }
 
 func quota(u manager.UserInfo) string {
@@ -207,12 +216,12 @@ func quota(u manager.UserInfo) string {
 
 func (m *model) refreshRows() {
 	rows := make([]table.Row, 0, len(m.users))
-	for _, u := range m.users {
+	for _, user := range m.users {
 		online := "-"
-		if u.Usage.Connections > 0 {
-			online = strconv.Itoa(u.Usage.Connections)
+		if user.Usage.Connections > 0 {
+			online = strconv.Itoa(user.Usage.Connections)
 		}
-		rows = append(rows, table.Row{u.Name, u.Status, expiry(u), humanBytes(u.Usage.MonthBytes), quota(u), online, u.Note})
+		rows = append(rows, table.Row{user.Name, user.Status, expiry(user), humanBytes(user.Usage.MonthBytes), quota(user), online, user.Note})
 	}
 	m.table.SetRows(rows)
 	// An empty table leaves the cursor at -1; select the first row once there is one.
@@ -252,6 +261,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tickMsg:
 		m.reload()
+		m.loadAlerts()
 		if m.view == viewLogs {
 			m.loadLogs()
 		}
@@ -280,10 +290,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "shift+tab":
 				m.view = (m.view + view(len(tabs)) - 1) % view(len(tabs))
 				return m, nil
-			case "1", "2", "3", "4":
+			case "1", "2", "3", "4", "5":
 				m.view = view(msg.String()[0] - '1')
-				if m.view == viewLogs {
+				switch m.view {
+				case viewLogs:
 					m.loadLogs()
+				case viewAlerts:
+					m.loadAlerts()
 				}
 				return m, nil
 			}
@@ -299,6 +312,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateServer(msg)
 		case viewLogs:
 			return m.updateLogs(msg)
+		case viewAlerts:
+			return m.updateAlerts(msg)
 		}
 	}
 	return m, nil
@@ -379,34 +394,34 @@ func (m *model) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) updateUsers(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	u := m.selectedUser()
+	selected := m.selectedUser()
 	switch msg.String() {
 	case "q":
 		return m, tea.Quit
 	case "a":
 		return m, m.openAddForm()
 	case "enter":
-		if u != nil {
-			m.view, m.user, m.qrIndex = viewUser, u.Name, 0
-			m.links, _ = m.mgr.Links(u.Name)
+		if selected != nil {
+			m.view, m.user, m.qrIndex = viewUser, selected.Name, 0
+			m.links, _ = m.mgr.Links(selected.Name)
 		}
 	case "e", " ":
-		if u != nil {
-			name, enable := u.Name, !u.Enabled
+		if selected != nil {
+			name, enable := selected.Name, !selected.Enabled
 			m.do(fmt.Sprintf("%s %s", name, map[bool]string{true: "enabled", false: "disabled"}[enable]),
 				func() error { _, err := m.mgr.UpdateUser(name, manager.UserPatch{Enabled: &enable}); return err })
 		}
 	case "x":
-		if u != nil {
-			name := u.Name
+		if selected != nil {
+			name := selected.Name
 			m.ask("Days until "+name+" expires (empty/never = no expiry)", "", func(m *model, v string) error {
 				return m.setExpiry(name, v)
 			})
 		}
 	case "g":
-		if u != nil {
-			name := u.Name
-			m.ask("Data cap for "+name+" in GB (0 = unlimited)", strconv.FormatFloat(u.QuotaGB, 'f', -1, 64), func(m *model, v string) error {
+		if selected != nil {
+			name := selected.Name
+			m.ask("Data cap for "+name+" in GB (0 = unlimited)", strconv.FormatFloat(selected.QuotaGB, 'f', -1, 64), func(m *model, v string) error {
 				gb, err := strconv.ParseFloat(v, 64)
 				if err != nil || gb < 0 {
 					return fmt.Errorf("invalid quota %q", v)
@@ -416,28 +431,28 @@ func (m *model) updateUsers(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			})
 		}
 	case "n":
-		if u != nil {
-			name := u.Name
-			m.ask("Note for "+name, u.Note, func(m *model, v string) error {
+		if selected != nil {
+			name := selected.Name
+			m.ask("Note for "+name, selected.Note, func(m *model, v string) error {
 				m.do("note updated", func() error { _, err := m.mgr.UpdateUser(name, manager.UserPatch{Note: &v}); return err })
 				return nil
 			})
 		}
 	case "d":
-		if u != nil {
-			name := u.Name
+		if selected != nil {
+			name := selected.Name
 			m.confirm = &prompt{label: "Delete " + name + "? (y/N)", submit: func(m *model, _ string) error {
 				m.do("deleted "+name, func() error { return m.mgr.DeleteUser(name) })
 				return nil
 			}}
 		}
 	case "r":
-		if u != nil {
-			m.confirmReset(u.Name)
+		if selected != nil {
+			m.confirmReset(selected.Name)
 		}
 	case "u":
-		if u != nil {
-			name := u.Name
+		if selected != nil {
+			name := selected.Name
 			m.confirm = &prompt{label: "Restart " + name + "'s traffic count for this month? (y/N)", submit: func(m *model, _ string) error {
 				m.do("usage reset for "+name, func() error { _, err := m.mgr.ResetUsage(name); return err })
 				return nil
@@ -458,12 +473,12 @@ func (m *model) confirmReset(name string) {
 	}}
 }
 
-func (m *model) setExpiry(name, v string) error {
+func (m *model) setExpiry(name, value string) error {
 	days := 0
-	if v != "" && v != "never" {
-		n, err := strconv.Atoi(v)
+	if value != "" && value != "never" {
+		n, err := strconv.Atoi(value)
 		if err != nil || n < 0 {
-			return fmt.Errorf("invalid number of days %q", v)
+			return fmt.Errorf("invalid number of days %q", value)
 		}
 		days = n
 	}
@@ -487,17 +502,17 @@ func (m *model) qrTargets() []manager.Link {
 }
 
 func (m *model) updateUser(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	n := len(m.qrTargets())
+	count := len(m.qrTargets())
 	switch msg.String() {
 	case "esc", "q", "backspace":
 		m.view = viewUsers
 	case "right", "l", "tab":
-		if n > 0 {
-			m.qrIndex = (m.qrIndex + 1) % n
+		if count > 0 {
+			m.qrIndex = (m.qrIndex + 1) % count
 		}
 	case "left", "h", "shift+tab":
-		if n > 0 {
-			m.qrIndex = (m.qrIndex - 1 + n) % n
+		if count > 0 {
+			m.qrIndex = (m.qrIndex - 1 + count) % count
 		}
 	case "r":
 		m.confirmReset(m.user)
@@ -506,7 +521,7 @@ func (m *model) updateUser(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) updateProtocols(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	p := m.protos[m.proto]
+	selected := m.protos[m.proto]
 	switch msg.String() {
 	case "q":
 		return m, tea.Quit
@@ -515,31 +530,31 @@ func (m *model) updateProtocols(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "down", "j":
 		m.proto = (m.proto + 1) % len(m.protos)
 	case " ", "e":
-		on := !p.Enabled
-		m.do(p.Key+" toggled", func() error {
-			_, err := m.mgr.SetProtocol(p.Key, manager.ProtocolPatch{Enabled: &on})
+		on := !selected.Enabled
+		m.do(selected.Key+" toggled", func() error {
+			_, err := m.mgr.SetProtocol(selected.Key, manager.ProtocolPatch{Enabled: &on})
 			return err
 		})
 	case "v":
 		// AmneziaWG 2.0 <-> 1.x: new obfuscation parameters, so every user imports their config again.
-		if p.Key == store.AmneziaWGKey {
+		if selected.Key == store.AmneziaWGKey {
 			next := store.AWG2
-			if p.AmneziaWGVersion == store.AWG2 {
+			if selected.AmneziaWGVersion == store.AWG2 {
 				next = store.AWGClassic
 			}
 			m.do("AmneziaWG "+next+" (users must import their config again)", func() error {
-				_, err := m.mgr.SetProtocol(p.Key, manager.ProtocolPatch{AmneziaWGVersion: &next})
+				_, err := m.mgr.SetProtocol(selected.Key, manager.ProtocolPatch{AmneziaWGVersion: &next})
 				return err
 			})
 		}
 	case "enter":
-		m.ask("Port for "+p.Key, strconv.Itoa(p.Port), func(m *model, v string) error {
-			port, err := strconv.Atoi(v)
+		m.ask("Port for "+selected.Key, strconv.Itoa(selected.Port), func(m *model, value string) error {
+			port, err := strconv.Atoi(value)
 			if err != nil || port < 1 || port > 65535 {
-				return fmt.Errorf("invalid port %q", v)
+				return fmt.Errorf("invalid port %q", value)
 			}
-			m.do(p.Key+" port updated", func() error {
-				_, err := m.mgr.SetProtocol(p.Key, manager.ProtocolPatch{Port: &port})
+			m.do(selected.Key+" port updated", func() error {
+				_, err := m.mgr.SetProtocol(selected.Key, manager.ProtocolPatch{Port: &port})
 				return err
 			})
 			return nil
@@ -564,18 +579,18 @@ func (m *model) updateServer(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return nil
 		}}
 	case "l":
-		m.ask("API listen address (e.g. 127.0.0.1 or 0.0.0.0)", m.api.Listen, func(m *model, v string) error {
-			if v == "" {
+		m.ask("API listen address (e.g. 127.0.0.1 or 0.0.0.0)", m.api.Listen, func(m *model, value string) error {
+			if value == "" {
 				return fmt.Errorf("an address is required")
 			}
-			m.do("API address updated", func() error { _, err := m.mgr.SetAPI(manager.APIPatch{Listen: &v}); return err })
+			m.do("API address updated", func() error { _, err := m.mgr.SetAPI(manager.APIPatch{Listen: &value}); return err })
 			return nil
 		})
 	case "p":
-		m.ask("API port", strconv.Itoa(m.api.Port), func(m *model, v string) error {
-			port, err := strconv.Atoi(v)
+		m.ask("API port", strconv.Itoa(m.api.Port), func(m *model, value string) error {
+			port, err := strconv.Atoi(value)
 			if err != nil {
-				return fmt.Errorf("invalid port %q", v)
+				return fmt.Errorf("invalid port %q", value)
 			}
 			m.do("API port updated", func() error { _, err := m.mgr.SetAPI(manager.APIPatch{Port: &port}); return err })
 			return nil
@@ -588,129 +603,138 @@ func (m *model) View() string {
 	if m.form != nil {
 		return titleStyle.Render("New user") + "\n\n" + m.form.View()
 	}
-	var b strings.Builder
-	b.WriteString(titleStyle.Render("Wardkeep server") + dimStyle.Render(fmt.Sprintf("  %s · %s · %s", m.info.Name, m.info.PublicHost, m.mgr.Store.Dir)) + "\n")
+	var out strings.Builder
+	out.WriteString(titleStyle.Render("Wardkeep server") + dimStyle.Render(fmt.Sprintf("  %s · %s · %s", m.info.Name, m.info.PublicHost, m.mgr.Store.Dir)))
+	if badge := m.alertBadge(); badge != "" {
+		out.WriteString("  " + badge)
+	}
+	out.WriteString("\n")
 	if m.view != viewUser {
 		for i, t := range tabs {
 			style := tabStyle
 			if view(i) == m.view {
 				style = tabOnStyle
 			}
-			b.WriteString(style.Render(fmt.Sprintf("%d %s", i+1, t)))
+			if view(i) == viewAlerts && m.unacknowledged > 0 {
+				t = fmt.Sprintf("%s (%d)", t, m.unacknowledged)
+			}
+			out.WriteString(style.Render(fmt.Sprintf("%d %s", i+1, t)))
 		}
 	}
-	b.WriteString("\n\n")
+	out.WriteString("\n\n")
 
 	switch m.view {
 	case viewUsers:
-		b.WriteString(m.usersView())
+		out.WriteString(m.usersView())
 	case viewUser:
-		b.WriteString(m.userView())
+		out.WriteString(m.userView())
 	case viewProtocols:
-		b.WriteString(m.protocolsView())
+		out.WriteString(m.protocolsView())
 	case viewServer:
-		b.WriteString(m.serverView())
+		out.WriteString(m.serverView())
 	case viewLogs:
-		b.WriteString(m.logsView())
+		out.WriteString(m.logsView())
+	case viewAlerts:
+		out.WriteString(m.alertsView())
 	}
 
-	b.WriteString("\n\n")
+	out.WriteString("\n\n")
 	switch {
 	case m.prompt != nil:
-		b.WriteString(m.prompt.label + ": " + m.input.View() + dimStyle.Render("  (enter to save, esc to cancel)"))
+		out.WriteString(m.prompt.label + ": " + m.input.View() + dimStyle.Render("  (enter to save, esc to cancel)"))
 	case m.confirm != nil:
-		b.WriteString(errStyle.Render(m.confirm.label))
+		out.WriteString(errStyle.Render(m.confirm.label))
 	case m.err != nil:
-		b.WriteString(errStyle.Render("Error: " + m.err.Error()))
+		out.WriteString(errStyle.Render("Error: " + m.err.Error()))
 	case m.status != "":
-		b.WriteString(okStyle.Render(m.status))
+		out.WriteString(okStyle.Render(m.status))
 	}
-	return b.String()
+	return out.String()
 }
 
 func (m *model) usersView() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("Users (%d, %d active)\n", m.info.Users, m.info.ActiveUsers))
+	var out strings.Builder
+	out.WriteString(fmt.Sprintf("Users (%d, %d active)\n", m.info.Users, m.info.ActiveUsers))
 	if len(m.users) == 0 {
-		b.WriteString(dimStyle.Render("No users yet — press a to add one.") + "\n")
+		out.WriteString(dimStyle.Render("No users yet — press a to add one.") + "\n")
 	} else {
-		b.WriteString(m.table.View() + "\n")
+		out.WriteString(m.table.View() + "\n")
 	}
-	b.WriteString(dimStyle.Render("enter links & QR · a add · e enable/disable · x expiry · g quota · n note · u reset usage · r new credentials · d delete · tab next · q quit"))
-	return b.String()
+	out.WriteString(dimStyle.Render("enter links & QR · a add · e enable/disable · x expiry · g quota · n note · u reset usage · r new credentials · d delete · tab next · q quit"))
+	return out.String()
 }
 
 func (m *model) userView() string {
-	var u *manager.UserInfo
+	var selected *manager.UserInfo
 	for i := range m.users {
 		if m.users[i].Name == m.user {
-			u = &m.users[i]
+			selected = &m.users[i]
 		}
 	}
-	if u == nil {
+	if selected == nil {
 		return "user not found"
 	}
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s  %s  expires %s\n\n", titleStyle.Render(u.Name), u.Status, expiry(*u)))
+	var out strings.Builder
+	out.WriteString(fmt.Sprintf("%s  %s  expires %s\n\n", titleStyle.Render(selected.Name), selected.Status, expiry(*selected)))
 	targets := m.qrTargets()
 	if len(targets) == 0 {
-		return b.String() + "No protocols enabled."
+		return out.String() + "No protocols enabled."
 	}
 	t := targets[m.qrIndex%len(targets)]
-	b.WriteString(fmt.Sprintf("%s %s\n", okStyle.Render(fmt.Sprintf("[%d/%d]", m.qrIndex%len(targets)+1, len(targets))), t.Protocol))
+	out.WriteString(fmt.Sprintf("%s %s\n", okStyle.Render(fmt.Sprintf("[%d/%d]", m.qrIndex%len(targets)+1, len(targets))), t.Protocol))
 	if code, err := qrterm.Render(t.URL); err == nil {
-		b.WriteString(code)
+		out.WriteString(code)
 	}
-	b.WriteString(boxStyle.Width(max(40, min(m.width-4, 110))).Render(t.URL) + "\n")
-	b.WriteString(dimStyle.Render("←/→ switch link · r new credentials · esc back"))
-	return b.String()
+	out.WriteString(boxStyle.Width(max(40, min(m.width-4, 110))).Render(t.URL) + "\n")
+	out.WriteString(dimStyle.Render("←/→ switch link · r new credentials · esc back"))
+	return out.String()
 }
 
 func (m *model) protocolsView() string {
-	var b strings.Builder
-	b.WriteString("Protocols\n\n")
-	for i, p := range m.protos {
+	var out strings.Builder
+	out.WriteString("Protocols\n\n")
+	for i, entry := range m.protos {
 		cursor := "  "
 		if i == m.proto {
 			cursor = okStyle.Render("▸ ")
 		}
 		state := errStyle.Render("off")
-		if p.Enabled {
+		if entry.Enabled {
 			state = okStyle.Render("on ")
 		}
-		detail := p.Transport
-		if p.AmneziaWGVersion != "" {
-			detail += " · " + p.AmneziaWGVersion
+		detail := entry.Transport
+		if entry.AmneziaWGVersion != "" {
+			detail += " · " + entry.AmneziaWGVersion
 		}
-		b.WriteString(fmt.Sprintf("%s%s  %-14s port %-5d %s\n", cursor, state, p.Key, p.Port, dimStyle.Render(detail)))
+		out.WriteString(fmt.Sprintf("%s%s  %-14s port %-5d %s\n", cursor, state, entry.Key, entry.Port, dimStyle.Render(detail)))
 	}
-	b.WriteString("\n" + dimStyle.Render("space toggle · enter change port · v AmneziaWG 2.0/1.x · tab next · q quit"))
-	return b.String()
+	out.WriteString("\n" + dimStyle.Render("space toggle · enter change port · v AmneziaWG 2.0/1.x · tab next · q quit"))
+	return out.String()
 }
 
 func (m *model) serverView() string {
-	var b strings.Builder
+	var out strings.Builder
 	i := m.info
-	b.WriteString(fmt.Sprintf("%s  %s\n", titleStyle.Render(i.Name), i.PublicHost))
-	b.WriteString(fmt.Sprintf("users %d (%d active) · protocols on %d", i.Users, i.ActiveUsers, i.Protocols))
+	out.WriteString(fmt.Sprintf("%s  %s\n", titleStyle.Render(i.Name), i.PublicHost))
+	out.WriteString(fmt.Sprintf("users %d (%d active) · protocols on %d", i.Users, i.ActiveUsers, i.Protocols))
 	if i.Running {
-		b.WriteString(okStyle.Render(fmt.Sprintf(" · running, %d connection(s)", i.Connections)))
+		out.WriteString(okStyle.Render(fmt.Sprintf(" · running, %d connection(s)", i.Connections)))
 	} else {
-		b.WriteString(errStyle.Render(" · server not running"))
+		out.WriteString(errStyle.Render(" · server not running"))
 	}
 	if i.SubscriptionPort > 0 {
-		b.WriteString(fmt.Sprintf(" · subscriptions on port %d", i.SubscriptionPort))
+		out.WriteString(fmt.Sprintf(" · subscriptions on port %d", i.SubscriptionPort))
 	}
-	b.WriteString("\n")
+	out.WriteString("\n")
 	switch {
 	case m.cert.Mode == "acme" && m.cert.Status == "issued":
-		b.WriteString(okStyle.Render(fmt.Sprintf("certificate: %s, valid until %s", m.cert.Domain, m.cert.NotAfter.Local().Format("2006-01-02"))))
+		out.WriteString(okStyle.Render(fmt.Sprintf("certificate: %s, valid until %s", m.cert.Domain, m.cert.NotAfter.Local().Format("2006-01-02"))))
 	case m.cert.Mode == "acme":
-		b.WriteString(errStyle.Render(fmt.Sprintf("certificate: waiting for %s from the CA (self-signed meanwhile)", m.cert.Domain)))
+		out.WriteString(errStyle.Render(fmt.Sprintf("certificate: waiting for %s from the CA (self-signed meanwhile)", m.cert.Domain)))
 	default:
-		b.WriteString(dimStyle.Render("certificate: self-signed (omnitun-server cert acme --domain … for a real one)"))
+		out.WriteString(dimStyle.Render("certificate: self-signed (omnitun-server cert acme --domain … for a real one)"))
 	}
-	b.WriteString("\n\nWeb API\n")
+	out.WriteString("\n\nWeb API\n")
 	state := errStyle.Render("off")
 	if m.api.Enabled {
 		state = okStyle.Render("on")
@@ -719,8 +743,8 @@ func (m *model) serverView() string {
 	if m.showTok {
 		tok = m.api.Token
 	}
-	b.WriteString(fmt.Sprintf("  state    %s\n  listen   %s:%d\n  token    %s\n  docs     http://%s:%d/docs\n",
+	out.WriteString(fmt.Sprintf("  state    %s\n  listen   %s:%d\n  token    %s\n  docs     http://%s:%d/docs\n",
 		state, m.api.Listen, m.api.Port, tok, m.api.Listen, m.api.Port))
-	b.WriteString("\n" + dimStyle.Render("e enable/disable API · t show token · n new token · l address · p port · tab next · q quit"))
-	return b.String()
+	out.WriteString("\n" + dimStyle.Render("e enable/disable API · t show token · n new token · l address · p port · tab next · q quit"))
+	return out.String()
 }

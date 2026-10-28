@@ -29,34 +29,34 @@ func quota(u manager.UserInfo) string {
 }
 
 // humanBytes formats a byte count (1 GB = 2^30 bytes, like quotas).
-func humanBytes(n int64) string {
+func humanBytes(size int64) string {
 	const k = 1024.0
-	f := float64(n)
+	value := float64(size)
 	switch {
-	case f >= k*k*k:
-		return fmt.Sprintf("%.2f GB", f/(k*k*k))
-	case f >= k*k:
-		return fmt.Sprintf("%.1f MB", f/(k*k))
-	case f >= k:
-		return fmt.Sprintf("%.1f KB", f/k)
+	case value >= k*k*k:
+		return fmt.Sprintf("%.2f GB", value/(k*k*k))
+	case value >= k*k:
+		return fmt.Sprintf("%.1f MB", value/(k*k))
+	case value >= k:
+		return fmt.Sprintf("%.1f KB", value/k)
 	}
-	return fmt.Sprintf("%d B", n)
+	return fmt.Sprintf("%d B", size)
 }
 
 func printUsers(users []manager.UserInfo) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATUS\tEXPIRES\tUSED (MONTH)\tQUOTA\tONLINE\tNOTE")
-	for _, u := range users {
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(tw, "NAME\tSTATUS\tEXPIRES\tUSED (MONTH)\tQUOTA\tONLINE\tNOTE")
+	for _, user := range users {
 		online := "-"
-		if u.Usage.Connections > 0 {
-			online = fmt.Sprintf("%d conn", u.Usage.Connections)
+		if user.Usage.Connections > 0 {
+			online = fmt.Sprintf("%d conn", user.Usage.Connections)
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", u.Name, u.Status, expiry(u), humanBytes(u.Usage.MonthBytes), quota(u), online, u.Note)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", user.Name, user.Status, expiry(user), humanBytes(user.Usage.MonthBytes), quota(user), online, user.Note)
 	}
-	w.Flush()
+	tw.Flush()
 }
 
-func newUserCmd(o *options) *cobra.Command {
+func newUserCmd(global *options) *cobra.Command {
 	cmd := &cobra.Command{Use: "user", Short: "Manage users"}
 	oneUser := func(u *manager.UserInfo, verb string) func() {
 		return func() { fmt.Printf("user %s: %s (%s)\n", u.Name, verb, u.Status) }
@@ -69,17 +69,17 @@ func newUserCmd(o *options) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			nu.Name = args[0]
-			m := o.manager()
-			u, err := m.AddUser(nu)
+			mgr := global.manager()
+			user, err := mgr.AddUser(nu)
 			if err != nil {
 				return err
 			}
-			set, err := m.Links(u.Name)
+			set, err := mgr.Links(user.Name)
 			if err != nil {
 				return err
 			}
-			return o.print(map[string]any{"user": u, "links": set}, func() {
-				fmt.Printf("Added %s.\n\n", u.Name)
+			return global.print(map[string]any{"user": user, "links": set}, func() {
+				fmt.Printf("Added %s.\n\n", user.Name)
 				printLinkSet(set, false, false)
 			})
 		},
@@ -93,11 +93,11 @@ func newUserCmd(o *options) *cobra.Command {
 		Short: "List users",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			users, err := o.manager().Users()
+			users, err := global.manager().Users()
 			if err != nil {
 				return err
 			}
-			return o.print(users, func() { printUsers(users) })
+			return global.print(users, func() { printUsers(users) })
 		},
 	}
 
@@ -107,10 +107,10 @@ func newUserCmd(o *options) *cobra.Command {
 		Short:   "Delete a user",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := o.manager().DeleteUser(args[0]); err != nil {
+			if err := global.manager().DeleteUser(args[0]); err != nil {
 				return err
 			}
-			return o.print(map[string]string{"deleted": args[0]}, func() { fmt.Printf("user %s: deleted\n", args[0]) })
+			return global.print(map[string]string{"deleted": args[0]}, func() { fmt.Printf("user %s: deleted\n", args[0]) })
 		},
 	}
 
@@ -120,11 +120,11 @@ func newUserCmd(o *options) *cobra.Command {
 			Short: strings.ToUpper(use[:1]) + use[1:] + " a user",
 			Args:  cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				u, err := o.manager().UpdateUser(args[0], manager.UserPatch{Enabled: &on})
+				u, err := global.manager().UpdateUser(args[0], manager.UserPatch{Enabled: &on})
 				if err != nil {
 					return err
 				}
-				return o.print(u, oneUser(u, use+"d"))
+				return global.print(u, oneUser(u, use+"d"))
 			},
 		}
 	}
@@ -142,11 +142,11 @@ func newUserCmd(o *options) *cobra.Command {
 				}
 				days = n
 			}
-			u, err := o.manager().UpdateUser(args[0], manager.UserPatch{ExpireDays: &days})
+			u, err := global.manager().UpdateUser(args[0], manager.UserPatch{ExpireDays: &days})
 			if err != nil {
 				return err
 			}
-			return o.print(u, func() { fmt.Printf("user %s: expires %s\n", u.Name, expiry(*u)) })
+			return global.print(u, func() { fmt.Printf("user %s: expires %s\n", u.Name, expiry(*u)) })
 		},
 	}
 
@@ -159,11 +159,11 @@ func newUserCmd(o *options) *cobra.Command {
 			if err != nil || gb < 0 {
 				return fmt.Errorf("%w: invalid quota %q", manager.ErrInvalid, args[1])
 			}
-			u, err := o.manager().UpdateUser(args[0], manager.UserPatch{QuotaGB: &gb})
+			u, err := global.manager().UpdateUser(args[0], manager.UserPatch{QuotaGB: &gb})
 			if err != nil {
 				return err
 			}
-			return o.print(u, func() { fmt.Printf("user %s: quota %s\n", u.Name, quota(*u)) })
+			return global.print(u, func() { fmt.Printf("user %s: quota %s\n", u.Name, quota(*u)) })
 		},
 	}
 
@@ -173,11 +173,11 @@ func newUserCmd(o *options) *cobra.Command {
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			text := strings.Join(args[1:], " ")
-			u, err := o.manager().UpdateUser(args[0], manager.UserPatch{Note: &text})
+			u, err := global.manager().UpdateUser(args[0], manager.UserPatch{Note: &text})
 			if err != nil {
 				return err
 			}
-			return o.print(u, oneUser(u, "note updated"))
+			return global.print(u, oneUser(u, "note updated"))
 		},
 	}
 
@@ -186,11 +186,11 @@ func newUserCmd(o *options) *cobra.Command {
 		Short: "Issue new credentials (old links stop working)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			u, err := o.manager().ResetUser(args[0])
+			u, err := global.manager().ResetUser(args[0])
 			if err != nil {
 				return err
 			}
-			return o.print(u, oneUser(u, "new credentials issued"))
+			return global.print(u, oneUser(u, "new credentials issued"))
 		},
 	}
 
@@ -200,27 +200,27 @@ func newUserCmd(o *options) *cobra.Command {
 		Short: "Show a user's traffic; --reset restarts this month's count",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			m := o.manager()
-			var u *manager.UserInfo
+			mgr := global.manager()
+			var user *manager.UserInfo
 			var err error
 			if resetUsage {
-				u, err = m.ResetUsage(args[0])
+				user, err = mgr.ResetUsage(args[0])
 			} else {
-				u, err = m.User(args[0])
+				user, err = mgr.User(args[0])
 			}
 			if err != nil {
 				return err
 			}
-			return o.print(u, func() {
-				fmt.Printf("%s (%s)\n", u.Name, u.Status)
-				fmt.Printf("this month   %s  (up %s, down %s)   quota %s\n", humanBytes(u.Usage.MonthBytes),
-					humanBytes(u.Usage.MonthUp), humanBytes(u.Usage.MonthDown), quota(*u))
-				fmt.Printf("all time     %s\n", humanBytes(u.Usage.TotalBytes))
-				if u.Usage.Connections > 0 {
-					fmt.Printf("online       %d connection(s), up %s/s, down %s/s\n", u.Usage.Connections,
-						humanBytes(u.Usage.UpBps), humanBytes(u.Usage.DownBps))
-				} else if u.Usage.LastSeen != nil {
-					fmt.Printf("last seen    %s\n", u.Usage.LastSeen.Local().Format("2006-01-02 15:04"))
+			return global.print(user, func() {
+				fmt.Printf("%s (%s)\n", user.Name, user.Status)
+				fmt.Printf("this month   %s  (up %s, down %s)   quota %s\n", humanBytes(user.Usage.MonthBytes),
+					humanBytes(user.Usage.MonthUp), humanBytes(user.Usage.MonthDown), quota(*user))
+				fmt.Printf("all time     %s\n", humanBytes(user.Usage.TotalBytes))
+				if user.Usage.Connections > 0 {
+					fmt.Printf("online       %d connection(s), up %s/s, down %s/s\n", user.Usage.Connections,
+						humanBytes(user.Usage.UpBps), humanBytes(user.Usage.DownBps))
+				} else if user.Usage.LastSeen != nil {
+					fmt.Printf("last seen    %s\n", user.Usage.LastSeen.Local().Format("2006-01-02 15:04"))
 				}
 				if resetUsage {
 					fmt.Println("(a running server applies the reset within seconds)")
@@ -234,7 +234,7 @@ func newUserCmd(o *options) *cobra.Command {
 	return cmd
 }
 
-func newLinkCmd(o *options) *cobra.Command {
+func newLinkCmd(global *options) *cobra.Command {
 	var qr, subOnly, stamp bool
 	var file, ovpn string
 	cmd := &cobra.Command{
@@ -248,25 +248,25 @@ func newLinkCmd(o *options) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if stamp {
-				return printDNSCryptStamp(o)
+				return printDNSCryptStamp(global)
 			}
-			m := o.manager()
+			mgr := global.manager()
 			if file == "" && ovpn != "" {
 				file = "openvpn-" + ovpn
 			}
 			if file != "" {
-				_, text, err := m.File(args[0], file)
+				_, text, err := mgr.File(args[0], file)
 				if err != nil {
 					return err
 				}
 				fmt.Print(text)
 				return nil
 			}
-			set, err := m.Links(args[0])
+			set, err := mgr.Links(args[0])
 			if err != nil {
 				return err
 			}
-			return o.print(set, func() { printLinkSet(set, qr, subOnly) })
+			return global.print(set, func() { printLinkSet(set, qr, subOnly) })
 		},
 	}
 	cmd.Flags().BoolVar(&qr, "qr", false, "show QR codes")

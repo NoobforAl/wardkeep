@@ -63,27 +63,27 @@ const ACMETag = "acme"
 // the domain's certificate; its data (account, certificates) lives in the
 // data directory's "acme" folder.
 func ACMEProvider(st *store.State, s *store.Store) obj {
-	a := st.Server.ACME
-	p := obj{
-		"type": "acme", "tag": ACMETag, "domain": []string{a.Domain}, "default_server_name": a.Domain,
+	acme := st.Server.ACME
+	provider := obj{
+		"type": "acme", "tag": ACMETag, "domain": []string{acme.Domain}, "default_server_name": acme.Domain,
 		"data_directory": ACMEDir(s),
 	}
-	if a.Email != "" {
-		p["email"] = a.Email
+	if acme.Email != "" {
+		provider["email"] = acme.Email
 	}
-	if a.Provider != "" && a.Provider != "letsencrypt" {
-		p["provider"] = a.Provider
+	if acme.Provider != "" && acme.Provider != "letsencrypt" {
+		provider["provider"] = acme.Provider
 	}
-	if a.HTTPPort > 0 {
-		p["alternative_http_port"] = a.HTTPPort
+	if acme.HTTPPort > 0 {
+		provider["alternative_http_port"] = acme.HTTPPort
 	}
-	switch a.DNSProvider {
+	switch acme.DNSProvider {
 	case "cloudflare":
-		p["dns01_challenge"] = obj{"provider": "cloudflare", "api_token": a.DNSToken}
+		provider["dns01_challenge"] = obj{"provider": "cloudflare", "api_token": acme.DNSToken}
 	case "alidns":
-		p["dns01_challenge"] = obj{"provider": "alidns", "access_key_id": a.DNSToken, "access_key_secret": a.DNSSecret}
+		provider["dns01_challenge"] = obj{"provider": "alidns", "access_key_id": acme.DNSToken, "access_key_secret": acme.DNSSecret}
 	}
-	return p
+	return provider
 }
 
 // ACMEDir is where the ACME account and certificates are kept.
@@ -119,17 +119,17 @@ func Accounts(users []*store.User) []protocols.Account {
 // Build returns the sing-box config for the active users. Paths are
 // resolved against s.Dir. Protocols with no active users are left out
 // (sing-box needs at least one user per inbound).
-func Build(st *store.State, s *store.Store, now time.Time) obj {
+func Build(st *store.State, stateStore *store.Store, now time.Time) obj {
 	users := st.ActiveUsers(now)
-	env := Env(st, s)
+	env := Env(st, stateStore)
 	var inbounds, endpoints []any
 	for _, key := range store.AllProtocols {
-		p := st.Server.Protocols[key]
+		protoState := st.Server.Protocols[key]
 		proto, ok := protocols.Get(key)
-		if p == nil || !p.Enabled || len(users) == 0 || !ok {
+		if protoState == nil || !protoState.Enabled || len(users) == 0 || !ok {
 			continue
 		}
-		cfg := proto.Inbounds(env, p.Port, Accounts(users))
+		cfg := proto.Inbounds(env, protoState.Port, Accounts(users))
 		for _, in := range cfg.Inbounds {
 			inbounds = append(inbounds, in)
 		}
@@ -143,7 +143,7 @@ func Build(st *store.State, s *store.Store, now time.Time) obj {
 		"outbounds": []any{obj{"type": "direct", "tag": "direct"}},
 	}
 	if env.CertProvider != "" && usesCertificate(st) {
-		cfg["certificate_providers"] = []any{ACMEProvider(st, s)}
+		cfg["certificate_providers"] = []any{ACMEProvider(st, stateStore)}
 	}
 	if len(endpoints) > 0 {
 		cfg["endpoints"] = endpoints
@@ -164,17 +164,17 @@ func usesCertificate(st *store.State) bool {
 
 // File returns the config file a user can download for a protocol (the
 // OpenVPN .ovpn, the WireGuard .conf): its name and content.
-func File(st *store.State, u *store.User, key string) (name, content string, err error) {
-	p := st.Server.Protocols[key]
+func File(st *store.State, user *store.User, key string) (name, content string, err error) {
+	proto := st.Server.Protocols[key]
 	pr, ok := protocols.Get(key)
-	if p == nil || !ok {
+	if proto == nil || !ok {
 		return "", "", fmt.Errorf("unknown protocol %q", key)
 	}
 	fp, ok := pr.(protocols.FileProtocol)
 	if !ok {
 		return "", "", fmt.Errorf("%s has no config file", key)
 	}
-	if !p.Enabled {
+	if !proto.Enabled {
 		return "", "", fmt.Errorf("%s is disabled (enable it with: proto enable %s)", key, key)
 	}
 	env := protocols.Env{
@@ -184,7 +184,7 @@ func File(st *store.State, u *store.User, key string) (name, content string, err
 		AWG:       awgEnv(st.Server),
 		IPv6:      st.Server.IPv6,
 	}
-	return fp.File(env, p.Port, Account(u))
+	return fp.File(env, proto.Port, Account(user))
 }
 
 // OVPN returns a user's OpenVPN client config (proto is store.OpenVPNUDP or
@@ -199,19 +199,19 @@ func OVPN(st *store.State, u *store.User, proto string) (string, error) {
 
 // Profiles returns the client profiles of every enabled protocol for the
 // user, in failover order (including OpenVPN, which has no share link).
-func Profiles(st *store.State, s *store.Store, u *store.User) ([]*profile.Profile, error) {
+func Profiles(st *store.State, s *store.Store, user *store.User) ([]*profile.Profile, error) {
 	env := Env(st, s)
 	var out []*profile.Profile
 	for _, key := range store.AllProtocols {
-		p := st.Server.Protocols[key]
+		protoState := st.Server.Protocols[key]
 		proto, ok := protocols.Get(key)
-		if p == nil || !p.Enabled || !ok {
+		if protoState == nil || !protoState.Enabled || !ok {
 			continue
 		}
 		if proto.Spec().Service {
 			continue // the DNSCrypt resolver is not a way to connect
 		}
-		prof, err := proto.Profile(env, p.Port, Account(u))
+		prof, err := proto.Profile(env, protoState.Port, Account(user))
 		if errors.Is(err, protocols.ErrNoDNSTTDomain) {
 			continue // enabled by hand without a domain: nothing to hand out, and no reason to fail the rest
 		}
@@ -232,16 +232,16 @@ type Link struct {
 // Links returns the user's share links for every enabled protocol, in
 // failover-friendly order (Reality first, UDP protocols last). Protocols
 // without a share link (OpenVPN) are left out; see OVPN and OVPNURL.
-func Links(st *store.State, s *store.Store, u *store.User) []Link {
+func Links(st *store.State, s *store.Store, user *store.User) []Link {
 	env := Env(st, s)
 	var out []Link
 	for _, key := range store.AllProtocols {
-		p := st.Server.Protocols[key]
+		protoState := st.Server.Protocols[key]
 		proto, ok := protocols.Get(key)
-		if p == nil || !p.Enabled || !ok || !proto.Spec().ShareLink {
+		if protoState == nil || !protoState.Enabled || !ok || !proto.Spec().ShareLink {
 			continue
 		}
-		prof, err := proto.Profile(env, p.Port, Account(u))
+		prof, err := proto.Profile(env, protoState.Port, Account(user))
 		if err != nil {
 			continue
 		}
@@ -280,7 +280,7 @@ func SubscriptionLink(st *store.State, u *store.User) string {
 }
 
 // SubscriptionURL is the user's subscription link, or "" if disabled.
-func SubscriptionURL(st *store.State, u *store.User) string {
+func SubscriptionURL(st *store.State, user *store.User) string {
 	sub := st.Server.Subscription
 	if !sub.Enabled {
 		return ""
@@ -289,5 +289,5 @@ func SubscriptionURL(st *store.State, u *store.User) string {
 	if st.Server.ACMEActive() {
 		scheme = "https" // the subscription endpoint serves the real certificate too
 	}
-	return fmt.Sprintf("%s://%s/%s/%s", scheme, net.JoinHostPort(st.Server.PublicHost, strconv.Itoa(sub.Port)), sub.Path, u.SubToken)
+	return fmt.Sprintf("%s://%s/%s/%s", scheme, net.JoinHostPort(st.Server.PublicHost, strconv.Itoa(sub.Port)), sub.Path, user.SubToken)
 }

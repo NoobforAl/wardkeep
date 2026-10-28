@@ -170,11 +170,17 @@ omnitun-server cert self-signed            # go back
 omnitun-server api enable                  # then `run` serves it; docs at /docs (OpenAPI)
 omnitun-server api token                   # the bearer token; --new replaces it at once
 omnitun-server api tls on                  # HTTPS with the server certificate
-omnitun-server tui                         # users, links with QR codes, protocols, server, logs
-omnitun-server logs -f                     # what the server reported: reloads, quota blocks, warnings
+omnitun-server tui                         # users, links with QR codes, protocols, server, logs, alerts
+omnitun-server logs -f [--level warn]      # what the server reported: reloads, quota blocks, warnings, errors
+omnitun-server logs level [debug|default]  # what the server writes to its log (applied within seconds)
+omnitun-server alerts                      # failures nothing handled; `alerts ack <id>|--all`, `alerts collect off`
 ```
 
 The API listens on 127.0.0.1 by default. Reach it over an SSH tunnel, or turn on `api tls` before listening publicly (the server warns when it listens publicly without TLS).
+
+**Log.** `server.log` holds one JSON record per line (the format of [logging.md](logging.md)): time, level, source (`server`, `sing-box`, `dnstt`), message and, where they apply, the protocol or inbound (`target`), the user, an error code and the error. `run` writes the same records to stderr (the systemd journal). A release build keeps `error` and `fatal` records only, a development build `debug` and above; `logs level` (or `run --log-level` for one run, or `PATCH /api/v1/logging`) changes that. Debug and trace logging slow the server down and keep more detail (client IP addresses appear only at debug); put it back to `default` when you are done. Destinations, keys, passwords, tokens and subscription URLs are never logged. Older text lines in the file are still shown.
+
+**Alerts.** A failure nothing else handles is an alert: a protocol that does not start (sing-box, SSTP, IKEv2, AmneziaWG, DNSCrypt, the DNS tunnel), the DNS tunnel, the subscription endpoint or the web API stopping on its own, a sing-box fatal error, NAT that could not be set up, a failed reload, an ACME certificate that was not issued within an hour or not renewed in time, and a crash (`fatal`, with the stack; the server keeps running). The same failure (target and code) within an hour is one alert with a count. The newest 200 are kept in `alerts.json` in the data directory, so a restart keeps them. The terminal UI shows a badge with the number of new alerts on every screen and an Alerts tab (`enter` details, `a` acknowledge, `A` all); the web API has `GET /api/v1/alerts` and `POST /api/v1/alerts/ack` (`{"ids":["3"]}` or `{"all":true}`), and `GET /api/v1/logs?level=&since=&limit=` returns the records (the older `?lines=` still answers text lines). `alerts collect off` (`"alerts": false` under `logging` in `state.json`) stops collecting them.
 
 ## Backup, restore, moving from Xray
 
@@ -200,4 +206,4 @@ Go tests (`go test ./server/... ./cmd/omnitun-server ./core/protocols`) cover th
 
 ## Files
 
-The data directory is `/var/lib/omnitun-server` as root and `~/.omnitun-server` otherwise (`--data` or `OMNITUN_SERVER_DATA`). It holds `state.json` (users and keys), `stats.json`, `server.log` and the certificates. Several commands can write at the same time; changes are picked up by a running server without a restart.
+The data directory is `/var/lib/omnitun-server` as root and `~/.omnitun-server` otherwise (`--data` or `OMNITUN_SERVER_DATA`). It holds `state.json` (users and keys), `stats.json`, `server.log` (rotated at 4 MB, one old file kept), `alerts.json` and the certificates. Several commands can write at the same time; changes are picked up by a running server without a restart.

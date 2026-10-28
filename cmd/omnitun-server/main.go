@@ -56,7 +56,7 @@ func (o *options) print(v any, text func()) error {
 var version = "dev"
 
 func newRootCmd() *cobra.Command {
-	o := &options{}
+	global := &options{}
 	root := &cobra.Command{
 		Use:     "omnitun-server",
 		Version: version,
@@ -76,11 +76,11 @@ otherwise ~/.omnitun-server; override with --data or OMNITUN_SERVER_DATA.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
-	root.PersistentFlags().StringVar(&o.dataDir, "data", defaultDataDir(), "data directory")
-	root.PersistentFlags().BoolVar(&o.json, "json", false, "print results as JSON")
+	root.PersistentFlags().StringVar(&global.dataDir, "data", defaultDataDir(), "data directory")
+	root.PersistentFlags().BoolVar(&global.json, "json", false, "print results as JSON")
 	root.AddCommand(
-		newInitCmd(o), newStatusCmd(o), newProtoCmd(o), newUserCmd(o), newLinkCmd(o),
-		newAPICmd(o), newBackupCmd(o), newRestoreCmd(o), newImportCmd(o), newCertCmd(o), newLogsCmd(o), newInstallCmd(o), newUninstallCmd(o), newFirewallCmd(o), newDNSCryptCmd(o), newDNSTTCmd(o), newSubscriptionCmd(o), newRunCmd(o), newTUICmd(o), newServiceCmd(o),
+		newInitCmd(global), newStatusCmd(global), newProtoCmd(global), newUserCmd(global), newLinkCmd(global),
+		newAPICmd(global), newBackupCmd(global), newRestoreCmd(global), newImportCmd(global), newCertCmd(global), newLogsCmd(global), newAlertsCmd(global), newInstallCmd(global), newUninstallCmd(global), newFirewallCmd(global), newDNSCryptCmd(global), newDNSTTCmd(global), newSubscriptionCmd(global), newRunCmd(global), newTUICmd(global), newServiceCmd(global),
 	)
 	return root
 }

@@ -13,7 +13,7 @@ import (
 )
 
 // tailReference is the plain way to do it: read both files whole and keep the
-// last n lines. Tail must give the same lines without reading them all.
+// last n non-empty lines. Tail must give the same records without reading them all.
 func tailReference(dir string, n int) []string {
 	var lines []string
 	for _, name := range []string{fileName + ".1", fileName} {
@@ -24,7 +24,9 @@ func tailReference(dir string, n int) []string {
 		sc := bufio.NewScanner(bytes.NewReader(data))
 		sc.Buffer(make([]byte, 64<<10), 1<<20)
 		for sc.Scan() {
-			lines = append(lines, clean(sc.Text(), false))
+			if line := strings.TrimRight(sc.Text(), "\r"); line != "" {
+				lines = append(lines, clean(line, false))
+			}
 		}
 	}
 	if len(lines) > n {
@@ -34,6 +36,14 @@ func tailReference(dir string, n int) []string {
 		lines = []string{}
 	}
 	return lines
+}
+
+func messages(records []Record) []string {
+	out := make([]string, len(records))
+	for i, rec := range records {
+		out[i] = rec.Msg
+	}
+	return out
 }
 
 func TestTailMatchesReadingEverythingAtOnce(t *testing.T) {
@@ -84,8 +94,8 @@ func TestTailMatchesReadingEverythingAtOnce(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if want := tailReference(dir, n); !slices.Equal(got, want) {
-					t.Fatalf("Tail(%d): %d lines, want %d (first %q, want %q)", n, len(got), len(want), first(got), first(want))
+				if want := tailReference(dir, n); !slices.Equal(messages(got), want) {
+					t.Fatalf("Tail(%d): %d records, want %d (first %q, want %q)", n, len(got), len(want), first(messages(got)), first(want))
 				}
 			}
 		})

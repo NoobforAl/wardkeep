@@ -96,12 +96,12 @@ func newGate(extra []netip.Prefix) *gate {
 }
 
 // permitted reports whether a source address may use the resolver.
-func (g *gate) permitted(a netip.Addr) bool {
-	a = a.Unmap().WithZone("")
+func (g *gate) permitted(addr netip.Addr) bool {
+	addr = addr.Unmap().WithZone("")
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	for _, p := range g.static {
-		if p.Contains(a) {
+		if p.Contains(addr) {
 			return true
 		}
 	}
@@ -117,7 +117,7 @@ func (g *gate) permitted(a netip.Addr) bool {
 		}
 	}
 	for _, p := range g.own {
-		if p.Contains(a) {
+		if p.Contains(addr) {
 			return true
 		}
 	}
@@ -164,7 +164,7 @@ func startDNSCrypt(cfg Config) (Server, error) {
 	if id.ProviderName == "" {
 		return nil, fmt.Errorf("dnscrypt: the server has no provider name")
 	}
-	s := &dnsCryptServer{
+	srv := &dnsCryptServer{
 		cfg: cfg,
 		rc: dc.ResolverConfig{
 			ProviderName: id.ProviderName, PublicKey: id.PublicKey, PrivateKey: id.PrivateKey,
@@ -176,51 +176,51 @@ func startDNSCrypt(cfg Config) (Server, error) {
 		logf:     cfg.Logf,
 		stop:     make(chan struct{}),
 	}
-	if s.logf == nil {
-		s.logf = func(string, ...any) {}
+	if srv.logf == nil {
+		srv.logf = func(string, ...any) {}
 	}
-	if err := s.listenAll(); err != nil {
+	if err := srv.listenAll(); err != nil {
 		return nil, err
 	}
 	every := cfg.DNSRotateEvery
 	if every <= 0 {
 		every = defaultDNSRotateEvery
 	}
-	s.wg.Add(1)
-	go s.rotateLoop(every)
-	return s, nil
+	srv.wg.Add(1)
+	go srv.rotateLoop(every)
+	return srv, nil
 }
 
 // parseListen accepts one specific address; the wildcard is refused.
-func parseListen(s string) (netip.Addr, error) {
-	if s == "" {
+func parseListen(text string) (netip.Addr, error) {
+	if text == "" {
 		return netip.Addr{}, fmt.Errorf("no address to listen on is set")
 	}
-	a, err := netip.ParseAddr(s)
+	addr, err := netip.ParseAddr(text)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%q is not an IP address", s)
+		return netip.Addr{}, fmt.Errorf("%q is not an IP address", text)
 	}
-	if a.IsUnspecified() || a.IsMulticast() {
-		return netip.Addr{}, fmt.Errorf("%s would listen on every interface", a)
+	if addr.IsUnspecified() || addr.IsMulticast() {
+		return netip.Addr{}, fmt.Errorf("%s would listen on every interface", addr)
 	}
-	return a, nil
+	return addr, nil
 }
 
 func parseRanges(list []string) ([]netip.Prefix, error) {
 	var out []netip.Prefix
-	for _, s := range list {
-		p, err := netip.ParsePrefix(s)
+	for _, entry := range list {
+		prefix, err := netip.ParsePrefix(entry)
 		if err != nil {
-			a, err2 := netip.ParseAddr(s)
+			addr, err2 := netip.ParseAddr(entry)
 			if err2 != nil {
-				return nil, fmt.Errorf("%q is not an IP address or range", s)
+				return nil, fmt.Errorf("%q is not an IP address or range", entry)
 			}
-			p = netip.PrefixFrom(a, a.BitLen())
+			prefix = netip.PrefixFrom(addr, addr.BitLen())
 		}
-		if p.Bits() == 0 {
-			return nil, fmt.Errorf("%s is every address", s)
+		if prefix.Bits() == 0 {
+			return nil, fmt.Errorf("%s is every address", entry)
 		}
-		out = append(out, p.Masked())
+		out = append(out, prefix.Masked())
 	}
 	return out, nil
 }
@@ -245,18 +245,18 @@ func (s *dnsCryptServer) listenAll() error {
 	s.mu.Unlock()
 
 	port := strconv.Itoa(s.cfg.Port)
-	l, err := net.Listen("tcp", net.JoinHostPort(s.listen.String(), port))
+	ln, err := net.Listen("tcp", net.JoinHostPort(s.listen.String(), port))
 	if err != nil {
 		return fmt.Errorf("dnscrypt: %w", err)
 	}
 	outer, err := net.ListenUDP("udp", net.UDPAddrFromAddrPort(netip.AddrPortFrom(s.listen, uint16(s.cfg.Port))))
 	if err != nil {
-		l.Close()
+		ln.Close()
 		return fmt.Errorf("dnscrypt: %w", err)
 	}
 	inner, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1)})
 	if err != nil {
-		l.Close()
+		ln.Close()
 		outer.Close()
 		return fmt.Errorf("dnscrypt: %w", err)
 	}
@@ -269,9 +269,9 @@ func (s *dnsCryptServer) listenAll() error {
 		magic: cert.ClientMagic, sessions: map[netip.AddrPort]*udpSession{}, done: make(chan struct{}),
 	}
 	s.mu.Lock()
-	s.srv, s.tcp, s.front, s.internal = srv, l, front, inner.LocalAddr().String()
+	s.srv, s.tcp, s.front, s.internal = srv, ln, front, inner.LocalAddr().String()
 	s.mu.Unlock()
-	go srv.ServeTCP(&gatedListener{Listener: l, gate: s.gate})
+	go srv.ServeTCP(&gatedListener{Listener: ln, gate: s.gate})
 	go srv.ServeUDP(inner)
 	go front.run()
 	return nil
@@ -314,21 +314,21 @@ func (s *dnsCryptServer) rotate() error {
 
 func (s *dnsCryptServer) rotateLoop(every time.Duration) {
 	defer s.wg.Done()
-	t := time.NewTimer(every)
-	defer t.Stop()
+	timer := time.NewTimer(every)
+	defer timer.Stop()
 	for {
 		select {
 		case <-s.stop:
 			return
-		case <-t.C:
+		case <-timer.C:
 		}
 		if err := s.rotate(); err != nil {
 			// The ports may be taken for a moment: try again soon rather than stay silent.
 			s.logf("dnscrypt: rotating the certificate failed: %v (trying again in 30 s)", err)
-			t.Reset(30 * time.Second)
+			timer.Reset(30 * time.Second)
 			continue
 		}
-		t.Reset(every)
+		timer.Reset(every)
 	}
 }
 
@@ -348,7 +348,7 @@ func (s *dnsCryptServer) Close() error {
 }
 
 // ServeDNS answers one decrypted query: it asks the upstream resolver.
-func (s *dnsCryptServer) ServeDNS(rw dc.ResponseWriter, q *dns.Msg) error {
+func (s *dnsCryptServer) ServeDNS(rw dc.ResponseWriter, req *dns.Msg) error {
 	_, isUDP := rw.(*dc.UDPResponseWriter)
 	if !isUDP { // UDP was checked and limited at the front, where the real source is known
 		if ap, err := netip.ParseAddrPort(rw.RemoteAddr().String()); err != nil || !s.gate.permitted(ap.Addr()) || !s.gate.query.allow(ap.Addr().Unmap()) {
@@ -357,30 +357,30 @@ func (s *dnsCryptServer) ServeDNS(rw dc.ResponseWriter, q *dns.Msg) error {
 	}
 	reply := func(code int) error {
 		r := new(dns.Msg)
-		r.SetRcode(q, code)
+		r.SetRcode(req, code)
 		return rw.WriteMsg(r)
 	}
-	if q.Opcode != dns.OpcodeQuery || len(q.Question) != 1 {
+	if req.Opcode != dns.OpcodeQuery || len(req.Question) != 1 {
 		return reply(dns.RcodeNotImplemented)
 	}
-	if q.Question[0].Qtype == dns.TypeANY {
+	if req.Question[0].Qtype == dns.TypeANY {
 		return reply(dns.RcodeNotImplemented) // RFC 8482: the classic amplification query
 	}
 	udp := &dns.Client{Net: "udp", Timeout: dnsUpstreamTimeout}
-	r, _, err := udp.Exchange(q, s.upstream)
-	if err != nil || (r != nil && r.Truncated) {
+	resp, _, err := udp.Exchange(req, s.upstream)
+	if err != nil || (resp != nil && resp.Truncated) {
 		tcp := &dns.Client{Net: "tcp", Timeout: dnsUpstreamTimeout}
-		if r2, _, err2 := tcp.Exchange(q, s.upstream); err2 == nil {
-			r, err = r2, nil
+		if r2, _, err2 := tcp.Exchange(req, s.upstream); err2 == nil {
+			resp, err = r2, nil
 		}
 	}
-	if err != nil || r == nil {
+	if err != nil || resp == nil {
 		return reply(dns.RcodeServerFailure)
 	}
-	if isUDP && r.Len() > dnsMaxUDPAnswer {
-		r.Truncate(dnsMaxUDPAnswer)
+	if isUDP && resp.Len() > dnsMaxUDPAnswer {
+		resp.Truncate(dnsMaxUDPAnswer)
 	}
-	return rw.WriteMsg(r)
+	return rw.WriteMsg(resp)
 }
 
 // upstreamResolver is the resolver the server asks: the configured "ip" or
@@ -412,16 +412,16 @@ type gatedListener struct {
 
 func (l *gatedListener) Accept() (net.Conn, error) {
 	for {
-		c, err := l.Listener.Accept()
+		conn, err := l.Listener.Accept()
 		if err != nil {
 			return nil, err
 		}
-		ap, perr := netip.ParseAddrPort(c.RemoteAddr().String())
+		ap, perr := netip.ParseAddrPort(conn.RemoteAddr().String())
 		if perr != nil || !l.gate.permitted(ap.Addr()) || !l.gate.query.allow(ap.Addr().Unmap()) {
-			c.Close()
+			conn.Close()
 			continue
 		}
-		return c, nil
+		return conn, nil
 	}
 }
 
@@ -529,11 +529,11 @@ func (f *udpFront) session(from netip.AddrPort) *udpSession {
 			return nil
 		}
 	}
-	c, err := net.DialUDP("udp", nil, f.target)
+	upstream, err := net.DialUDP("udp", nil, f.target)
 	if err != nil {
 		return nil
 	}
-	s := &udpSession{conn: c, last: now}
+	s := &udpSession{conn: upstream, last: now}
 	f.sessions[from] = s
 	go f.reply(from, s, idle)
 	return s
@@ -543,12 +543,12 @@ func (f *udpFront) session(from netip.AddrPort) *udpSession {
 // the socket is closed (eviction, or the front closing), on any other read error,
 // or when the session has been idle for a whole period; it never retries after an
 // error that is not a timeout, and the goroutine closes its own socket on the way out.
-func (f *udpFront) reply(from netip.AddrPort, s *udpSession, idle time.Duration) {
-	defer s.conn.Close()
+func (f *udpFront) reply(from netip.AddrPort, sess *udpSession, idle time.Duration) {
+	defer sess.conn.Close()
 	buf := make([]byte, 65535)
 	for {
-		s.conn.SetReadDeadline(time.Now().Add(idle))
-		n, err := s.conn.Read(buf)
+		sess.conn.SetReadDeadline(time.Now().Add(idle))
+		n, err := sess.conn.Read(buf)
 		f.reads.Add(1)
 		if err == nil {
 			f.conn.WriteToUDPAddrPort(buf[:n], from)
@@ -556,13 +556,13 @@ func (f *udpFront) reply(from netip.AddrPort, s *udpSession, idle time.Duration)
 		}
 		var ne net.Error
 		if errors.Is(err, net.ErrClosed) || !errors.As(err, &ne) || !ne.Timeout() {
-			f.forget(from, s)
+			f.forget(from, sess)
 			return
 		}
 		// A timeout: leave if the session is idle or no longer the client's current one.
 		f.mu.Lock()
-		current := f.sessions[from] == s
-		stop := f.closed || !current || time.Since(s.last) >= idle
+		current := f.sessions[from] == sess
+		stop := f.closed || !current || time.Since(sess.last) >= idle
 		if stop && current {
 			delete(f.sessions, from)
 		}
@@ -601,7 +601,7 @@ func newRateLimiter(perSecond, burst int) *rateLimiter {
 	return &rateLimiter{rate: float64(perSecond), burst: float64(burst), buckets: map[netip.Addr]*bucket{}, swept: time.Now()}
 }
 
-func (l *rateLimiter) allow(a netip.Addr) bool {
+func (l *rateLimiter) allow(addr netip.Addr) bool {
 	now := time.Now()
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -613,10 +613,10 @@ func (l *rateLimiter) allow(a netip.Addr) bool {
 		}
 		l.swept = now
 	}
-	b := l.buckets[a]
+	b := l.buckets[addr]
 	if b == nil {
 		b = &bucket{tokens: l.burst, last: now}
-		l.buckets[a] = b
+		l.buckets[addr] = b
 	}
 	b.tokens = min(l.burst, b.tokens+now.Sub(b.last).Seconds()*l.rate)
 	b.last = now

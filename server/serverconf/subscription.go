@@ -37,18 +37,18 @@ func SingBoxSubscription(st *store.State, s *store.Store, u *store.User) ([]byte
 	}
 	outbounds, endpoints := []any{}, []any{}
 	extraLinks := []string{} // profiles another engine of the client runs (SSTP, IKEv2)
-	for _, p := range profiles {
-		out, isEndpoint, extras, err := singbox.Outbound(p, p.Name)
+	for _, prof := range profiles {
+		out, isEndpoint, extras, err := singbox.Outbound(prof, prof.Name)
 		if errors.Is(err, singbox.ErrOtherEngine) {
-			link, lerr := links.Export(p)
+			link, lerr := links.Export(prof)
 			if lerr != nil {
-				return nil, fmt.Errorf("%s: %w", p.Name, lerr)
+				return nil, fmt.Errorf("%s: %w", prof.Name, lerr)
 			}
 			extraLinks = append(extraLinks, link)
 			continue
 		}
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", p.Name, err)
+			return nil, fmt.Errorf("%s: %w", prof.Name, err)
 		}
 		if isEndpoint {
 			endpoints = append(endpoints, out)
@@ -69,13 +69,13 @@ func SingBoxSubscription(st *store.State, s *store.Store, u *store.User) ([]byte
 // SubscriptionHandler serves GET /<path>/<token> with the user's links,
 // base64-encoded, plus the standard usage/expiry headers. It reloads the
 // state on every request, so user changes apply immediately.
-func SubscriptionHandler(s *store.Store) http.Handler {
+func SubscriptionHandler(stateStore *store.Store) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		st, err := s.Load()
+		st, err := stateStore.Load()
 		if err != nil {
 			http.Error(w, "unavailable", http.StatusServiceUnavailable)
 			return
@@ -123,7 +123,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 		}
 		info := ""
 		var up, down int64
-		if snap, err := stats.Read(s.Dir); err == nil && snap.Users[user.Name] != nil {
+		if snap, err := stats.Read(stateStore.Dir); err == nil && snap.Users[user.Name] != nil {
 			up, down = snap.Users[user.Name].MonthUp, snap.Users[user.Name].MonthDown
 		}
 		if user.QuotaGB > 0 {
@@ -140,7 +140,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 		// Wardkeep (and other sing-box clients) get a sing-box config, which can
 		// also carry OpenVPN; everyone else gets the usual base64 link list.
 		if wantsSingBox(r) {
-			body, err := SingBoxSubscription(st, s, user)
+			body, err := SingBoxSubscription(st, stateStore, user)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -150,7 +150,7 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 			return
 		}
 		var lines []string
-		for _, l := range Links(st, s, user) {
+		for _, l := range Links(st, stateStore, user) {
 			lines = append(lines, l.URL)
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -159,14 +159,14 @@ func SubscriptionHandler(s *store.Store) http.Handler {
 }
 
 // setProtocolOrder adds the protocol order the operator asked for ("Protocol-Order", and one per country).
-func setProtocolOrder(h http.Header, st *store.State) {
+func setProtocolOrder(header http.Header, st *store.State) {
 	for country, list := range st.Server.Subscription.ProtocolOrder {
 		name := subscription.OrderHeader
 		if country != "" {
 			name += "-" + strings.ToUpper(country)
 		}
 		if list != "" {
-			h.Set(name, list)
+			header.Set(name, list)
 		}
 	}
 }

@@ -42,14 +42,14 @@ const (
 
 // ParseAWGVersion reads a version typed by a person or sent to the API: "2.0"
 // (also "2", "new", "default" and empty) or "1.x" (also "1", "1.0", "classic").
-func ParseAWGVersion(s string) (string, error) {
-	switch strings.ToLower(strings.TrimSpace(s)) {
+func ParseAWGVersion(text string) (string, error) {
+	switch strings.ToLower(strings.TrimSpace(text)) {
 	case "", "2", "2.0", "new", "default":
 		return AWG2, nil
 	case "1", "1.x", "1.0", "classic":
 		return AWGClassic, nil
 	}
-	return "", fmt.Errorf("unknown AmneziaWG version %q (use 2.0 or 1.x)", s)
+	return "", fmt.Errorf("unknown AmneziaWG version %q (use 2.0 or 1.x)", text)
 }
 
 // Version tells which AmneziaWG generation the stored parameters are.
@@ -119,19 +119,19 @@ func classicAWGParams() map[string]string {
 	jmin := randUint(40, 80)
 	s1, s2 := paddingsS1S2(15, 120)
 	hs := map[uint32]bool{}
-	var h [4]uint32
-	for i := range h {
+	var hdr [4]uint32
+	for i := range hdr {
 		for {
 			v := randUint(5, 0x7fffffff)
 			if !hs[v] {
-				hs[v], h[i] = true, v
+				hs[v], hdr[i] = true, v
 				break
 			}
 		}
 	}
 	return map[string]string{
 		"jc": u32(randUint(4, 10)), "jmin": u32(jmin), "jmax": u32(jmin + randUint(30, 120)),
-		"s1": u32(s1), "s2": u32(s2), "h1": u32(h[0]), "h2": u32(h[1]), "h3": u32(h[2]), "h4": u32(h[3]),
+		"s1": u32(s1), "s2": u32(s2), "h1": u32(hdr[0]), "h2": u32(hdr[1]), "h3": u32(hdr[2]), "h4": u32(hdr[3]),
 	}
 }
 
@@ -159,7 +159,7 @@ func awg2Params() map[string]string {
 		j := int(randUint(0, uint32(i)))
 		order[i], order[j] = order[j], order[i]
 	}
-	p := map[string]string{
+	params := map[string]string{
 		"jc": u32(randUint(4, 12)), "jmin": u32(jmin), "jmax": u32(jmin + randUint(30, 150)),
 		"s1": u32(s1), "s2": u32(s2), "s3": u32(randUint(16, 64)), "s4": u32(randUint(8, 32)),
 	}
@@ -168,7 +168,7 @@ func awg2Params() map[string]string {
 		// A width from 64Ki to 16Mi values, put at a random place with a gap to the slot's ends.
 		width := randUint(1<<16, 1<<24)
 		lo := base + randUint(1, slot-width-1)
-		p[key] = u32(lo) + "-" + u32(lo+width)
+		params[key] = u32(lo) + "-" + u32(lo+width)
 	}
-	return p
+	return params
 }

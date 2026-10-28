@@ -9,7 +9,7 @@ import (
 	"github.com/NoobforAl/omnitun/server/manager"
 )
 
-func newDNSCryptCmd(o *options) *cobra.Command {
+func newDNSCryptCmd(global *options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dnscrypt",
 		Short: "The optional DNSCrypt resolver for this server's users",
@@ -57,16 +57,16 @@ closed to the internet in the firewall: users reach it through the tunnel.`,
 	status := &cobra.Command{
 		Use: "status", Short: "Show the resolver, its key and its stamp", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().DNSCrypt()
+			info, err := global.manager().DNSCrypt()
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { show(info) })
+			return global.print(info, func() { show(info) })
 		},
 	}
 	stamp := &cobra.Command{
 		Use: "stamp", Short: "Print the resolver's DNS stamp (same as: link --stamp)", Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error { return printDNSCryptStamp(o) },
+		RunE: func(cmd *cobra.Command, args []string) error { return printDNSCryptStamp(global) },
 	}
 	rotate := &cobra.Command{
 		Use:   "rotate-key",
@@ -77,11 +77,11 @@ the stamp changes and every client must take the new one; restart the server
 carry are replaced by the running server on its own (every 7 days).`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().RotateDNSCryptKey()
+			info, err := global.manager().RotateDNSCryptKey()
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() {
+			return global.print(info, func() {
 				fmt.Println("New key made. Restart the server and give clients the new stamp.")
 				show(info)
 			})
@@ -96,11 +96,11 @@ carry are replaced by the running server on its own (every 7 days).`,
 			if len(args) == 1 {
 				addr = args[0]
 			}
-			info, err := o.manager().SetDNSCryptUpstream(addr)
+			info, err := global.manager().SetDNSCryptUpstream(addr)
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { show(info) })
+			return global.print(info, func() { show(info) })
 		},
 	}
 	listen := &cobra.Command{
@@ -113,11 +113,11 @@ only tunnel users can reach it; the stamp names this address. The address has to
 exist when the server starts, so the tunnel's interface must be up.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().SetDNSCryptListen(args[0])
+			info, err := global.manager().SetDNSCryptListen(args[0])
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { show(info) })
+			return global.print(info, func() { show(info) })
 		},
 	}
 	allow := &cobra.Command{
@@ -128,11 +128,11 @@ loopback, this server's own addresses and the VPN client networks. Replaces the
 earlier list; with no argument it is emptied. A range of every address is refused.`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().SetDNSCryptAllow(args)
+			info, err := global.manager().SetDNSCryptAllow(args)
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { show(info) })
+			return global.print(info, func() { show(info) })
 		},
 	}
 	cmd.AddCommand(status, stamp, listen, allow, rotate, upstream)
@@ -140,11 +140,11 @@ earlier list; with no argument it is emptied. A range of every address is refuse
 }
 
 // printDNSCryptStamp prints the resolver's stamp (and nothing else, so it can be piped).
-func printDNSCryptStamp(o *options) error {
-	m := o.manager()
-	s, err := m.DNSCryptStamp()
+func printDNSCryptStamp(global *options) error {
+	m := global.manager()
+	stamp, err := m.DNSCryptStamp()
 	if err != nil {
 		return err
 	}
-	return o.print(map[string]string{"stamp": s}, func() { fmt.Println(s) })
+	return global.print(map[string]string{"stamp": stamp}, func() { fmt.Println(stamp) })
 }

@@ -33,19 +33,19 @@ type CertInfo struct {
 
 var domainName = regexp.MustCompile(`^([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$`)
 
-func certInfo(st *store.State, s *store.Store) *CertInfo {
-	a := st.Server.ACME
+func certInfo(st *store.State, stateStore *store.Store) *CertInfo {
+	acme := st.Server.ACME
 	info := &CertInfo{Mode: "self-signed", Status: "self-signed"}
 	var domain string
 	if st.Server.ACMEActive() {
-		info.Mode, info.Status, domain = "acme", "waiting", a.Domain
-		info.Domain, info.Provider, info.Email = a.Domain, a.Provider, a.Email
+		info.Mode, info.Status, domain = "acme", "waiting", acme.Domain
+		info.Domain, info.Provider, info.Email = acme.Domain, acme.Provider, acme.Email
 		if info.Provider == "" {
 			info.Provider = "letsencrypt"
 		}
-		info.DNSProvider, info.DNSTokenSet, info.HTTPPort = a.DNSProvider, a.DNSToken != "", a.HTTPPort
+		info.DNSProvider, info.DNSTokenSet, info.HTTPPort = acme.DNSProvider, acme.DNSToken != "", acme.HTTPPort
 	}
-	src := tlsfiles.New(serverconf.ACMEDir(s), domain, s.Path(st.Server.CertFile), s.Path(st.Server.KeyFile))
+	src := tlsfiles.New(serverconf.ACMEDir(stateStore), domain, stateStore.Path(st.Server.CertFile), stateStore.Path(st.Server.KeyFile))
 	if c, err := src.Info(); err == nil {
 		info.Certificate, info.NotAfter = &c, &c.NotAfter
 		if c.Source == "acme" {
@@ -83,70 +83,70 @@ type ACMEPatch struct {
 // domain becomes the server's public address (links use it), so it must
 // already point at this machine. The VPN core obtains the certificate when it
 // runs, and renews it by itself.
-func (m *Manager) EnableACME(p ACMEPatch) (*CertInfo, error) {
+func (m *Manager) EnableACME(patch ACMEPatch) (*CertInfo, error) {
 	err := m.Store.Update(func(st *store.State) error {
-		a := st.Server.ACME
-		if p.Domain != nil {
-			a.Domain = strings.ToLower(strings.TrimSpace(*p.Domain))
+		acme := st.Server.ACME
+		if patch.Domain != nil {
+			acme.Domain = strings.ToLower(strings.TrimSpace(*patch.Domain))
 		}
-		if a.Domain == "" {
+		if acme.Domain == "" {
 			return invalid("a domain is required")
 		}
-		if net.ParseIP(a.Domain) != nil || !domainName.MatchString(a.Domain) {
-			return invalid("%q is not a domain name; certificates cannot be issued for an IP address", a.Domain)
+		if net.ParseIP(acme.Domain) != nil || !domainName.MatchString(acme.Domain) {
+			return invalid("%q is not a domain name; certificates cannot be issued for an IP address", acme.Domain)
 		}
-		if p.Email != nil {
-			a.Email = strings.TrimSpace(*p.Email)
+		if patch.Email != nil {
+			acme.Email = strings.TrimSpace(*patch.Email)
 		}
-		if a.Email != "" && !strings.Contains(a.Email, "@") {
-			return invalid("%q is not an e-mail address", a.Email)
+		if acme.Email != "" && !strings.Contains(acme.Email, "@") {
+			return invalid("%q is not an e-mail address", acme.Email)
 		}
-		if p.Provider != nil {
-			a.Provider = *p.Provider
+		if patch.Provider != nil {
+			acme.Provider = *patch.Provider
 		}
-		switch pr := a.Provider; {
+		switch pr := acme.Provider; {
 		case pr == "", pr == "letsencrypt", pr == "zerossl", strings.HasPrefix(pr, "https://"):
 		default:
 			return invalid("provider must be letsencrypt, zerossl or an https:// ACME directory URL")
 		}
-		if a.Provider == "zerossl" && a.Email == "" {
+		if acme.Provider == "zerossl" && acme.Email == "" {
 			return invalid("ZeroSSL needs an e-mail address")
 		}
-		if p.DNSProvider != nil {
-			a.DNSProvider = *p.DNSProvider
+		if patch.DNSProvider != nil {
+			acme.DNSProvider = *patch.DNSProvider
 		}
-		if p.DNSToken != nil {
-			a.DNSToken = *p.DNSToken
+		if patch.DNSToken != nil {
+			acme.DNSToken = *patch.DNSToken
 		}
-		if p.DNSSecret != nil {
-			a.DNSSecret = *p.DNSSecret
+		if patch.DNSSecret != nil {
+			acme.DNSSecret = *patch.DNSSecret
 		}
-		switch a.DNSProvider {
+		switch acme.DNSProvider {
 		case "":
-			a.DNSToken, a.DNSSecret = "", ""
+			acme.DNSToken, acme.DNSSecret = "", ""
 		case "cloudflare":
-			if a.DNSToken == "" {
+			if acme.DNSToken == "" {
 				return invalid("the Cloudflare DNS challenge needs an API token (dns_token)")
 			}
 		case "alidns":
-			if a.DNSToken == "" || a.DNSSecret == "" {
+			if acme.DNSToken == "" || acme.DNSSecret == "" {
 				return invalid("the AliDNS challenge needs an access key ID (dns_token) and secret (dns_secret)")
 			}
 		default:
 			return invalid("dns_provider must be cloudflare or alidns")
 		}
-		if p.HTTPPort != nil {
-			if *p.HTTPPort < 0 || *p.HTTPPort > 65535 {
+		if patch.HTTPPort != nil {
+			if *patch.HTTPPort < 0 || *patch.HTTPPort > 65535 {
 				return invalid("http_port is out of range")
 			}
-			a.HTTPPort = *p.HTTPPort
+			acme.HTTPPort = *patch.HTTPPort
 		}
-		a.Enabled = true
-		st.Server.ACME = a
+		acme.Enabled = true
+		st.Server.ACME = acme
 		// Links must name the domain for the certificate to match; the
 		// self-signed certificate (served until the first issuance) too.
-		st.Server.PublicHost = a.Domain
-		return store.WriteSelfSignedCert(m.Store.Path(st.Server.CertFile), m.Store.Path(st.Server.KeyFile), a.Domain)
+		st.Server.PublicHost = acme.Domain
+		return store.WriteSelfSignedCert(m.Store.Path(st.Server.CertFile), m.Store.Path(st.Server.KeyFile), acme.Domain)
 	})
 	if err != nil {
 		return nil, err

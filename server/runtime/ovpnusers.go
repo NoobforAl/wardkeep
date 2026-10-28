@@ -21,20 +21,20 @@ func (o *ovpnUsers) user(a netip.Addr) string {
 	return o.m[a]
 }
 
-func (o *ovpnUsers) observe(e ovpn.SessionEvent) {
+func (o *ovpnUsers) observe(event ovpn.SessionEvent) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	if o.m == nil {
 		o.m = map[netip.Addr]string{}
 	}
-	for _, a := range []netip.Addr{e.IPv4, e.IPv6} {
-		if !a.IsValid() {
+	for _, addr := range []netip.Addr{event.IPv4, event.IPv6} {
+		if !addr.IsValid() {
 			continue
 		}
-		if e.Up {
-			o.m[a.Unmap()] = e.Username
+		if event.Up {
+			o.m[addr.Unmap()] = event.Username
 		} else {
-			delete(o.m, a.Unmap())
+			delete(o.m, addr.Unmap())
 		}
 	}
 }

@@ -41,14 +41,14 @@ func (d *pingDevice) Read(b []byte) (int, error) {
 
 func (d *pingDevice) Write(p []byte) (int, error) {
 	if len(p) >= 28 && p[0]>>4 == 4 && p[9] == 1 && p[20] == 8 {
-		r := append([]byte(nil), p...)
-		copy(r[12:16], p[16:20])
-		copy(r[16:20], p[12:16])
-		r[10], r[11], r[20], r[22], r[23] = 0, 0, 0, 0, 0
-		binary.BigEndian.PutUint16(r[10:], checksum(r[:20]))
-		binary.BigEndian.PutUint16(r[22:], checksum(r[20:]))
+		reply := append([]byte(nil), p...)
+		copy(reply[12:16], p[16:20])
+		copy(reply[16:20], p[12:16])
+		reply[10], reply[11], reply[20], reply[22], reply[23] = 0, 0, 0, 0, 0
+		binary.BigEndian.PutUint16(reply[10:], checksum(reply[:20]))
+		binary.BigEndian.PutUint16(reply[22:], checksum(reply[20:]))
 		log.Printf("ping %d.%d.%d.%d -> %d.%d.%d.%d", p[12], p[13], p[14], p[15], p[16], p[17], p[18], p[19])
-		d.replies <- r
+		d.replies <- reply
 	}
 	return len(p), nil
 }

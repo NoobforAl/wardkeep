@@ -26,25 +26,25 @@ var ErrDNSCryptOff = errors.New("the DNSCrypt resolver is off (enable it with: p
 // The resolver keeps no logs and blocks nothing on purpose; it validates DNSSEC
 // only as far as its upstream does, so that property is not claimed.
 func DNSCryptStamp(st *store.State) (string, error) {
-	p := st.Server.Protocols[store.DNSCryptKey]
-	if p == nil || !p.Enabled {
+	proto := st.Server.Protocols[store.DNSCryptKey]
+	if proto == nil || !proto.Enabled {
 		return "", ErrDNSCryptOff
 	}
-	d := st.Server.DNSCrypt
-	if err := d.Valid(); err != nil {
+	conf := st.Server.DNSCrypt
+	if err := conf.Valid(); err != nil {
 		return "", err
 	}
-	pub, _ := hex.DecodeString(d.PublicKey)
+	pub, _ := hex.DecodeString(conf.PublicKey)
 	// The stamp names the address the resolver listens on (a VPN tunnel address),
 	// which is where the VPN's users reach it from inside the tunnel.
-	listen, err := store.ParseDNSCryptListen(d.Listen)
+	listen, err := store.ParseDNSCryptListen(conf.Listen)
 	if err != nil {
 		return "", store.ErrDNSCryptListen
 	}
-	addr := net.JoinHostPort(listen.String(), strconv.Itoa(p.Port))
+	addr := net.JoinHostPort(listen.String(), strconv.Itoa(proto.Port))
 	stamp := dnscrypt.Stamp{
 		Kind: dnscrypt.KindDNSCrypt, Props: dnscrypt.PropNoLog | dnscrypt.PropNoFilter,
-		Addr: addr, PublicKey: pub, ProviderName: d.ProviderName,
+		Addr: addr, PublicKey: pub, ProviderName: conf.ProviderName,
 	}
 	s := stamp.String()
 	if _, err := dnscrypt.ParseDNSCryptStamp(s); err != nil {

@@ -141,14 +141,14 @@ func (s *Source) Paths() (cert, key string, err error) {
 // servers that take PEM bytes (SSTP). They are read when called, so a renewed
 // certificate is used the next time such a server is started.
 func (s *Source) PEM() (cert, key []byte, err error) {
-	l, err := s.current()
+	loaded, err := s.current()
 	if err != nil {
 		return nil, nil, err
 	}
-	if cert, err = os.ReadFile(l.certPath); err != nil {
+	if cert, err = os.ReadFile(loaded.certPath); err != nil {
 		return nil, nil, err
 	}
-	if key, err = os.ReadFile(l.keyPath); err != nil {
+	if key, err = os.ReadFile(loaded.keyPath); err != nil {
 		return nil, nil, err
 	}
 	return cert, key, nil

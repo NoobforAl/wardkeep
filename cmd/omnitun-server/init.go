@@ -22,7 +22,7 @@ import (
 	"github.com/NoobforAl/omnitun/server/store"
 )
 
-func newInitCmd(o *options) *cobra.Command {
+func newInitCmd(global *options) *cobra.Command {
 	var (
 		opts      manager.InitOptions
 		enabled   []string
@@ -45,34 +45,34 @@ Protocols: ` + strings.Join(protocols.Keys(), ", ") + `.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Enabled, opts.Ports = enabled, ports
-			interactive := term.IsTerminal(int(os.Stdin.Fd())) && term.IsTerminal(int(os.Stdout.Fd())) && !o.json
+			interactive := term.IsTerminal(int(os.Stdin.Fd())) && term.IsTerminal(int(os.Stdout.Fd())) && !global.json
 			if opts.PublicHost == "" || wizard {
 				if !interactive {
 					return fmt.Errorf("%w: --host is required (run in a terminal for the wizard)", manager.ErrInvalid)
 				}
-				w, err := runWizard(opts)
+				wiz, err := runWizard(opts)
 				if err != nil {
 					return err
 				}
-				opts, firstUser = w.opts, w.firstUser
+				opts, firstUser = wiz.opts, wiz.firstUser
 			}
-			m := o.manager()
-			info, err := m.Init(opts)
+			mgr := global.manager()
+			info, err := mgr.Init(opts)
 			if err != nil {
 				return err
 			}
 			var added *manager.LinkSet
 			if firstUser != "" {
-				if _, err := m.AddUser(manager.NewUser{Name: firstUser}); err != nil {
+				if _, err := mgr.AddUser(manager.NewUser{Name: firstUser}); err != nil {
 					return err
 				}
-				if added, err = m.Links(firstUser); err != nil {
+				if added, err = mgr.Links(firstUser); err != nil {
 					return err
 				}
 			}
-			protos, _ := m.Protocols()
-			return o.print(map[string]any{"server": info, "protocols": protos, "first_user": added}, func() {
-				fmt.Printf("Initialized %q in %s\n\n", info.Name, o.dataDir)
+			protos, _ := mgr.Protocols()
+			return global.print(map[string]any{"server": info, "protocols": protos, "first_user": added}, func() {
+				fmt.Printf("Initialized %q in %s\n\n", info.Name, global.dataDir)
 				printProtocols(protos, info.SubscriptionPort)
 				if added != nil {
 					fmt.Printf("\nUser %s:\n\n", firstUser)
@@ -83,17 +83,17 @@ Protocols: ` + strings.Join(protocols.Keys(), ", ") + `.`,
 			})
 		},
 	}
-	f := cmd.Flags()
-	f.StringVar(&opts.PublicHost, "host", "", "public IP or domain clients connect to (omit in a terminal for the wizard)")
-	f.StringVar(&opts.Name, "name", "Wardkeep", "server name shown in clients")
-	f.StringVar(&opts.RealityHandshake, "reality-site", "www.microsoft.com:443", "site VLESS+Reality and ShadowTLS imitate")
-	f.IntVar(&opts.SubPort, "sub-port", 2096, "subscription endpoint port")
-	f.StringSliceVar(&enabled, "protocols", nil, "protocols to enable, comma separated (default: all)")
-	f.StringToIntVar(&ports, "port", nil, "port for a protocol, e.g. --port trojan=9443 (repeatable)")
-	f.StringVar(&firstUser, "first-user", "", "also create this user and print the subscription link")
-	f.StringVar(&opts.AmneziaWGVersion, "awg-version", "2.0", "AmneziaWG parameters: 2.0 (harder to recognise) or 1.x (classic, for old clients)")
-	f.BoolVar(&opts.IPv6, "ipv6", false, "give users an IPv6 address in WireGuard, AmneziaWG, OpenVPN and IKEv2 tunnels (the host needs IPv6 to the internet)")
-	f.BoolVar(&wizard, "wizard", false, "ask the questions even when --host is given")
+	flags := cmd.Flags()
+	flags.StringVar(&opts.PublicHost, "host", "", "public IP or domain clients connect to (omit in a terminal for the wizard)")
+	flags.StringVar(&opts.Name, "name", "Wardkeep", "server name shown in clients")
+	flags.StringVar(&opts.RealityHandshake, "reality-site", "www.microsoft.com:443", "site VLESS+Reality and ShadowTLS imitate")
+	flags.IntVar(&opts.SubPort, "sub-port", 2096, "subscription endpoint port")
+	flags.StringSliceVar(&enabled, "protocols", nil, "protocols to enable, comma separated (default: all)")
+	flags.StringToIntVar(&ports, "port", nil, "port for a protocol, e.g. --port trojan=9443 (repeatable)")
+	flags.StringVar(&firstUser, "first-user", "", "also create this user and print the subscription link")
+	flags.StringVar(&opts.AmneziaWGVersion, "awg-version", "2.0", "AmneziaWG parameters: 2.0 (harder to recognise) or 1.x (classic, for old clients)")
+	flags.BoolVar(&opts.IPv6, "ipv6", false, "give users an IPv6 address in WireGuard, AmneziaWG, OpenVPN and IKEv2 tunnels (the host needs IPv6 to the internet)")
+	flags.BoolVar(&wizard, "wizard", false, "ask the questions even when --host is given")
 	return cmd
 }
 
@@ -187,13 +187,13 @@ func runWizard(start manager.InitOptions) (*wizardResult, error) {
 	needSite := false
 	for _, key := range chosen {
 		p, _ := protocols.Get(key)
-		s := p.Spec()
-		def := strconv.Itoa(s.DefaultPort)
+		spec := p.Spec()
+		def := strconv.Itoa(spec.DefaultPort)
 		if v, ok := start.Ports[key]; ok {
 			def = strconv.Itoa(v)
 		}
 		portStrings[key] = &def
-		fields = append(fields, huh.NewInput().Title(s.Name+" port").Description(s.Transport).Value(&def).Validate(portValidator))
+		fields = append(fields, huh.NewInput().Title(spec.Name+" port").Description(spec.Transport).Value(&def).Validate(portValidator))
 		if key == "vless-reality" || key == "shadowtls" {
 			needSite = true
 		}

@@ -107,30 +107,30 @@ func Start(key string, cfg Config) (Server, error) {
 // the host's networking to the caller; without this the device stays down and
 // no client traffic ever reaches the kernel. A device with no name (a test
 // device) has nothing to configure.
-func configureTUN(r Runner, name string, gateway net.IP, network *net.IPNet) error {
+func configureTUN(runner Runner, name string, gateway net.IP, network *net.IPNet) error {
 	if name == "" || gateway == nil || network == nil {
 		return nil
 	}
-	if r == nil {
-		r = ExecRunner{}
+	if runner == nil {
+		runner = ExecRunner{}
 	}
 	ones, _ := network.Mask.Size()
-	if err := r.Run("ip", "addr", "add", fmt.Sprintf("%s/%d", gateway, ones), "dev", name); err != nil {
+	if err := runner.Run("ip", "addr", "add", fmt.Sprintf("%s/%d", gateway, ones), "dev", name); err != nil {
 		return err
 	}
-	return r.Run("ip", "link", "set", "dev", name, "up")
+	return runner.Run("ip", "link", "set", "dev", name, "up")
 }
 
 // configureTUN6 gives the TUN device the gateway address of the IPv6 client
 // network (the device is already up).
-func configureTUN6(r Runner, name string, gateway netip.Addr, network netip.Prefix) error {
+func configureTUN6(runner Runner, name string, gateway netip.Addr, network netip.Prefix) error {
 	if name == "" || !gateway.IsValid() || !network.IsValid() {
 		return nil
 	}
-	if r == nil {
-		r = ExecRunner{}
+	if runner == nil {
+		runner = ExecRunner{}
 	}
-	return r.Run("ip", "-6", "addr", "add", fmt.Sprintf("%s/%d", gateway, network.Bits()), "dev", name)
+	return runner.Run("ip", "-6", "addr", "add", fmt.Sprintf("%s/%d", gateway, network.Bits()), "dev", name)
 }
 
 // publicDNS is pushed to clients.
@@ -188,13 +188,13 @@ func (x ikev2Server) Pool6() string { return x.pool6 }
 // after the last reading and before a peer left is not seen.
 func (x ikev2Server) Usage() []Usage {
 	cur := map[string][2]uint64{} // by user and address: what each live tunnel carried
-	for _, p := range x.s.Peers() {
-		if p.Name == "" {
+	for _, peer := range x.s.Peers() {
+		if peer.Name == "" {
 			continue
 		}
-		k := p.Name + "\x00" + p.Address
+		k := peer.Name + "\x00" + peer.Address
 		v := cur[k]
-		cur[k] = [2]uint64{v[0] + p.RxBytes, v[1] + p.TxBytes}
+		cur[k] = [2]uint64{v[0] + peer.RxBytes, v[1] + peer.TxBytes}
 	}
 	return x.m.add(cur)
 }
@@ -211,15 +211,15 @@ func (m *ikeMeter) add(cur map[string][2]uint64) []Usage {
 	defer m.mu.Unlock()
 	for k, v := range cur {
 		prev := m.last[k]
-		d := [2]uint64{v[0] - prev[0], v[1] - prev[1]}
-		for i := range d {
+		delta := [2]uint64{v[0] - prev[0], v[1] - prev[1]}
+		for i := range delta {
 			if v[i] < prev[i] { // a new tunnel at the same address
-				d[i] = v[i]
+				delta[i] = v[i]
 			}
 		}
 		user := k[:strings.IndexByte(k, 0)]
 		t := m.total[user]
-		m.total[user] = [2]uint64{t[0] + d[0], t[1] + d[1]}
+		m.total[user] = [2]uint64{t[0] + delta[0], t[1] + delta[1]}
 	}
 	m.last = cur
 	sessions := map[string]int{} // live tunnels by user

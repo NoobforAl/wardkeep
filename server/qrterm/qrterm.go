@@ -11,13 +11,13 @@ import (
 
 // Render returns the QR code for text as lines of block characters.
 func Render(text string) (string, error) {
-	q, err := qrcode.New(text, qrcode.Low)
+	code, err := qrcode.New(text, qrcode.Low)
 	if err != nil {
 		return "", err
 	}
-	q.DisableBorder = false
-	bits := q.Bitmap() // true = dark module; includes the quiet zone
-	var b strings.Builder
+	code.DisableBorder = false
+	bits := code.Bitmap() // true = dark module; includes the quiet zone
+	var out strings.Builder
 	for y := 0; y < len(bits); y += 2 {
 		for x := range bits[y] {
 			top := bits[y][x]
@@ -25,16 +25,16 @@ func Render(text string) (string, error) {
 			// Light is the drawn "ink" (white blocks), dark is background.
 			switch {
 			case !top && !bottom:
-				b.WriteRune('█')
+				out.WriteRune('█')
 			case !top && bottom:
-				b.WriteRune('▀')
+				out.WriteRune('▀')
 			case top && !bottom:
-				b.WriteRune('▄')
+				out.WriteRune('▄')
 			default:
-				b.WriteRune(' ')
+				out.WriteRune(' ')
 			}
 		}
-		b.WriteByte('\n')
+		out.WriteByte('\n')
 	}
-	return b.String(), nil
+	return out.String(), nil
 }

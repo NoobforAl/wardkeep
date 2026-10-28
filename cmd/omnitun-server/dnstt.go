@@ -8,7 +8,7 @@ import (
 	"github.com/NoobforAl/omnitun/server/manager"
 )
 
-func newDNSTTCmd(o *options) *cobra.Command {
+func newDNSTTCmd(global *options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dnstt",
 		Short: "The optional DNS tunnel, for users on networks where only DNS gets out",
@@ -47,11 +47,11 @@ credentials as everywhere else, so quotas and the user list work as for the othe
 	status := &cobra.Command{
 		Use: "status", Short: "Show the DNS tunnel, its key and the DNS records it needs", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().DNSTT()
+			info, err := global.manager().DNSTT()
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { show(info) })
+			return global.print(info, func() { show(info) })
 		},
 	}
 	domain := &cobra.Command{
@@ -59,11 +59,11 @@ credentials as everywhere else, so quotas and the user list work as for the othe
 		Short: "Set the DNS zone delegated to this server (such as t.example.com)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().SetDNSTTDomain(args[0])
+			info, err := global.manager().SetDNSTTDomain(args[0])
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { show(info) })
+			return global.print(info, func() { show(info) })
 		},
 	}
 	rotate := &cobra.Command{
@@ -74,11 +74,11 @@ must take the new link; until they do, the tunnel does not connect for them. Res
 (omnitun-server run) to use it.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().RotateDNSTTKey()
+			info, err := global.manager().RotateDNSTTKey()
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() {
+			return global.print(info, func() {
 				fmt.Println("New key made. Restart the server and give every user their new link.")
 				show(info)
 			})

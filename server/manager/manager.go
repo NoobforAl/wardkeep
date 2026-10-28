@@ -140,45 +140,45 @@ type LinkSet struct {
 type InitOptions = store.InitOptions
 
 // Init creates a new server in the data directory.
-func (m *Manager) Init(o InitOptions) (*ServerInfo, error) {
-	if o.PublicHost == "" {
+func (m *Manager) Init(opts InitOptions) (*ServerInfo, error) {
+	if opts.PublicHost == "" {
 		return nil, invalid("a public host (IP or domain) is required")
 	}
 	if m.Store.Exists() {
 		return nil, fmt.Errorf("%w: already initialized in %s", ErrConflict, m.Store.Dir)
 	}
 	// Check the choices before anything is written.
-	if _, err := store.ParseAWGVersion(o.AmneziaWGVersion); err != nil {
+	if _, err := store.ParseAWGVersion(opts.AmneziaWGVersion); err != nil {
 		return nil, invalid("%v", err)
 	}
-	if slices.Contains(o.Enabled, store.DNSCryptKey) {
+	if slices.Contains(opts.Enabled, store.DNSCryptKey) {
 		// It needs an address to listen on, which a new server does not have yet.
 		return nil, invalid("%v (init the server without dnscrypt, then set the address and run: proto enable dnscrypt)", store.ErrDNSCryptListen)
 	}
-	if slices.Contains(o.Enabled, store.DNSTTKey) {
+	if slices.Contains(opts.Enabled, store.DNSTTKey) {
 		// It needs a domain delegated to the server, which a new server does not have yet.
 		return nil, invalid("the DNS tunnel needs its domain first (init the server without dnstt, then run: dnstt domain <name>; proto enable dnstt)")
 	}
 	probe := &store.State{Server: store.Server{Protocols: map[string]*store.Proto{}}}
-	for _, key := range append(append([]string{}, o.Enabled...), mapKeys(o.Ports)...) {
+	for _, key := range append(append([]string{}, opts.Enabled...), mapKeys(opts.Ports)...) {
 		if !slices.Contains(store.AllProtocols, key) {
 			return nil, invalid("unknown protocol %q (have: %s)", key, strings.Join(store.AllProtocols, ", "))
 		}
 	}
 	for _, key := range store.AllProtocols {
 		port := store.DefaultPorts[key]
-		if v, ok := o.Ports[key]; ok {
+		if v, ok := opts.Ports[key]; ok {
 			if v < 1 || v > 65535 {
 				return nil, invalid("port %d for %s is out of range", v, key)
 			}
 			port = v
 		}
-		probe.Server.Protocols[key] = &store.Proto{Enabled: store.EnabledAtInit(key, o.Enabled), Port: port}
+		probe.Server.Protocols[key] = &store.Proto{Enabled: store.EnabledAtInit(key, opts.Enabled), Port: port}
 	}
 	if err := portConflict(probe); err != nil {
 		return nil, err
 	}
-	st, err := store.Init(m.Store, o)
+	st, err := store.Init(m.Store, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -296,14 +296,14 @@ type ProtocolPatch struct {
 
 // portUses lists every (port, transport) a protocol listens on.
 func portUses(key string, port int) []protocols.PortUse {
-	p, ok := protocols.Get(key)
+	proto, ok := protocols.Get(key)
 	if !ok {
 		return []protocols.PortUse{{Port: port, Proto: "tcp"}}
 	}
-	if pp, ok := p.(protocols.PortProtocol); ok {
+	if pp, ok := proto.(protocols.PortProtocol); ok {
 		return pp.Listens(port)
 	}
-	switch p.Spec().Transport {
+	switch proto.Spec().Transport {
 	case "udp":
 		return []protocols.PortUse{{Port: port, Proto: "udp"}}
 	case "tcp+udp":
@@ -357,7 +357,7 @@ func (m *Manager) SetProtocol(key string, patch ProtocolPatch) (*ProtocolInfo, e
 	}
 	var out ProtocolInfo
 	err := m.Store.Update(func(st *store.State) error {
-		p := st.Server.Protocols[key]
+		proto := st.Server.Protocols[key]
 		if awgVersion != "" && st.Server.AmneziaWG.Version() != awgVersion {
 			params, err := store.NewAWGParams(awgVersion)
 			if err != nil {
@@ -374,10 +374,10 @@ func (m *Manager) SetProtocol(key string, patch ProtocolPatch) (*ProtocolInfo, e
 			if *patch.Enabled && key == store.DNSTTKey && st.Server.DNSTT.Domain == "" {
 				return invalid("the DNS tunnel needs its domain first (omnitun-server dnstt domain <name>)")
 			}
-			p.Enabled = *patch.Enabled
+			proto.Enabled = *patch.Enabled
 		}
 		if patch.Port != nil {
-			p.Port = *patch.Port
+			proto.Port = *patch.Port
 		}
 		if err := portConflict(st); err != nil {
 			return err
@@ -449,25 +449,25 @@ type NewUser struct {
 }
 
 // AddUser creates an account with fresh credentials for every protocol.
-func (m *Manager) AddUser(n NewUser) (*UserInfo, error) {
-	if n.Days < 0 || n.QuotaGB < 0 {
+func (m *Manager) AddUser(newUser NewUser) (*UserInfo, error) {
+	if newUser.Days < 0 || newUser.QuotaGB < 0 {
 		return nil, invalid("days and quota cannot be negative")
 	}
 	var out UserInfo
 	err := m.Store.Update(func(st *store.State) error {
-		if st.User(n.Name) != nil {
-			return fmt.Errorf("%w: user %q", ErrConflict, n.Name)
+		if st.User(newUser.Name) != nil {
+			return fmt.Errorf("%w: user %q", ErrConflict, newUser.Name)
 		}
-		u, err := store.AddUser(st, n.Name)
+		user, err := store.AddUser(st, newUser.Name)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrInvalid, err)
 		}
-		if n.Days > 0 {
-			t := m.Now().AddDate(0, 0, n.Days).UTC()
-			u.ExpiresAt = &t
+		if newUser.Days > 0 {
+			t := m.Now().AddDate(0, 0, newUser.Days).UTC()
+			user.ExpiresAt = &t
 		}
-		u.QuotaGB, u.Note = n.QuotaGB, plainText(n.Note)
-		out = userInfo(u, m.Now(), stats.Snapshot{})
+		user.QuotaGB, user.Note = newUser.QuotaGB, plainText(newUser.Note)
+		out = userInfo(user, m.Now(), stats.Snapshot{})
 		return nil
 	})
 	if err != nil {
@@ -486,38 +486,38 @@ type UserPatch struct {
 }
 
 // UpdateUser applies a patch to an account.
-func (m *Manager) UpdateUser(name string, p UserPatch) (*UserInfo, error) {
-	if (p.ExpireDays != nil && *p.ExpireDays < 0) || (p.QuotaGB != nil && *p.QuotaGB < 0) {
+func (m *Manager) UpdateUser(name string, patch UserPatch) (*UserInfo, error) {
+	if (patch.ExpireDays != nil && *patch.ExpireDays < 0) || (patch.QuotaGB != nil && *patch.QuotaGB < 0) {
 		return nil, invalid("days and quota cannot be negative")
 	}
 	var out UserInfo
 	snap := m.snapshot()
 	err := m.Store.Update(func(st *store.State) error {
-		u := st.User(name)
-		if u == nil {
+		user := st.User(name)
+		if user == nil {
 			return notFound("no user %q", name)
 		}
-		if p.Enabled != nil {
-			u.Enabled = *p.Enabled
+		if patch.Enabled != nil {
+			user.Enabled = *patch.Enabled
 		}
-		if p.ExpireDays != nil {
-			if *p.ExpireDays == 0 {
-				u.ExpiresAt = nil
+		if patch.ExpireDays != nil {
+			if *patch.ExpireDays == 0 {
+				user.ExpiresAt = nil
 			} else {
-				t := m.Now().AddDate(0, 0, *p.ExpireDays).UTC()
-				u.ExpiresAt = &t
+				t := m.Now().AddDate(0, 0, *patch.ExpireDays).UTC()
+				user.ExpiresAt = &t
 			}
 		}
-		if p.QuotaGB != nil {
-			u.QuotaGB = *p.QuotaGB
+		if patch.QuotaGB != nil {
+			user.QuotaGB = *patch.QuotaGB
 			// Apply the new cap at once; the running server re-checks it too.
-			used := float64(monthTotal(snap, u.Name))
-			u.QuotaExceeded = u.QuotaGB > 0 && used >= u.QuotaGB*stats.GiB
+			used := float64(monthTotal(snap, user.Name))
+			user.QuotaExceeded = user.QuotaGB > 0 && used >= user.QuotaGB*stats.GiB
 		}
-		if p.Note != nil {
-			u.Note = plainText(*p.Note)
+		if patch.Note != nil {
+			user.Note = plainText(*patch.Note)
 		}
-		out = userInfo(u, m.Now(), snap)
+		out = userInfo(user, m.Now(), snap)
 		return nil
 	})
 	if err != nil {
@@ -560,14 +560,14 @@ func (m *Manager) ResetUser(name string) (*UserInfo, error) {
 func (m *Manager) ResetUsage(name string) (*UserInfo, error) {
 	var out UserInfo
 	err := m.Store.Update(func(st *store.State) error {
-		u := st.User(name)
-		if u == nil {
+		user := st.User(name)
+		if user == nil {
 			return notFound("no user %q", name)
 		}
 		now := m.Now().UTC()
-		u.UsageResetAt = &now
-		u.QuotaExceeded = false
-		out = userInfo(u, m.Now(), m.snapshot())
+		user.UsageResetAt = &now
+		user.QuotaExceeded = false
+		out = userInfo(user, m.Now(), m.snapshot())
 		out.Usage.MonthBytes, out.Usage.MonthUp, out.Usage.MonthDown = 0, 0, 0
 		return nil
 	})
@@ -583,12 +583,12 @@ func (m *Manager) Links(name string) (*LinkSet, error) {
 	if err != nil {
 		return nil, err
 	}
-	u := st.User(name)
-	if u == nil {
+	user := st.User(name)
+	if user == nil {
 		return nil, notFound("no user %q", name)
 	}
-	set := &LinkSet{User: u.Name, Subscription: serverconf.SubscriptionLink(st, u), Links: []Link{}}
-	for _, l := range serverconf.Links(st, m.Store, u) {
+	set := &LinkSet{User: user.Name, Subscription: serverconf.SubscriptionLink(st, user), Links: []Link{}}
+	for _, l := range serverconf.Links(st, m.Store, user) {
 		set.Links = append(set.Links, Link{Protocol: l.Protocol, URL: l.URL})
 	}
 	for _, spec := range protocols.Specs() {
@@ -598,7 +598,7 @@ func (m *Manager) Links(name string) (*LinkSet, error) {
 		if set.Files == nil {
 			set.Files = map[string]string{}
 		}
-		set.Files[spec.Key] = serverconf.FileURL(st, u, spec.Key)
+		set.Files[spec.Key] = serverconf.FileURL(st, user, spec.Key)
 		if store.IsOpenVPN(spec.Key) {
 			if set.OVPN == nil {
 				set.OVPN = map[string]string{}
@@ -617,8 +617,8 @@ func (m *Manager) File(name, proto string) (filename, content string, err error)
 	if err != nil {
 		return "", "", err
 	}
-	u := st.User(name)
-	if u == nil {
+	user := st.User(name)
+	if user == nil {
 		return "", "", notFound("no user %q", name)
 	}
 	if proto == "udp" || proto == "tcp" {
@@ -629,7 +629,7 @@ func (m *Manager) File(name, proto string) (filename, content string, err error)
 	} else if p.Spec().FileExt == "" {
 		return "", "", invalid("%s has no config file; use its share link", proto)
 	}
-	filename, content, err = serverconf.File(st, u, proto)
+	filename, content, err = serverconf.File(st, user, proto)
 	if err != nil {
 		return "", "", invalid("%v", err)
 	}
@@ -643,15 +643,15 @@ func (m *Manager) OVPN(name, proto string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	u := st.User(name)
-	if u == nil {
+	user := st.User(name)
+	if user == nil {
 		return "", notFound("no user %q", name)
 	}
 	proto = "openvpn-" + strings.TrimPrefix(proto, "openvpn-")
 	if !store.IsOpenVPN(proto) {
 		return "", invalid("protocol must be udp or tcp")
 	}
-	text, err := serverconf.OVPN(st, u, proto)
+	text, err := serverconf.OVPN(st, user, proto)
 	if err != nil {
 		return "", invalid("%v", err)
 	}
@@ -679,29 +679,29 @@ type APIPatch struct {
 }
 
 // SetAPI updates the web API settings.
-func (m *Manager) SetAPI(p APIPatch) (store.API, error) {
+func (m *Manager) SetAPI(patch APIPatch) (store.API, error) {
 	var out store.API
 	err := m.Store.Update(func(st *store.State) error {
-		a := &st.Server.API
-		if p.Enabled != nil {
-			a.Enabled = *p.Enabled
+		api := &st.Server.API
+		if patch.Enabled != nil {
+			api.Enabled = *patch.Enabled
 		}
-		if p.Listen != nil {
-			a.Listen = *p.Listen
+		if patch.Listen != nil {
+			api.Listen = *patch.Listen
 		}
-		if p.Port != nil {
-			if *p.Port < 1 || *p.Port > 65535 {
-				return invalid("port %d is out of range", *p.Port)
+		if patch.Port != nil {
+			if *patch.Port < 1 || *patch.Port > 65535 {
+				return invalid("port %d is out of range", *patch.Port)
 			}
-			a.Port = *p.Port
+			api.Port = *patch.Port
 		}
-		if p.TLS != nil {
-			a.TLS = *p.TLS
+		if patch.TLS != nil {
+			api.TLS = *patch.TLS
 		}
-		if p.NewToken {
-			a.Token = store.RandomHex(24)
+		if patch.NewToken {
+			api.Token = store.RandomHex(24)
 		}
-		out = *a
+		out = *api
 		return nil
 	})
 	return out, err
@@ -722,29 +722,37 @@ func mapKeys[V any](m map[string]V) []string {
 	return keys
 }
 
-// Logs returns the last lines of the server log (oldest first). It holds
-// what the server and sing-box reported: starts, reloads, quota blocks,
-// warnings and errors.
+// Logs returns the last records of the server log (oldest first) as text
+// lines (logs.Record.Text). It holds what the server and sing-box reported:
+// starts, reloads, quota blocks, warnings and errors.
 func (m *Manager) Logs(lines int) ([]string, error) {
-	if lines <= 0 || lines > 5000 {
-		return nil, invalid("lines must be between 1 and 5000")
+	if lines <= 0 || lines > MaxLogRecords {
+		return nil, invalid("lines must be between 1 and %d", MaxLogRecords)
 	}
-	return logs.Tail(m.Store.Dir, lines)
+	records, err := logs.Tail(m.Store.Dir, lines)
+	if err != nil {
+		return nil, err
+	}
+	text := make([]string, len(records))
+	for i, rec := range records {
+		text[i] = rec.Text()
+	}
+	return text, nil
 }
 
 // plainText drops control and invisible formatting characters from free text
 // that the CLI and the TUI print later (a note cannot move the terminal's
 // cursor or hide itself); line breaks and tabs become spaces.
 func plainText(s string) string {
-	var b strings.Builder
+	var out strings.Builder
 	for _, r := range s {
 		switch {
 		case r == '\n' || r == '\r' || r == '\t':
-			b.WriteByte(' ')
+			out.WriteByte(' ')
 		case unicode.IsControl(r) || unicode.Is(unicode.Cf, r):
 		default:
-			b.WriteRune(r)
+			out.WriteRune(r)
 		}
 	}
-	return strings.TrimSpace(b.String())
+	return strings.TrimSpace(out.String())
 }

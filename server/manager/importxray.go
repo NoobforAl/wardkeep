@@ -31,14 +31,14 @@ type ImportXrayResult struct {
 // ImportXray reads an Xray/V2Ray server config and brings its users (with
 // their UUIDs and passwords) and its Reality identity into this server,
 // creating the server first if needed.
-func (m *Manager) ImportXray(text string, o ImportXrayOptions) (*ImportXrayResult, error) {
+func (m *Manager) ImportXray(text string, importOpts ImportXrayOptions) (*ImportXrayResult, error) {
 	cfg, err := v2ray.ParseServer(text)
 	if err != nil {
 		return nil, invalid("%v", err)
 	}
 	res := &ImportXrayResult{Notes: cfg.Notes}
 	if !m.Store.Exists() {
-		opts := InitOptions{PublicHost: o.Host, Name: o.Name}
+		opts := InitOptions{PublicHost: importOpts.Host, Name: importOpts.Name}
 		if cfg.Reality != nil {
 			opts.RealityHandshake = cfg.Reality.Handshake
 		}
@@ -46,10 +46,10 @@ func (m *Manager) ImportXray(text string, o ImportXrayOptions) (*ImportXrayResul
 			return nil, err
 		}
 		res.CreatedServer = true
-		o.AdoptReality = true
+		importOpts.AdoptReality = true
 	}
 	err = m.Store.Update(func(st *store.State) error {
-		if cfg.Reality != nil && o.AdoptReality {
+		if cfg.Reality != nil && importOpts.AdoptReality {
 			r := &st.Server.Reality
 			r.PrivateKey, r.PublicKey = cfg.Reality.PrivateKey, cfg.Reality.PublicKey
 			if cfg.Reality.ShortID != "" {
@@ -68,18 +68,18 @@ func (m *Manager) ImportXray(text string, o ImportXrayOptions) (*ImportXrayResul
 				res.UsersSkipped = append(res.UsersSkipped, iu.Name)
 				continue
 			}
-			u, err := store.AddUser(st, iu.Name)
+			user, err := store.AddUser(st, iu.Name)
 			if err != nil {
 				return fmt.Errorf("%w: %v", ErrInvalid, err)
 			}
 			if iu.UUID != "" {
-				u.UUID = iu.UUID
+				user.UUID = iu.UUID
 			}
 			if iu.Password != "" {
-				u.Password = iu.Password
+				user.Password = iu.Password
 			}
-			u.Note = iu.Note
-			res.UsersAdded = append(res.UsersAdded, u.Name)
+			user.Note = iu.Note
+			res.UsersAdded = append(res.UsersAdded, user.Name)
 		}
 		return nil
 	})

@@ -133,63 +133,63 @@ func ParseServer(text string) (*Config, error) {
 	taken := map[string]bool{}
 	byKey := map[string]int{} // uuid or password -> index in cfg.Users
 	next := 1
-	add := func(u User) {
-		key := u.UUID + "|" + u.Password
+	add := func(user User) {
+		key := user.UUID + "|" + user.Password
 		if _, ok := byKey[key]; ok {
 			return
 		}
-		u.Name = userName(u.Name, "user"+strconv.Itoa(next), taken)
+		user.Name = userName(user.Name, "user"+strconv.Itoa(next), taken)
 		next++
 		byKey[key] = len(cfg.Users)
-		cfg.Users = append(cfg.Users, u)
+		cfg.Users = append(cfg.Users, user)
 	}
 
 	for _, in := range doc.Inbounds {
 		switch strings.ToLower(in.Protocol) {
 		case "vless", "vmess":
-			for _, c := range in.Settings.Clients {
+			for _, client := range in.Settings.Clients {
 				switch {
-				case c.ID == "":
-				case !safeUUID.MatchString(c.ID):
-					cfg.Notes = append(cfg.Notes, fmt.Sprintf("client %q skipped: its id is not a UUID", c.Email))
+				case client.ID == "":
+				case !safeUUID.MatchString(client.ID):
+					cfg.Notes = append(cfg.Notes, fmt.Sprintf("client %q skipped: its id is not a UUID", client.Email))
 				default:
-					add(User{Name: c.Email, UUID: c.ID, Note: "imported from " + in.Protocol})
+					add(User{Name: client.Email, UUID: client.ID, Note: "imported from " + in.Protocol})
 				}
 			}
 			if strings.ToLower(in.Protocol) == "vmess" {
 				cfg.Notes = append(cfg.Notes, "VMess inbound: users imported, but Wardkeep does not serve VMess (use VLESS+Reality)")
 			}
 			if in.Protocol == "vless" && in.Stream.Security == "reality" && cfg.Reality == nil {
-				r := in.Stream.Reality
-				pub, err := PublicKey(r.PrivateKey)
+				reality := in.Stream.Reality
+				pub, err := PublicKey(reality.PrivateKey)
 				if err != nil {
 					cfg.Notes = append(cfg.Notes, err.Error())
 					break
 				}
 				short := ""
-				if len(r.ShortIDs) > 0 {
-					short = r.ShortIDs[0]
+				if len(reality.ShortIDs) > 0 {
+					short = reality.ShortIDs[0]
 				}
-				dest := r.Dest
+				dest := reality.Dest
 				if dest == "" {
-					dest = r.Target
+					dest = reality.Target
 				}
 				if dest != "" && !strings.Contains(dest, ":") {
 					dest += ":443"
 				}
-				if dest == "" && len(r.ServerNames) > 0 {
-					dest = r.ServerNames[0] + ":443"
+				if dest == "" && len(reality.ServerNames) > 0 {
+					dest = reality.ServerNames[0] + ":443"
 				}
-				cfg.Reality = &Reality{PrivateKey: r.PrivateKey, PublicKey: pub, ShortID: short, Handshake: dest, Port: portOf(in.Port)}
+				cfg.Reality = &Reality{PrivateKey: reality.PrivateKey, PublicKey: pub, ShortID: short, Handshake: dest, Port: portOf(in.Port)}
 			}
 		case "trojan":
-			for _, c := range in.Settings.Clients {
+			for _, client := range in.Settings.Clients {
 				switch {
-				case c.Password == "":
-				case !safePassword.MatchString(c.Password):
-					cfg.Notes = append(cfg.Notes, fmt.Sprintf("trojan client %q skipped: its password has characters that are not allowed (letters, digits and ._~+=/:@!*,- only)", c.Email))
+				case client.Password == "":
+				case !safePassword.MatchString(client.Password):
+					cfg.Notes = append(cfg.Notes, fmt.Sprintf("trojan client %q skipped: its password has characters that are not allowed (letters, digits and ._~+=/:@!*,- only)", client.Email))
 				default:
-					add(User{Name: c.Email, Password: c.Password, Note: "imported from trojan"})
+					add(User{Name: client.Email, Password: client.Password, Note: "imported from trojan"})
 				}
 			}
 		case "shadowsocks":

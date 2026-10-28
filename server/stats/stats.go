@@ -83,17 +83,17 @@ func Read(dir string) (Snapshot, error) {
 	if err != nil {
 		return Snapshot{}, err
 	}
-	var s Snapshot
-	if err := json.Unmarshal(data, &s); err != nil {
+	var snap Snapshot
+	if err := json.Unmarshal(data, &snap); err != nil {
 		return Snapshot{}, err
 	}
-	if s.Users == nil {
-		s.Users = map[string]*User{}
+	if snap.Users == nil {
+		snap.Users = map[string]*User{}
 	}
-	if s.Protocols == nil {
-		s.Protocols = map[string]*Protocol{}
+	if snap.Protocols == nil {
+		snap.Protocols = map[string]*Protocol{}
 	}
-	return s, nil
+	return snap, nil
 }
 
 // Tracker is the live, in-memory counters of a running server.
@@ -121,27 +121,27 @@ func NewTracker(dir string) *Tracker {
 func monthKey(t time.Time) string { return t.UTC().Format("2006-01") }
 
 func (t *Tracker) user(name string, now time.Time) *User {
-	u := t.snap.Users[name]
-	if u == nil {
-		u = &User{}
-		t.snap.Users[name] = u
+	user := t.snap.Users[name]
+	if user == nil {
+		user = &User{}
+		t.snap.Users[name] = user
 	}
-	if m := monthKey(now); u.Month != m {
-		u.Month, u.MonthUp, u.MonthDown = m, 0, 0
+	if m := monthKey(now); user.Month != m {
+		user.Month, user.MonthUp, user.MonthDown = m, 0, 0
 	}
-	return u
+	return user
 }
 
 func (t *Tracker) protocol(key string, now time.Time) *Protocol {
-	p := t.snap.Protocols[key]
-	if p == nil {
-		p = &Protocol{}
-		t.snap.Protocols[key] = p
+	proto := t.snap.Protocols[key]
+	if proto == nil {
+		proto = &Protocol{}
+		t.snap.Protocols[key] = proto
 	}
-	if m := monthKey(now); p.Month != m {
-		p.Month, p.MonthUp, p.MonthDown = m, 0, 0
+	if m := monthKey(now); proto.Month != m {
+		proto.Month, proto.MonthUp, proto.MonthDown = m, 0, 0
 	}
-	return p
+	return proto
 }
 
 // AddProtocol counts traffic for a protocol.

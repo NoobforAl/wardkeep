@@ -45,14 +45,14 @@ var nonName = regexp.MustCompile(`[^a-z0-9-]+`)
 
 // DNSCryptProviderName makes the provider name for a server called name.
 func DNSCryptProviderName(name string) string {
-	n := strings.Trim(nonName.ReplaceAllString(strings.ToLower(name), "-"), "-")
-	if n == "" {
-		n = "omnitun"
+	slug := strings.Trim(nonName.ReplaceAllString(strings.ToLower(name), "-"), "-")
+	if slug == "" {
+		slug = "omnitun"
 	}
-	if len(n) > 40 {
-		n = strings.Trim(n[:40], "-")
+	if len(slug) > 40 {
+		slug = strings.Trim(slug[:40], "-")
 	}
-	return dnsCryptPrefix + n
+	return dnsCryptPrefix + slug
 }
 
 // NewDNSCrypt makes a new identity (a key pair and the provider name) for a server called name.
@@ -93,12 +93,12 @@ func (st *State) ensureDNSCrypt() (bool, error) {
 	if st.Server.DNSCrypt.Valid() == nil {
 		return false, nil
 	}
-	d, err := NewDNSCrypt(st.Server.Name)
+	generated, err := NewDNSCrypt(st.Server.Name)
 	if err != nil {
 		return false, err
 	}
-	d.Upstream, d.Listen, d.Allow = st.Server.DNSCrypt.Upstream, st.Server.DNSCrypt.Listen, st.Server.DNSCrypt.Allow
-	st.Server.DNSCrypt = d
+	generated.Upstream, generated.Listen, generated.Allow = st.Server.DNSCrypt.Upstream, st.Server.DNSCrypt.Listen, st.Server.DNSCrypt.Allow
+	st.Server.DNSCrypt = generated
 	return true, nil
 }
 
@@ -106,15 +106,15 @@ func (st *State) ensureDNSCrypt() (bool, error) {
 // stamp; users of the resolver must take the new stamp. The provider name and
 // upstream stay.
 func (st *State) RotateDNSCryptKey() error {
-	d, err := NewDNSCrypt(st.Server.Name)
+	generated, err := NewDNSCrypt(st.Server.Name)
 	if err != nil {
 		return err
 	}
 	if st.Server.DNSCrypt.ProviderName != "" {
-		d.ProviderName = st.Server.DNSCrypt.ProviderName
+		generated.ProviderName = st.Server.DNSCrypt.ProviderName
 	}
-	d.Upstream, d.Listen, d.Allow = st.Server.DNSCrypt.Upstream, st.Server.DNSCrypt.Listen, st.Server.DNSCrypt.Allow
-	st.Server.DNSCrypt = d
+	generated.Upstream, generated.Listen, generated.Allow = st.Server.DNSCrypt.Upstream, st.Server.DNSCrypt.Listen, st.Server.DNSCrypt.Allow
+	st.Server.DNSCrypt = generated
 	return nil
 }
 
@@ -124,34 +124,34 @@ var ErrDNSCryptListen = fmt.Errorf("the DNSCrypt resolver needs the address to l
 
 // ParseDNSCryptListen checks the listen address: one specific IP, not a wildcard.
 func ParseDNSCryptListen(s string) (netip.Addr, error) {
-	a, err := netip.ParseAddr(strings.TrimSpace(s))
+	addr, err := netip.ParseAddr(strings.TrimSpace(s))
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("%q is not an IP address", s)
 	}
-	if a.IsUnspecified() || a.IsMulticast() {
-		return netip.Addr{}, fmt.Errorf("%s would listen on every interface; name one address (a VPN tunnel address or 127.0.0.1)", a)
+	if addr.IsUnspecified() || addr.IsMulticast() {
+		return netip.Addr{}, fmt.Errorf("%s would listen on every interface; name one address (a VPN tunnel address or 127.0.0.1)", addr)
 	}
-	return a, nil
+	return addr, nil
 }
 
 // ParseDNSCryptAllow checks a list of source ranges ("203.0.113.0/24", or a bare IP).
 func ParseDNSCryptAllow(list []string) ([]netip.Prefix, error) {
 	var out []netip.Prefix
-	for _, s := range list {
-		s = strings.TrimSpace(s)
-		if s == "" {
+	for _, entry := range list {
+		entry = strings.TrimSpace(entry)
+		if entry == "" {
 			continue
 		}
-		if p, err := netip.ParsePrefix(s); err == nil {
+		if p, err := netip.ParsePrefix(entry); err == nil {
 			if p.Bits() == 0 {
-				return nil, fmt.Errorf("%s is every address; name the ranges that may use the resolver", s)
+				return nil, fmt.Errorf("%s is every address; name the ranges that may use the resolver", entry)
 			}
 			out = append(out, p.Masked())
 			continue
 		}
-		a, err := netip.ParseAddr(s)
+		a, err := netip.ParseAddr(entry)
 		if err != nil {
-			return nil, fmt.Errorf("%q is not an IP address or a range like 203.0.113.0/24", s)
+			return nil, fmt.Errorf("%q is not an IP address or a range like 203.0.113.0/24", entry)
 		}
 		out = append(out, netip.PrefixFrom(a, a.BitLen()))
 	}

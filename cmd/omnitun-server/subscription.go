@@ -8,7 +8,7 @@ import (
 	"github.com/NoobforAl/omnitun/server/manager"
 )
 
-func newSubscriptionCmd(o *options) *cobra.Command {
+func newSubscriptionCmd(global *options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subscription",
 		Short: "How the subscription is signed, and the order of protocols it asks for",
@@ -41,11 +41,11 @@ so only a client that has the key trusts it:
 	status := &cobra.Command{
 		Use: "status", Short: "Show the public signing key and the protocol order", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().Subscription()
+			info, err := global.manager().Subscription()
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { show(info) })
+			return global.print(info, func() { show(info) })
 		},
 	}
 	var country string
@@ -58,11 +58,11 @@ so only a client that has the key trusts it:
 			if len(args) == 1 {
 				list = args[0]
 			}
-			info, err := o.manager().SetProtocolOrder(country, list)
+			info, err := global.manager().SetProtocolOrder(country, list)
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { show(info) })
+			return global.print(info, func() { show(info) })
 		},
 	}
 	order.Flags().StringVar(&country, "country", "", "a two-letter country code; without it, the order is for everyone")
@@ -73,11 +73,11 @@ so only a client that has the key trusts it:
 take the new link; until they do, clients with the old key refuse the subscription.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().RotateSigningKey()
+			info, err := global.manager().RotateSigningKey()
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() {
+			return global.print(info, func() {
 				fmt.Println("New key made. Give every user the new subscription link (omnitun-server link --sub).")
 				show(info)
 			})

@@ -13,7 +13,9 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,7 +38,11 @@ import (
 // Server is a running VPN server.
 type Server struct {
 	store *store.Store
-	logf  func(format string, args ...any)
+
+	levelMu       sync.Mutex
+	levelOverride *logs.Level // run --log-level: wins over the config
+	started       time.Time
+	certChecked   time.Time // last checkCertificate (guarded by mu)
 
 	mu       sync.Mutex
 	instance *box.Box
@@ -45,7 +51,7 @@ type Server struct {
 	loaded   time.Time // state file mod time of the running config
 	fp       string    // listenerFingerprint of the state the running listeners were built from
 
-	file    *logs.Log      // server.log
+	log     *logs.Log      // server.log
 	tracker *stats.Tracker // per-user traffic, shared by every sing-box run
 	accMu   sync.Mutex     // guards the collector's tick against the final flush
 	coll    *collector     // the running instance's collector (guarded by accMu)
@@ -64,48 +70,128 @@ type Server struct {
 
 // setWireGuardUsers remembers which user owns which tunnel address.
 func (s *Server) setWireGuardUsers(st *store.State) {
-	m := map[netip.Addr]string{}
-	for _, u := range st.Users {
-		if p, err := netip.ParsePrefix(u.WGAddress); err == nil {
-			m[p.Addr()] = u.Name
-			if a6, err := protocols.WGAddress6(u.WGAddress); err == nil {
+	byAddr := map[netip.Addr]string{}
+	for _, user := range st.Users {
+		if p, err := netip.ParsePrefix(user.WGAddress); err == nil {
+			byAddr[p.Addr()] = user.Name
+			if a6, err := protocols.WGAddress6(user.WGAddress); err == nil {
 				if p6, err := netip.ParsePrefix(a6); err == nil {
-					m[p6.Addr()] = u.Name // the IPv6 address of a server with IPv6 on
+					byAddr[p6.Addr()] = user.Name // the IPv6 address of a server with IPv6 on
 				}
 			}
 		}
 	}
 	s.wgMu.Lock()
-	s.wgUsers = m
+	s.wgUsers = byAddr
 	s.wgMu.Unlock()
 }
 
 // userByTunnelIP names the user behind a WireGuard or OpenVPN tunnel address.
-func (s *Server) userByTunnelIP(a netip.Addr) string {
-	a = a.Unmap()
+func (s *Server) userByTunnelIP(addr netip.Addr) string {
+	addr = addr.Unmap()
 	s.wgMu.RLock()
-	u := s.wgUsers[a]
+	u := s.wgUsers[addr]
 	s.wgMu.RUnlock()
 	if u != "" {
 		return u
 	}
-	return s.ovpn.user(a)
+	return s.ovpn.user(addr)
 }
 
-// New prepares a server for the store.
-func New(s *store.Store, logf func(string, ...any)) *Server {
-	if logf == nil {
-		logf = func(string, ...any) {}
+// New prepares a server for the store. Everything it logs goes to server.log,
+// where the CLI, the TUI and the API read it; echo (may be nil) also gets every
+// record's line (tests pass t.Logf; `run` mirrors the log to stderr instead).
+func New(stateStore *store.Store, echo func(string, ...any)) *Server {
+	file := logs.Open(stateStore.Dir)
+	if echo != nil {
+		file.SetMirror(lineFunc(func(line string) { echo("%s", line) }))
 	}
-	// Everything the server says also goes to server.log, where the CLI, the
-	// TUI and the API can read it.
-	file := logs.Open(s.Dir)
-	srv := &Server{store: s, file: file, runner: hostproto.ExecRunner{}}
-	srv.logf = func(format string, args ...any) {
-		logf(format, args...)
-		file.Write("info", fmt.Sprintf(format, args...))
+	return &Server{store: stateStore, log: file, runner: hostproto.ExecRunner{}}
+}
+
+// lineFunc is an io.Writer that hands each written line to a function.
+type lineFunc func(line string)
+
+func (f lineFunc) Write(p []byte) (int, error) {
+	f(strings.TrimRight(string(p), "\n"))
+	return len(p), nil
+}
+
+// Log is the server's log: `run` mirrors it to stderr and writes its own records there.
+func (s *Server) Log() *logs.Log { return s.log }
+
+// SetLogLevel makes level win over the configured one (run --log-level).
+func (s *Server) SetLogLevel(level logs.Level) {
+	s.levelMu.Lock()
+	s.levelOverride = &level
+	s.levelMu.Unlock()
+	s.log.SetLevel(level)
+}
+
+// applyLogging sets the log level and the alerts from the state (the
+// override wins over the configured level).
+func (s *Server) applyLogging(st *store.State) {
+	level := logs.DefaultLevel()
+	if configured, ok := logs.ParseLevel(st.Server.Logging.LevelName()); ok {
+		level = configured
 	}
-	return srv
+	s.levelMu.Lock()
+	if s.levelOverride != nil {
+		level = *s.levelOverride
+	}
+	s.levelMu.Unlock()
+	s.log.SetLevel(level)
+	if st.Server.Logging.AlertsEnabled() {
+		s.log.SetAlerts(logs.OpenAlerts(s.store.Dir))
+	} else {
+		s.log.SetAlerts(nil)
+	}
+}
+
+// logf writes a server record; the message is only formatted when the log keeps level.
+func (s *Server) logf(level logs.Level, format string, args ...any) {
+	if s.log.Enabled(level) {
+		s.log.Log(level, logs.Record{Msg: fmt.Sprintf(format, args...)})
+	}
+}
+
+// failed writes an error record. With notify, nothing else handles the
+// failure: it is also an alert. The error's text is scrubbed of addresses.
+func (s *Server) failed(notify bool, rec logs.Record, err error) {
+	if !s.log.Enabled(logs.LevelError) {
+		return
+	}
+	if err != nil {
+		rec.Err = logs.Scrub(err.Error())
+	}
+	rec.Notify = notify
+	s.log.Log(logs.LevelError, rec)
+}
+
+// recovered logs a panic of a long-running goroutine as a fatal record (and
+// an alert) and ends that work instead of the process. Use it deferred:
+// `defer s.recovered("runtime", "watch")`.
+func (s *Server) recovered(target, op string) {
+	if value := recover(); value != nil {
+		s.log.LogPanic(value, target, op)
+	}
+}
+
+// recoverHandler answers 500 to a request whose handler panicked and logs
+// the panic, instead of net/http's text on stderr.
+func (s *Server) recoverHandler(target string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if value := recover(); value != nil {
+				if value == http.ErrAbortHandler {
+					panic(value)
+				}
+				s.log.LogPanic(value, target, "request")
+				http.Error(w, "internal error", http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Start loads the state and starts sing-box and the subscription endpoint.
@@ -116,6 +202,8 @@ func (s *Server) Start() error {
 	if err != nil {
 		return err
 	}
+	s.applyLogging(st)
+	s.started = time.Now()
 	s.tracker = stats.NewTracker(s.store.Dir)
 	s.setWireGuardUsers(st)
 	s.watchOpenVPN()
@@ -125,7 +213,7 @@ func (s *Server) Start() error {
 	if renewed, err := store.RenewSelfSignedCert(s.store, st); err != nil {
 		return fmt.Errorf("renew certificate: %w", err)
 	} else if renewed {
-		s.logf("issued a new self-signed certificate (valid %d days)", int(store.SelfSignedValidity.Hours()/24))
+		s.logf(logs.LevelInfo, "issued a new self-signed certificate (valid %d days)", int(store.SelfSignedValidity.Hours()/24))
 	}
 	if err := s.startBoxLocked(st); err != nil {
 		return err
@@ -138,16 +226,25 @@ func (s *Server) Start() error {
 			s.stopBoxLocked()
 			return fmt.Errorf("subscription endpoint: %w", err)
 		}
-		s.sub = &http.Server{Handler: serverconf.SubscriptionHandler(s.store), ReadHeaderTimeout: 10 * time.Second}
+		sub := &http.Server{
+			Handler:           s.recoverHandler("subscription", serverconf.SubscriptionHandler(s.store)),
+			ReadHeaderTimeout: 10 * time.Second,
+			ErrorLog:          s.httpErrorLog("subscription"),
+		}
+		s.sub = sub
+		serve, scheme := func() error { return sub.Serve(ln) }, "http"
 		if st.Server.ACMEActive() {
 			src := tlsfiles.New(serverconf.ACMEDir(s.store), st.Server.ACME.Domain, s.store.Path(st.Server.CertFile), s.store.Path(st.Server.KeyFile))
-			s.sub.TLSConfig = src.TLSConfig()
-			go s.sub.ServeTLS(ln, "", "")
-			s.logf("subscriptions on https://%s", ln.Addr())
-		} else {
-			go s.sub.Serve(ln)
-			s.logf("subscriptions on %s", ln.Addr())
+			sub.TLSConfig = src.TLSConfig()
+			serve, scheme = func() error { return sub.ServeTLS(ln, "", "") }, "https"
 		}
+		go func() {
+			defer s.recovered("subscription", "serve")
+			if err := serve(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				s.failed(true, logs.Record{Msg: "the subscription endpoint stopped", Target: "subscription", Op: "serve", Code: "STOPPED"}, err)
+			}
+		}()
+		s.logf(logs.LevelInfo, "subscriptions on %s://%s", scheme, ln.Addr())
 	}
 	return nil
 }
@@ -159,9 +256,12 @@ func (s *Server) startBoxLocked(st *store.State) error {
 	inbounds, _ := cfg["inbounds"].([]any)
 	endpoints, _ := cfg["endpoints"].([]any)
 	if len(inbounds)+len(endpoints) == 0 {
-		s.logf("no active users or protocols; waiting for changes")
+		s.logf(logs.LevelInfo, "no active users or protocols; waiting for changes")
 		return nil
 	}
+	// sing-box's own console output is off: what it logs reaches server.log
+	// as records through the platform writer (sbLog).
+	cfg["log"] = map[string]any{"level": "fatal", "output": os.DevNull}
 	raw, err := json.Marshal(cfg)
 	if err != nil {
 		return err
@@ -172,16 +272,16 @@ func (s *Server) startBoxLocked(st *store.State) error {
 		var instance *box.Box
 		// The platform writer makes sing-box create its traffic manager,
 		// which the accounting reads.
-		instance, err = box.New(box.Options{Context: ctx, Options: opts, PlatformLogWriter: sbLog{s.file}})
+		instance, err = box.New(box.Options{Context: ctx, Options: opts, PlatformLogWriter: sbLog{s.log}})
 		if err == nil {
 			if err = instance.Start(); err == nil {
 				s.instance, s.cancel = instance, cancel
 				if tm := service.PtrFromContext[trafficcontrol.Manager](ctx); tm != nil {
 					s.accMu.Lock()
-					s.coll = newCollector(tm, s.tracker, s.userByTunnelIP)
+					s.coll = newCollector(tm, s.tracker, s.userByTunnelIP, s.log)
 					s.accMu.Unlock()
 				}
-				s.logf("serving %d protocol(s) for %d user(s)", len(inbounds)+len(endpoints), len(st.ActiveUsers(time.Now())))
+				s.logf(logs.LevelInfo, "serving %d protocol(s) for %d user(s)", len(inbounds)+len(endpoints), len(st.ActiveUsers(time.Now())))
 				return nil
 			}
 			instance.Close()
@@ -218,17 +318,18 @@ func (s *Server) stopBoxLocked() {
 // served on its own). Anything else, including a field added later, changes it,
 // so a change that matters always restarts the listeners.
 func listenerFingerprint(st *store.State) string {
-	c := *st
-	c.Server.API = store.API{}
+	trimmed := *st
+	trimmed.Server.API = store.API{}
+	trimmed.Server.Logging = nil // applied without a restart
 	// The subscription endpoint reads these from the file on every request; no listener does.
-	c.Server.Subscription.ProtocolOrder, c.Server.Subscription.SigningKey = nil, ""
-	c.Users = make([]*store.User, len(st.Users))
+	trimmed.Server.Subscription.ProtocolOrder, trimmed.Server.Subscription.SigningKey = nil, ""
+	trimmed.Users = make([]*store.User, len(st.Users))
 	for i, u := range st.Users {
 		v := *u
 		v.Note, v.QuotaGB, v.UsageResetAt = "", 0, nil
-		c.Users[i] = &v
+		trimmed.Users[i] = &v
 	}
-	raw, err := json.Marshal(&c)
+	raw, err := json.Marshal(&trimmed)
 	if err != nil {
 		return "" // never equal: the listeners are restarted
 	}
@@ -254,16 +355,29 @@ func (s *Server) Reload() error {
 }
 
 // Watch reloads when the state file changes and once a minute (to apply
-// expirations), until ctx is done.
+// expirations), until ctx is done. A panic in it is logged (and is an alert)
+// and the watch goes on after a pause.
 func (s *Server) Watch(ctx context.Context) {
-	t := time.NewTicker(2 * time.Second)
-	defer t.Stop()
+	for !s.watch(ctx) {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(5 * time.Second):
+		}
+	}
+}
+
+// watch is Watch's loop; it reports false when it ended in a panic.
+func (s *Server) watch(ctx context.Context) (done bool) {
+	defer s.recovered("runtime", "watch")
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
 	lastMinute := time.Now()
 	for {
 		select {
 		case <-ctx.Done():
-			return
-		case <-t.C:
+			return true
+		case <-ticker.C:
 		}
 		s.mu.Lock()
 		changed := !s.store.ModTime().Equal(s.loaded)
@@ -271,8 +385,11 @@ func (s *Server) Watch(ctx context.Context) {
 		if changed || time.Since(lastMinute) >= time.Minute {
 			lastMinute = time.Now()
 			if err := s.reloadIfNeeded(changed); err != nil {
-				s.logf("reload failed: %v", err)
+				// The next minute tries again, but until then (or for good) the
+				// protocols are down: the admin should know.
+				s.failed(true, logs.Record{Msg: "reload failed; the VPN protocols may be down", Target: "sing-box", Op: "reload", Code: "RELOAD_FAILED"}, err)
 			}
+			s.checkCertificate()
 		}
 	}
 }
@@ -285,6 +402,7 @@ func (s *Server) reloadIfNeeded(changed bool) error {
 	if err != nil {
 		return err
 	}
+	s.applyLogging(st)
 	if changed {
 		s.mu.Lock()
 		same := s.fp != "" && s.fp == listenerFingerprint(st)
@@ -293,11 +411,11 @@ func (s *Server) reloadIfNeeded(changed bool) error {
 		}
 		s.mu.Unlock()
 		if !same {
-			s.logf("state changed, reloading")
+			s.logf(logs.LevelInfo, "state changed, reloading")
 			return s.Reload()
 		}
 		// A note, a quota figure or the API settings: nothing a listener was built from, so nobody is disconnected.
-		s.logf("state changed, nothing the listeners use: no restart")
+		s.logf(logs.LevelDebug, "state changed, nothing the listeners use: no restart")
 	}
 	s.mu.Lock()
 	running := s.instance != nil
@@ -307,7 +425,7 @@ func (s *Server) reloadIfNeeded(changed bool) error {
 	}
 	for _, u := range st.Users {
 		if u.Enabled && u.ExpiresAt != nil && time.Since(*u.ExpiresAt) >= 0 && time.Since(*u.ExpiresAt) < time.Minute+5*time.Second {
-			s.logf("user %s expired, reloading", u.Name)
+			s.log.Log(logs.LevelInfo, logs.Record{Msg: "user expired, reloading", User: u.Name, Op: "reload"})
 			return s.Reload()
 		}
 	}
@@ -321,13 +439,13 @@ func (s *Server) Close() error {
 	s.stopBoxLocked()
 	s.stopHostLocked()
 	s.stopWatchingOpenVPN()
-	defer s.file.Close()
+	defer s.log.Close()
 	if s.accStop != nil {
 		s.accStop()
 	}
 	if s.tracker != nil {
 		if err := s.tracker.Stop(); err != nil {
-			s.logf("save stats: %v", err)
+			s.failed(false, logs.Record{Msg: "saving the traffic stats failed", Op: "stats", Code: "STATS_SAVE_FAILED"}, err)
 		}
 	}
 	var err error

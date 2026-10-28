@@ -46,27 +46,27 @@ func main() {
 	if err != nil || len(res.Profiles) != 1 {
 		log.Fatalf("import: %v %+v", err, res)
 	}
-	p := res.Profiles[0]
-	endpoint, err := netip.ParseAddrPort(p.Server + ":" + strconv.Itoa(p.Port))
+	prof := res.Profiles[0]
+	endpoint, err := netip.ParseAddrPort(prof.Server + ":" + strconv.Itoa(prof.Port))
 	if err != nil {
-		log.Fatalf("endpoint %s:%d: %v", p.Server, p.Port, err)
+		log.Fatalf("endpoint %s:%d: %v", prof.Server, prof.Port, err)
 	}
-	uapi, err := awg.UAPI(p, endpoint)
-	if err != nil {
-		log.Fatal(err)
-	}
-	t, err := tun.CreateTUN(*name, 1280)
+	uapi, err := awg.UAPI(prof, endpoint)
 	if err != nil {
 		log.Fatal(err)
 	}
-	dev := device.NewDevice(t, conn.NewDefaultBind(), device.NewLogger(device.LogLevelError, "awgclient: "))
+	tunDev, err := tun.CreateTUN(*name, 1280)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dev := device.NewDevice(tunDev, conn.NewDefaultBind(), device.NewLogger(device.LogLevelError, "awgclient: "))
 	if err := dev.IpcSet(uapi); err != nil {
 		log.Fatal(err)
 	}
 	if err := dev.Up(); err != nil {
 		log.Fatal(err)
 	}
-	for _, a := range p.WireGuard.Address { // IPv4 and, on a server with IPv6, IPv6
+	for _, a := range prof.WireGuard.Address { // IPv4 and, on a server with IPv6, IPv6
 		run("ip", "addr", "add", a, "dev", *name)
 	}
 	run("ip", "link", "set", "dev", *name, "up")

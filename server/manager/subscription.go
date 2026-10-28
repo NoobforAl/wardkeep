@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"maps"
 	"sort"
 	"strings"
 
@@ -22,9 +23,7 @@ func subscriptionInfo(st *store.State) *SubscriptionInfo {
 	info := &SubscriptionInfo{Enabled: s.Enabled, Port: s.Port, PublicKey: s.SigningPublic()}
 	if len(s.ProtocolOrder) > 0 {
 		info.ProtocolOrder = map[string]string{}
-		for k, v := range s.ProtocolOrder {
-			info.ProtocolOrder[k] = v
-		}
+		maps.Copy(info.ProtocolOrder, s.ProtocolOrder)
 	}
 	return info
 }
@@ -51,17 +50,17 @@ func (m *Manager) SetProtocolOrder(country, list string) (*SubscriptionInfo, err
 	}
 	var out *SubscriptionInfo
 	err = m.Store.Update(func(st *store.State) error {
-		s := &st.Server.Subscription
+		sub := &st.Server.Subscription
 		if len(items) == 0 {
-			delete(s.ProtocolOrder, country)
-			if len(s.ProtocolOrder) == 0 {
-				s.ProtocolOrder = nil
+			delete(sub.ProtocolOrder, country)
+			if len(sub.ProtocolOrder) == 0 {
+				sub.ProtocolOrder = nil
 			}
 		} else {
-			if s.ProtocolOrder == nil {
-				s.ProtocolOrder = map[string]string{}
+			if sub.ProtocolOrder == nil {
+				sub.ProtocolOrder = map[string]string{}
 			}
-			s.ProtocolOrder[country] = strings.Join(items, ",")
+			sub.ProtocolOrder[country] = strings.Join(items, ",")
 		}
 		out = subscriptionInfo(st)
 		return nil

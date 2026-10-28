@@ -43,15 +43,15 @@ func (m *Manager) Backup(w io.Writer) error {
 	}
 	gz := gzip.NewWriter(w)
 	tw := tar.NewWriter(gz)
-	for _, e := range entries {
-		if e.IsDir() || !backupFile(e.Name()) {
+	for _, entry := range entries {
+		if entry.IsDir() || !backupFile(entry.Name()) {
 			continue
 		}
-		data, err := os.ReadFile(filepath.Join(m.Store.Dir, e.Name()))
+		data, err := os.ReadFile(filepath.Join(m.Store.Dir, entry.Name()))
 		if err != nil {
 			return err
 		}
-		hdr := &tar.Header{Name: e.Name(), Mode: 0o600, Size: int64(len(data)), ModTime: m.Now()}
+		hdr := &tar.Header{Name: entry.Name(), Mode: 0o600, Size: int64(len(data)), ModTime: m.Now()}
 		if err := tw.WriteHeader(hdr); err != nil {
 			return err
 		}

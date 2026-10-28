@@ -134,12 +134,12 @@ func iptablesRules(pool string, all []string) [][]string {
 // host (and nothing else, see nftRules) and returns a function that removes
 // the rules again. It uses nftables and falls back to iptables. dir is where
 // the nft ruleset file is written.
-func EnableNAT(r Runner, dir string, pools []string) (undo func(), err error) {
+func EnableNAT(runner Runner, dir string, pools []string) (undo func(), err error) {
 	if len(pools) == 0 {
 		return func() {}, nil
 	}
 	switch {
-	case r.Has("nft"):
+	case runner.Has("nft"):
 		file := filepath.Join(dir, "nat.nft")
 		if err := os.WriteFile(file, []byte(nftRules(pools)), 0o600); err != nil {
 			return nil, err
@@ -154,19 +154,19 @@ func EnableNAT(r Runner, dir string, pools []string) (undo func(), err error) {
 			families = append(families, "ip6")
 		}
 		for _, f := range families {
-			r.Run("nft", "delete", "table", f, natTable)
+			runner.Run("nft", "delete", "table", f, natTable)
 		}
-		if err := r.Run("nft", "-f", file); err != nil {
+		if err := runner.Run("nft", "-f", file); err != nil {
 			os.Remove(file)
 			return nil, err
 		}
 		return func() {
 			for _, f := range families {
-				r.Run("nft", "delete", "table", f, natTable)
+				runner.Run("nft", "delete", "table", f, natTable)
 			}
 			os.Remove(file)
 		}, nil
-	case r.Has("iptables"):
+	case runner.Has("iptables"):
 		type removal struct {
 			tool string
 			args []string
@@ -174,31 +174,31 @@ func EnableNAT(r Runner, dir string, pools []string) (undo func(), err error) {
 		var removals []removal // commands that take back what was added, newest first
 		undo := func() {
 			for _, rule := range removals {
-				r.Run(append([]string{rule.tool}, rule.args...)...)
+				runner.Run(append([]string{rule.tool}, rule.args...)...)
 			}
 		}
-		for _, p := range pools {
+		for _, pool := range pools {
 			tool := "iptables"
-			if strings.Contains(p, ":") {
-				if !r.Has("ip6tables") {
+			if strings.Contains(pool, ":") {
+				if !runner.Has("ip6tables") {
 					undo()
 					return nil, fmt.Errorf("ip6tables is not installed, so IPv6 clients could not reach the internet")
 				}
 				tool = "ip6tables"
 			}
 			add := func(add, del []string) error {
-				if err := r.Run(append([]string{tool}, add...)...); err != nil {
+				if err := runner.Run(append([]string{tool}, add...)...); err != nil {
 					return err
 				}
 				removals = append([]removal{{tool, del}}, removals...)
 				return nil
 			}
-			if err := add([]string{"-t", "nat", "-A", "POSTROUTING", "-s", p, "-j", "MASQUERADE"},
-				[]string{"-t", "nat", "-D", "POSTROUTING", "-s", p, "-j", "MASQUERADE"}); err != nil {
+			if err := add([]string{"-t", "nat", "-A", "POSTROUTING", "-s", pool, "-j", "MASQUERADE"},
+				[]string{"-t", "nat", "-D", "POSTROUTING", "-s", pool, "-j", "MASQUERADE"}); err != nil {
 				undo()
 				return nil, err
 			}
-			rules := iptablesRules(p, pools)
+			rules := iptablesRules(pool, pools)
 			// Insert last-to-first so the first rule ends up on top.
 			for _, rule := range slices.Backward(rules) {
 				if err := add(append([]string{"-I", "FORWARD", "1"}, rule...), append([]string{"-D", "FORWARD"}, rule...)); err != nil {

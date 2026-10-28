@@ -55,23 +55,23 @@ func (d DNSTT) Valid() error {
 
 // CheckDNSTTDomain checks the zone name an operator gives: a host name of at least two labels, letters, digits
 // and hyphens; trailing dot and case are dropped. It returns the name as it is stored.
-func CheckDNSTTDomain(s string) (string, error) {
-	s = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(s), "."))
-	labels := strings.Split(s, ".")
-	if len(labels) < 2 || len(s) > 200 {
-		return "", fmt.Errorf("%q is not a domain with a parent zone (use something like t.example.com)", s)
+func CheckDNSTTDomain(domain string) (string, error) {
+	domain = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
+	labels := strings.Split(domain, ".")
+	if len(labels) < 2 || len(domain) > 200 {
+		return "", fmt.Errorf("%q is not a domain with a parent zone (use something like t.example.com)", domain)
 	}
 	for _, l := range labels {
 		if l == "" || len(l) > 63 || l[0] == '-' || l[len(l)-1] == '-' {
-			return "", fmt.Errorf("%q is not a valid domain name", s)
+			return "", fmt.Errorf("%q is not a valid domain name", domain)
 		}
 		for _, r := range l {
 			if !(r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '-') {
-				return "", fmt.Errorf("%q is not a valid domain name (letters, digits and hyphens only)", s)
+				return "", fmt.Errorf("%q is not a valid domain name (letters, digits and hyphens only)", domain)
 			}
 		}
 	}
-	return s, nil
+	return domain, nil
 }
 
 // ensureDNSTT gives a state with no DNS tunnel identity (one made before the tunnel existed) a new one, and reports
@@ -80,25 +80,25 @@ func (st *State) ensureDNSTT() (bool, error) {
 	if st.Server.DNSTT.Valid() == nil {
 		return false, nil
 	}
-	d, err := NewDNSTT()
+	dnstt, err := NewDNSTT()
 	if err != nil {
 		return false, err
 	}
-	d.Domain = st.Server.DNSTT.Domain
+	dnstt.Domain = st.Server.DNSTT.Domain
 	if p := st.Server.DNSTT.UpstreamPort; p >= 1 && p <= 65535 {
-		d.UpstreamPort = p
+		dnstt.UpstreamPort = p
 	}
-	st.Server.DNSTT = d
+	st.Server.DNSTT = dnstt
 	return true, nil
 }
 
 // RotateDNSTTKey makes a new key pair; every user needs the new link.
 func (st *State) RotateDNSTTKey() error {
-	d, err := NewDNSTT()
+	dnstt, err := NewDNSTT()
 	if err != nil {
 		return err
 	}
-	d.Domain, d.UpstreamPort = st.Server.DNSTT.Domain, max(st.Server.DNSTT.UpstreamPort, 1)
-	st.Server.DNSTT = d
+	dnstt.Domain, dnstt.UpstreamPort = st.Server.DNSTT.Domain, max(st.Server.DNSTT.UpstreamPort, 1)
+	st.Server.DNSTT = dnstt
 	return nil
 }

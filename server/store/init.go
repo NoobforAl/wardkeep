@@ -65,9 +65,9 @@ func DefaultEnabled() []string {
 var DefaultPorts = protocols.DefaultPorts()
 
 // Init creates a state with fresh keys and a self-signed certificate.
-func Init(s *Store, opts InitOptions) (*State, error) {
-	if s.Exists() {
-		return nil, fmt.Errorf("already initialized in %s", s.Dir)
+func Init(stateStore *Store, opts InitOptions) (*State, error) {
+	if stateStore.Exists() {
+		return nil, fmt.Errorf("already initialized in %s", stateStore.Dir)
 	}
 	if opts.PublicHost == "" {
 		return nil, fmt.Errorf("public host (IP or domain) is required")
@@ -131,13 +131,13 @@ func Init(s *Store, opts InitOptions) (*State, error) {
 		}
 		st.Server.Protocols[p] = &Proto{Enabled: EnabledAtInit(p, opts.Enabled), Port: port}
 	}
-	if err := os.MkdirAll(s.Dir, 0o700); err != nil {
+	if err := os.MkdirAll(stateStore.Dir, 0o700); err != nil {
 		return nil, err
 	}
-	if err := WriteSelfSignedCert(s.Path(st.Server.CertFile), s.Path(st.Server.KeyFile), opts.PublicHost); err != nil {
+	if err := WriteSelfSignedCert(stateStore.Path(st.Server.CertFile), stateStore.Path(st.Server.KeyFile), opts.PublicHost); err != nil {
 		return nil, err
 	}
-	if err := s.Save(st); err != nil {
+	if err := stateStore.Save(st); err != nil {
 		return nil, err
 	}
 	return st, nil
@@ -169,11 +169,11 @@ const SelfSignedValidity = 90 * 24 * time.Hour
 // RenewSelfSignedCert replaces the server's self-signed certificate when it
 // expires within 30 days or was issued for longer than SelfSignedValidity. It
 // reports whether it renewed the certificate.
-func RenewSelfSignedCert(s *Store, st *State) (bool, error) {
+func RenewSelfSignedCert(stateStore *Store, st *State) (bool, error) {
 	if !st.Server.SelfSigned {
 		return false, nil
 	}
-	certPath := s.Path(st.Server.CertFile)
+	certPath := stateStore.Path(st.Server.CertFile)
 	if data, err := os.ReadFile(certPath); err == nil {
 		if block, _ := pem.Decode(data); block != nil {
 			if cert, err := x509.ParseCertificate(block.Bytes); err == nil &&
@@ -182,7 +182,7 @@ func RenewSelfSignedCert(s *Store, st *State) (bool, error) {
 			}
 		}
 	}
-	return true, WriteSelfSignedCert(certPath, s.Path(st.Server.KeyFile), st.Server.PublicHost)
+	return true, WriteSelfSignedCert(certPath, stateStore.Path(st.Server.KeyFile), st.Server.PublicHost)
 }
 
 // WriteSelfSignedCert writes a self-signed ECDSA certificate for host, valid

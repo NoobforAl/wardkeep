@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -273,6 +274,7 @@ func TestLogsEndpoint(t *testing.T) {
 	defer srv.Close()
 	c := &client{t: t, srv: srv}
 
+	// The older form: lines answers text lines.
 	var lines []string
 	json.Unmarshal(c.ok("GET", "/api/v1/logs?lines=3", nil, 200), &lines)
 	if len(lines) != 3 || !strings.HasSuffix(lines[2], "line e") || !strings.HasSuffix(lines[0], "line c") {
@@ -283,5 +285,153 @@ func TestLogsEndpoint(t *testing.T) {
 	}
 	if status, _ := c.do("GET", "/api/v1/logs", nil, ""); status != 401 {
 		t.Errorf("without a token -> %d, want 401", status)
+	}
+
+	// Records, filtered.
+	lg = logs.Open(m.Store.Dir)
+	lg.SetLevel(logs.LevelTrace)
+	lg.Log(logs.LevelError, logs.Record{Msg: "trojan did not start", Target: "trojan", Code: "START_FAILED", Err: "busy"})
+	lg.Close()
+	var records []logs.Record
+	json.Unmarshal(c.ok("GET", "/api/v1/logs", nil, 200), &records)
+	if len(records) != 6 || records[0].Msg != "line a" || records[5].Code != "START_FAILED" || records[5].Level != "error" {
+		t.Fatalf("records = %+v", records)
+	}
+	records = nil
+	json.Unmarshal(c.ok("GET", "/api/v1/logs?level=warn&limit=10", nil, 200), &records)
+	if len(records) != 1 || records[0].Target != "trojan" || records[0].Err != "busy" || records[0].Source != "server" {
+		t.Fatalf("errors = %+v", records)
+	}
+	records = nil
+	json.Unmarshal(c.ok("GET", "/api/v1/logs?limit=2", nil, 200), &records)
+	if len(records) != 2 || records[1].Code != "START_FAILED" {
+		t.Fatalf("limit = %+v", records)
+	}
+	since := url.QueryEscape(time.Now().Add(time.Hour).Format(time.RFC3339))
+	if body := c.ok("GET", "/api/v1/logs?since="+since, nil, 200); strings.TrimSpace(string(body)) != "[]" {
+		t.Fatalf("since = %s", body)
+	}
+	for _, bad := range []string{"level=loud", "limit=0", "limit=5001", "since=yesterday"} {
+		if status, _ := c.do("GET", "/api/v1/logs?"+bad, nil, "Bearer "+token); status != 422 {
+			t.Errorf("%s -> %d, want 422", bad, status)
+		}
+	}
+}
+
+func TestAlertsEndpoints(t *testing.T) {
+	m := manager.New(store.Open(tempDir(t)))
+	if _, err := m.Init(manager.InitOptions{PublicHost: "203.0.113.7"}); err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(New(Options{Manager: m, Token: func() string { return token }}))
+	defer srv.Close()
+	c := &client{t: t, srv: srv}
+
+	var list AlertList
+	json.Unmarshal(c.ok("GET", "/api/v1/alerts", nil, 200), &list)
+	if list.Unacknowledged != 0 || list.Alerts == nil || len(list.Alerts) != 0 {
+		t.Fatalf("empty = %+v", list)
+	}
+	lg := logs.Open(m.Store.Dir)
+	lg.SetAlerts(logs.OpenAlerts(m.Store.Dir))
+	lg.Log(logs.LevelError, logs.Record{Msg: "dnstt stopped", Target: "dnstt", Code: "STOPPED", Notify: true})
+	lg.Log(logs.LevelError, logs.Record{Msg: "nat failed", Target: "nat", Code: "NAT_FAILED", Notify: true})
+	lg.Close()
+	json.Unmarshal(c.ok("GET", "/api/v1/alerts", nil, 200), &list)
+	if list.Unacknowledged != 2 || len(list.Alerts) != 2 || list.Alerts[0].Target != "nat" {
+		t.Fatalf("alerts = %+v", list)
+	}
+
+	var result AckResult
+	json.Unmarshal(c.ok("POST", "/api/v1/alerts/ack", map[string]any{"ids": []string{list.Alerts[1].ID}}, 200), &result)
+	if result.Acknowledged != 1 || result.Unacknowledged != 1 {
+		t.Fatalf("ack one = %+v", result)
+	}
+	json.Unmarshal(c.ok("POST", "/api/v1/alerts/ack", map[string]any{"all": true}, 200), &result)
+	if result.Acknowledged != 1 || result.Unacknowledged != 0 {
+		t.Fatalf("ack all = %+v", result)
+	}
+	if status, _ := c.do("POST", "/api/v1/alerts/ack", map[string]any{}, "Bearer "+token); status != 422 {
+		t.Errorf("an empty ack -> %d, want 422", status)
+	}
+	for _, path := range []string{"/api/v1/alerts", "/api/v1/logging"} {
+		if status, _ := c.do("GET", path, nil, ""); status != 401 {
+			t.Errorf("%s without a token -> %d", path, status)
+		}
+	}
+	if status, _ := c.do("POST", "/api/v1/alerts/ack", map[string]any{"all": true}, ""); status != 401 {
+		t.Errorf("ack without a token -> %d", status)
+	}
+
+	// The log settings.
+	var info manager.LoggingInfo
+	json.Unmarshal(c.ok("PATCH", "/api/v1/logging", map[string]any{"level": "warn", "alerts": false}, 200), &info)
+	if info.Level != "warn" || info.Alerts {
+		t.Fatalf("logging = %+v", info)
+	}
+	if status, _ := c.do("PATCH", "/api/v1/logging", map[string]any{"level": "loud"}, "Bearer "+token); status != 422 {
+		t.Errorf("a bad level -> %d", status)
+	}
+}
+
+// A handler that panics answers 500 and leaves a fatal record and an alert.
+func TestPanicIsLogged(t *testing.T) {
+	m := manager.New(store.Open(tempDir(t)))
+	if _, err := m.Init(manager.InitOptions{PublicHost: "203.0.113.7"}); err != nil {
+		t.Fatal(err)
+	}
+	lg := logs.Open(m.Store.Dir)
+	lg.SetAlerts(logs.OpenAlerts(m.Store.Dir))
+	defer lg.Close()
+	handler := New(Options{Manager: m, Token: func() string { panic("token store broke") }, Log: lg})
+	srv := httptest.NewServer(handler)
+	defer srv.Close()
+	c := &client{t: t, srv: srv}
+	if status, _ := c.do("GET", "/api/v1/server", nil, "Bearer x"); status != 500 {
+		t.Fatalf("status %d", status)
+	}
+	records, _ := logs.Query(m.Store.Dir, logs.Filter{Level: logs.LevelFatal, Limit: 1})
+	if len(records) != 1 || !records[0].Notify || records[0].Target != "api" || !strings.Contains(records[0].Err, "token store broke") {
+		t.Fatalf("records = %+v", records)
+	}
+	if alerts, _ := m.Alerts(); len(alerts) != 1 {
+		t.Fatalf("alerts = %+v", alerts)
+	}
+}
+
+// The OpenAPI document describes the log and alert endpoints.
+func TestOpenAPIDescribesLogsAndAlerts(t *testing.T) {
+	c := newClient(t)
+	_, raw := c.do("GET", "/openapi.json", nil, "")
+	var doc struct {
+		Paths map[string]map[string]struct {
+			Parameters []struct {
+				Name string `json:"name"`
+			} `json:"parameters"`
+			Responses map[string]struct {
+				Content map[string]struct {
+					Schema map[string]any `json:"schema"`
+				} `json:"content"`
+			} `json:"responses"`
+		} `json:"paths"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	getLogs := doc.Paths["/api/v1/logs"]["get"]
+	var params []string
+	for _, p := range getLogs.Parameters {
+		params = append(params, p.Name)
+	}
+	if strings.Join(params, ",") != "level,since,limit,lines" {
+		t.Errorf("logs parameters = %q", params)
+	}
+	if _, ok := getLogs.Responses["200"].Content["application/json"].Schema["oneOf"]; !ok {
+		t.Errorf("logs response = %+v", getLogs.Responses["200"])
+	}
+	for path, method := range map[string]string{"/api/v1/alerts": "get", "/api/v1/alerts/ack": "post", "/api/v1/logging": "patch"} {
+		if _, ok := doc.Paths[path][method]; !ok {
+			t.Errorf("%s %s is not described", method, path)
+		}
 	}
 }

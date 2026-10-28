@@ -163,9 +163,13 @@ func TestUserAccountingAndQuota(t *testing.T) {
 	})
 
 	// The block is in the server log, where the CLI, TUI and API show it.
-	lines, _ := logs.Tail(s.Dir, 100)
-	if !strings.Contains(strings.Join(lines, "\n"), "used up the monthly quota") {
-		t.Fatalf("the quota block is not in server.log: %q", lines)
+	records, _ := logs.Tail(s.Dir, 100)
+	blocked := false
+	for _, rec := range records {
+		blocked = blocked || (strings.Contains(rec.Msg, "used up the monthly quota") && rec.User == "alice")
+	}
+	if !blocked {
+		t.Fatalf("the quota block is not in server.log: %+v", records)
 	}
 
 	// Raising the quota lets her back in.

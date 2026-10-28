@@ -196,14 +196,14 @@ func TestServerTabAPISettings(t *testing.T) {
 
 func TestTabsCycle(t *testing.T) {
 	m, _ := newTestModel(t)
-	for i, want := range []view{viewProtocols, viewServer, viewLogs, viewUsers} {
+	for i, want := range []view{viewProtocols, viewServer, viewLogs, viewAlerts, viewUsers} {
 		send(m, "tab")
 		if m.view != want {
 			t.Fatalf("after %d tab(s) the view is %v, want %v", i+1, m.view, want)
 		}
 	}
 	send(m, "shift+tab")
-	if m.view != viewLogs {
+	if m.view != viewAlerts {
 		t.Fatalf("shift+tab from the first tab went to %v", m.view)
 	}
 }
@@ -219,8 +219,62 @@ func TestLogsTab(t *testing.T) {
 	if m.view != viewLogs || !strings.Contains(view, "disk is almost full") || !strings.Contains(view, "something failed") {
 		t.Fatalf("logs tab:\n%s", view)
 	}
-	send(m, "tab")
+	// Columns, and the level filter.
+	if !strings.Contains(view, "LEVEL") || !strings.Contains(view, "WARN ") || !strings.Contains(view, "ERROR") {
+		t.Fatalf("columns:\n%s", view)
+	}
+	for range 4 { // trace -> debug -> info -> warn -> error
+		send(m, "l")
+	}
+	if view = m.View(); m.logLevel != logs.LevelError || strings.Contains(view, "disk is almost full") || !strings.Contains(view, "something failed") {
+		t.Fatalf("level %v:\n%s", m.logLevel, view)
+	}
+	send(m, "l")
+	if m.logLevel != logs.LevelTrace {
+		t.Fatalf("the level did not wrap: %v", m.logLevel)
+	}
+	send(m, "tab", "tab")
 	if m.view != viewUsers {
 		t.Fatalf("tab from the last tab went to %v", m.view)
+	}
+}
+
+func TestAlertsTab(t *testing.T) {
+	m, mgr := newTestModel(t)
+	if strings.Contains(m.View(), "⚠") {
+		t.Fatal("a badge without alerts")
+	}
+	lg := logs.Open(mgr.Store.Dir)
+	lg.SetAlerts(logs.OpenAlerts(mgr.Store.Dir))
+	lg.Log(logs.LevelError, logs.Record{Msg: "trojan did not start", Target: "trojan", Code: "START_FAILED", Err: "port busy", Notify: true})
+	lg.Log(logs.LevelFatal, logs.Record{Msg: "panic: runtime stopped", Target: "runtime", Code: "PANIC", Stack: "goroutine 1\nmain.main()", Notify: true})
+	lg.Close()
+	m.Update(tickMsg(time.Now()))
+	// The badge is on every main screen.
+	for _, key := range []string{"1", "2", "3", "4"} {
+		send(m, key)
+		if view := m.View(); !strings.Contains(view, "⚠ 2 alerts") {
+			t.Fatalf("no badge on tab %s:\n%s", key, view)
+		}
+	}
+	send(m, "5")
+	view := m.View()
+	if m.view != viewAlerts || !strings.Contains(view, "panic: runtime stopped") || !strings.Contains(view, "trojan did not start") || !strings.Contains(view, "Alerts (2)") {
+		t.Fatalf("alerts tab:\n%s", view)
+	}
+	send(m, "down", "enter")
+	if view = m.View(); !strings.Contains(view, "START_FAILED") || !strings.Contains(view, "port busy") {
+		t.Fatalf("details:\n%s", view)
+	}
+	send(m, "a")
+	if view = m.View(); m.unacknowledged != 1 || !strings.Contains(view, "⚠ 1 alert ·") {
+		t.Fatalf("after one ack (%d):\n%s", m.unacknowledged, view)
+	}
+	send(m, "A")
+	if view = m.View(); m.unacknowledged != 0 || strings.Contains(view, "⚠") {
+		t.Fatalf("after ack all:\n%s", view)
+	}
+	if list, _ := mgr.Alerts(); list[0].Acknowledged != true || list[1].Acknowledged != true {
+		t.Fatalf("not stored: %+v", list)
 	}
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/sagernet/sing-box/common/trafficcontrol"
-	"github.com/sagernet/sing-box/log"
 	"github.com/sagernet/sing/common/observable"
 
 	"github.com/NoobforAl/omnitun/server/logs"
@@ -23,15 +22,6 @@ var (
 	accountingInterval = 2 * time.Second
 	enforceEvery       = 5
 )
-
-// sbLog is the platform log writer sing-box needs before it creates its
-// traffic manager; it also puts sing-box's own messages (warnings and errors,
-// at the configured level) into server.log. The normal log output continues.
-type sbLog struct{ file *logs.Log }
-
-func (w sbLog) WriteMessage(level log.Level, message string) {
-	w.file.Write("sing-box "+log.FormatLevel(level), message)
-}
 
 // protocolKey maps an inbound tag to the protocol it serves: ShadowTLS hands
 // its streams to an internal Shadowsocks inbound.
@@ -80,29 +70,36 @@ type collector struct {
 	done map[uuid.UUID]time.Time // closed connections already counted, and when
 
 	events  observable.Subscription[trafficcontrol.ConnectionEvent]
+	log     *logs.Log // for a panic of the event reader
 	stopped chan struct{}
 	drained chan struct{}
 }
 
-func newCollector(tm *trafficcontrol.Manager, tr *stats.Tracker, userByIP func(netip.Addr) string) *collector {
+func newCollector(tm *trafficcontrol.Manager, tr *stats.Tracker, userByIP func(netip.Addr) string, log *logs.Log) *collector {
 	now := time.Now()
-	c := &collector{
-		tm: tm, tr: tr, userByIP: userByIP, last: now, started: now,
+	col := &collector{
+		tm: tm, tr: tr, userByIP: userByIP, last: now, started: now, log: log,
 		seen: map[uuid.UUID]seenConn{}, done: map[uuid.UUID]time.Time{},
 		stopped: make(chan struct{}), drained: make(chan struct{}),
 	}
 	if events, _, err := tm.SubscribeEvents(); err == nil {
-		c.events = events
-		go c.readEvents()
+		col.events = events
+		go col.readEvents()
 	} else {
-		close(c.drained)
+		close(col.drained)
 	}
-	return c
+	return col
 }
 
-// readEvents counts every connection as it closes.
+// readEvents counts every connection as it closes. A panic ends the reading
+// (the polling still counts the connections) instead of the server.
 func (c *collector) readEvents() {
 	defer close(c.drained)
+	defer func() {
+		if value := recover(); value != nil && c.log != nil {
+			c.log.LogPanic(value, "accounting", "events")
+		}
+	}()
 	for {
 		select {
 		case ev := <-c.events:
@@ -261,17 +258,30 @@ func (s *Server) publishLive(box map[string]stats.Live, boxProto map[string]int)
 // counts traffic while sing-box runs, and keeps enforcing quotas and saving
 // the stats file also while it does not (a blocked user must be let back in).
 func (s *Server) accountingLoop(ctx context.Context) {
-	t := time.NewTicker(accountingInterval)
-	defer t.Stop()
 	// Write the file at once, so `status` sees a running server straight away.
 	if err := s.tracker.Save(); err != nil {
-		s.logf("save stats: %v", err)
+		s.failed(false, logs.Record{Msg: "saving the traffic stats failed", Op: "stats", Code: "STATS_SAVE_FAILED"}, err)
 	}
-	for n := 1; ; n++ {
+	// A panic is logged (and is an alert); the counting goes on after a pause.
+	for !s.accounting(ctx) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-t.C:
+		case <-time.After(5 * time.Second):
+		}
+	}
+}
+
+// accounting is accountingLoop's loop; it reports false when it ended in a panic.
+func (s *Server) accounting(ctx context.Context) (done bool) {
+	defer s.recovered("accounting", "count")
+	ticker := time.NewTicker(accountingInterval)
+	defer ticker.Stop()
+	for round := 1; ; round++ {
+		select {
+		case <-ctx.Done():
+			return true
+		case <-ticker.C:
 		}
 		var boxLive map[string]stats.Live
 		var boxProto map[string]int
@@ -282,10 +292,10 @@ func (s *Server) accountingLoop(ctx context.Context) {
 		s.accMu.Unlock()
 		s.meters.collect(s.tracker)
 		s.publishLive(boxLive, boxProto)
-		if n%enforceEvery == 0 {
+		if round%enforceEvery == 0 {
 			s.enforceQuotas()
-			if err := s.tracker.Save(); err != nil {
-				s.logf("save stats: %v", err)
+			if err := s.tracker.Save(); err != nil { // tried again at the next round
+				s.failed(false, logs.Record{Msg: "saving the traffic stats failed", Op: "stats", Code: "STATS_SAVE_FAILED"}, err)
 			}
 		}
 	}
@@ -306,13 +316,13 @@ func (s *Server) enforceQuotas() {
 		exceeded bool
 	}
 	var changes []change
-	for _, u := range st.Users {
-		if u.UsageResetAt != nil {
-			s.tracker.ApplyReset(u.Name, *u.UsageResetAt)
+	for _, user := range st.Users {
+		if user.UsageResetAt != nil {
+			s.tracker.ApplyReset(user.Name, *user.UsageResetAt)
 		}
-		exceeded := u.QuotaGB > 0 && float64(s.tracker.MonthTotal(u.Name)) >= u.QuotaGB*stats.GiB
-		if exceeded != u.QuotaExceeded {
-			changes = append(changes, change{u.Name, exceeded})
+		exceeded := user.QuotaGB > 0 && float64(s.tracker.MonthTotal(user.Name)) >= user.QuotaGB*stats.GiB
+		if exceeded != user.QuotaExceeded {
+			changes = append(changes, change{user.Name, exceeded})
 		}
 	}
 	if len(changes) == 0 {
@@ -327,14 +337,14 @@ func (s *Server) enforceQuotas() {
 		return nil
 	})
 	if err != nil {
-		s.logf("update quota flags: %v", err)
+		s.failed(false, logs.Record{Msg: "updating the quota flags failed", Op: "quota", Code: "QUOTA_UPDATE_FAILED"}, err)
 		return
 	}
 	for _, c := range changes {
-		if c.exceeded {
-			s.logf("user %s used up the monthly quota; blocked until it resets or is raised", c.name)
-		} else {
-			s.logf("user %s is under the quota again; allowed", c.name)
+		message := "used up the monthly quota; blocked until it resets or is raised"
+		if !c.exceeded {
+			message = "is under the quota again; allowed"
 		}
+		s.log.Log(logs.LevelInfo, logs.Record{Msg: "user " + message, User: c.name, Op: "quota"})
 	}
 }

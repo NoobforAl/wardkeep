@@ -38,14 +38,14 @@ func WireGuardServerAddress() string {
 // nextWireGuardAddress returns the first free user address (as a host address,
 // "10.30.0.2/32"); users already have theirs in st.
 func nextWireGuardAddress(st *State) (string, error) {
-	p := netip.MustParsePrefix(WireGuardSubnet)
-	used := map[netip.Addr]bool{p.Addr().Next(): true} // the server
+	subnet := netip.MustParsePrefix(WireGuardSubnet)
+	used := map[netip.Addr]bool{subnet.Addr().Next(): true} // the server
 	for _, u := range st.Users {
 		if pf, err := netip.ParsePrefix(u.WGAddress); err == nil {
 			used[pf.Addr()] = true
 		}
 	}
-	for a := p.Addr().Next().Next(); p.Contains(a); a = a.Next() {
+	for a := subnet.Addr().Next().Next(); subnet.Contains(a); a = a.Next() {
 		if !used[a] {
 			return netip.PrefixFrom(a, 32).String(), nil
 		}
@@ -54,19 +54,19 @@ func nextWireGuardAddress(st *State) (string, error) {
 }
 
 // giveWireGuard assigns keys and an address to a user that has none.
-func giveWireGuard(st *State, u *User) error {
-	if u.WGPrivateKey == "" {
+func giveWireGuard(st *State, user *User) error {
+	if user.WGPrivateKey == "" {
 		var err error
-		if u.WGPrivateKey, u.WGPublicKey, err = NewWireGuardKeys(); err != nil {
+		if user.WGPrivateKey, user.WGPublicKey, err = NewWireGuardKeys(); err != nil {
 			return err
 		}
 	}
-	if u.WGAddress == "" {
+	if user.WGAddress == "" {
 		addr, err := nextWireGuardAddress(st)
 		if err != nil {
 			return err
 		}
-		u.WGAddress = addr
+		user.WGAddress = addr
 	}
 	return nil
 }

@@ -40,26 +40,26 @@ func (t *pingTun) Read(bufs [][]byte, sizes []int, offset int) (int, error) {
 // Write receives packets from the peer and queues echo replies.
 func (t *pingTun) Write(bufs [][]byte, offset int) (int, error) {
 	for _, b := range bufs {
-		p := b[offset:]
-		if len(p) < 28 || p[0]>>4 != 4 || p[9] != 1 {
+		pkt := b[offset:]
+		if len(pkt) < 28 || pkt[0]>>4 != 4 || pkt[9] != 1 {
 			continue // not IPv4 ICMP
 		}
-		ihl := int(p[0]&0x0f) * 4
-		if len(p) < ihl+8 || p[ihl] != 8 {
+		ihl := int(pkt[0]&0x0f) * 4
+		if len(pkt) < ihl+8 || pkt[ihl] != 8 {
 			continue // not an echo request
 		}
-		r := append([]byte(nil), p...)
-		copy(r[12:16], p[16:20]) // swap addresses
-		copy(r[16:20], p[12:16])
-		r[8] = 64 // TTL
-		r[10], r[11] = 0, 0
-		binary.BigEndian.PutUint16(r[10:], checksum(r[:ihl]))
-		r[ihl] = 0 // echo reply
-		r[ihl+2], r[ihl+3] = 0, 0
-		binary.BigEndian.PutUint16(r[ihl+2:], checksum(r[ihl:]))
-		log.Printf("ping from %d.%d.%d.%d", p[12], p[13], p[14], p[15])
+		reply := append([]byte(nil), pkt...)
+		copy(reply[12:16], pkt[16:20]) // swap addresses
+		copy(reply[16:20], pkt[12:16])
+		reply[8] = 64 // TTL
+		reply[10], reply[11] = 0, 0
+		binary.BigEndian.PutUint16(reply[10:], checksum(reply[:ihl]))
+		reply[ihl] = 0 // echo reply
+		reply[ihl+2], reply[ihl+3] = 0, 0
+		binary.BigEndian.PutUint16(reply[ihl+2:], checksum(reply[ihl:]))
+		log.Printf("ping from %d.%d.%d.%d", pkt[12], pkt[13], pkt[14], pkt[15])
 		select {
-		case t.replies <- r:
+		case t.replies <- reply:
 		default:
 		}
 	}

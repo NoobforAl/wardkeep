@@ -10,7 +10,7 @@ import (
 	"github.com/NoobforAl/omnitun/server/manager"
 )
 
-func newImportCmd(o *options) *cobra.Command {
+func newImportCmd(global *options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import",
 		Short: "Move users and keys from another server",
@@ -38,13 +38,13 @@ users are added; --adopt-reality also takes over the imported Reality identity.`
 			if err != nil {
 				return err
 			}
-			res, err := o.manager().ImportXray(string(raw), opts)
+			res, err := global.manager().ImportXray(string(raw), opts)
 			if err != nil {
 				return err
 			}
-			return o.print(res, func() {
+			return global.print(res, func() {
 				if res.CreatedServer {
-					fmt.Printf("Created the server in %s.\n", o.dataDir)
+					fmt.Printf("Created the server in %s.\n", global.dataDir)
 				}
 				fmt.Printf("Added %d user(s): %v\n", len(res.UsersAdded), res.UsersAdded)
 				if len(res.UsersSkipped) > 0 {

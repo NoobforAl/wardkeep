@@ -33,13 +33,13 @@ func (h *hostMeters) clock() time.Time {
 }
 
 // add starts counting a server that has just been started (its counts begin at zero).
-func (h *hostMeters) add(key string, m hostproto.Meter) {
+func (h *hostMeters) add(key string, source hostproto.Meter) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if h.by == nil {
 		h.by = map[string]*meterState{}
 	}
-	h.by[key] = &meterState{meter: m, last: map[string][2]uint64{}}
+	h.by[key] = &meterState{meter: source, last: map[string][2]uint64{}}
 }
 
 // collect adds what every server moved since the last reading.
@@ -74,13 +74,13 @@ func (h *hostMeters) live() (users map[string]stats.Live, protocols map[string]i
 	defer h.mu.Unlock()
 	users, protocols = map[string]stats.Live{}, map[string]int{}
 	for key, st := range h.by {
-		for user, l := range st.live {
+		for user, userLive := range st.live {
 			u := users[user]
-			u.Connections += l.Connections
-			u.UpBps += l.UpBps
-			u.DownBps += l.DownBps
+			u.Connections += userLive.Connections
+			u.UpBps += userLive.UpBps
+			u.DownBps += userLive.DownBps
 			users[user] = u
-			protocols[key] += l.Connections
+			protocols[key] += userLive.Connections
 		}
 	}
 	return users, protocols
@@ -88,23 +88,23 @@ func (h *hostMeters) live() (users map[string]stats.Live, protocols map[string]i
 
 func (h *hostMeters) collectLocked(key string, st *meterState, tr *stats.Tracker, dt float64) {
 	live := map[string]stats.Live{}
-	for _, u := range st.meter.Usage() {
-		prev := st.last[u.User]
-		du, dd := u.Up-prev[0], u.Down-prev[1]
-		if u.Up < prev[0] {
-			du = u.Up
+	for _, usage := range st.meter.Usage() {
+		prev := st.last[usage.User]
+		du, dd := usage.Up-prev[0], usage.Down-prev[1]
+		if usage.Up < prev[0] {
+			du = usage.Up
 		}
-		if u.Down < prev[1] {
-			dd = u.Down
+		if usage.Down < prev[1] {
+			dd = usage.Down
 		}
-		st.last[u.User] = [2]uint64{u.Up, u.Down}
-		if u.Sessions > 0 {
-			live[u.User] = stats.Live{Connections: u.Sessions, UpBps: int64(float64(du) / dt), DownBps: int64(float64(dd) / dt)}
+		st.last[usage.User] = [2]uint64{usage.Up, usage.Down}
+		if usage.Sessions > 0 {
+			live[usage.User] = stats.Live{Connections: usage.Sessions, UpBps: int64(float64(du) / dt), DownBps: int64(float64(dd) / dt)}
 		}
 		if tr == nil || (du == 0 && dd == 0) {
 			continue
 		}
-		tr.Add(u.User, int64(du), int64(dd))
+		tr.Add(usage.User, int64(du), int64(dd))
 		tr.AddProtocol(key, int64(du), int64(dd))
 	}
 	st.live = live

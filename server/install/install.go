@@ -85,23 +85,23 @@ func (o *Options) defaults() {
 // Unit returns the systemd unit for the server. It is also what
 // `omnitun-server service` prints.
 func Unit(binary, dataDir, user string, hostServers bool) string {
-	var b strings.Builder
-	b.WriteString("[Unit]\nDescription=Wardkeep VPN server\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\n")
-	fmt.Fprintf(&b, "ExecStart=%s --data %s run\n", binary, dataDir)
+	var out strings.Builder
+	out.WriteString("[Unit]\nDescription=Wardkeep VPN server\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\n")
+	fmt.Fprintf(&out, "ExecStart=%s --data %s run\n", binary, dataDir)
 	if user != "" {
-		fmt.Fprintf(&b, "User=%s\nGroup=%s\n", user, user)
+		fmt.Fprintf(&out, "User=%s\nGroup=%s\n", user, user)
 	}
-	b.WriteString("Restart=on-failure\nRestartSec=3\nLimitNOFILE=1048576\n")
+	out.WriteString("Restart=on-failure\nRestartSec=3\nLimitNOFILE=1048576\n")
 	// Binding ports below 1024 (443) without being root.
 	caps := "CAP_NET_BIND_SERVICE"
 	if hostServers {
 		caps += " CAP_NET_ADMIN" // the TUN device and the NAT rules of SSTP/IKEv2
 	}
-	fmt.Fprintf(&b, "AmbientCapabilities=%s\nCapabilityBoundingSet=%s\nNoNewPrivileges=true\n", caps, caps)
-	b.WriteString("ProtectSystem=full\nProtectHome=true\nPrivateTmp=true\n")
-	fmt.Fprintf(&b, "ReadWritePaths=%s\n", dataDir)
-	b.WriteString("\n[Install]\nWantedBy=multi-user.target\n")
-	return b.String()
+	fmt.Fprintf(&out, "AmbientCapabilities=%s\nCapabilityBoundingSet=%s\nNoNewPrivileges=true\n", caps, caps)
+	out.WriteString("ProtectSystem=full\nProtectHome=true\nPrivateTmp=true\n")
+	fmt.Fprintf(&out, "ReadWritePaths=%s\n", dataDir)
+	out.WriteString("\n[Install]\nWantedBy=multi-user.target\n")
+	return out.String()
 }
 
 // firewallRuleComment tags the rules so uninstall can remove exactly them.
@@ -113,20 +113,20 @@ func portArg(p Port) string { return strconv.Itoa(p.Port) + "/" + p.Proto }
 // given manager.
 func firewallSteps(kind string, ports []Port, remove bool) []Step {
 	var steps []Step
-	for _, p := range ports {
+	for _, port := range ports {
 		switch kind {
 		case "ufw":
 			if remove {
-				steps = append(steps, Step{Description: "close " + portArg(p), Command: []string{"ufw", "delete", "allow", portArg(p)}, IgnoreError: true})
+				steps = append(steps, Step{Description: "close " + portArg(port), Command: []string{"ufw", "delete", "allow", portArg(port)}, IgnoreError: true})
 			} else {
-				steps = append(steps, Step{Description: "open " + portArg(p) + " (" + p.Purpose + ")",
-					Command: []string{"ufw", "allow", portArg(p), "comment", firewallRuleComment + ": " + p.Purpose}})
+				steps = append(steps, Step{Description: "open " + portArg(port) + " (" + port.Purpose + ")",
+					Command: []string{"ufw", "allow", portArg(port), "comment", firewallRuleComment + ": " + port.Purpose}})
 			}
 		case "firewalld":
-			verb := "--add-port=" + portArg(p)
-			desc := "open " + portArg(p) + " (" + p.Purpose + ")"
+			verb := "--add-port=" + portArg(port)
+			desc := "open " + portArg(port) + " (" + port.Purpose + ")"
 			if remove {
-				verb, desc = "--remove-port="+portArg(p), "close "+portArg(p)
+				verb, desc = "--remove-port="+portArg(port), "close "+portArg(port)
 			}
 			steps = append(steps, Step{Description: desc, Command: []string{"firewall-cmd", "--permanent", verb}, IgnoreError: remove})
 		}
@@ -147,54 +147,54 @@ func manualFirewallNote(ports []Port) string {
 			udp = append(udp, strconv.Itoa(p.Port))
 		}
 	}
-	var b strings.Builder
-	b.WriteString("No supported firewall manager (ufw or firewalld) is active, so no rules were added. ")
-	b.WriteString("If you use nftables or iptables directly, allow:")
+	var out strings.Builder
+	out.WriteString("No supported firewall manager (ufw or firewalld) is active, so no rules were added. ")
+	out.WriteString("If you use nftables or iptables directly, allow:")
 	if len(tcp) > 0 {
-		fmt.Fprintf(&b, "\n  TCP: %s\n    nft add rule inet filter input tcp dport { %s } accept", strings.Join(tcp, ", "), strings.Join(tcp, ", "))
+		fmt.Fprintf(&out, "\n  TCP: %s\n    nft add rule inet filter input tcp dport { %s } accept", strings.Join(tcp, ", "), strings.Join(tcp, ", "))
 	}
 	if len(udp) > 0 {
-		fmt.Fprintf(&b, "\n  UDP: %s\n    nft add rule inet filter input udp dport { %s } accept", strings.Join(udp, ", "), strings.Join(udp, ", "))
+		fmt.Fprintf(&out, "\n  UDP: %s\n    nft add rule inet filter input udp dport { %s } accept", strings.Join(udp, ", "), strings.Join(udp, ", "))
 	}
-	b.WriteString("\nAlso check your cloud provider's security group or network firewall.")
-	return b.String()
+	out.WriteString("\nAlso check your cloud provider's security group or network firewall.")
+	return out.String()
 }
 
 // Plan builds the installation steps. fw is the detected firewall manager
 // ("ufw", "firewalld" or "none"), see Detect.
-func BuildPlan(o Options, fw string) (Plan, error) {
-	o.defaults()
+func BuildPlan(opts Options, fw string) (Plan, error) {
+	opts.defaults()
 	// Plans describe Linux paths (slashes); a Windows host can still preview one.
-	o.Binary, o.DataDir, o.BinDir = filepath.ToSlash(o.Binary), filepath.ToSlash(o.DataDir), filepath.ToSlash(o.BinDir)
-	if o.Binary == "" || o.DataDir == "" {
+	opts.Binary, opts.DataDir, opts.BinDir = filepath.ToSlash(opts.Binary), filepath.ToSlash(opts.DataDir), filepath.ToSlash(opts.BinDir)
+	if opts.Binary == "" || opts.DataDir == "" {
 		return Plan{}, errors.New("the binary and the data directory are required")
 	}
-	if !isAbs(o.DataDir) || !isAbs(o.BinDir) {
+	if !isAbs(opts.DataDir) || !isAbs(opts.BinDir) {
 		return Plan{}, errors.New("the data and binary directories must be absolute paths")
 	}
-	if strings.ContainsAny(o.DataDir+o.BinDir+o.User, " \t\r\n\"'\\$") {
+	if strings.ContainsAny(opts.DataDir+opts.BinDir+opts.User, " \t\r\n\"'\\$") {
 		return Plan{}, errors.New("the directories and user name may not contain spaces or shell characters")
 	}
-	target := path.Join(o.BinDir, "omnitun-server")
+	target := path.Join(opts.BinDir, "omnitun-server")
 	var plan Plan
 	step := func(desc string, ignore bool, argv ...string) {
 		plan.Steps = append(plan.Steps, Step{Description: desc, Command: argv, IgnoreError: ignore})
 	}
 
-	if o.User != "" {
-		step("create the service user "+o.User, true, "useradd", "--system", "--home-dir", o.DataDir, "--shell", "/usr/sbin/nologin", o.User)
+	if opts.User != "" {
+		step("create the service user "+opts.User, true, "useradd", "--system", "--home-dir", opts.DataDir, "--shell", "/usr/sbin/nologin", opts.User)
 	}
-	step("create the data directory", false, "mkdir", "-p", o.DataDir)
-	if o.User != "" {
-		step("give the service user the data directory", false, "chown", "-R", o.User+":"+o.User, o.DataDir)
+	step("create the data directory", false, "mkdir", "-p", opts.DataDir)
+	if opts.User != "" {
+		step("give the service user the data directory", false, "chown", "-R", opts.User+":"+opts.User, opts.DataDir)
 	}
-	step("restrict the data directory (it holds every key)", false, "chmod", "700", o.DataDir)
-	step("install the binary", false, "install", "-m", "0755", filepath.ToSlash(o.Binary), target)
+	step("restrict the data directory (it holds every key)", false, "chmod", "700", opts.DataDir)
+	step("install the binary", false, "install", "-m", "0755", filepath.ToSlash(opts.Binary), target)
 	plan.Steps = append(plan.Steps, Step{
 		Description: "write the systemd unit", File: UnitPath, FileMode: 0o644,
-		Content: Unit(target, filepath.ToSlash(o.DataDir), o.User, o.HostServers),
+		Content: Unit(target, filepath.ToSlash(opts.DataDir), opts.User, opts.HostServers),
 	})
-	if o.HostServers {
+	if opts.HostServers {
 		plan.Steps = append(plan.Steps, Step{
 			Description: "enable IP forwarding (SSTP and IKEv2 clients are routed through this host)",
 			File:        SysctlPath, FileMode: 0o644, Content: "net.ipv4.ip_forward=1\n",
@@ -203,27 +203,27 @@ func BuildPlan(o Options, fw string) (Plan, error) {
 	}
 	step("reload systemd", false, "systemctl", "daemon-reload")
 
-	kind := o.Firewall
+	kind := opts.Firewall
 	if kind == "auto" {
 		kind = fw
 	}
 	switch kind {
 	case "ufw", "firewalld":
-		plan.Steps = append(plan.Steps, firewallSteps(kind, o.Ports, false)...)
+		plan.Steps = append(plan.Steps, firewallSteps(kind, opts.Ports, false)...)
 	default:
-		if len(o.Ports) > 0 {
-			plan.Notes = append(plan.Notes, manualFirewallNote(o.Ports))
+		if len(opts.Ports) > 0 {
+			plan.Notes = append(plan.Notes, manualFirewallNote(opts.Ports))
 		}
 	}
 	step("start the server now and at every boot", false, "systemctl", "enable", "--now", UnitName)
-	plan.Notes = append(plan.Notes, "Check it with: systemctl status "+UnitName+"   and   omnitun-server --data "+filepath.ToSlash(o.DataDir)+" logs -f")
+	plan.Notes = append(plan.Notes, "Check it with: systemctl status "+UnitName+"   and   omnitun-server --data "+filepath.ToSlash(opts.DataDir)+" logs -f")
 	return plan, nil
 }
 
 // BuildRemovalPlan stops the service and removes the unit and the firewall
 // rules it added. The data directory and the binary are left alone.
-func BuildRemovalPlan(o Options, fw string) Plan {
-	o.defaults()
+func BuildRemovalPlan(opts Options, fw string) Plan {
+	opts.defaults()
 	var plan Plan
 	step := func(desc string, argv ...string) {
 		plan.Steps = append(plan.Steps, Step{Description: desc, Command: argv, IgnoreError: true})
@@ -231,28 +231,28 @@ func BuildRemovalPlan(o Options, fw string) Plan {
 	step("stop and disable the service", "systemctl", "disable", "--now", UnitName)
 	plan.Steps = append(plan.Steps, Step{Description: "remove the systemd unit", Command: []string{"rm", "-f", UnitPath}, IgnoreError: true})
 	step("reload systemd", "systemctl", "daemon-reload")
-	kind := o.Firewall
+	kind := opts.Firewall
 	if kind == "auto" {
 		kind = fw
 	}
 	if kind == "ufw" || kind == "firewalld" {
-		plan.Steps = append(plan.Steps, firewallSteps(kind, o.Ports, true)...)
+		plan.Steps = append(plan.Steps, firewallSteps(kind, opts.Ports, true)...)
 	}
-	plan.Notes = append(plan.Notes, "The data directory "+filepath.ToSlash(o.DataDir)+" and the binary were kept; delete them yourself if you are sure.")
+	plan.Notes = append(plan.Notes, "The data directory "+filepath.ToSlash(opts.DataDir)+" and the binary were kept; delete them yourself if you are sure.")
 	return plan
 }
 
 // FirewallPlan opens only the firewall ports (after a port was changed).
-func FirewallPlan(o Options, fw string) Plan {
-	o.defaults()
-	kind := o.Firewall
+func FirewallPlan(opts Options, fw string) Plan {
+	opts.defaults()
+	kind := opts.Firewall
 	if kind == "auto" {
 		kind = fw
 	}
 	if kind == "ufw" || kind == "firewalld" {
-		return Plan{Steps: firewallSteps(kind, o.Ports, false)}
+		return Plan{Steps: firewallSteps(kind, opts.Ports, false)}
 	}
-	return Plan{Notes: []string{manualFirewallNote(o.Ports)}}
+	return Plan{Notes: []string{manualFirewallNote(opts.Ports)}}
 }
 
 // Runner runs commands; tests replace it.
@@ -286,11 +286,11 @@ func (ExecRunner) Active(argv ...string) bool {
 
 // Detect finds the firewall manager that is switched on: "ufw", "firewalld"
 // or "none".
-func Detect(r Runner) string {
-	if out, err := r.Run("ufw", "status"); err == nil && strings.Contains(out, "Status: active") {
+func Detect(runner Runner) string {
+	if out, err := runner.Run("ufw", "status"); err == nil && strings.Contains(out, "Status: active") {
 		return "ufw"
 	}
-	if r.Active("firewall-cmd", "--state") {
+	if runner.Active("firewall-cmd", "--state") {
 		return "firewalld"
 	}
 	return "none"
@@ -298,21 +298,21 @@ func Detect(r Runner) string {
 
 // Execute runs a plan, reporting each step to w. A failing step that is not
 // marked IgnoreError stops the run.
-func Execute(p Plan, r Runner, w io.Writer) error {
-	for i, s := range p.Steps {
-		fmt.Fprintf(w, "[%d/%d] %s\n", i+1, len(p.Steps), s.Description)
+func Execute(plan Plan, runner Runner, w io.Writer) error {
+	for i, step := range plan.Steps {
+		fmt.Fprintf(w, "[%d/%d] %s\n", i+1, len(plan.Steps), step.Description)
 		switch {
-		case s.Command == nil:
-			if err := os.MkdirAll(filepath.Dir(s.File), 0o755); err != nil {
+		case step.Command == nil:
+			if err := os.MkdirAll(filepath.Dir(step.File), 0o755); err != nil {
 				return err
 			}
-			if err := os.WriteFile(s.File, []byte(s.Content), s.FileMode); err != nil {
-				return fmt.Errorf("%s: %w", s.Description, err)
+			if err := os.WriteFile(step.File, []byte(step.Content), step.FileMode); err != nil {
+				return fmt.Errorf("%s: %w", step.Description, err)
 			}
 		default:
-			out, err := r.Run(s.Command...)
-			if err != nil && !s.IgnoreError {
-				return fmt.Errorf("%s: %s: %w\n%s", s.Description, strings.Join(s.Command, " "), err, out)
+			out, err := runner.Run(step.Command...)
+			if err != nil && !step.IgnoreError {
+				return fmt.Errorf("%s: %s: %w\n%s", step.Description, strings.Join(step.Command, " "), err, out)
 			}
 		}
 	}
@@ -320,18 +320,18 @@ func Execute(p Plan, r Runner, w io.Writer) error {
 }
 
 // Describe prints a plan as shell-like text (for --dry-run).
-func Describe(p Plan, w io.Writer) {
-	for _, s := range p.Steps {
-		if s.Command == nil {
-			fmt.Fprintf(w, "# %s\n#   write %s\n", s.Description, s.File)
-			for line := range strings.SplitSeq(strings.TrimRight(s.Content, "\n"), "\n") {
+func Describe(plan Plan, w io.Writer) {
+	for _, step := range plan.Steps {
+		if step.Command == nil {
+			fmt.Fprintf(w, "# %s\n#   write %s\n", step.Description, step.File)
+			for line := range strings.SplitSeq(strings.TrimRight(step.Content, "\n"), "\n") {
 				fmt.Fprintf(w, "#   | %s\n", line)
 			}
 			continue
 		}
-		fmt.Fprintf(w, "# %s\n%s\n", s.Description, strings.Join(s.Command, " "))
+		fmt.Fprintf(w, "# %s\n%s\n", step.Description, strings.Join(step.Command, " "))
 	}
-	for _, n := range p.Notes {
+	for _, n := range plan.Notes {
 		fmt.Fprintf(w, "\nnote: %s\n", n)
 	}
 }

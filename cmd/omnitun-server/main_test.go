@@ -254,13 +254,73 @@ func TestLogsCommand(t *testing.T) {
 	if err != nil || !strings.Contains(out, "and then this") || strings.Contains(out, "something happened") {
 		t.Fatalf("logs -n 1: %v\n%s", err, out)
 	}
+	if !strings.Contains(out, "INFO  and then this") {
+		t.Fatalf("logs shows the level: %q", out)
+	}
 	out, _ = run(t, dir, "--json", "logs")
-	var lines []string
-	if json.Unmarshal([]byte(out), &lines) != nil || len(lines) != 2 {
+	var records []logs.Record
+	if json.Unmarshal([]byte(out), &records) != nil || len(records) != 2 || records[0].Level != "warn" || records[1].Source != "server" {
 		t.Fatalf("json logs = %q", out)
+	}
+	if out, _ = run(t, dir, "logs", "--level", "warn"); !strings.Contains(out, "something happened") || strings.Contains(out, "and then this") {
+		t.Fatalf("logs --level warn: %q", out)
 	}
 	if _, err := run(t, dir, "logs", "-n", "0"); exitCode(err) != 2 {
 		t.Fatalf("logs -n 0: code %d", exitCode(err))
+	}
+	if _, err := run(t, dir, "logs", "--level", "loud"); exitCode(err) != 2 {
+		t.Fatalf("logs --level loud: code %d", exitCode(err))
+	}
+
+	// The level setting.
+	if out, err := run(t, dir, "logs", "level", "info"); err != nil || !strings.Contains(out, "log level: info") {
+		t.Fatalf("logs level info: %v %q", err, out)
+	}
+	if out, _ := run(t, dir, "logs", "level", "trace"); !strings.Contains(out, "warning: debug and trace logging slow") {
+		t.Fatalf("no warning for trace: %q", out)
+	}
+	if out, _ := run(t, dir, "logs", "level", "default"); !strings.Contains(out, "log level: default") {
+		t.Fatalf("logs level default: %q", out)
+	}
+	if _, err := run(t, dir, "logs", "level", "loud"); exitCode(err) != 2 {
+		t.Fatalf("logs level loud: code %d", exitCode(err))
+	}
+	if _, err := run(t, dir, "run", "--log-level", "loud"); exitCode(err) != 2 {
+		t.Fatalf("run --log-level loud: code %d", exitCode(err))
+	}
+}
+
+func TestAlertsCommand(t *testing.T) {
+	dir := tempDir(t)
+	run(t, dir, "init", "--host", "203.0.113.7")
+	if out, _ := run(t, dir, "alerts"); !strings.Contains(out, "no alerts") {
+		t.Fatalf("alerts: %q", out)
+	}
+	lg := logs.Open(dir)
+	lg.SetAlerts(logs.OpenAlerts(dir))
+	lg.Log(logs.LevelError, logs.Record{Msg: "the DNS tunnel stopped", Target: "dnstt", Code: "STOPPED", Err: "boom", Notify: true})
+	lg.Log(logs.LevelError, logs.Record{Msg: "the DNS tunnel stopped", Target: "dnstt", Code: "STOPPED", Err: "boom", Notify: true})
+	lg.Close()
+	out, _ := run(t, dir, "alerts")
+	if !strings.Contains(out, "NEW") || !strings.Contains(out, "the DNS tunnel stopped (2 times): boom") {
+		t.Fatalf("alerts: %q", out)
+	}
+	if _, err := run(t, dir, "alerts", "ack"); exitCode(err) != 2 {
+		t.Fatalf("ack without ids: code %d", exitCode(err))
+	}
+	if out, err := run(t, dir, "alerts", "ack", "1"); err != nil || !strings.Contains(out, "1 alert(s) acknowledged") {
+		t.Fatalf("ack 1: %v %q", err, out)
+	}
+	out, _ = run(t, dir, "--json", "alerts")
+	var list []logs.Alert
+	if json.Unmarshal([]byte(out), &list) != nil || len(list) != 1 || !list[0].Acknowledged {
+		t.Fatalf("json alerts = %q", out)
+	}
+	if out, err := run(t, dir, "alerts", "collect", "off"); err != nil || !strings.Contains(out, "alerts: off") {
+		t.Fatalf("collect off: %v %q", err, out)
+	}
+	if info, _ := manager.New(store.Open(dir)).Logging(); info.Alerts {
+		t.Fatal("alerts still on")
 	}
 }
 

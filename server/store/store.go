@@ -111,6 +111,27 @@ type API struct {
 // DefaultAPIPort is the web API's default port.
 const DefaultAPIPort = 2097
 
+// Logging sets what the running server writes to server.log and whether
+// failures nothing handled become alerts (see server/logs).
+type Logging struct {
+	// Level is trace, debug, info, warn or error; empty is the build's default
+	// (error in release builds, debug in development builds).
+	Level string `json:"level,omitempty"`
+	// Alerts off stops collecting alerts; nil is on.
+	Alerts *bool `json:"alerts,omitempty"`
+}
+
+// AlertsEnabled reports whether alerts are collected (the default).
+func (l *Logging) AlertsEnabled() bool { return l == nil || l.Alerts == nil || *l.Alerts }
+
+// LevelName is the configured level, "" for the default.
+func (l *Logging) LevelName() string {
+	if l == nil {
+		return ""
+	}
+	return l.Level
+}
+
 // Server settings.
 type Server struct {
 	Name string `json:"name"`
@@ -133,6 +154,8 @@ type Server struct {
 	DNSTT        DNSTT        `json:"dnstt"`
 	API          API          `json:"api"`
 	ACME         ACME         `json:"acme"`
+	// Logging is the log level and the alerts switch; nil is the defaults.
+	Logging *Logging `json:"logging,omitempty"`
 	// IPv6 gives users an IPv6 address inside the tunnels that can carry one
 	// (WireGuard, AmneziaWG, OpenVPN, IKEv2) and makes the server route it. Off by
 	// default: a host without IPv6 to the internet would make apps wait for
@@ -308,9 +331,9 @@ func (s *Store) read() (*State, bool, error) {
 // the running server) to finish its update.
 const lockTimeout = 10 * time.Second
 
-// withLock runs f holding the data directory's exclusive write lock, which
+// withLock runs fn holding the data directory's exclusive write lock, which
 // works across processes, so two updates can't overwrite each other.
-func (s *Store) withLock(f func() error) error {
+func (s *Store) withLock(fn func() error) error {
 	if err := os.MkdirAll(s.Dir, 0o700); err != nil {
 		return err
 	}
@@ -325,7 +348,7 @@ func (s *Store) withLock(f func() error) error {
 		return fmt.Errorf("another omnitun-server command is writing to %s; try again", s.Dir)
 	}
 	defer lock.Unlock()
-	return f()
+	return fn()
 }
 
 // Save writes the state atomically, readable only by the owner (it holds keys).
@@ -352,14 +375,14 @@ func (s *Store) Save(st *State) error {
 	}
 }
 
-// Update loads, applies f and saves, holding the write lock throughout.
-func (s *Store) Update(f func(*State) error) error {
+// Update loads, applies fn and saves, holding the write lock throughout.
+func (s *Store) Update(fn func(*State) error) error {
 	return s.withLock(func() error {
 		st, _, err := s.read()
 		if err != nil {
 			return err
 		}
-		if err := f(st); err != nil {
+		if err := fn(st); err != nil {
 			return err
 		}
 		return s.Save(st)
@@ -376,7 +399,7 @@ func AddUser(st *State, name string) (*User, error) {
 	if st.User(name) != nil {
 		return nil, fmt.Errorf("user %q already exists", name)
 	}
-	u := &User{
+	user := &User{
 		Name:      name,
 		UUID:      NewUUID(),
 		Password:  RandomHex(16),
@@ -385,11 +408,11 @@ func AddUser(st *State, name string) (*User, error) {
 		Enabled:   true,
 		CreatedAt: time.Now().UTC(),
 	}
-	if err := giveWireGuard(st, u); err != nil {
+	if err := giveWireGuard(st, user); err != nil {
 		return nil, err
 	}
-	st.Users = append(st.Users, u)
-	return u, nil
+	st.Users = append(st.Users, user)
+	return user, nil
 }
 
 // DeleteUser removes a user.

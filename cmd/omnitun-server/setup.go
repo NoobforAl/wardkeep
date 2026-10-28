@@ -13,17 +13,17 @@ import (
 	"github.com/NoobforAl/omnitun/server/store"
 )
 
-func newStatusCmd(o *options) *cobra.Command {
+func newStatusCmd(global *options) *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
 		Short: "Show the server summary",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			info, err := o.manager().Server()
+			info, err := global.manager().Server()
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() {
+			return global.print(info, func() {
 				fmt.Printf("%s (%s)\n", info.Name, info.PublicHost)
 				fmt.Printf("users: %d (%d active)   protocols enabled: %d\n", info.Users, info.ActiveUsers, info.Protocols)
 				if info.Running {
@@ -40,30 +40,30 @@ func newStatusCmd(o *options) *cobra.Command {
 }
 
 func printProtocols(list []manager.ProtocolInfo, subPort int) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "PROTOCOL\tNAME\tPORT\tTRANSPORT\tSTATUS\tTRAFFIC (MONTH)\tCONN")
-	for _, p := range list {
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(tw, "PROTOCOL\tNAME\tPORT\tTRANSPORT\tSTATUS\tTRAFFIC (MONTH)\tCONN")
+	for _, proto := range list {
 		status := "disabled"
-		if p.Enabled {
+		if proto.Enabled {
 			status = "enabled"
 		}
 		conn := "-"
-		if p.Connections > 0 {
-			conn = fmt.Sprint(p.Connections)
+		if proto.Connections > 0 {
+			conn = fmt.Sprint(proto.Connections)
 		}
-		name := p.Name
-		if p.AmneziaWGVersion != "" {
-			name += " " + p.AmneziaWGVersion
+		name := proto.Name
+		if proto.AmneziaWGVersion != "" {
+			name += " " + proto.AmneziaWGVersion
 		}
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\t%s\t%s\n", p.Key, name, p.Port, p.Transport, status, humanBytes(p.MonthBytes), conn)
+		fmt.Fprintf(tw, "%s\t%s\t%d\t%s\t%s\t%s\t%s\n", proto.Key, name, proto.Port, proto.Transport, status, humanBytes(proto.MonthBytes), conn)
 	}
 	if subPort > 0 {
-		fmt.Fprintf(w, "subscriptions\t\t%d\ttcp\thttp\t\t\n", subPort)
+		fmt.Fprintf(tw, "subscriptions\t\t%d\ttcp\thttp\t\t\n", subPort)
 	}
-	w.Flush()
+	tw.Flush()
 }
 
-func newProtoCmd(o *options) *cobra.Command {
+func newProtoCmd(global *options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proto",
 		Short: "List protocols, switch them on or off, change ports",
@@ -75,13 +75,13 @@ func newProtoCmd(o *options) *cobra.Command {
 		Short: "Protocols, ports and status",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			m := o.manager()
-			protos, err := m.Protocols()
+			mgr := global.manager()
+			protos, err := mgr.Protocols()
 			if err != nil {
 				return err
 			}
-			info, _ := m.Server()
-			return o.print(protos, func() { printProtocols(protos, info.SubscriptionPort) })
+			info, _ := mgr.Server()
+			return global.print(protos, func() { printProtocols(protos, info.SubscriptionPort) })
 		},
 	}
 	setEnabled := func(use string, on bool) *cobra.Command {
@@ -91,11 +91,11 @@ func newProtoCmd(o *options) *cobra.Command {
 			Args:      cobra.ExactArgs(1),
 			ValidArgs: store.AllProtocols,
 			RunE: func(cmd *cobra.Command, args []string) error {
-				p, err := o.manager().SetProtocol(args[0], manager.ProtocolPatch{Enabled: &on})
+				p, err := global.manager().SetProtocol(args[0], manager.ProtocolPatch{Enabled: &on})
 				if err != nil {
 					return err
 				}
-				return o.print(p, func() { fmt.Printf("%s: enabled=%v port=%d\n", p.Key, p.Enabled, p.Port) })
+				return global.print(p, func() { fmt.Printf("%s: enabled=%v port=%d\n", p.Key, p.Enabled, p.Port) })
 			},
 		}
 	}
@@ -109,11 +109,11 @@ func newProtoCmd(o *options) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("%w: port %q is not a number", manager.ErrInvalid, args[1])
 			}
-			p, err := o.manager().SetProtocol(args[0], manager.ProtocolPatch{Port: &n})
+			p, err := global.manager().SetProtocol(args[0], manager.ProtocolPatch{Port: &n})
 			if err != nil {
 				return err
 			}
-			return o.print(p, func() { fmt.Printf("%s: enabled=%v port=%d\n", p.Key, p.Enabled, p.Port) })
+			return global.print(p, func() { fmt.Printf("%s: enabled=%v port=%d\n", p.Key, p.Enabled, p.Port) })
 		},
 	}
 	awgVersion := &cobra.Command{
@@ -132,11 +132,11 @@ it again. The version the server already has is left alone.`,
 			if err != nil {
 				return fmt.Errorf("%w: %v", manager.ErrInvalid, err)
 			}
-			p, err := o.manager().SetProtocol(store.AmneziaWGKey, manager.ProtocolPatch{AmneziaWGVersion: &v})
+			p, err := global.manager().SetProtocol(store.AmneziaWGKey, manager.ProtocolPatch{AmneziaWGVersion: &v})
 			if err != nil {
 				return err
 			}
-			return o.print(p, func() {
+			return global.print(p, func() {
 				fmt.Printf("%s: AmneziaWG %s (users must import their AmneziaWG config or link again)\n", p.Key, p.AmneziaWGVersion)
 			})
 		},
@@ -162,11 +162,11 @@ so their devices import them again.`,
 			default:
 				return fmt.Errorf("%w: say on or off", manager.ErrInvalid)
 			}
-			info, err := o.manager().SetIPv6(on)
+			info, err := global.manager().SetIPv6(on)
 			if err != nil {
 				return err
 			}
-			return o.print(info, func() { fmt.Println("IPv6 in the tunnels:", map[bool]string{true: "on", false: "off"}[info.IPv6]) })
+			return global.print(info, func() { fmt.Println("IPv6 in the tunnels:", map[bool]string{true: "on", false: "off"}[info.IPv6]) })
 		},
 	}
 	cmd.AddCommand(list, setEnabled("enable", true), setEnabled("disable", false), port, awgVersion, ipv6)
