@@ -154,7 +154,7 @@ func (inner *remoteMapInner) Swap(i, j int) {
 	inner.byAddr[inner.byAge[j].Addr] = j
 }
 
-func (inner *remoteMapInner) Push(x interface{}) {
+func (inner *remoteMapInner) Push(x any) {
 	record := x.(*remoteRecord)
 	if _, ok := inner.byAddr[record.Addr]; ok {
 		panic("duplicate address in remoteMap")
@@ -165,7 +165,7 @@ func (inner *remoteMapInner) Push(x interface{}) {
 	inner.byAge = append(inner.byAge, record)
 }
 
-func (inner *remoteMapInner) Pop() interface{} {
+func (inner *remoteMapInner) Pop() any {
 	n := len(inner.byAddr)
 	// Remove from byAge slice.
 	record := inner.byAge[n-1]

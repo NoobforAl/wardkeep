@@ -91,7 +91,7 @@ func TestSampleWeighted(t *testing.T) {
 		{[]uint32{0, 0, 0, 0, 1}, 4},
 		{[]uint32{0, 0, 0xffffffff, 0, 1}, 2},
 	} {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			index := sampleWeighted(test.weights)
 			if index != test.index {
 				t.Errorf("%v: expected %d, got %d", test.weights, test.index, index)

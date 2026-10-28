@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
+
 	"net/http"
 	"strconv"
 	"sync"
@@ -67,7 +67,7 @@ func NewHTTPPacketConn(rt http.RoundTripper, urlString string, numSenders int) (
 		urlString:       urlString,
 		QueuePacketConn: turbotunnel.NewQueuePacketConn(turbotunnel.DummyAddr{}, 0),
 	}
-	for i := 0; i < numSenders; i++ {
+	for range numSenders {
 		go c.sendLoop()
 	}
 	return c, nil
@@ -94,7 +94,7 @@ func (c *HTTPPacketConn) send(p []byte) error {
 		if ct := resp.Header.Get("Content-Type"); ct != "application/dns-message" {
 			return fmt.Errorf("unknown HTTP response Content-Type %+q", ct)
 		}
-		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 64000))
+		body, err := io.ReadAll(io.LimitReader(resp.Body, 64000))
 		if err == nil {
 			c.QueuePacketConn.QueueIncoming(body, turbotunnel.DummyAddr{})
 		}

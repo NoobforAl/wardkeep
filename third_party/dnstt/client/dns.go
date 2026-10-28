@@ -228,10 +228,7 @@ func (c *DNSPacketConn) recvLoop(transport net.PacketConn) error {
 func chunks(p []byte, n int) [][]byte {
 	var result [][]byte
 	for len(p) > 0 {
-		sz := len(p)
-		if sz > n {
-			sz = n
-		}
+		sz := min(len(p), n)
 		result = append(result, p[:sz])
 		p = p[sz:]
 	}
@@ -375,10 +372,7 @@ func (c *DNSPacketConn) sendLoop(transport net.PacketConn, addr net.Addr) error 
 		if pollTimerExpired {
 			// We're polling because it's been a while since we last
 			// polled. Increase the poll delay.
-			pollDelay = time.Duration(float64(pollDelay) * pollDelayMultiplier)
-			if pollDelay > maxPollDelay {
-				pollDelay = maxPollDelay
-			}
+			pollDelay = min(time.Duration(float64(pollDelay)*pollDelayMultiplier), maxPollDelay)
 		} else {
 			// We're sending an actual data packet, or we're polling
 			// in response to a received packet. Reset the poll

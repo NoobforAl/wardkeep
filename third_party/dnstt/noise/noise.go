@@ -107,10 +107,7 @@ func (s *socket) Read(p []byte) (int, error) {
 func (s *socket) Write(p []byte) (int, error) {
 	total := 0
 	for len(p) > 0 {
-		n := len(p)
-		if n > 4096 {
-			n = 4096
-		}
+		n := min(len(p), 4096)
 		msg, err := s.sendCipher.Encrypt(nil, nil, p[:n])
 		if err != nil {
 			return total, err
