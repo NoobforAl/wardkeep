@@ -18,7 +18,7 @@ TAGS := with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openv
 LDFLAGS := -s -w -checklinkname=0
 GOFLAGS_ALL := -tags "$(TAGS)" -ldflags "$(LDFLAGS)"
 
-.PHONY: build test vet tor app-test server-release fix dev-build dev-server dev-tui dev-web dev-android dev-clean clean help docker-e2e notices
+.PHONY: build test vet lint tor app-test server-release fix dev-build dev-server dev-tui dev-web dev-android dev-clean clean help docker-e2e notices
 
 build:
 	go build $(GOFLAGS_ALL) -o bin/ ./cmd/...
@@ -28,6 +28,14 @@ test:
 
 vet:
 	go vet -tags "$(TAGS)" ./...
+
+# Linters for all three languages (configs: .golangci.yml, tor/Cargo.toml [lints] and tor/deny.toml,
+# app/analysis_options.yaml). Needs golangci-lint v2, govulncheck and cargo-deny on PATH.
+lint:
+	golangci-lint run --build-tags "$(TAGS)" ./...
+	govulncheck -tags "$(TAGS)" ./...
+	cd tor && cargo clippy --all-targets -- -D warnings && cargo deny check
+	$(FLUTTER_SH); cd app && "$$FLUTTER" analyze
 
 tor:
 	cd tor && cargo test
@@ -62,6 +70,7 @@ docker-e2e:
 #   make dev-web       the web API of that server (docs at http://127.0.0.1:<port>/docs)
 #   make dev-android   build the core for the connected phone, then run the app on it
 #   make clean         delete build output and caches (Go, Rust, Flutter, Gradle, Android core); keeps .dev and signing keys
+#   make lint          linters: golangci-lint (with gosec), govulncheck, clippy, cargo-deny, flutter analyze
 #   make fix           format and fix the code (gofmt, go fix, go vet, dart fix, cargo fmt)
 #   make docker-e2e    real VPN clients against the Linux server in Docker (PROTO="wireguard amneziawg", E2E_ARGS="--only ipv6")
 # ---------------------------------------------------------------------------

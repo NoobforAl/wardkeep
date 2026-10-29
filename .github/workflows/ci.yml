@@ -60,6 +60,33 @@ jobs:
           workspaces: tor
       - run: cargo test
         working-directory: tor
+      # Lints in tor/Cargo.toml; clippy is part of the stable toolchain.
+      - run: cargo clippy --all-targets -- -D warnings
+        working-directory: tor
+      # Vulnerabilities, licenses and sources (tor/deny.toml).
+      - run: cargo install --locked cargo-deny@0.20.2
+      - run: cargo deny check
+        working-directory: tor
+
+  # golangci-lint (with gosec; .golangci.yml) and govulncheck. On Linux: the Windows-only code is still checked
+  # by `go vet` in the go job.
+  go-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+      - name: Lint
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          TAGS=$(sed -n 's/^TAGS := //p' Makefile)
+          golangci-lint run --build-tags "$TAGS" --timeout 15m ./...
+          govulncheck -tags "$TAGS" ./...
 
   flutter:
     runs-on: ubuntu-latest
