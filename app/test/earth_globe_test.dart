@@ -390,8 +390,12 @@ void zoomTests() {
       await b.moveBy(const Offset(400, 0));
       await tester.pump();
       expect(state(tester).userZoom, lessThanOrEqualTo(1.5), reason: 'the zoom has a limit');
-      Clip clip() => tester.widget<ClipRect>(find.descendant(of: find.byType(EarthBackdrop), matching: find.byType(ClipRect)).first).clipBehavior;
-      expect(clip(), Clip.hardEdge, reason: 'zoomed in, the Earth does not draw over the page around it');
+      final outline = tester.widget<ClipOval>(find.descendant(of: find.byType(EarthBackdrop), matching: find.byType(ClipOval)).first);
+      expect(outline.clipBehavior, isNot(Clip.none), reason: 'zoomed in, the Earth does not draw over the page around it');
+      final box = tester.getSize(find.byType(EarthBackdrop));
+      final clipped = outline.clipper!.getClip(box);
+      expect(clipped.width, box.shortestSide, reason: 'it keeps the round outline it has at the normal zoom, not a square');
+      expect(clipped.center, box.center(Offset.zero));
       await a.up();
       await b.up();
       await tester.pumpAndSettle();

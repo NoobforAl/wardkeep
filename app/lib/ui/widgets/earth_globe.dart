@@ -551,9 +551,11 @@ class EarthBackdropState extends State<EarthBackdrop> with TickerProviderStateMi
                 ..onEnd = _scaleEnd,
             ),
           },
-          // Zoomed in, the Earth stays inside its box instead of drawing over the page around it.
-          child: ClipRect(
-          clipBehavior: _userZoom > 1 ? Clip.hardEdge : Clip.none,
+          // Zoomed in, the Earth stays inside the circle it has at the normal zoom, so it neither draws over the
+          // page around it nor shows the square edge of its box: the view moves closer, the outline stays round.
+          child: ClipOval(
+          clipper: const _GlobeOutline(),
+          clipBehavior: _userZoom > 1 ? Clip.antiAlias : Clip.none,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -704,6 +706,17 @@ class _GlobeLayerState extends State<_GlobeLayer> {
       },
     );
   }
+}
+
+/// The Earth's outline at the normal zoom: the largest circle centred in the box (see [_Projection]).
+class _GlobeOutline extends CustomClipper<Rect> {
+  const _GlobeOutline();
+
+  @override
+  Rect getClip(Size size) => Rect.fromCircle(center: size.center(Offset.zero), radius: size.shortestSide / 2);
+
+  @override
+  bool shouldReclip(_GlobeOutline oldClipper) => false;
 }
 
 /// Paints a picture of the Earth made at the screen's own pixel size (one pixel of it is one pixel of the screen).
