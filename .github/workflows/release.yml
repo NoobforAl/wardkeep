@@ -436,8 +436,19 @@ jobs:
           cache: true
       - name: Build tools and libraries
         run: |
+          # clang 18 from LLVM's own repository: the QR scanner's zxing-cpp (C++20 ranges) does not compile
+          # with 22.04's clang 14 or 15 against libstdc++ 12. Same Ubuntu, same glibc and libstdc++, so the app
+          # still runs where it ran. `flutter build linux` calls plain clang/clang++, so clang 18 goes first on PATH
+          # (the runner's own /usr/bin/clang is left alone).
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main" | sudo tee /etc/apt/sources.list.d/llvm-18.list >/dev/null
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends clang cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev libnotify-dev liblzma-dev
+          sudo apt-get install -y -qq --no-install-recommends clang-18 cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev libnotify-dev liblzma-dev
+          mkdir -p "$RUNNER_TEMP/clang18"
+          ln -sf /usr/bin/clang-18 "$RUNNER_TEMP/clang18/clang"
+          ln -sf /usr/bin/clang++-18 "$RUNNER_TEMP/clang18/clang++"
+          echo "$RUNNER_TEMP/clang18" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/clang18/clang++" --version | head -1
       - name: App
         working-directory: app
         run: |
