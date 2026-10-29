@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -549,18 +550,41 @@ class LogsController extends Notifier<List<LogRecord>> {
   /// The most records kept; the oldest go first.
   static const maxRecords = 500;
 
+  /// How often new records reach the screen. At debug level the core can send hundreds of lines a second;
+  /// publishing each one copied the whole list and marked the log page for a rebuild every time.
+  static const publishEvery = Duration(milliseconds: 100);
+
+  final _records = ListQueue<LogRecord>(maxRecords);
+  Timer? _publish;
+
   @override
   List<LogRecord> build() {
     final sub = ref.watch(engineProvider).logs.listen(add);
-    ref.onDispose(sub.cancel);
+    ref.onDispose(() {
+      sub.cancel();
+      _publish?.cancel();
+    });
+    _records.clear();
     return const [];
   }
 
   void add(LogRecord record) {
-    state = [...state.skip(state.length >= maxRecords ? state.length - maxRecords + 1 : 0), record];
+    if (_records.length >= maxRecords) _records.removeFirst();
+    _records.addLast(record);
+    _publish ??= Timer(publishEvery, flush);
   }
 
-  void clear() => state = const [];
+  /// Shows the records added since the last time at once.
+  void flush() {
+    _publish?.cancel();
+    _publish = null;
+    state = List.unmodifiable(_records);
+  }
+
+  void clear() {
+    _records.clear();
+    flush();
+  }
 }
 
 final logsProvider = NotifierProvider<LogsController, List<LogRecord>>(LogsController.new);

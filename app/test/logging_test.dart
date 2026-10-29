@@ -131,6 +131,8 @@ void main() {
       engine.records.add(LogRecord.app('line $i'));
     }
     await Future<void>.delayed(Duration.zero);
+    expect(container.read(logsProvider), isEmpty, reason: 'records reach the screen in batches');
+    await Future<void>.delayed(LogsController.publishEvery * 2);
     final logs = container.read(logsProvider);
     expect(logs, hasLength(LogsController.maxRecords));
     expect(logs.first.msg, 'line 20');
