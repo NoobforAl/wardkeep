@@ -43,12 +43,17 @@ class _LogEngine extends MockEngine {
 class _FakeSystemNotifications extends SystemNotifications {
   final shown = <(String title, String body, String conn)>[];
 
+  /// Whether each shown one was a failure of the connection (Android leaves those to "Connection lost").
+  final connection = <bool>[];
+
   @override
   Future<void> start(void Function(String conn) openLogs) async {}
 
   @override
-  Future<void> show({required String title, required String body, required String conn}) async =>
-      shown.add((title, body, conn));
+  Future<void> show({required String title, required String body, required String conn, bool connection = false}) async {
+    shown.add((title, body, conn));
+    this.connection.add(connection);
+  }
 }
 
 LogRecord _failure({String conn = '7f3a', String code = 'TOR_TIMEOUT'}) => LogRecord.fromJson({
@@ -330,6 +335,38 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text(l.logsView), findsNothing);
       expect(notifications.shown.single, (l.appName, l.errTorTimeout, '7f3a'));
+    });
+
+    testWidgets('a failure of the connection is marked as one (Android leaves it to "Connection lost")', (tester) async {
+      final (engine, notifications, _) = await pumpApp(tester, settings: {'notify_popup': false});
+      // A running connection that fell to the error state (op connect, from the attempt it belongs to).
+      engine.records.add(LogRecord.fromJson({
+        'level': 'error',
+        'source': 'core',
+        'msg': 'the connection failed: the server did not answer in time',
+        'op': 'connect',
+        'conn': 'c1',
+        'code': 'TIMEOUT',
+        'notify': true,
+      }));
+      // Something else that failed with nothing to handle it.
+      engine.records.add(LogRecord.fromJson({
+        'level': 'fatal',
+        'source': 'core',
+        'msg': 'panic: boom',
+        'op': 'subscription',
+        'code': 'PANIC',
+        'notify': true,
+      }));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(notifications.shown.map((n) => n.$3), ['c1', '']);
+      expect(notifications.connection, [true, false]);
+    });
+
+    test('only the records of a connection are failures of the connection', () {
+      expect(SystemNotifications.isConnectionFailure(_failure()), isTrue);
+      expect(SystemNotifications.isConnectionFailure(LogRecord.app('import failed', level: 'error')), isFalse);
     });
 
     testWidgets('with both switched off nothing is told', (tester) async {

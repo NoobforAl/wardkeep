@@ -2,8 +2,12 @@ package mobile
 
 import (
 	"context"
+	"encoding/json"
 	"net"
+	"strings"
 	"testing"
+
+	"github.com/NoobforAl/omnitun/core/engine"
 )
 
 func TestStartTunnelFromJSONNeedsTheCore(t *testing.T) {
@@ -18,6 +22,84 @@ func TestStartTunnelFromJSONNeedsTheCore(t *testing.T) {
 	}()
 	if err := StartTunnelFromJSON(`{"profiles":[]}`); err == nil {
 		t.Fatal("started without a running core")
+	}
+}
+
+func TestRestartTunnelFromJSONNeedsTheCore(t *testing.T) {
+	mu.Lock()
+	saved := srv
+	srv = nil
+	mu.Unlock()
+	defer func() {
+		mu.Lock()
+		srv = saved
+		mu.Unlock()
+	}()
+	if err := RestartTunnelFromJSON(`{"profiles":[]}`); err == nil {
+		t.Fatal("restarted without a running core")
+	}
+}
+
+// Reconnect sends the saved request as a "start" whatever is running: the engine replaces a running tunnel
+// itself, without a stop that would close the VPN interface in between.
+func TestRestartSendsTheSavedStart(t *testing.T) {
+	var method, params string
+	err := restartWith(func(m string, p json.RawMessage) (any, error) {
+		method, params = m, string(p)
+		return nil, nil
+	}, `{"selected":"p_1"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if method != "start" || params != `{"selected":"p_1"}` {
+		t.Fatalf("called %q with %s, want start with the saved request", method, params)
+	}
+	if err := restartWith(func(string, json.RawMessage) (any, error) { return nil, nil }, ""); err == nil {
+		t.Fatal("restarted with no saved request")
+	}
+}
+
+// A second Reconnect while one is in progress does nothing; the next one after it works again.
+func TestRestartIgnoresATapWhileReconnecting(t *testing.T) {
+	entered, release := make(chan struct{}), make(chan struct{})
+	done := make(chan error)
+	go func() {
+		done <- restartWith(func(string, json.RawMessage) (any, error) {
+			close(entered)
+			<-release
+			return nil, nil
+		}, `{}`)
+	}()
+	<-entered
+	calls := 0
+	count := func(string, json.RawMessage) (any, error) { calls++; return nil, nil }
+	if err := restartWith(count, `{}`); err != nil || calls != 0 {
+		t.Fatalf("second restart: err %v, %d calls; want ignored", err, calls)
+	}
+	close(release)
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if err := restartWith(count, `{}`); err != nil || calls != 1 {
+		t.Fatalf("restart after the first ended: err %v, %d calls; want 1", err, calls)
+	}
+}
+
+// The notification shows why a connection failed; the reason never carries an address.
+func TestNotifyStateErrorIsScrubbed(t *testing.T) {
+	got := newNotifyState(engine.State{
+		Status: engine.StatusError, ProfileName: "Home",
+		Error: "Handshake failed: dial tcp 192.0.2.7:443: i/o timeout", ErrorCode: engine.ErrTimeout,
+	})
+	if got.Status != "error" || got.ErrorCode != engine.ErrTimeout || got.Profile != "Home" {
+		t.Fatalf("notifyState = %+v", got)
+	}
+	if strings.Contains(got.Error, "192.0.2.7") || !strings.Contains(got.Error, "i/o timeout") {
+		t.Fatalf("error %q: want the reason without the address", got.Error)
+	}
+	running := newNotifyState(engine.State{Status: engine.StatusRunning, Error: "stale", ErrorCode: "X"})
+	if running.Error != "" || running.ErrorCode != "" {
+		t.Fatalf("a running state carries an error: %+v", running)
 	}
 }
 

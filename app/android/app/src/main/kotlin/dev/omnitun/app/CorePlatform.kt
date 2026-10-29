@@ -37,7 +37,10 @@ class CorePlatform(context: Context) : Platform {
         val state = runCatching { JSONObject(stateJSON) }.getOrNull() ?: return
         val service = OmnitunVpnService.instance ?: return
         when (val status = state.optString("status")) {
-            "disconnected", "error" -> service.stopVpn()
+            // A stop: the user's, or the system's (VPN revoked). Nothing to tell.
+            "disconnected" -> service.stopVpn()
+            // The connection failed: close the VPN and say so, with Reconnect.
+            "error" -> service.connectionLost(state.optString("error"), state.optString("error_code"))
             else -> service.updateStatus(
                 status,
                 state.optString("profile"),

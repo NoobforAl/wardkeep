@@ -2,7 +2,6 @@ package dev.omnitun.app
 
 import android.Manifest
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
@@ -32,8 +31,9 @@ import java.util.concurrent.Executors
  *  - requestNotifications: ask for POST_NOTIFICATIONS (Android 13+)
  *
  * and the "omnitun/notify" channel: a failure nothing handled (docs/logging.md §5) as a system notification
- * ("show" {title, body, conn}); tapping it opens the app's log page for that connection ("openLogs" to
- * Flutter while it runs, "takeOpenLogs" from Flutter when the tap started the app).
+ * ("show" {title, body, conn, connection}); tapping it opens the app's log page for that connection ("openLogs"
+ * to Flutter while it runs, "takeOpenLogs" from Flutter when the tap started the app). A failure of the
+ * connection (connection = true) is left out while the VPN service's "Connection lost" tells it.
  */
 class MainActivity : FlutterActivity() {
 
@@ -85,19 +85,15 @@ class MainActivity : FlutterActivity() {
         takeIncoming(intent)
     }
 
-    /** A failure as a notification on the "errors" channel; one per connection, a newer one replaces it. */
-    private fun showError(title: String, body: String, conn: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
+    /**
+     * A failure as a notification on the "errors" channel; one per connection, a newer one replaces it. A failure
+     * of the [connection] is not posted while the VPN service's "Connection lost" says it (and that one removes
+     * it when it comes later).
+     */
+    private fun showError(title: String, body: String, conn: String, connection: Boolean) {
+        if (!OmnitunVpnService.canNotify(this)) return
         val manager = getSystemService(NotificationManager::class.java)
-        if (manager.getNotificationChannel(ERRORS_CHANNEL) == null) {
-            manager.createNotificationChannel(
-                NotificationChannel(ERRORS_CHANNEL, getString(R.string.errors_channel), NotificationManager.IMPORTANCE_DEFAULT),
-            )
-        }
+        val channel = OmnitunVpnService.errorsChannel(this)
         val notificationId = ERROR_NOTIFICATION_BASE + (conn.hashCode() and 0xffff)
         val open = PendingIntent.getActivity(
             this,
@@ -108,7 +104,7 @@ class MainActivity : FlutterActivity() {
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val notification = Notification.Builder(this, ERRORS_CHANNEL)
+        val notification = Notification.Builder(this, channel)
             .setSmallIcon(R.drawable.ic_vpn_key)
             .setContentTitle(title)
             .setContentText(body)
@@ -116,7 +112,11 @@ class MainActivity : FlutterActivity() {
             .setContentIntent(open)
             .setAutoCancel(true)
             .build()
-        manager.notify(notificationId, notification)
+        if (connection) {
+            OmnitunVpnService.postConnectionAlert(this) { notificationId.also { manager.notify(it, notification) } }
+        } else {
+            manager.notify(notificationId, notification)
+        }
     }
 
     private fun takeIncoming(intent: Intent?) {
@@ -225,6 +225,7 @@ class MainActivity : FlutterActivity() {
                                 call.argument<String>("title") ?: getString(R.string.app_name),
                                 call.argument<String>("body") ?: "",
                                 call.argument<String>("conn") ?: "",
+                                call.argument<Boolean>("connection") ?: false,
                             )
                         }
                         result.success(null)
@@ -338,7 +339,6 @@ class MainActivity : FlutterActivity() {
         private const val CLEANUP_PREFS = "cleanup"
         private const val KEY_IKEV2_PROFILE_REMOVED = "ikev2_profile_removed"
         private const val REQUEST_NOTIFICATIONS = 1002
-        private const val ERRORS_CHANNEL = "errors"
         private const val ERROR_NOTIFICATION_BASE = 0x10000 // above the VPN service's own (1)
         private const val ACTION_SHOW_LOGS = "dev.omnitun.app.SHOW_LOGS"
         private const val EXTRA_CONN = "conn"

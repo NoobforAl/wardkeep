@@ -82,7 +82,7 @@ logged without it.
 | Where | How | Setting (default) |
 |---|---|---|
 | App | red notice with "View logs" (opens the log page filtered by that `conn`) | `notifyPopup` (on) |
-| Android | system notification on the VPN service's channel | `notifyOs` (on) |
+| Android | system notification on the "errors" channel; a failure of the connection (`op: connect`) is left to the VPN service's own "Connection lost" notification (with Reconnect) while that one is shown | `notifyOs` (on) |
 | Desktop | system notification | `notifyOs` (on) |
 | Server | alert in the TUI, the API and the web panel | `alerts` in the server config (on) |
 

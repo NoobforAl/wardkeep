@@ -10,9 +10,11 @@ import (
 	"errors"
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"github.com/NoobforAl/omnitun/core/control"
 	"github.com/NoobforAl/omnitun/core/engine"
+	"github.com/NoobforAl/omnitun/core/logrec"
 )
 
 // Platform is implemented natively (Kotlin VpnService on Android).
@@ -32,7 +34,9 @@ type Platform interface {
 	// StateChanged reports the engine state as JSON (see notifyState): status is
 	// "connecting", "connected", "disconnected" or "error"; it is called about once
 	// a second while connected, with traffic, so the notification can show speed.
-	// The native side stops its VPN service on "disconnected" and "error".
+	// The native side stops its VPN service on "disconnected" and "error"; on
+	// "error" it also tells the user the connection was lost, with error_code and
+	// error (scrubbed of addresses) saying why.
 	StateChanged(stateJSON string)
 }
 
@@ -68,9 +72,7 @@ func Start(dataDir string, platform Platform) (string, error) {
 		// Go cannot read the Android system CA store; use the embedded Mozilla bundle.
 		CertificateStore: "mozilla",
 		OnState: func(st engine.State) {
-			b, _ := json.Marshal(notifyState{
-				Status: string(st.Status), Profile: st.ProfileName, UpBps: st.UpBps, DownBps: st.DownBps,
-			})
+			b, _ := json.Marshal(newNotifyState(st))
 			platform.StateChanged(string(b))
 		},
 	})
@@ -121,6 +123,39 @@ func StartTunnelFromJSON(request string) error {
 	return err
 }
 
+// restarting is set while RestartTunnelFromJSON runs, so a second tap on Reconnect does not start another attempt.
+var restarting atomic.Bool
+
+// RestartTunnelFromJSON connects again with a "start" request saved by the UI
+// (control.StartParams as JSON), whatever the tunnel is doing: running, still
+// connecting, failed or stopped. It is the notification's Reconnect. A running
+// tunnel is replaced without a "disconnected" state in between (engine.Start), so
+// the VPN interface stays up and no traffic leaks while it reconnects. It returns
+// at once, doing nothing, while another restart is in progress. Safe to call from
+// any thread; it blocks until the attempt has succeeded or failed.
+func RestartTunnelFromJSON(request string) error {
+	mu.Lock()
+	server := srv
+	mu.Unlock()
+	if server == nil {
+		return errors.New("the core is not running")
+	}
+	return restartWith(server.Call, request)
+}
+
+// restartWith is RestartTunnelFromJSON with the control call to make (a test passes a fake one).
+func restartWith(call func(method string, params json.RawMessage) (any, error), request string) error {
+	if request == "" {
+		return errors.New("no saved connection to reconnect with")
+	}
+	if !restarting.CompareAndSwap(false, true) {
+		return nil
+	}
+	defer restarting.Store(false)
+	_, err := call("start", json.RawMessage(request))
+	return err
+}
+
 // Stop shuts everything down.
 func Stop() {
 	mu.Lock()
@@ -137,6 +172,19 @@ type notifyState struct {
 	Profile string `json:"profile,omitempty"`
 	UpBps   int64  `json:"up_bps"`
 	DownBps int64  `json:"down_bps"`
+	// Error says why the connection failed ("error" only), scrubbed of addresses: the
+	// system notification shows it, where anyone looking at the phone can read it.
+	Error string `json:"error,omitempty"`
+	// ErrorCode is the engine's code for that failure (engine.ErrTimeout, ...), or empty.
+	ErrorCode string `json:"error_code,omitempty"`
+}
+
+func newNotifyState(st engine.State) notifyState {
+	n := notifyState{Status: string(st.Status), Profile: st.ProfileName, UpBps: st.UpBps, DownBps: st.DownBps}
+	if st.Status == engine.StatusError {
+		n.Error, n.ErrorCode = logrec.Scrub(st.Error), st.ErrorCode
+	}
+	return n
 }
 
 // tunProvider opens the VPN interface for engines other than sing-box (AmneziaWG).

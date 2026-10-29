@@ -5,5 +5,8 @@
     <string name="vpn_connecting">Connecting…</string>
     <string name="vpn_connected">Connected</string>
     <string name="vpn_disconnect">Disconnect</string>
+    <string name="vpn_reconnect">Reconnect</string>
+    <string name="vpn_connection_lost">Connection lost</string>
+    <string name="vpn_open_app">Open app</string>
     <string name="errors_channel">Errors</string>
 </resources>

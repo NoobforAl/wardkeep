@@ -208,7 +208,13 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
     }
     final inFront = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     if (settings.notifyOs && !(popup && inFront)) {
-      unawaited(ref.read(systemNotificationsProvider).show(title: l.appName, body: text, conn: record.conn));
+      final notifications = ref.read(systemNotificationsProvider);
+      unawaited(notifications.show(
+        title: l.appName,
+        body: text,
+        conn: record.conn,
+        connection: SystemNotifications.isConnectionFailure(record),
+      ));
     }
   }
 
