@@ -150,7 +150,7 @@ func TestRecover(t *testing.T) {
 	go func() {
 		defer Recover(SourceCore, "connect", func(rec Record) { got <- rec })
 		var profiles map[string]int
-		profiles["x"] = 1 // a nil map write panics
+		profiles["x"] = 1 //nolint:staticcheck // SA5000: the panic is the test // a nil map write panics
 	}()
 	select {
 	case rec := <-got:

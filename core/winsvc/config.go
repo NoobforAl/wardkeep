@@ -46,7 +46,7 @@ func (c *Config) Add(sid string) {
 
 // LoadConfig reads the settings; a missing file is an empty configuration.
 func LoadConfig(path string) (Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: the service's own settings file
 	if errors.Is(err, os.ErrNotExist) {
 		return Config{}, nil
 	}

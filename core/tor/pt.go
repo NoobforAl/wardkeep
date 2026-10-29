@@ -96,8 +96,8 @@ func handle(factory base.ClientFactory, conn net.Conn, dial DialFunc) {
 		return
 	}
 	done := make(chan struct{}, 2)
-	go func() { io.Copy(remote, conn); done <- struct{}{} }()
-	go func() { io.Copy(conn, remote); done <- struct{}{} }()
+	go func() { _, _ = io.Copy(remote, conn); done <- struct{}{} }()
+	go func() { _, _ = io.Copy(conn, remote); done <- struct{}{} }()
 	<-done
 }
 

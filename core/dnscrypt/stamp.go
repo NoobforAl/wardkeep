@@ -371,7 +371,7 @@ func (st Stamp) String() string {
 	var out []byte
 	out = append(out, byte(st.Kind))
 	lp := func(s []byte) {
-		out = append(out, byte(len(s)))
+		out = append(out, byte(len(s))) //nolint:gosec // G115: one length byte by the stamp format; host names, keys and hashes are < 256 bytes
 		out = append(out, s...)
 	}
 	vlp := func(items [][]byte) {
@@ -380,7 +380,7 @@ func (st Stamp) String() string {
 			return
 		}
 		for i, it := range items {
-			l := byte(len(it))
+			l := byte(len(it)) //nolint:gosec // G115: one length byte by the stamp format; hashes and ALPNs are < 128 bytes
 			if i < len(items)-1 {
 				l |= 0x80
 			}

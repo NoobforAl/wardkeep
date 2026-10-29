@@ -328,7 +328,7 @@ func TestProtocolTrafficAndLogs(t *testing.T) {
 func TestNotesCannotDriveTheTerminal(t *testing.T) {
 	m := newManager(t)
 	esc := string(rune(27))
-	u, err := m.AddUser(NewUser{Name: "alice", Note: "ok" + esc + "[2J" + esc + "]0;x" + string(rune(7)) + "‮ line\none"})
+	u, err := m.AddUser(NewUser{Name: "alice", Note: "ok" + esc + "[2J" + esc + "]0;x" + string(rune(7)) + "\u202e line\none"})
 	if err != nil {
 		t.Fatal(err)
 	}

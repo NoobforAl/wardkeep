@@ -724,7 +724,7 @@ func wireguardEndpoint(prof *profile.Profile, tag string) (obj, []obj, error) {
 			return nil, nil, fmt.Errorf("the proxy under WireGuard cannot be %s", pv.Protocol)
 		}
 		out["tag"] = viaTag
-		extras = append(more, out)
+		extras = slices.Concat(more, []obj{out})
 		ep["detour"] = viaTag
 	}
 	return ep, extras, nil

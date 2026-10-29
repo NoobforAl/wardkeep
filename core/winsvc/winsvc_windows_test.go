@@ -4,6 +4,7 @@ package winsvc
 
 import (
 	"crypto/md5"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -245,16 +246,16 @@ func TestInstallAndStartNeedAdmin(t *testing.T) {
 		t.Skip("elevated: would really install")
 	}
 	logf := func(string, ...any) {}
-	if err := Install(InstallOptions{}, logf); err != ErrNeedsAdmin {
+	if err := Install(InstallOptions{}, logf); !errors.Is(err, ErrNeedsAdmin) {
 		t.Errorf("Install: %v", err)
 	}
-	if err := Uninstall(false, logf); err != ErrNeedsAdmin {
+	if err := Uninstall(false, logf); !errors.Is(err, ErrNeedsAdmin) {
 		t.Errorf("Uninstall: %v", err)
 	}
-	if err := Start(logf); err != ErrNeedsAdmin {
+	if err := Start(logf); !errors.Is(err, ErrNeedsAdmin) {
 		t.Errorf("Start: %v", err)
 	}
-	if err := Stop(logf); err != ErrNeedsAdmin {
+	if err := Stop(logf); !errors.Is(err, ErrNeedsAdmin) {
 		t.Errorf("Stop: %v", err)
 	}
 }

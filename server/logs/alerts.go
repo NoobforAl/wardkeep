@@ -112,9 +112,9 @@ func (a *Alerts) update(change func(state *alertsState)) error {
 // ten seconds was left by a process that died and is taken over.
 func (a *Alerts) lockFile() func() {
 	lock := a.path() + ".lock"
-	os.MkdirAll(a.dir, 0o700)
+	_ = os.MkdirAll(a.dir, 0o700) // OpenFile below reports a real problem
 	for range 100 {
-		file, err := os.OpenFile(lock, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+		file, err := os.OpenFile(lock, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600) //nolint:gosec // G304: a lock file inside the server's own log folder
 		if err == nil {
 			file.Close()
 			return func() { os.Remove(lock) }
@@ -142,7 +142,7 @@ func (a *Alerts) Add(rec Record) {
 		at = a.now()
 	}
 	at = at.UTC()
-	a.update(func(state *alertsState) {
+	_ = a.update(func(state *alertsState) {
 		for i := len(state.Alerts) - 1; i >= 0; i-- {
 			existing := &state.Alerts[i]
 			if existing.Target == rec.Target && existing.Code == rec.Code && existing.Source == rec.Source &&

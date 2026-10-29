@@ -72,7 +72,7 @@ func runPerUser(args []string) int {
 			return 2
 		}
 		// The process exit ends it; nothing needs to wait for it.
-		go pprofsrv.ServeListener(context.Background(), ln, logger.Printf)
+		go func() { _ = pprofsrv.ServeListener(context.Background(), ln, logger.Printf) }()
 	}
 	if *cleanup {
 		runCleanup(logger)

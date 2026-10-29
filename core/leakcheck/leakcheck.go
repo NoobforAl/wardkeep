@@ -49,13 +49,13 @@ type Limits struct {
 func Check(t *testing.T, what string, cycles int, before, after Snapshot, lim Limits) {
 	t.Helper()
 	dg := after.Goroutines - before.Goroutines
-	var dh int64 = int64(after.HeapInuse) - int64(before.HeapInuse)
+	dh := int64(after.HeapInuse) - int64(before.HeapInuse) //nolint:gosec // G115: heap sizes are far below 2^63
 	t.Logf("%s, %d cycles: goroutines %d -> %d (%+d), heap in use %.1f -> %.1f MiB (%+.1f MiB, %.0f KiB/cycle)",
 		what, cycles, before.Goroutines, after.Goroutines, dg,
 		mib(before.HeapInuse), mib(after.HeapInuse), float64(dh)/(1<<20), float64(dh)/1024/float64(cycles))
 	if dg > lim.Goroutines {
 		var buf bytes.Buffer
-		pprof.Lookup("goroutine").WriteTo(&buf, 1)
+		_ = pprof.Lookup("goroutine").WriteTo(&buf, 1)
 		t.Errorf("%s: %d goroutines left behind after %d cycles (allowed %d):\n%s", what, dg, cycles, lim.Goroutines, buf.String())
 	}
 	if dh > 0 && uint64(dh) > lim.HeapBytes {

@@ -90,7 +90,7 @@ func (w *platformWrapper) Initialize(networkManager adapter.NetworkManager) erro
 
 func (w *platformWrapper) UsePlatformAutoDetectInterfaceControl() bool { return true }
 
-func (w *platformWrapper) AutoDetectInterfaceControl(fd int) error { return w.p.Protect(int32(fd)) }
+func (w *platformWrapper) AutoDetectInterfaceControl(fd int) error { return w.p.Protect(int32(fd)) } //nolint:gosec // G115: file descriptors fit in int32 (gomobile has no int)
 
 func (w *platformWrapper) UsePlatformInterface() bool { return true }
 

@@ -230,8 +230,12 @@ func Generation(params map[string]string) string {
 // ResolveEndpoint returns the peer address; host names are resolved with the
 // system resolver (before the tunnel exists).
 func ResolveEndpoint(ctx context.Context, prof *profile.Profile) (netip.AddrPort, error) {
+	if prof.Port < 1 || prof.Port > 65535 {
+		return netip.AddrPort{}, fmt.Errorf("invalid port %d", prof.Port)
+	}
+	port := uint16(prof.Port)
 	if addr, err := netip.ParseAddr(prof.Server); err == nil {
-		return netip.AddrPortFrom(addr.Unmap(), uint16(prof.Port)), nil
+		return netip.AddrPortFrom(addr.Unmap(), port), nil
 	}
 	addrs, err := net.DefaultResolver.LookupNetIP(ctx, "ip", prof.Server)
 	if err != nil || len(addrs) == 0 {
@@ -240,10 +244,10 @@ func ResolveEndpoint(ctx context.Context, prof *profile.Profile) (netip.AddrPort
 	// Prefer IPv4: many mobile networks have broken IPv6.
 	for _, a := range addrs {
 		if a.Unmap().Is4() {
-			return netip.AddrPortFrom(a.Unmap(), uint16(prof.Port)), nil
+			return netip.AddrPortFrom(a.Unmap(), port), nil
 		}
 	}
-	return netip.AddrPortFrom(addrs[0], uint16(prof.Port)), nil
+	return netip.AddrPortFrom(addrs[0], port), nil
 }
 
 // Tunnel is a running AmneziaWG device.

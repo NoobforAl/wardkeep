@@ -271,7 +271,7 @@ type ExecRunner struct{}
 // Run implements Runner.
 func (ExecRunner) Run(argv ...string) (string, error) {
 	var out bytes.Buffer
-	cmd := exec.Command(argv[0], argv[1:]...)
+	cmd := exec.Command(argv[0], argv[1:]...) //nolint:gosec,noctx // G204: runs the fixed command lines of an install plan; no caller context
 	cmd.Stdout, cmd.Stderr = &out, &out
 	err := cmd.Run()
 	return strings.TrimSpace(out.String()), err
@@ -282,7 +282,7 @@ func (ExecRunner) Active(argv ...string) bool {
 	if _, err := exec.LookPath(argv[0]); err != nil {
 		return false
 	}
-	return exec.Command(argv[0], argv[1:]...).Run() == nil
+	return exec.Command(argv[0], argv[1:]...).Run() == nil //nolint:gosec,noctx // G204: runs the fixed probe commands of an install plan; no caller context
 }
 
 // Detect finds the firewall manager that is switched on: "ufw", "firewalld"
@@ -304,7 +304,7 @@ func Execute(plan Plan, runner Runner, w io.Writer) error {
 		fmt.Fprintf(w, "[%d/%d] %s\n", i+1, len(plan.Steps), step.Description)
 		switch {
 		case step.Command == nil:
-			if err := os.MkdirAll(filepath.Dir(step.File), 0o755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(step.File), 0o755); err != nil { //nolint:gosec // G301: system folders (systemd units, config) must stay world-readable
 				return err
 			}
 			if err := os.WriteFile(step.File, []byte(step.Content), step.FileMode); err != nil {

@@ -70,5 +70,5 @@ func (l *Logger) Emit(rec Record) {
 	line = append(line, '\n')
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.out.Write(line)
+	_, _ = l.out.Write(line)
 }

@@ -174,7 +174,7 @@ func RenewSelfSignedCert(stateStore *Store, st *State) (bool, error) {
 		return false, nil
 	}
 	certPath := stateStore.Path(st.Server.CertFile)
-	if data, err := os.ReadFile(certPath); err == nil {
+	if data, err := os.ReadFile(certPath); err == nil { //nolint:gosec // G304: the certificate inside the server's state folder
 		if block, _ := pem.Decode(data); block != nil {
 			if cert, err := x509.ParseCertificate(block.Bytes); err == nil &&
 				time.Until(cert.NotAfter) > 30*24*time.Hour && cert.NotAfter.Sub(cert.NotBefore) <= SelfSignedValidity+24*time.Hour {
@@ -214,7 +214,7 @@ func WriteSelfSignedCert(certPath, keyPath, host string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(certPath, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}), 0o644); err != nil {
+	if err := os.WriteFile(certPath, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}), 0o644); err != nil { //nolint:gosec // G306: a public certificate; the private key is written 0600
 		return err
 	}
 	return os.WriteFile(keyPath, pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyDER}), 0o600)

@@ -431,7 +431,7 @@ func recoverer(log *logs.Log) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if value := recover(); value != nil {
-					if value == http.ErrAbortHandler {
+					if value == http.ErrAbortHandler { //nolint:errorlint // recover() value, not a returned error; net/http panics with this exact sentinel
 						panic(value)
 					}
 					log.LogPanic(value, "api", "request")
@@ -457,7 +457,7 @@ func authenticate(humaAPI huma.API, current func() string) func(huma.Context, fu
 		}
 		if !ok || token == "" || subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
 			ctx.SetHeader("WWW-Authenticate", "Bearer")
-			huma.WriteErr(humaAPI, ctx, http.StatusUnauthorized, "a valid bearer token is required")
+			_ = huma.WriteErr(humaAPI, ctx, http.StatusUnauthorized, "a valid bearer token is required")
 			return
 		}
 		next(ctx)

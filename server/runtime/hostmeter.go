@@ -104,8 +104,8 @@ func (h *hostMeters) collectLocked(key string, st *meterState, tr *stats.Tracker
 		if tr == nil || (du == 0 && dd == 0) {
 			continue
 		}
-		tr.Add(usage.User, int64(du), int64(dd))
-		tr.AddProtocol(key, int64(du), int64(dd))
+		tr.Add(usage.User, int64(du), int64(dd))  //nolint:gosec // G115: per-interval byte deltas, far below 2^63
+		tr.AddProtocol(key, int64(du), int64(dd)) //nolint:gosec // G115: per-interval byte deltas, far below 2^63
 	}
 	st.live = live
 }

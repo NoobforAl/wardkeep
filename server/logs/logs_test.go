@@ -196,7 +196,7 @@ func TestControlCharactersAreRemoved(t *testing.T) {
 	l := openAt(dir, LevelTrace)
 	esc := string(rune(27))
 	hostile := "login failed for " + esc + "[2J" + esc + "]0;owned" + string(rune(7)) + " user\x08\x08\x08root" +
-		"‮ gnp.exe " + "a​b " + string(rune(0x9b)) + "31m"
+		"\u202e gnp.exe " + "a\u200bb " + string(rune(0x9b)) + "31m"
 	l.Write("info", hostile)
 	l.Log(LevelError, Record{Msg: "x", User: hostile, Err: hostile})
 	l.Close()
@@ -323,7 +323,7 @@ func TestLogPanic(t *testing.T) {
 			}
 		}()
 		var nilMap map[string]int
-		nilMap["x"] = 1
+		nilMap["x"] = 1 //nolint:staticcheck // SA5000: the panic is the test
 	}()
 	l.Close()
 	records, _ := Tail(dir, 1)

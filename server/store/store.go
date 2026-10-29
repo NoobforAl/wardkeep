@@ -345,7 +345,7 @@ func (s *Store) withLock(fn func() error) error {
 	if !ok {
 		return fmt.Errorf("another omnitun-server command is writing to %s; try again", s.Dir)
 	}
-	defer lock.Unlock()
+	defer func() { _ = lock.Unlock() }()
 	return fn()
 }
 

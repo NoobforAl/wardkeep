@@ -164,7 +164,7 @@ func awg2Params() map[string]string {
 		"s1": u32(s1), "s2": u32(s2), "s3": u32(randUint(16, 64)), "s4": u32(randUint(8, 32)),
 	}
 	for i, key := range []string{"h1", "h2", "h3", "h4"} {
-		base := 5 + uint32(order[i])*slot
+		base := 5 + uint32(order[i])*slot //nolint:gosec // G115: order is a permutation of 0..3
 		// A width from 64Ki to 16Mi values, put at a random place with a gap to the slot's ends.
 		width := randUint(1<<16, 1<<24)
 		lo := base + randUint(1, slot-width-1)

@@ -21,7 +21,7 @@ func openServiceLog(path string) (io.WriteCloser, error) {
 	if st, err := os.Stat(path); err == nil && st.Size() > maxLogSize {
 		flags = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
 	}
-	return os.OpenFile(path, flags, 0o600)
+	return os.OpenFile(path, flags, 0o600) //nolint:gosec // G304: the service's own log file, a path the installer chose
 }
 
 // runAsService is the entry point when Windows starts us as the service.

@@ -222,7 +222,7 @@ func tunLUID(name string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	luid, err := winipcfg.LUIDFromIndex(uint32(ifc.Index))
+	luid, err := winipcfg.LUIDFromIndex(uint32(ifc.Index)) //nolint:gosec // G115: interface indexes are positive 32-bit values
 	if err != nil {
 		return 0, err
 	}

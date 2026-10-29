@@ -1,0 +1,119 @@
+# golangci-lint v2 configuration.
+# Run: golangci-lint run ./...
+# On Windows dev PCs that need it, add the extra tag on the command line:
+#   golangci-lint run --build-tags "<Makefile TAGS>,with_external_windivert" ./...
+version: "2"
+
+run:
+  # Keep in sync with TAGS in the Makefile.
+  build-tags:
+    - with_gvisor
+    - with_quic
+    - with_wireguard
+    - with_utls
+    - with_clash_api
+    - with_openvpn
+    - with_openconnect
+    - with_acme
+    - badlinkname
+    - tfogo_checklinkname0
+  tests: true
+  timeout: 15m
+
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - errorlint
+    - ineffassign
+    - unused
+    - bodyclose
+    - gosec
+    - gocritic
+    # Default (no) locale: the code base writes British English on purpose
+    # ("colour", "recognise"); only real misspellings are reported.
+    - misspell
+    - nilerr
+    - noctx
+    - copyloopvar
+    - durationcheck
+
+  settings:
+    gocritic:
+      # Bug finders only (gocritic has no "security" tag); no style/perf opinions.
+      enabled-tags:
+        - diagnostic
+      disabled-tags:
+        - style
+        - performance
+        - experimental
+        - opinionated
+    staticcheck:
+      # Default set minus pure style: ST* naming/comment rules (ST1018 --
+      # invisible Unicode in literals -- is kept) and QF* quick-fix hints.
+      checks:
+        - all
+        - -ST1000
+        - -ST1003
+        - -ST1005
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+        - -QF*
+    errorlint:
+      # The code deliberately writes fmt.Errorf("%w: %v", ErrSentinel, err)
+      # to classify an error by one sentinel without exposing the inner
+      # cause to errors.Is/As; keep only the comparison and assertion checks,
+      # which find real bugs.
+      errorf: false
+    errcheck:
+      # Releasing handles on cleanup paths where nothing useful can be done.
+      exclude-functions:
+        - (io.Closer).Close
+        - (net.Conn).Close
+        - (net.Listener).Close
+        - (net.PacketConn).Close
+        - (*os.File).Close
+        - (io.ReadCloser).Close
+        - golang.org/x/sys/windows.CloseHandle
+        - golang.org/x/sys/windows.CloseServiceHandle
+        - (*golang.org/x/sys/windows/svc/mgr.Mgr).Disconnect
+        - (net.Conn).SetDeadline
+        - (net.Conn).SetReadDeadline
+        - (net.Conn).SetWriteDeadline
+        - (net.PacketConn).SetReadDeadline
+        - (net.PacketConn).SetWriteDeadline
+    gosec:
+      excludes:
+        # G104 duplicates errcheck.
+        - G104
+
+  exclusions:
+    generated: lax
+    presets:
+      - std-error-handling
+    paths:
+      - third_party/
+    rules:
+      # Test-only patterns: fixture credentials, temp-file perms, test
+      # servers without TLS verification, deterministic randomness,
+      # building commands/paths from test data.
+      - path: _test\.go
+        linters:
+          - gosec
+        text: "G101|G102|G106|G107|G108|G110|G112|G114|G115|G117|G204|G301|G302|G304|G306|G401|G402|G403|G404|G501|G505|G705"
+      # httptest servers and throwaway requests in tests need no context;
+      # test setup ignores errors the assertions after it would catch.
+      - path: _test\.go
+        linters:
+          - noctx
+          - bodyclose
+          - errcheck
+      # noctx's net.Listen/ListenPacket rule: binding a socket does not block,
+      # so a context adds nothing (dials and HTTP requests are still checked).
+      - linters:
+          - noctx
+        text: 'net\.(Listen|ListenPacket) must not be called'

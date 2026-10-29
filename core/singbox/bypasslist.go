@@ -64,7 +64,7 @@ const (
 	BypassEmptyExpression = "EMPTY_EXPRESSION"
 	BypassBadExpression   = "BAD_EXPRESSION"
 	BypassBadName         = "BAD_NAME"
-	BypassGeoUnsupported  = "GEO_UNSUPPORTED"
+	BypassGeoUnsupported  = "GEO_UNSUPPORTED" //nolint:gosec // G101: error codes, not credentials
 	BypassBadEntry        = "BAD_ENTRY"
 	BypassTooMany         = "TOO_MANY"
 )

@@ -146,7 +146,7 @@ func Start(cfg Config) (*Process, error) {
 		}
 	}
 
-	proc.cmd = exec.Command(bin, args...)
+	proc.cmd = exec.Command(bin, args...) //nolint:gosec,noctx // G204: the Tor binary (bundled, or the one the user configured) with arguments built here; Stop kills it
 	hideWindow(proc.cmd)
 	stdout, err := proc.cmd.StdoutPipe()
 	if err != nil {
@@ -167,7 +167,7 @@ func Start(cfg Config) (*Process, error) {
 	listening := make(chan string, 1)
 	go func() {
 		// A panic here (in a handler) must not leave Tor blocked on a full pipe: the rest is drained unread.
-		defer io.Copy(io.Discard, stdout)
+		defer func() { _, _ = io.Copy(io.Discard, stdout) }()
 		defer logrec.Recover(logrec.SourceTor, "run", cfg.OnLog)
 		sc := bufio.NewScanner(stdout)
 		for sc.Scan() {
@@ -212,7 +212,7 @@ func Start(cfg Config) (*Process, error) {
 	}()
 	if stderr != nil {
 		go func() {
-			defer io.Copy(io.Discard, stderr)
+			defer func() { _, _ = io.Copy(io.Discard, stderr) }()
 			defer logrec.Recover(logrec.SourceTor, "run", cfg.OnLog)
 			sc := bufio.NewScanner(stderr)
 			for sc.Scan() {
@@ -292,7 +292,7 @@ func (p *Process) Stop() {
 	p.once.Do(func() {
 		p.stdin.Close()
 		if p.cmd.Process != nil {
-			p.cmd.Process.Kill()
+			_ = p.cmd.Process.Kill()
 		}
 		<-p.done
 		p.closeTransports()

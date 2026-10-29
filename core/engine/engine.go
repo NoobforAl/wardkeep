@@ -321,7 +321,7 @@ func (e *Engine) Start(profiles []*profile.Profile, opts singbox.Options) error 
 // startLocked replaces whatever is running. e.mu must be held. It doesn't
 // report "disconnected" in between, which on Android would stop the VPN service.
 func (e *Engine) startLocked(profiles []*profile.Profile, opts singbox.Options) error {
-	e.teardownLocked()
+	_ = e.teardownLocked()
 	e.profiles, e.opts = profiles, opts
 
 	selected := opts.Selected
@@ -420,7 +420,7 @@ func (e *Engine) startSingboxLocked(profiles []*profile.Profile, opts singbox.Op
 	// sing-box's cache file restores the selector's last choice from a previous
 	// run, which would silently override the profile chosen now.
 	if err := e.applySelectionLocked(selected); err != nil {
-		e.stopLocked()
+		_ = e.stopLocked()
 		return fail(StageTunnelUp, err)
 	}
 	go func() {

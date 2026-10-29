@@ -83,7 +83,7 @@ func Start(dataDir string, platform Platform) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	go server.Serve()
+	go func() { _ = server.Serve() }()
 	b, _ := json.Marshal(map[string]string{"addr": addr.String(), "token": server.Token()})
 	srv, info = server, string(b)
 	return info, nil
@@ -100,7 +100,7 @@ func StopTunnel() {
 	s := srv
 	mu.Unlock()
 	if s != nil {
-		s.Engine().Stop()
+		_ = s.Engine().Stop()
 	}
 }
 
@@ -199,4 +199,4 @@ func (t tunProvider) OpenTun(req engine.TunRequest) (int, error) {
 	return int(fd), err
 }
 
-func (t tunProvider) Protect(fd int) error { return t.p.Protect(int32(fd)) }
+func (t tunProvider) Protect(fd int) error { return t.p.Protect(int32(fd)) } //nolint:gosec // G115: file descriptors fit in int32 (gomobile has no int)

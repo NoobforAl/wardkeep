@@ -22,7 +22,7 @@ type ExecRunner struct{}
 
 // Run implements Runner.
 func (ExecRunner) Run(argv ...string) error {
-	out, err := exec.Command(argv[0], argv[1:]...).CombinedOutput()
+	out, err := exec.Command(argv[0], argv[1:]...).CombinedOutput() //nolint:gosec,noctx // G204: runs the fixed nft/iptables command lines this package builds; short-lived, no caller context
 	if err != nil {
 		return fmt.Errorf("%s: %w: %s", strings.Join(argv, " "), err, strings.TrimSpace(string(out)))
 	}
@@ -154,7 +154,7 @@ func EnableNAT(runner Runner, dir string, pools []string) (undo func(), err erro
 			families = append(families, "ip6")
 		}
 		for _, f := range families {
-			runner.Run("nft", "delete", "table", f, natTable)
+			_ = runner.Run("nft", "delete", "table", f, natTable)
 		}
 		if err := runner.Run("nft", "-f", file); err != nil {
 			os.Remove(file)
@@ -162,7 +162,7 @@ func EnableNAT(runner Runner, dir string, pools []string) (undo func(), err erro
 		}
 		return func() {
 			for _, f := range families {
-				runner.Run("nft", "delete", "table", f, natTable)
+				_ = runner.Run("nft", "delete", "table", f, natTable)
 			}
 			os.Remove(file)
 		}, nil
@@ -174,7 +174,7 @@ func EnableNAT(runner Runner, dir string, pools []string) (undo func(), err erro
 		var removals []removal // commands that take back what was added, newest first
 		undo := func() {
 			for _, rule := range removals {
-				runner.Run(append([]string{rule.tool}, rule.args...)...)
+				_ = runner.Run(append([]string{rule.tool}, rule.args...)...)
 			}
 		}
 		for _, pool := range pools {

@@ -205,7 +205,7 @@ func (l *Log) rotateLocked() {
 	l.f.Close()
 	l.f = nil
 	os.Remove(l.path() + ".1")
-	os.Rename(l.path(), l.path()+".1")
+	_ = os.Rename(l.path(), l.path()+".1")
 }
 
 // Write appends a server record with level (a level name; unknown names are
@@ -245,7 +245,7 @@ func (l *Log) Log(level Level, rec Record) {
 		}
 	}
 	if l.mirror != nil {
-		l.mirror.Write(l.buf)
+		_, _ = l.mirror.Write(l.buf)
 	}
 	if cap(l.buf) > 64<<10 { // a stack trace: do not keep a large buffer for good
 		l.buf = nil

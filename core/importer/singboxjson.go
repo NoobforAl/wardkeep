@@ -3,6 +3,7 @@ package importer
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/NoobforAl/omnitun/core/profile"
@@ -103,7 +104,7 @@ func ImportSingBoxJSON(text string) (*Result, error) {
 		return nil, fmt.Errorf("sing-box JSON: %w", err)
 	}
 	res := &Result{}
-	all := append(doc.Outbounds, doc.Endpoints...)
+	all := slices.Concat(doc.Outbounds, doc.Endpoints)
 	// ShadowTLS outbounds are layers under Shadowsocks ones (via "detour").
 	shadowTLS := map[string]sbShadowTLS{}
 	for _, raw := range all {

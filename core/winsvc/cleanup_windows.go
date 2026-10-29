@@ -3,7 +3,7 @@
 package winsvc
 
 import (
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec // G501: Wintun derives adapter GUIDs with MD5; not used for security
 	"errors"
 	"fmt"
 	"net"
@@ -36,11 +36,11 @@ func CleanupSteps(tunName string) []Step {
 // (tun_windows.go, generateGUIDByDeviceName): the MD5 of "wintun" + name,
 // read as a GUID.
 func WintunGUID(name string) windows.GUID {
-	h := md5.New()
+	h := md5.New() //nolint:gosec // G401: must match sing-box's generateGUIDByDeviceName; not used for security
 	h.Write([]byte("wintun"))
 	h.Write([]byte(name))
 	sum := h.Sum(nil)
-	return *(*windows.GUID)(unsafe.Pointer(&sum[0]))
+	return *(*windows.GUID)(unsafe.Pointer(&sum[0])) //nolint:gosec // G103: a 16-byte MD5 sum read as a 16-byte GUID
 }
 
 // Adapter is a network device of the Wintun driver.
@@ -126,7 +126,7 @@ func removeAdapter(name string) (string, error) {
 	if ifc, err := net.InterfaceByName(name); err == nil {
 		// Flush first: if the device cannot be removed, the adapter at least
 		// stops carrying the VPN's routes and DNS.
-		if luid, err := winipcfg.LUIDFromIndex(uint32(ifc.Index)); err == nil {
+		if luid, err := winipcfg.LUIDFromIndex(uint32(ifc.Index)); err == nil { //nolint:gosec // G115: interface indexes are positive 32-bit values
 			for _, fam := range []winipcfg.AddressFamily{windows.AF_INET, windows.AF_INET6} {
 				if err := luid.FlushRoutes(fam); err != nil {
 					errs = append(errs, fmt.Errorf("flush routes: %w", err))

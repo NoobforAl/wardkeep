@@ -33,9 +33,10 @@ func Serve(ctx context.Context, host string, port int, handler http.Handler, tls
 	}
 	go func() {
 		<-ctx.Done()
-		shutdown, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		// ctx is already done: shut down on a fresh deadline that keeps its values.
+		shutdown, cancel := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)
 		defer cancel()
-		srv.Shutdown(shutdown)
+		_ = srv.Shutdown(shutdown)
 	}()
 	if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err

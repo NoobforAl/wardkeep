@@ -39,7 +39,7 @@ func DefaultLevel() Level {
 func Enabled(level Level) bool { return int32(level) >= effective.Load() }
 
 // Current is the effective level.
-func Current() Level { return Level(effective.Load()) }
+func Current() Level { return Level(effective.Load()) } //nolint:gosec // G115: effective only ever holds a Level
 
 // WantCaller reports whether records should carry their caller (debug and trace).
 func WantCaller() bool { return Current() <= LevelDebug }

@@ -27,7 +27,7 @@ import (
 )
 
 func run(name string, args ...string) {
-	if out, err := exec.Command(name, args...).CombinedOutput(); err != nil {
+	if out, err := exec.Command(name, args...).CombinedOutput(); err != nil { //nolint:gosec,noctx // G204: a test container helper running fixed commands
 		log.Fatalf("%s %s: %v: %s", name, strings.Join(args, " "), err, out)
 	}
 }

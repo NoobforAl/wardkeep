@@ -111,7 +111,7 @@ func (e *Engine) failoverLoop(ctx context.Context, instance *box.Box, order []st
 		e.mu.Lock()
 		if e.instance == instance {
 			e.logWith(logrec.LevelWarn, logFields{profile: current, err: err}, "failover: the profile stopped responding, switching to %s", next)
-			e.selectLocked(next, &FailoverEvent{From: current, To: next, Reason: err.Error(), At: time.Now()})
+			_ = e.selectLocked(next, &FailoverEvent{From: current, To: next, Reason: err.Error(), At: time.Now()})
 		}
 		e.mu.Unlock()
 		failures = 0

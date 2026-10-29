@@ -134,7 +134,7 @@ func TestAWG2HeadersVary(t *testing.T) {
 }
 
 func TestParseAWGVersion(t *testing.T) {
-	for in, want := range map[string]string{"": AWG2, "2": AWG2, "2.0": AWG2, " NEW ": AWG2, "1": AWGClassic, "1.x": AWGClassic, "Classic": AWGClassic} {
+	for in, want := range map[string]string{"": AWG2, "2": AWG2, "2.0": AWG2, " NEW ": AWG2, "1": AWGClassic, "1.x": AWGClassic, "Classic": AWGClassic} { //nolint:gocritic // mapKey: " NEW " tests trimming
 		if got, err := ParseAWGVersion(in); err != nil || got != want {
 			t.Errorf("ParseAWGVersion(%q) = %q, %v; want %q", in, got, err, want)
 		}

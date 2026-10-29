@@ -28,7 +28,7 @@ func kindOfJSON(text string) string {
 	proxyProtocols := map[string]bool{"vless": true, "vmess": true, "trojan": true, "shadowsocks": true, "wireguard": true, "hysteria": true}
 	protocolOf := func(m map[string]json.RawMessage) string {
 		var v string
-		json.Unmarshal(m["protocol"], &v)
+		_ = json.Unmarshal(m["protocol"], &v) // not a string: no protocol
 		return strings.ToLower(v)
 	}
 	proxyOutbound := false
@@ -291,7 +291,7 @@ func splitEndpoint(ep string) (string, int) {
 
 func jsonString(raw json.RawMessage) string {
 	var v string
-	json.Unmarshal(raw, &v)
+	_ = json.Unmarshal(raw, &v) // not a string: empty
 	return v
 }
 

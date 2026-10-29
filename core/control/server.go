@@ -264,7 +264,7 @@ func (s *Server) removeClient(cl *client) {
 		s.mu.Unlock()
 		if idle && s.engine.State().Status != engine.StatusStopped {
 			s.logf(logrec.LevelInfo, "no UI connected for %s, stopping tunnel", s.cfg.Grace)
-			s.engine.Stop()
+			_ = s.engine.Stop()
 		}
 		if idle {
 			s.ksStop() // the UI is gone: a kill switch kept after an internal stop ends with it

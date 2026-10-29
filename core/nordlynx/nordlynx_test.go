@@ -1,6 +1,7 @@
 package nordlynx
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,7 +48,7 @@ func TestProfiles(t *testing.T) {
 	if err := p.Validate(); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Profiles(t.Context(), srv.Client(), "bad", "", 5); err != ErrAuth {
+	if _, err := Profiles(t.Context(), srv.Client(), "bad", "", 5); !errors.Is(err, ErrAuth) {
 		t.Fatalf("bad token err = %v", err)
 	}
 }

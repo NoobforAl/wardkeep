@@ -126,7 +126,7 @@ func NewUpstream(cfg UpstreamConfig) (*Upstream, error) {
 		if err != nil {
 			return nil, ErrNeedIP
 		}
-		up.header = relayHeader(netip.AddrPortFrom(ip, uint16(cfg.Stamp.Port)))
+		up.header = relayHeader(netip.AddrPortFrom(ip, uint16(cfg.Stamp.Port))) //nolint:gosec // G115: ParseStamp keeps ports within 0..65535 (0: none given)
 		up.target = cfg.Relay.HostAddr()
 	}
 	return up, nil
@@ -449,7 +449,7 @@ func (u *Upstream) exchangeWith(ctx context.Context, sess *session, query []byte
 		}
 		return plain, nil
 	}
-	if lastErr == errTruncated {
+	if errors.Is(lastErr, errTruncated) {
 		return nil, errors.New("dnscrypt: the answer was cut short")
 	}
 	return nil, lastErr
@@ -521,8 +521,11 @@ func (u *Upstream) tcpExchange(ctx context.Context, conn net.Conn, frame []byte,
 	_ = conn.SetDeadline(deadline)
 	stop := context.AfterFunc(ctx, func() { _ = conn.SetDeadline(time.Unix(1, 0)) })
 	defer stop()
+	if len(frame) > 0xffff {
+		return nil, errors.New("dnscrypt: query too long for TCP")
+	}
 	out := make([]byte, 2, 2+len(frame))
-	binary.BigEndian.PutUint16(out, uint16(len(frame)))
+	binary.BigEndian.PutUint16(out, uint16(len(frame))) //nolint:gosec // G115: checked against 0xffff above
 	out = append(out, frame...)
 	if _, err := conn.Write(out); err != nil {
 		return nil, err

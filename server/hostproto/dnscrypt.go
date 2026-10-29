@@ -136,7 +136,6 @@ type dnsCryptServer struct {
 	srv      *dc.Server
 	tcp      net.Listener
 	front    *udpFront
-	magic    [8]byte
 	internal string // the library's own UDP socket, behind the front
 	serial   uint32
 	stopped  bool
@@ -249,7 +248,7 @@ func (s *dnsCryptServer) listenAll() error {
 	if err != nil {
 		return fmt.Errorf("dnscrypt: %w", err)
 	}
-	outer, err := net.ListenUDP("udp", net.UDPAddrFromAddrPort(netip.AddrPortFrom(s.listen, uint16(s.cfg.Port))))
+	outer, err := net.ListenUDP("udp", net.UDPAddrFromAddrPort(netip.AddrPortFrom(s.listen, uint16(s.cfg.Port)))) //nolint:gosec // G115: net.Listen above already rejected ports outside 0..65535
 	if err != nil {
 		ln.Close()
 		return fmt.Errorf("dnscrypt: %w", err)
@@ -271,8 +270,8 @@ func (s *dnsCryptServer) listenAll() error {
 	s.mu.Lock()
 	s.srv, s.tcp, s.front, s.internal = srv, ln, front, inner.LocalAddr().String()
 	s.mu.Unlock()
-	go srv.ServeTCP(&gatedListener{Listener: ln, gate: s.gate})
-	go srv.ServeUDP(inner)
+	go func() { _ = srv.ServeTCP(&gatedListener{Listener: ln, gate: s.gate}) }()
+	go func() { _ = srv.ServeUDP(inner) }()
 	go front.run()
 	return nil
 }
@@ -297,7 +296,7 @@ func (s *dnsCryptServer) shutdownListeners() {
 	front.close()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	srv.Shutdown(ctx)
+	_ = srv.Shutdown(ctx)
 	front.inner.Close()
 }
 
@@ -352,7 +351,7 @@ func (s *dnsCryptServer) ServeDNS(rw dc.ResponseWriter, req *dns.Msg) error {
 	_, isUDP := rw.(*dc.UDPResponseWriter)
 	if !isUDP { // UDP was checked and limited at the front, where the real source is known
 		if ap, err := netip.ParseAddrPort(rw.RemoteAddr().String()); err != nil || !s.gate.permitted(ap.Addr()) || !s.gate.query.allow(ap.Addr().Unmap()) {
-			return nil // not a client, or too many: no answer
+			return nil //nolint:nilerr // not a client, or too many: no answer
 		}
 	}
 	reply := func(code int) error {
@@ -492,7 +491,7 @@ func (f *udpFront) run() {
 		if sess == nil {
 			continue
 		}
-		sess.conn.Write(pkt)
+		_, _ = sess.conn.Write(pkt)
 	}
 }
 
@@ -547,11 +546,11 @@ func (f *udpFront) reply(from netip.AddrPort, sess *udpSession, idle time.Durati
 	defer sess.conn.Close()
 	buf := make([]byte, 65535)
 	for {
-		sess.conn.SetReadDeadline(time.Now().Add(idle))
+		_ = sess.conn.SetReadDeadline(time.Now().Add(idle))
 		n, err := sess.conn.Read(buf)
 		f.reads.Add(1)
 		if err == nil {
-			f.conn.WriteToUDPAddrPort(buf[:n], from)
+			_, _ = f.conn.WriteToUDPAddrPort(buf[:n], from)
 			continue
 		}
 		var ne net.Error

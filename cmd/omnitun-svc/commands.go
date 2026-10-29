@@ -176,7 +176,7 @@ func cmdKillSwitchSelfTest(args []string) int {
 		return fail(winsvc.ErrNeedsAdmin)
 	}
 	reach := func(addr string) error {
-		c, err := net.DialTimeout("tcp", addr, 2*time.Second)
+		c, err := (&net.Dialer{Timeout: 2 * time.Second}).DialContext(context.Background(), "tcp", addr)
 		if err == nil {
 			c.Close()
 		}
@@ -204,9 +204,9 @@ func cmdKillSwitchSelfTest(args []string) int {
 	}()
 
 	ks := killswitch.NewManager()
-	timer := time.AfterFunc(time.Duration(*seconds)*time.Second, func() { ks.Disarm() })
+	timer := time.AfterFunc(time.Duration(*seconds)*time.Second, func() { _ = ks.Disarm() })
 	defer timer.Stop()
-	defer ks.Disarm()
+	defer func() { _ = ks.Disarm() }()
 	say("2. raising a block that permits loopback only (lasts at most %d s)", *seconds)
 	if err := ks.Arm(killswitch.Options{}, ""); err != nil {
 		return fail(err)

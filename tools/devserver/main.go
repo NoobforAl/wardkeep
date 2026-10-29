@@ -38,7 +38,8 @@ func main() {
 	defer cancel()
 	opts, err := sjson.UnmarshalExtendedContext[option.Options](ctx, raw)
 	if err != nil {
-		log.Fatal(err)
+		cancel()
+		log.Fatal(err) //nolint:gocritic // exitAfterDefer: cancel ran above
 	}
 	server, err := box.New(box.Options{Context: ctx, Options: opts})
 	if err != nil {

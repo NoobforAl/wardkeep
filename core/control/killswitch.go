@@ -170,7 +170,7 @@ func (s *Server) ksRaise(gen uint64, base killswitch.Options) {
 	s.ksLiftLocked(gen)
 	s.ks.op.Unlock()
 	s.logf(logrec.LevelError, "kill switch: cannot raise the block, stopping the tunnel: %v", err)
-	s.engine.Stop()
+	_ = s.engine.Stop()
 	s.engine.FailAt(engine.StageTunnelUp, fmt.Errorf("kill switch: %w", err))
 }
 

@@ -179,5 +179,6 @@ func writeSigned(w http.ResponseWriter, r *http.Request, st *store.State, body [
 	if key, ok := st.Server.Subscription.SigningPrivate(); ok {
 		subscription.Sign(key, body, w.Header(), r.URL.RequestURI(), time.Now())
 	}
-	w.Write(body)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	_, _ = w.Write(body) //nolint:gosec // G705: a subscription document with an explicit non-HTML Content-Type and nosniff
 }

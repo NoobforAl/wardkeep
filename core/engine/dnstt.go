@@ -118,7 +118,7 @@ func (e *Engine) watchDNSTT(run *dnsttRun) {
 			"the DNS tunnel stopped on its own")
 	}
 	wasRunning := e.state.Status == StatusRunning
-	e.teardownLocked()
+	_ = e.teardownLocked()
 	run.cancel()
 	e.dropReported = true
 	stage := StageHandshake

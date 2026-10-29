@@ -130,11 +130,11 @@ func readInput(path string) (string, error) {
 		b, err := io.ReadAll(os.Stdin)
 		return string(b), err
 	}
-	if _, err := os.Stat(path); err != nil {
+	if _, err := os.Stat(path); err != nil { //nolint:gosec // G703: a path the CLI user typed
 		// Allow passing a single link directly.
-		return path, nil
+		return path, nil //nolint:nilerr // not a file: the argument is a link itself
 	}
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(path) //nolint:gosec // G304: reading the file the CLI user named is the point
 	return string(b), err
 }
 

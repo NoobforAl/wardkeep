@@ -304,7 +304,7 @@ func (e *Engine) torFailedLocked(run *torRun, cause error) {
 		e.torRun = nil
 	}
 	if e.instance != nil {
-		e.teardownLocked()
+		_ = e.teardownLocked()
 	}
 	run.stop()
 	bridges, _ := torBridges(run.profile)

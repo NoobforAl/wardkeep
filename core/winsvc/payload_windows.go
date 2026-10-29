@@ -40,9 +40,9 @@ func aclEntries(h windows.Handle) (owner string, entries []aceEntry, err error) 
 		}
 		switch ace.Header.AceType {
 		case windows.ACCESS_ALLOWED_ACE_TYPE, 9: // 9: allowed, with a condition (same layout)
-			entries = append(entries, aceEntry{SID: (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String(), Mask: uint32(ace.Mask), Flags: ace.Header.AceFlags})
+			entries = append(entries, aceEntry{SID: (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String(), Mask: uint32(ace.Mask), Flags: ace.Header.AceFlags}) //nolint:gosec // G103: the SID follows the ACE header (Win32 layout)
 		case windows.ACCESS_DENIED_ACE_TYPE:
-			entries = append(entries, aceEntry{SID: (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String(), Mask: uint32(ace.Mask), Flags: ace.Header.AceFlags, Deny: true})
+			entries = append(entries, aceEntry{SID: (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String(), Mask: uint32(ace.Mask), Flags: ace.Header.AceFlags, Deny: true}) //nolint:gosec // G103: the SID follows the ACE header (Win32 layout)
 		default:
 			// An entry kind this code does not read: assume the worst.
 			entries = append(entries, aceEntry{SID: fmt.Sprintf("(access entry of type %d)", ace.Header.AceType), Mask: genericAll, Flags: ace.Header.AceFlags})
@@ -168,7 +168,7 @@ func closeAll(files []*sourceFile) {
 func finalPath(h windows.Handle) (string, error) {
 	buf := make([]uint16, 1024)
 	for {
-		n, err := windows.GetFinalPathNameByHandle(h, &buf[0], uint32(len(buf)), 0 /* FILE_NAME_NORMALIZED | VOLUME_NAME_DOS */)
+		n, err := windows.GetFinalPathNameByHandle(h, &buf[0], uint32(len(buf)), 0 /* FILE_NAME_NORMALIZED | VOLUME_NAME_DOS */) //nolint:gosec // G115: the buffer stays far below 4 GiB
 		if err != nil {
 			return "", err
 		}
@@ -251,7 +251,7 @@ func copyVerified(from, to string) (string, error) {
 func copyFrom(in *os.File, to string) (string, error) {
 	tmp := to + ".new"
 	os.Remove(tmp)
-	out, err := os.OpenFile(tmp, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o755)
+	out, err := os.OpenFile(tmp, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o755) //nolint:gosec // G302: an installed program must be executable; the folder's ACL limits writers to administrators
 	if err != nil {
 		return "", err
 	}
@@ -285,7 +285,7 @@ func copyFrom(in *os.File, to string) (string, error) {
 }
 
 func fileSHA256(path string) (string, error) {
-	file, err := os.Open(path)
+	file, err := os.Open(path) //nolint:gosec // G304: hashing files this package chose
 	if err != nil {
 		return "", err
 	}
@@ -352,7 +352,7 @@ func openPlan(plan installPlan) (files []*sourceFile, unsafeErr error, err error
 // copyProgram copies the open source files into dir (a place only
 // administrators can write) and returns the installed program's path.
 func copyProgram(files []*sourceFile, dir string, logf func(string, ...any)) (string, error) {
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil { //nolint:gosec // G301: a program folder all users run from; its ACL limits writers to administrators
 		return "", err
 	}
 	// Whoever can write to the install folder can put code next to the

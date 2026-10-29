@@ -76,7 +76,7 @@ func (s Snapshot) Running(now time.Time) bool {
 
 // Read loads the stats file from dir; a missing file is an empty snapshot.
 func Read(dir string) (Snapshot, error) {
-	data, err := os.ReadFile(filepath.Join(dir, fileName))
+	data, err := os.ReadFile(filepath.Join(dir, fileName)) //nolint:gosec // G304: a fixed file name inside the server's state folder
 	if errors.Is(err, os.ErrNotExist) {
 		return Snapshot{Users: map[string]*User{}, Protocols: map[string]*Protocol{}}, nil
 	}

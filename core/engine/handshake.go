@@ -44,7 +44,7 @@ func (e *Engine) handshake(ctx context.Context, instance *box.Box, order []strin
 			}
 			if i > 0 {
 				e.logWith(logrec.LevelWarn, logFields{profile: selected, err: firstErr}, "failover: the profile did not respond, using %s", tag)
-				e.selectLocked(tag, &FailoverEvent{From: selected, To: tag, Reason: firstErr.Error(), At: time.Now()})
+				_ = e.selectLocked(tag, &FailoverEvent{From: selected, To: tag, Reason: firstErr.Error(), At: time.Now()})
 			}
 			s := e.state
 			s.Status, s.Since, s.Error, s.Progress = StatusRunning, time.Now(), "", progress(StageConnected, e.name(tag))
@@ -80,7 +80,7 @@ func (e *Engine) handshake(ctx context.Context, instance *box.Box, order []strin
 		return
 	}
 	failed := progress(StageHandshake, e.name(selected))
-	e.stopLocked()
+	_ = e.stopLocked()
 	e.setState(State{Status: StatusError, Error: msg, Progress: failed, NoNetwork: msg == msgNoInternet})
 }
 

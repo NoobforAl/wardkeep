@@ -71,7 +71,7 @@ func Query(dir string, f Filter) ([]Record, error) {
 // scanBackward calls visit with every non-empty line of the file, newest
 // first, until visit returns false. The line is only valid during the call.
 func scanBackward(path string, visit func(line []byte) bool) error {
-	file, err := os.Open(path)
+	file, err := os.Open(path) //nolint:gosec // G304: log files inside the server's own log folder
 	if err != nil {
 		return err
 	}
@@ -409,7 +409,7 @@ func (p *jsonParser) hex4() (rune, bool) {
 		return 0, false
 	}
 	p.at += 4
-	return rune(value), true
+	return rune(value), true //nolint:gosec // G115: four hex digits, at most 0xFFFF
 }
 
 // raw reads a non-string value (number, true, false, null, object, array) as its JSON text.

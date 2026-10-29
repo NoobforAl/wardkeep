@@ -74,7 +74,7 @@ func (s *Source) acmePair() (certPath, keyPath string, ok bool) {
 }
 
 func readLeaf(path string) (*x509.Certificate, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: the certificate path the administrator configured
 	if err != nil {
 		return nil, err
 	}

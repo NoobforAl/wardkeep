@@ -44,7 +44,7 @@ func findProfile(profiles []*profile.Profile, id string) *profile.Profile {
 func awgTunRequest(p *profile.Profile, opts singbox.Options) TunRequest {
 	wg := p.WireGuard
 	req := TunRequest{
-		MTU:             uint32(wg.MTU),
+		MTU:             1280,
 		AutoRoute:       true,
 		Inet4Address:    []string{},
 		Inet6Address:    []string{},
@@ -53,8 +53,8 @@ func awgTunRequest(p *profile.Profile, opts singbox.Options) TunRequest {
 		DNSServers:      []string{},
 		IncludePackage:  append([]string{}, opts.IncludePackages...),
 	}
-	if req.MTU == 0 {
-		req.MTU = 1280
+	if wg.MTU > 0 && wg.MTU <= 65535 {
+		req.MTU = uint32(wg.MTU)
 	}
 	if len(req.IncludePackage) == 0 {
 		req.ExcludePackage = append([]string{}, opts.ExcludePackages...)
@@ -214,10 +214,10 @@ func (e *Engine) awgHandshakeFailedLocked(run *awgRun) {
 				rest = append(rest, p)
 			}
 		}
-		e.startLocked(rest, opts)
+		_ = e.startLocked(rest, opts)
 		return
 	}
-	e.stopLocked()
+	_ = e.stopLocked()
 	err := fmt.Errorf("%s failed: %w", stageLabel[StageHandshake], reason)
 	e.logWith(logrec.LevelError, logFields{profile: run.profile.ID, code: ErrNoHandshake},
 		"%s failed: no handshake within %s", stageLabel[StageHandshake], awgHandshakeTimeout)

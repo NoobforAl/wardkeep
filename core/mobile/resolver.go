@@ -20,7 +20,7 @@ func installResolver(wrapper *platformWrapper) {
 	dialer := net.Dialer{
 		Control: func(_, _ string, c syscall.RawConn) error {
 			var protectErr error
-			if err := c.Control(func(fd uintptr) { protectErr = wrapper.p.Protect(int32(fd)) }); err != nil {
+			if err := c.Control(func(fd uintptr) { protectErr = wrapper.p.Protect(int32(fd)) }); err != nil { //nolint:gosec // G115: file descriptors fit in int32 (gomobile has no int)
 				return err
 			}
 			return protectErr

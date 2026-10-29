@@ -183,7 +183,7 @@ func (s *Server) recoverHandler(target string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if value := recover(); value != nil {
-				if value == http.ErrAbortHandler {
+				if value == http.ErrAbortHandler { //nolint:errorlint // recover() value, not a returned error; net/http panics with this exact sentinel
 					panic(value)
 				}
 				s.log.LogPanic(value, target, "request")

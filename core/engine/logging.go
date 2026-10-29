@@ -147,7 +147,7 @@ func (e *Engine) recoverLoop(op string) {
 	// waiting for it here only parks this goroutine, which is ending anyway.
 	e.mu.Lock()
 	if e.state.Status == StatusRunning || e.state.Status == StatusStarting {
-		e.teardownLocked()
+		_ = e.teardownLocked()
 		e.dropReported = true
 		e.setState(State{Status: StatusError, Error: "Internal error: " + rec.Msg, Selected: e.state.Selected})
 		e.dropReported = false

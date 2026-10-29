@@ -188,7 +188,7 @@ func (r *Record) UnmarshalJSON(data []byte) error {
 	r.Caller, r.Stack, r.User = text("caller"), text("stack"), text("user")
 	if raw, ok := fields["notify"]; ok {
 		delete(fields, "notify")
-		json.Unmarshal(raw, &r.Notify)
+		_ = json.Unmarshal(raw, &r.Notify) // not a bool: no notification
 	}
 	if len(fields) > 0 {
 		r.Extra = make(map[string]any, len(fields))

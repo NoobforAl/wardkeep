@@ -12,7 +12,7 @@ import (
 
 // ReadControlFile reads the control file of a running core.
 func ReadControlFile(path string) (control.ControlFile, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: the core's control file at a fixed location
 	if err != nil {
 		return control.ControlFile{}, err
 	}

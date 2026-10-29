@@ -52,7 +52,8 @@ func ServeListener(ctx context.Context, ln net.Listener, logf func(string, ...an
 	srv := &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	go func() {
 		<-ctx.Done()
-		shutdown, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		// ctx is already done: shut down on a fresh deadline that keeps its values.
+		shutdown, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
 		defer cancel()
 		if srv.Shutdown(shutdown) != nil {
 			srv.Close()

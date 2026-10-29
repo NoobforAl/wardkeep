@@ -316,10 +316,10 @@ func (f *Forwarder) serveTCPConn(conn net.Conn) {
 		}
 		f.queries.Add(1)
 		reply := func(resp []byte) {
-			if resp == nil {
+			if resp == nil || len(resp) > 0xffff {
 				return
 			}
-			out := binary.BigEndian.AppendUint16(make([]byte, 0, 2+len(resp)), uint16(len(resp)))
+			out := binary.BigEndian.AppendUint16(make([]byte, 0, 2+len(resp)), uint16(len(resp))) //nolint:gosec // G115: checked against 0xffff above
 			out = append(out, resp...)
 			wmu.Lock()
 			_ = conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
@@ -541,7 +541,7 @@ func (c *answerCache) get(key string, id uint16) *dns.Msg {
 	}
 	c.order.MoveToFront(el)
 	msg := entry.msg.Copy()
-	age := uint32(now.Sub(entry.stored) / time.Second)
+	age := uint32(now.Sub(entry.stored) / time.Second) //nolint:gosec // G115: monotonic, non-negative, and bounded by the entry's TTL
 	c.mu.Unlock()
 	msg.Id = id
 	for _, section := range [][]dns.RR{msg.Answer, msg.Ns, msg.Extra} {

@@ -27,11 +27,6 @@ func (r *recordingRunner) Run(argv ...string) error {
 	return nil
 }
 func (r *recordingRunner) Has(name string) bool { return name == "nft" }
-func (r *recordingRunner) commands() string {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return strings.Join(r.ran, "\n")
-}
 
 // Enabling the DNSCrypt resolver starts its host server; disabling it stops
 // the server again.
