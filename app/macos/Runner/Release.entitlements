@@ -2,7 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- The app runs in the macOS sandbox (Flutter's default); the keys below open only what it needs. -->
 	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- Outgoing connections: the UI talks to its core over TCP on 127.0.0.1, and the core to the servers. -->
+	<key>com.apple.security.network.client</key>
 	<true/>
 </dict>
 </plist>

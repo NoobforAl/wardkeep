@@ -46,6 +46,8 @@ AppVersion={#AppVersionName}
 AppPublisher=Wardkeep
 AppPublisherURL=https://github.com/NoobforAl/wardkeep
 AppSupportURL=https://github.com/NoobforAl/wardkeep/issues
+; The "Comments" of the uninstall entry, shown in Apps & features (Programs and Features).
+AppComments=VPN, proxy and Tor client
 VersionInfoVersion={#AppVersion}.0
 VersionInfoProductName={#AppName}
 VersionInfoDescription={#AppName} setup

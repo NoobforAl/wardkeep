@@ -1,7 +1,9 @@
 [Desktop Entry]
 Type=Application
 Name=Wardkeep
+GenericName=VPN client
 Comment=VPN, proxy and Tor client
+Keywords=VPN;Proxy;Tor;WireGuard;OpenVPN;Privacy;
 Exec=omnitun %U
 Icon=dev.omnitun.app
 StartupWMClass=omnitun
