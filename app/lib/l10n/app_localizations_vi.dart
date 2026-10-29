@@ -1425,7 +1425,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get exitHint =>
-      'Hỏi api.country.is về IP và quốc gia, cả khi chưa kết nối.';
+      'Hỏi Cloudflare (1.1.1.1) / api.country.is về IP và quốc gia, cả khi chưa kết nối.';
 
   @override
   String exitIpLabel(String ip) {

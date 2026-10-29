@@ -399,7 +399,7 @@
   "hpWarpReserved": "تین نمبر، جیسا WARP کنفیگریشنز میں دیے جاتے ہیں",
   "hpOneBridgePerLine": "ہر سطر میں ایک برج، torrc کی طرح لیکن \"Bridge \" کے بغیر",
   "exitTitle": "ایگزٹ ایڈریس اور ملک دکھائیں",
-  "exitHint": "api.country.is سے آپ کا IP اور ملک پوچھیں، منسلک نہ ہونے پر بھی۔",
+  "exitHint": "Cloudflare (1.1.1.1) / api.country.is سے آپ کا IP اور ملک پوچھیں، منسلک نہ ہونے پر بھی۔",
   "exitIpLabel": "IP {ip}",
   "connectedTo": "{place} سے منسلک",
   "noticesTitle": "اوپن سورس لائسنس",

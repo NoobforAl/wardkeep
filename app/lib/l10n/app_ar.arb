@@ -406,7 +406,7 @@
   "hpWarpReserved": "ثلاثة أرقام كما تُدرج في إعدادات WARP",
   "hpOneBridgePerLine": "جسر واحد في كل سطر كما في torrc لكن بدون «Bridge »",
   "exitTitle": "إظهار عنوان الخروج والبلد",
-  "exitHint": "يسأل api.country.is عن عنوانك وبلدك، حتى عند عدم الاتصال.",
+  "exitHint": "يسأل Cloudflare (1.1.1.1) / api.country.is عن عنوانك وبلدك، حتى عند عدم الاتصال.",
   "exitIpLabel": "IP‎ {ip}",
   "connectedTo": "متصل بـ {place}",
   "noticesTitle": "تراخيص المصدر المفتوح",

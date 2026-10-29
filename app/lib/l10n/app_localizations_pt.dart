@@ -1460,7 +1460,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get exitHint =>
-      'Consulta api.country.is para obter seu IP e país, também sem conexão.';
+      'Consulta Cloudflare (1.1.1.1) / api.country.is para obter seu IP e país, também sem conexão.';
 
   @override
   String exitIpLabel(String ip) {

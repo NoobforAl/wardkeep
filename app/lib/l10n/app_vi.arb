@@ -399,7 +399,7 @@
   "hpWarpReserved": "Ba số, như được liệt kê trong cấu hình WARP",
   "hpOneBridgePerLine": "Mỗi dòng một cầu nối, như trong torrc nhưng không có “Bridge ”",
   "exitTitle": "Hiện địa chỉ và quốc gia đầu ra",
-  "exitHint": "Hỏi api.country.is về IP và quốc gia, cả khi chưa kết nối.",
+  "exitHint": "Hỏi Cloudflare (1.1.1.1) / api.country.is về IP và quốc gia, cả khi chưa kết nối.",
   "exitIpLabel": "IP {ip}",
   "connectedTo": "Đã kết nối tới {place}",
   "noticesTitle": "Giấy phép mã nguồn mở",

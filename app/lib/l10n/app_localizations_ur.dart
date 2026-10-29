@@ -1444,7 +1444,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get exitHint =>
-      'api.country.is سے آپ کا IP اور ملک پوچھیں، منسلک نہ ہونے پر بھی۔';
+      'Cloudflare (1.1.1.1) / api.country.is سے آپ کا IP اور ملک پوچھیں، منسلک نہ ہونے پر بھی۔';
 
   @override
   String exitIpLabel(String ip) {

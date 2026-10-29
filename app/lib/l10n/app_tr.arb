@@ -399,7 +399,7 @@
   "hpWarpReserved": "WARP yapılandırmalarındaki gibi üç sayı",
   "hpOneBridgePerLine": "Her satıra bir köprü, torrc'deki gibi \"Bridge \" olmadan",
   "exitTitle": "Çıkış adresini ve ülkeyi göster",
-  "exitHint": "IP'nizi ve ülkenizi api.country.is'e sorar, bağlı değilken de.",
+  "exitHint": "IP'nizi ve ülkenizi Cloudflare (1.1.1.1) / api.country.is'e sorar, bağlı değilken de.",
   "exitIpLabel": "IP {ip}",
   "connectedTo": "{place} konumuna bağlandı",
   "noticesTitle": "Açık kaynak lisansları",

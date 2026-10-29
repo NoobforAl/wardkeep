@@ -1486,7 +1486,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get exitHint =>
-      'يسأل api.country.is عن عنوانك وبلدك، حتى عند عدم الاتصال.';
+      'يسأل Cloudflare (1.1.1.1) / api.country.is عن عنوانك وبلدك، حتى عند عدم الاتصال.';
 
   @override
   String exitIpLabel(String ip) {

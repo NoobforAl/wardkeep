@@ -2517,7 +2517,7 @@ abstract class AppLocalizations {
   /// No description provided for @exitHint.
   ///
   /// In en, this message translates to:
-  /// **'Ask api.country.is for your IP and country, also when not connected.'**
+  /// **'Ask Cloudflare (1.1.1.1) / api.country.is for your IP and country, also when not connected.'**
   String get exitHint;
 
   /// No description provided for @exitIpLabel.

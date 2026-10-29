@@ -1427,7 +1427,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get exitHint =>
-      'Tanyakan api.country.is untuk IP dan negara Anda, juga saat tidak terhubung.';
+      'Tanyakan Cloudflare (1.1.1.1) / api.country.is untuk IP dan negara Anda, juga saat tidak terhubung.';
 
   @override
   String exitIpLabel(String ip) {

@@ -1440,7 +1440,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get exitHint =>
-      'نشانی و کشور شما را از api.country.is می‌پرسد، حتی بدون اتصال.';
+      'نشانی و کشور شما را از Cloudflare (1.1.1.1) / api.country.is می‌پرسد، حتی بدون اتصال.';
 
   @override
   String exitIpLabel(String ip) {

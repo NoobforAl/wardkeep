@@ -399,7 +399,7 @@
   "hpWarpReserved": "Tiga angka, seperti yang tercantum di konfigurasi WARP",
   "hpOneBridgePerLine": "Satu bridge per baris, seperti di torrc tanpa \"Bridge \"",
   "exitTitle": "Tampilkan alamat dan negara keluar",
-  "exitHint": "Tanyakan api.country.is untuk IP dan negara Anda, juga saat tidak terhubung.",
+  "exitHint": "Tanyakan Cloudflare (1.1.1.1) / api.country.is untuk IP dan negara Anda, juga saat tidak terhubung.",
   "exitIpLabel": "IP {ip}",
   "connectedTo": "Terhubung ke {place}",
   "noticesTitle": "Lisensi sumber terbuka",

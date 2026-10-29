@@ -1473,7 +1473,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get exitHint =>
-      'Спрашивать у api.country.is ваш адрес и страну, в том числе без подключения.';
+      'Спрашивать у Cloudflare (1.1.1.1) / api.country.is ваш адрес и страну, в том числе без подключения.';
 
   @override
   String exitIpLabel(String ip) {

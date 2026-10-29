@@ -745,7 +745,7 @@
   "hpWarpReserved": "Three numbers, as WARP configurations list them",
   "hpOneBridgePerLine": "One bridge per line, as in a torrc without \"Bridge \"",
   "exitTitle": "Show exit address and country",
-  "exitHint": "Ask api.country.is for your IP and country, also when not connected.",
+  "exitHint": "Ask Cloudflare (1.1.1.1) / api.country.is for your IP and country, also when not connected.",
   "exitIpLabel": "IP {ip}",
   "@exitIpLabel": {
     "placeholders": {

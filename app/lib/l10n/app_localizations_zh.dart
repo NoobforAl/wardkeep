@@ -1385,7 +1385,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exitTitle => '显示出口地址和国家';
 
   @override
-  String get exitHint => '向 api.country.is 查询你的地址和国家，未连接时也会查询。';
+  String get exitHint =>
+      '向 Cloudflare (1.1.1.1) / api.country.is 查询你的地址和国家，未连接时也会查询。';
 
   @override
   String exitIpLabel(String ip) {

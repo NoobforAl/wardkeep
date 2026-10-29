@@ -399,7 +399,7 @@
   "hpWarpReserved": "Tres números, como los listan las configuraciones de WARP",
   "hpOneBridgePerLine": "Un puente por línea, como en un torrc sin \"Bridge \"",
   "exitTitle": "Mostrar dirección de salida y país",
-  "exitHint": "Consulta api.country.is para obtener tu IP y país, también sin conexión.",
+  "exitHint": "Consulta Cloudflare (1.1.1.1) / api.country.is para obtener tu IP y país, también sin conexión.",
   "exitIpLabel": "IP {ip}",
   "connectedTo": "Conectado a {place}",
   "noticesTitle": "Licencias de código abierto",
