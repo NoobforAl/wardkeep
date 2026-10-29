@@ -1,3 +1,5 @@
+//go:build with_quic && with_utls && with_wireguard && with_gvisor
+
 package runtime
 
 import (
