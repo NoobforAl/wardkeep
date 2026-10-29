@@ -1,13 +1,34 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- The VPN itself: connections to the servers, and the UI's to the in-process core on 127.0.0.1. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The core follows the phone's networks (Wi-Fi, mobile data) to send the tunnel out of the right one
+         and to reconnect when it changes (CorePlatform: interfaces, default-network monitor). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- ConnectivityManager.requestNetwork: the monitor that tracks the best non-VPN network. -->
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <!-- The VPN service keeps running in the foreground, with its notification, while connected. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Android 14+: the foreground service's type ("specialUse", subtype vpn; see the service below). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Android 13+: the VPN status notification (speed, Reconnect, Disconnect), "Connection lost", and
+         failures the app could not handle; asked for in the app. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Split tunneling lists installed apps (a permitted use for VPN apps). -->
+    <!-- Split tunneling: the picker of apps that use (or skip) the VPN lists the installed apps. The list
+         never leaves the device. A permitted use for VPN apps; the APKs are distributed outside Play. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- The QR scanner (flutter_zxing on the camera plugin); asked for when the scan screen opens.
+         The camera plugin also declares the microphone and storage, for videos and photos the app never
+         records or saves: removed (the build adds READ_EXTERNAL_STORAGE for it too).
+         A phone without a camera can still install the app (QR import is optional). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" tools:replace="android:required" />
 
+    <!-- No android:appCategory: none of Android's categories (game, audio, video, image, social, news,
+         maps, productivity, accessibility) fits a VPN client. -->
     <application
         android:allowBackup="false"
         android:label="Wardkeep"
@@ -125,6 +146,11 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="vpn" />
         </service>
+        <!-- image_picker (pulled in by flutter_zxing, unused here) asks Google Play services for its
+             photo picker backport: removed, the app has no Google components. -->
+        <service
+            android:name="com.google.android.gms.metadata.ModuleDependencies"
+            tools:node="remove" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

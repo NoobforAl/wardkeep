@@ -7,10 +7,10 @@ Omnitun is MIT licensed. It includes the software below under their own licenses
 | License | Packages |
 |---|---|
 | MIT OR Apache-2.0 | 269 |
-| MIT | 180 |
+| MIT | 181 |
 | Apache-2.0 OR MIT | 46 |
-| BSD-3-Clause | 41 |
-| Apache-2.0 | 35 |
+| BSD-3-Clause | 42 |
+| Apache-2.0 | 36 |
 | MIT/Apache-2.0 | 27 |
 | Unicode-3.0 | 18 |
 | GPL-3.0 | 16 |
@@ -214,14 +214,17 @@ Omnitun is MIT licensed. It includes the software below under their own licenses
 | Go | google.golang.org/grpc | v1.84.0 | Apache-2.0 |
 | Go | google.golang.org/protobuf | v1.36.12 | BSD-3-Clause |
 | Go | lukechampine.com/blake3 | v1.4.1 | MIT |
+| Dart | camera | 0.12.2 | BSD-3-Clause |
 | Dart | cupertino_icons | 1.0.9 | MIT |
 | Dart | file_picker | 13.1.0 | MIT |
+| Dart | flutter_zxing | 3.1.0 | MIT |
 | Dart | flutter_riverpod | 3.4.3 | MIT |
 | Dart | go_router | 18.1.0 | BSD-3-Clause |
 | Dart | intl | 0.20.3 | BSD-3-Clause |
-| Dart | mobile_scanner | 7.4.2 | BSD-3-Clause |
 | Dart | path_provider | 2.1.6 | BSD-3-Clause |
 | Dart | qr_flutter | 4.1.0 | BSD-3-Clause |
+| C++ | zxing-cpp (built into flutter_zxing) | 3.1.1 | Apache-2.0 |
+| C | libzint backend (built into zxing-cpp) | 2.16.0 | BSD-3-Clause |
 | Rust | adler2 | 2.0.1 | 0BSD OR MIT OR Apache-2.0 |
 | Rust | aes | 0.9.3 | MIT OR Apache-2.0 |
 | Rust | aho-corasick | 1.1.5 | Unlicense OR MIT |
@@ -737,6 +740,50 @@ Omnitun is MIT licensed. It includes the software below under their own licenses
 
 ## License texts
 
+### Used by: C libzint backend 2.16.0
+
+```text
+libzint - the open source barcode library
+Copyright (C) 2008-2025 Robin Stuart <rstuart114@gmail.com>
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the project nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+```
+
+### Used by: C++ zxing-cpp 3.1.1
+
+```text
+Copyright 2016 Nu-book Inc.
+Copyright 2016 ZXing authors
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
+compliance with the License. The full text of the License is the Apache License 2.0 text below.
+Unless required by applicable law or agreed to in writing, software distributed under the License is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+```
+
 ### Used by: Dart cupertino_icons 1.0.9
 
 ```text
@@ -788,6 +835,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+### Used by: Dart flutter_zxing 3.1.0
+
+```text
+MIT License
+
+Copyright (c) 2022 Khoren Markosyan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ### Used by: Dart flutter_riverpod 3.4.3
 
 ```text
@@ -814,7 +887,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### Used by: Dart go_router 18.1.0, Dart path_provider 2.1.6
+### Used by: Dart camera 0.12.2, Dart go_router 18.1.0, Dart path_provider 2.1.6
 
 ```text
 Copyright 2013 The Flutter Authors
@@ -873,40 +946,6 @@ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-```
-
-### Used by: Dart mobile_scanner 7.4.2
-
-```text
-BSD 3-Clause License
-
-Copyright (c) 2022, Julian Steenbakker
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
