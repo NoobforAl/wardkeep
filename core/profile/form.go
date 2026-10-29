@@ -367,22 +367,6 @@ func ovpnStr(sel func(*OVPN) *string) strPtr {
 	}
 }
 
-func ikeOf(profile *Profile, create bool) *IKEv2Opts {
-	if profile.IKEv2 == nil && create {
-		profile.IKEv2 = &IKEv2Opts{Auth: "eap"}
-	}
-	return profile.IKEv2
-}
-
-func ikeStr(sel func(*IKEv2Opts) *string) strPtr {
-	return func(p *Profile, create bool) *string {
-		if o := ikeOf(p, create); o != nil {
-			return sel(o)
-		}
-		return nil
-	}
-}
-
 func sshOf(profile *Profile, create bool) *SSHOpts {
 	if profile.SSH == nil && create {
 		profile.SSH = &SSHOpts{}
@@ -789,38 +773,6 @@ func protocolFields(protocol string) ([]Field, bool) {
 			text("openvpn.verify_x509_name", "Verify server name", ovpnStr(func(o *OVPN) *string { return &o.VerifyX509Name }), advanced),
 			text("openvpn.remote_cert_tls", "Remote certificate type", ovpnStr(func(o *OVPN) *string { return &o.RemoteCertTLS }), choices("", "server"), advanced),
 		}, true
-	case IKEv2:
-		return []Field{
-			text("ikev2.auth", "Authentication", ikeStr(func(o *IKEv2Opts) *string { return &o.Auth }), choices("eap", "psk", "cert"), def("eap"), required),
-			username(), password(),
-			secret("ikev2.psk", "Pre-shared key", ikeStr(func(o *IKEv2Opts) *string { return &o.PSK })),
-			text("ikev2.remote_id", "Server identity", ikeStr(func(o *IKEv2Opts) *string { return &o.RemoteID }), advanced, help("Defaults to the server address")),
-			text("ikev2.local_id", "Your identity", ikeStr(func(o *IKEv2Opts) *string { return &o.LocalID }), advanced),
-			pem("ikev2.ca_cert", "Server certificate to trust (PEM)", ikeStr(func(o *IKEv2Opts) *string { return &o.CACert }), advanced),
-			pem("ikev2.client_cert", "Client certificate (PEM)", ikeStr(func(o *IKEv2Opts) *string { return &o.ClientCert }), advanced),
-			pem("ikev2.client_key", "Client key (PEM)", ikeStr(func(o *IKEv2Opts) *string { return &o.ClientKey }), advanced),
-			toggle("ikev2.tcp", "Use TCP", func(p *Profile, c bool) *bool {
-				if o := ikeOf(p, c); o != nil {
-					return &o.TCP
-				}
-				return nil
-			}, advanced, help("Carry IKE and ESP over TCP for networks that block UDP")),
-			toggle("ikev2.system", "Use the phone's own IKEv2 client", func(p *Profile, c bool) *bool {
-				if o := ikeOf(p, c); o != nil {
-					return &o.System
-				}
-				return nil
-			}, advanced),
-		}, true
-	case SSTP:
-		return []Field{username(required), password(required),
-			toggle("tls.insecure", "Skip certificate check", func(p *Profile, c bool) *bool {
-				if t := tlsOf(p, c); t != nil {
-					return &t.Insecure
-				}
-				return nil
-			}, advanced, help("Safe for SSTP: the password exchange proves the server")),
-		}, true
 	case Tailscale:
 		return []Field{
 			secret("password", "Auth key", func(p *Profile, _ bool) *string { return &p.Password }, required,
@@ -861,14 +813,14 @@ func protocolFields(protocol string) ([]Field, bool) {
 var formLabels = []struct{ protocol, label string }{
 	{VLESS, "VLESS"}, {VMess, "VMess"}, {Trojan, "Trojan"}, {Shadowsocks, "Shadowsocks"},
 	{Hysteria2, "Hysteria 2"}, {Hysteria, "Hysteria"}, {TUIC, "TUIC"}, {AnyTLS, "AnyTLS"}, {Naive, "NaiveProxy"},
-	{WireGuard, "WireGuard"}, {AmneziaWG, "AmneziaWG"}, {OpenVPN, "OpenVPN"}, {IKEv2, "IKEv2/IPsec"}, {SSTP, "SSTP"},
+	{WireGuard, "WireGuard"}, {AmneziaWG, "AmneziaWG"}, {OpenVPN, "OpenVPN"},
 	{SSH, "SSH"}, {Tor, "Tor"}, {DNSTT, "DNS tunnel"}, {Tailscale, "Tailscale / Headscale"},
 }
 
 // defaultPorts are the ports a new profile starts with.
 var defaultPorts = map[string]int{
 	VLESS: 443, VMess: 443, Trojan: 443, Shadowsocks: 8388, Hysteria2: 443, Hysteria: 443, TUIC: 443,
-	AnyTLS: 443, Naive: 443, SSH: 22, DNSTT: dnsttPort, WireGuard: 51820, AmneziaWG: 51820, OpenVPN: 1194, IKEv2: 4500, SSTP: 443,
+	AnyTLS: 443, Naive: 443, SSH: 22, DNSTT: dnsttPort, WireGuard: 51820, AmneziaWG: 51820, OpenVPN: 1194,
 }
 
 func commonFields(protocol string) []Field {
@@ -920,12 +872,8 @@ func New(protocol string) (*Profile, error) {
 		profile.TLS = &TLS{Enabled: true}
 	case VMess:
 		profile.Method = "auto"
-	case IKEv2:
-		profile.IKEv2 = &IKEv2Opts{Auth: "eap"}
 	case OpenVPN:
 		profile.OpenVPN = &OVPN{Network: "udp"}
-	case SSTP:
-		profile.TLS = &TLS{Enabled: true}
 	}
 	return profile, nil
 }

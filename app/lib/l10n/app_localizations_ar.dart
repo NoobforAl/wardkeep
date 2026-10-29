@@ -1391,9 +1391,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flReservedBytes => 'البايتات المحجوزة';
 
   @override
-  String get flAuthentication => 'المصادقة';
-
-  @override
   String get flAuthDigest => 'ملخّص المصادقة';
 
   @override
@@ -1421,21 +1418,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flVerifyServerName => 'التحقق من اسم الخادم';
 
   @override
-  String get flYourIdentity => 'هويتك';
-
-  @override
-  String get flServerIdentity => 'هوية الخادم';
-
-  @override
-  String get flServerCertTrust => 'شهادة الخادم الموثوقة (PEM)';
-
-  @override
-  String get flUseSystemIke => 'استخدام عميل IKEv2 المدمج في الهاتف';
-
-  @override
-  String get flUseTcp => 'استخدام TCP';
-
-  @override
   String get flHostKeys => 'مفاتيح المضيف';
 
   @override
@@ -1460,9 +1442,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hpAuthorizedKeys => 'بصيغة authorized_keys؛ الفارغ يقبل أي مفتاح';
 
   @override
-  String get hpIkeTcp => 'نقل IKE وESP عبر TCP للشبكات التي تحجب UDP';
-
-  @override
   String get hpDefaultsToServer => 'الافتراضي هو عنوان الخادم';
 
   @override
@@ -1484,9 +1463,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get hpOnlySelfSigned =>
       'فقط للخوادم ذات الشهادة الموقّعة ذاتيًا التي لا يمكنك تثبيتها';
-
-  @override
-  String get hpSafeSstp => 'آمن مع SSTP: تبادل كلمة المرور يثبت هوية الخادم';
 
   @override
   String get hpHysteriaObfs =>

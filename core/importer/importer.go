@@ -131,10 +131,6 @@ func ParseLink(link string) (*profile.Profile, error) {
 		prof, err = parseSSH(link)
 	case "naive+https", "naive+quic", "naive":
 		prof, err = parseNaive(link)
-	case "ikev2":
-		prof, err = parseIKEv2(link)
-	case "sstp":
-		prof, err = parseSSTP(link)
 	case "tor":
 		prof, err = parseTorLink(link)
 	case "tailscale", "headscale":

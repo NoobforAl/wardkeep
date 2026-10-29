@@ -1346,9 +1346,6 @@ class AppLocalizationsUr extends AppLocalizations {
   String get flReservedBytes => 'ریزروڈ بائٹس';
 
   @override
-  String get flAuthentication => 'توثیق';
-
-  @override
   String get flAuthDigest => 'Auth ڈائجسٹ';
 
   @override
@@ -1376,21 +1373,6 @@ class AppLocalizationsUr extends AppLocalizations {
   String get flVerifyServerName => 'سرور کا نام تصدیق کریں';
 
   @override
-  String get flYourIdentity => 'آپ کی شناخت';
-
-  @override
-  String get flServerIdentity => 'سرور کی شناخت';
-
-  @override
-  String get flServerCertTrust => 'قابلِ اعتماد سرور سرٹیفکیٹ (PEM)';
-
-  @override
-  String get flUseSystemIke => 'فون کا اپنا IKEv2 کلائنٹ استعمال کریں';
-
-  @override
-  String get flUseTcp => 'TCP استعمال کریں';
-
-  @override
   String get flHostKeys => 'ہوسٹ کلیدیں';
 
   @override
@@ -1416,10 +1398,6 @@ class AppLocalizationsUr extends AppLocalizations {
       'authorized_keys فارمیٹ؛ خالی ہو تو کوئی بھی کلید قبول';
 
   @override
-  String get hpIkeTcp =>
-      'UDP روکنے والے نیٹ ورکس کے لیے IKE اور ESP کو TCP پر چلائیں';
-
-  @override
   String get hpDefaultsToServer => 'بطور ڈیفالٹ سرور کا پتہ';
 
   @override
@@ -1441,10 +1419,6 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get hpOnlySelfSigned =>
       'صرف ان سرورز کے لیے جن کا سیلف سائنڈ سرٹیفکیٹ آپ پن نہیں کر سکتے';
-
-  @override
-  String get hpSafeSstp =>
-      'SSTP کے لیے محفوظ: پاس ورڈ کا تبادلہ سرور کی تصدیق کر دیتا ہے';
 
   @override
   String get hpHysteriaObfs =>

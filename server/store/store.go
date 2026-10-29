@@ -37,8 +37,6 @@ const (
 	OpenVPNUDP   = "openvpn-udp"
 	OpenVPNTCP   = "openvpn-tcp"
 	WireGuardKey = "wireguard"
-	SSTP         = "sstp"
-	IKEv2        = "ikev2"
 	AmneziaWGKey = "amneziawg"
 )
 
@@ -157,7 +155,7 @@ type Server struct {
 	// Logging is the log level and the alerts switch; nil is the defaults.
 	Logging *Logging `json:"logging,omitempty"`
 	// IPv6 gives users an IPv6 address inside the tunnels that can carry one
-	// (WireGuard, AmneziaWG, OpenVPN, IKEv2) and makes the server route it. Off by
+	// (WireGuard, AmneziaWG, OpenVPN) and makes the server route it. Off by
 	// default: a host without IPv6 to the internet would make apps wait for
 	// addresses that go nowhere.
 	IPv6 bool `json:"ipv6,omitempty"`

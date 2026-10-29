@@ -84,9 +84,8 @@ class ProfileInfo {
         raw: raw,
       );
 
-  /// OpenVPN profiles with `auth-user-pass` and IKEv2 EAP profiles need a username and password.
-  bool get needsCredentials =>
-      (raw['openvpn'] as Map?)?['needs_auth'] == true || (protocol == 'ikev2' && (raw['ikev2'] as Map?)?['auth'] == 'eap');
+  /// OpenVPN profiles with `auth-user-pass` need a username and password.
+  bool get needsCredentials => (raw['openvpn'] as Map?)?['needs_auth'] == true;
 
   bool get hasCredentials =>
       (raw['username'] as String? ?? '').isNotEmpty && (raw['password'] as String? ?? '').isNotEmpty;

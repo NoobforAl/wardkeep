@@ -1,17 +1,17 @@
 name: Docker end-to-end
 
-# Real VPN clients (OpenVPN, WireGuard, AmneziaWG, SSTP, IKEv2) against the Linux server, in Docker on a GitHub
+# Real VPN clients (OpenVPN, WireGuard, AmneziaWG) against the Linux server, in Docker on a GitHub
 # machine: `make docker-e2e`, which is tools/dockertest/run.py. It builds the server, starts it with a TUN device
 # and NAT in a container, connects real clients from other containers (one user at a time, then three users at
 # once, then IPv6), and checks the tunnel, the server's NAT and the per-user traffic accounting.
 #
-# It takes about 25 minutes and has never run on GitHub (the runner's kernel may lack /dev/ppp or the xfrm
-# modules that SSTP and IKEv2 need), so it runs on request only (Actions -> Docker end-to-end -> Run workflow).
+# It takes about 25 minutes and has never run on GitHub, so it runs on request only (Actions -> Docker
+# end-to-end -> Run workflow).
 # Once it has passed there, turn the push and pull_request triggers back on.
 #
 # Every action is pinned to a full commit SHA. The job only reads the repository and holds no secret; it runs
 # code from the repository and its dependencies, so the token cannot write anything. The containers it starts
-# are privileged (SSTP's pppd needs /dev/ppp) and live only as long as the job's machine does.
+# may open TUN devices and change their own network (NET_ADMIN) and live only as long as the job's machine does.
 
 on:
   workflow_dispatch:
@@ -36,13 +36,13 @@ jobs:
         with:
           go-version-file: go.mod
 
-      # The clients run in containers but use this machine's kernel: SSTP needs the PPP driver (and /dev/ppp),
-      # the AmneziaWG and OpenVPN clients a TUN device. A module that is built in or missing is not an error here;
-      # the test says which tunnel failed and shows the client's log.
+      # The clients run in containers but use this machine's kernel: the WireGuard, AmneziaWG and OpenVPN clients
+      # need a TUN device. A module that is built in or missing is not an error here; the test says which tunnel
+      # failed and shows the client's log.
       - name: Kernel pieces the clients need
         run: |
-          sudo modprobe ppp_generic ppp_async ppp_mppe tun || true
-          ls -l /dev/net/tun /dev/ppp || true
+          sudo modprobe tun || true
+          ls -l /dev/net/tun || true
           docker version --format 'Docker {{.Server.Version}}'
 
       - name: Docker end-to-end test

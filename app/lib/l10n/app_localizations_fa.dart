@@ -1343,9 +1343,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get flReservedBytes => 'بایت‌های رزرو';
 
   @override
-  String get flAuthentication => 'احراز هویت';
-
-  @override
   String get flAuthDigest => 'چکیده احراز هویت';
 
   @override
@@ -1373,21 +1370,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get flVerifyServerName => 'بررسی نام سرور';
 
   @override
-  String get flYourIdentity => 'هویت شما';
-
-  @override
-  String get flServerIdentity => 'هویت سرور';
-
-  @override
-  String get flServerCertTrust => 'گواهی سرور برای اعتماد (PEM)';
-
-  @override
-  String get flUseSystemIke => 'استفاده از کلاینت IKEv2 خودِ گوشی';
-
-  @override
-  String get flUseTcp => 'استفاده از TCP';
-
-  @override
   String get flHostKeys => 'کلیدهای میزبان';
 
   @override
@@ -1413,10 +1395,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'قالب authorized_keys؛ خالی یعنی هر کلیدی پذیرفته می‌شود';
 
   @override
-  String get hpIkeTcp =>
-      'IKE و ESP را روی TCP عبور می‌دهد، برای شبکه‌هایی که UDP را مسدود می‌کنند';
-
-  @override
   String get hpDefaultsToServer => 'به‌طور پیش‌فرض نشانی سرور';
 
   @override
@@ -1438,10 +1416,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get hpOnlySelfSigned =>
       'فقط برای سرورهایی با گواهی خودامضا که نمی‌توانید پین کنید';
-
-  @override
-  String get hpSafeSstp =>
-      'برای SSTP ایمن است: تبادل گذرواژه سرور را اثبات می‌کند';
 
   @override
   String get hpHysteriaObfs =>

@@ -143,9 +143,9 @@ it again. The version the server already has is left alone.`,
 	}
 	ipv6 := &cobra.Command{
 		Use:   "ipv6 <on|off>",
-		Short: "Give users an IPv6 address inside WireGuard, AmneziaWG, OpenVPN and IKEv2 tunnels",
+		Short: "Give users an IPv6 address inside WireGuard, AmneziaWG and OpenVPN tunnels",
 		Long: `Give users an IPv6 address inside the tunnels that can carry one (WireGuard,
-AmneziaWG, OpenVPN, IKEv2/IPsec; SSTP cannot), and route and NAT it on this host.
+AmneziaWG, OpenVPN), and route and NAT it on this host.
 
 Turn it on only if this host has IPv6 to the internet and forwards it
 (sysctl net.ipv6.conf.all.forwarding=1): otherwise apps would try IPv6

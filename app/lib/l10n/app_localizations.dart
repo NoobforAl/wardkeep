@@ -2334,12 +2334,6 @@ abstract class AppLocalizations {
   /// **'Reserved bytes'**
   String get flReservedBytes;
 
-  /// No description provided for @flAuthentication.
-  ///
-  /// In en, this message translates to:
-  /// **'Authentication'**
-  String get flAuthentication;
-
   /// No description provided for @flAuthDigest.
   ///
   /// In en, this message translates to:
@@ -2394,36 +2388,6 @@ abstract class AppLocalizations {
   /// **'Verify server name'**
   String get flVerifyServerName;
 
-  /// No description provided for @flYourIdentity.
-  ///
-  /// In en, this message translates to:
-  /// **'Your identity'**
-  String get flYourIdentity;
-
-  /// No description provided for @flServerIdentity.
-  ///
-  /// In en, this message translates to:
-  /// **'Server identity'**
-  String get flServerIdentity;
-
-  /// No description provided for @flServerCertTrust.
-  ///
-  /// In en, this message translates to:
-  /// **'Server certificate to trust (PEM)'**
-  String get flServerCertTrust;
-
-  /// No description provided for @flUseSystemIke.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the phone\'s own IKEv2 client'**
-  String get flUseSystemIke;
-
-  /// No description provided for @flUseTcp.
-  ///
-  /// In en, this message translates to:
-  /// **'Use TCP'**
-  String get flUseTcp;
-
   /// No description provided for @flHostKeys.
   ///
   /// In en, this message translates to:
@@ -2472,12 +2436,6 @@ abstract class AppLocalizations {
   /// **'authorized_keys format; empty accepts any key'**
   String get hpAuthorizedKeys;
 
-  /// No description provided for @hpIkeTcp.
-  ///
-  /// In en, this message translates to:
-  /// **'Carry IKE and ESP over TCP for networks that block UDP'**
-  String get hpIkeTcp;
-
   /// No description provided for @hpDefaultsToServer.
   ///
   /// In en, this message translates to:
@@ -2519,12 +2477,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only for servers with a self-signed certificate you cannot pin'**
   String get hpOnlySelfSigned;
-
-  /// No description provided for @hpSafeSstp.
-  ///
-  /// In en, this message translates to:
-  /// **'Safe for SSTP: the password exchange proves the server'**
-  String get hpSafeSstp;
 
   /// No description provided for @hpHysteriaObfs.
   ///

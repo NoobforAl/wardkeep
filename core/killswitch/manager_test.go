@@ -157,7 +157,7 @@ func TestCheckProfiles(t *testing.T) {
 	if err := CheckProfiles([]*profile.Profile{prof(profile.VLESS, "a"), prof(profile.WireGuard, "b")}); err != nil {
 		t.Errorf("supported protocols refused: %v", err)
 	}
-	for _, p := range []string{profile.Tor, profile.IKEv2, profile.SSTP, profile.AmneziaWG} {
+	for _, p := range []string{profile.Tor, profile.AmneziaWG, profile.DNSTT} {
 		if err := CheckProfiles([]*profile.Profile{prof(profile.VLESS, "a"), prof(p, "x")}); err == nil {
 			t.Errorf("%s must be refused", p)
 		}

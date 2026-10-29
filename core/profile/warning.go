@@ -79,7 +79,7 @@ func WarningsForProtocol(protocol string) []Warning {
 		return []Warning{wSSPlain}
 	case Hysteria:
 		return []Warning{wHysteria1}
-	case WireGuard, OpenVPN, IKEv2, SSTP:
+	case WireGuard, OpenVPN:
 		return []Warning{wDPI}
 	case SSH:
 		return []Warning{wSSH}
@@ -111,7 +111,7 @@ func WarningsFor(profile *Profile) []Warning {
 			add(wNoTLS)
 		}
 	}
-	if profile.TLS != nil && profile.TLS.Insecure && profile.Protocol != SSTP {
+	if profile.TLS != nil && profile.TLS.Insecure {
 		add(wInsecure)
 	}
 	warningsFromOptions(profile, add)

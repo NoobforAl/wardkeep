@@ -57,7 +57,7 @@ type Server struct {
 	coll    *collector     // the running instance's collector (guarded by accMu)
 	accStop context.CancelFunc
 
-	hosts   map[string]hostproto.Server // running SSTP / IKEv2 servers
+	hosts   map[string]hostproto.Server // running host-level servers (AmneziaWG, DNSCrypt)
 	dnstt   *dnsttSidecar               // the DNS tunnel's front end, when it runs
 	undoNAT func()
 	meters  hostMeters       // per-user traffic of the host-level servers

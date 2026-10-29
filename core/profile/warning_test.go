@@ -13,7 +13,7 @@ func codes(ws []Warning) map[string]bool {
 func TestWarningsForProtocols(t *testing.T) {
 	want := map[string]string{
 		VMess: WarnVMessLegacy, Shadowsocks: WarnSSPlain, Hysteria: WarnHysteria1,
-		WireGuard: WarnDPIVisible, OpenVPN: WarnDPIVisible, IKEv2: WarnDPIVisible, SSTP: WarnDPIVisible,
+		WireGuard: WarnDPIVisible, OpenVPN: WarnDPIVisible,
 		SSH: WarnSSHVisible,
 	}
 	for proto, code := range want {
@@ -46,12 +46,6 @@ func TestWarningsForProfile(t *testing.T) {
 	insecure := &Profile{Protocol: Trojan, TLS: &TLS{Enabled: true, Insecure: true}}
 	if !codes(WarningsFor(insecure))[WarnTLSInsecure] {
 		t.Error("insecure TLS should warn")
-	}
-
-	// SSTP's password exchange proves the server, so skipping the check is not flagged.
-	sstp := &Profile{Protocol: SSTP, TLS: &TLS{Enabled: true, Insecure: true}}
-	if codes(WarningsFor(sstp))[WarnTLSInsecure] {
-		t.Error("SSTP should not warn about skipping the certificate check")
 	}
 
 	for _, p := range []*Profile{

@@ -18,7 +18,7 @@ func TestHostMetersCountChangesPerUserAndProtocol(t *testing.T) {
 	defer tr.Stop()
 	var h hostMeters
 	m := &fakeMeter{}
-	h.add("sstp", m)
+	h.add("amneziawg", m)
 
 	m.usage = []hostproto.Usage{{User: "alice", Up: 100, Down: 400}, {User: "bob", Up: 10, Down: 20}}
 	h.collect(tr)
@@ -38,7 +38,7 @@ func TestHostMetersCountChangesPerUserAndProtocol(t *testing.T) {
 
 	// The last reading before a server stops is taken too.
 	m.usage = []hostproto.Usage{{User: "alice", Up: 160, Down: 450}}
-	h.remove("sstp", tr)
+	h.remove("amneziawg", tr)
 	if got := tr.MonthTotal("alice"); got != 610 {
 		t.Fatalf("alice after the final reading: %d", got)
 	}
@@ -49,7 +49,7 @@ func TestHostMetersCountChangesPerUserAndProtocol(t *testing.T) {
 
 	// A restarted server counts from zero again.
 	m.usage = []hostproto.Usage{{User: "alice", Up: 5, Down: 5}}
-	h.add("sstp", m)
+	h.add("amneziawg", m)
 	h.collect(tr)
 	if got := tr.MonthTotal("alice"); got != 620 {
 		t.Fatalf("alice after a restart: %d", got)
@@ -61,16 +61,16 @@ func TestHostMetersLiveConnectionsAndSpeed(t *testing.T) {
 	defer tr.Stop()
 	clock := time.Unix(1000, 0)
 	h := hostMeters{now: func() time.Time { return clock }}
-	sstp, awg := &fakeMeter{}, &fakeMeter{}
-	h.add("sstp", sstp)
+	other, awg := &fakeMeter{}, &fakeMeter{} // other stands for a second metered host protocol
+	h.add("other", other)
 	h.add("amneziawg", awg)
 
-	sstp.usage = []hostproto.Usage{{User: "alice", Up: 0, Down: 0, Sessions: 2}}
+	other.usage = []hostproto.Usage{{User: "alice", Up: 0, Down: 0, Sessions: 2}}
 	awg.usage = []hostproto.Usage{{User: "alice", Sessions: 1}, {User: "bob", Sessions: 0}}
 	h.collect(tr)
 
 	clock = clock.Add(2 * time.Second)
-	sstp.usage = []hostproto.Usage{{User: "alice", Up: 2000, Down: 6000, Sessions: 2}}
+	other.usage = []hostproto.Usage{{User: "alice", Up: 2000, Down: 6000, Sessions: 2}}
 	awg.usage = []hostproto.Usage{{User: "alice", Up: 400, Down: 200, Sessions: 1}, {User: "bob"}}
 	h.collect(tr)
 
@@ -82,13 +82,13 @@ func TestHostMetersLiveConnectionsAndSpeed(t *testing.T) {
 	if _, ok := users["bob"]; ok {
 		t.Fatalf("bob has no connection but is listed: %+v", users["bob"])
 	}
-	if protocols["sstp"] != 2 || protocols["amneziawg"] != 1 {
+	if protocols["other"] != 2 || protocols["amneziawg"] != 1 {
 		t.Fatalf("protocols: %v", protocols)
 	}
 
 	// Everyone leaves: nothing is live any more, though the totals stay.
 	clock = clock.Add(2 * time.Second)
-	sstp.usage = []hostproto.Usage{{User: "alice", Up: 2000, Down: 6000}}
+	other.usage = []hostproto.Usage{{User: "alice", Up: 2000, Down: 6000}}
 	awg.usage = []hostproto.Usage{{User: "alice", Up: 400, Down: 200}}
 	h.collect(tr)
 	if users, protocols := h.live(); len(users) != 0 || len(protocols) != 0 {

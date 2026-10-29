@@ -45,10 +45,6 @@ func Export(prof *profile.Profile) (string, error) {
 		return ssh(prof), nil
 	case profile.Naive:
 		return naive(prof), nil
-	case profile.IKEv2:
-		return ikev2(prof), nil
-	case profile.SSTP:
-		return sstp(prof), nil
 	case profile.Tor:
 		return tor(prof), nil
 	case profile.Tailscale:
@@ -377,41 +373,6 @@ func naive(prof *profile.Profile) string {
 	}
 	userinfo := url.PathEscape(prof.Username) + ":" + url.PathEscape(prof.Password)
 	return build(scheme, userinfo, hostPort(prof), "/", params, prof.Name)
-}
-
-func ikev2(prof *profile.Profile) string {
-	params := &query{}
-	opts := prof.IKEv2
-	if opts == nil {
-		opts = &profile.IKEv2Opts{Auth: "eap"}
-	}
-	params.add("auth", opts.Auth)
-	params.add("psk", opts.PSK)
-	params.add("remote_id", opts.RemoteID)
-	params.add("local_id", opts.LocalID)
-	params.add("ca", opts.CACert)
-	if opts.MTU > 0 {
-		params.add("mtu", strconv.Itoa(opts.MTU))
-	}
-	params.addFlag("tcp", opts.TCP)
-	params.addFlag("system", opts.System)
-	userinfo := ""
-	if prof.Username != "" {
-		userinfo = url.PathEscape(prof.Username)
-		if prof.Password != "" {
-			userinfo += ":" + url.PathEscape(prof.Password)
-		}
-	}
-	return build("ikev2", userinfo, hostPort(prof), "", params, prof.Name)
-}
-
-func sstp(prof *profile.Profile) string {
-	params := &query{}
-	if prof.TLS != nil && !prof.TLS.Insecure {
-		params.add("insecure", "0") // the parser's default is insecure=1
-	}
-	userinfo := url.PathEscape(prof.Username) + ":" + url.PathEscape(prof.Password)
-	return build("sstp", userinfo, hostPort(prof), "", params, prof.Name)
 }
 
 // tor is one line, so a Tor profile with the user's own bridges can sit in a list of links (a shared group).

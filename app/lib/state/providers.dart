@@ -26,17 +26,29 @@ final engineProvider = Provider<VpnEngine>((ref) {
 class ProfilesController extends Notifier<List<ProfileInfo>> {
   static const _key = 'profiles';
 
+  /// Protocols earlier versions had and this one does not: their saved profiles are dropped on load.
+  static const removedProtocols = {'ikev2', 'sstp'};
+
   @override
   List<ProfileInfo> build() {
-    final saved = ref.read(storeProvider).read<List<dynamic>>(_key) ?? const [];
+    final store = ref.read(storeProvider);
+    final saved = store.read<List<dynamic>>(_key) ?? const [];
     final out = <ProfileInfo>[];
+    var dropped = false;
     for (final raw in saved) {
       try {
-        out.add(ProfileInfo.fromJson(Map<String, dynamic>.from(raw as Map)));
+        final profile = ProfileInfo.fromJson(Map<String, dynamic>.from(raw as Map));
+        if (removedProtocols.contains(profile.protocol)) {
+          dropped = true;
+          continue;
+        }
+        out.add(profile);
       } catch (_) {
         // Skip entries written by an incompatible version.
       }
     }
+    // Saved once without them, so they do not come back with an older version's data.
+    if (dropped) store.write(_key, [for (final p in out) p.raw]);
     return out;
   }
 

@@ -1295,9 +1295,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flReservedBytes => '保留字节';
 
   @override
-  String get flAuthentication => '身份验证';
-
-  @override
   String get flAuthDigest => '验证摘要';
 
   @override
@@ -1325,21 +1322,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flVerifyServerName => '验证服务器名称';
 
   @override
-  String get flYourIdentity => '你的标识';
-
-  @override
-  String get flServerIdentity => '服务器标识';
-
-  @override
-  String get flServerCertTrust => '要信任的服务器证书 (PEM)';
-
-  @override
-  String get flUseSystemIke => '使用手机自带的 IKEv2 客户端';
-
-  @override
-  String get flUseTcp => '使用 TCP';
-
-  @override
   String get flHostKeys => '主机密钥';
 
   @override
@@ -1364,9 +1346,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hpAuthorizedKeys => 'authorized_keys 格式；留空则接受任何密钥';
 
   @override
-  String get hpIkeTcp => '通过 TCP 承载 IKE 和 ESP，适用于屏蔽 UDP 的网络';
-
-  @override
   String get hpDefaultsToServer => '默认使用服务器地址';
 
   @override
@@ -1386,9 +1365,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hpOnlySelfSigned => '仅适用于使用自签名证书且无法固定的服务器';
-
-  @override
-  String get hpSafeSstp => '对 SSTP 是安全的：密码交换可证明服务器身份';
 
   @override
   String get hpHysteriaObfs => 'Hysteria 2 填 salamander；Hysteria 1 填混淆密码';

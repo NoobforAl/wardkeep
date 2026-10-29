@@ -147,7 +147,8 @@ func newFirewallCmd(global *options) *cobra.Command {
 	return cmd
 }
 
-// hostServers reports whether SSTP or IKEv2 is enabled on this server.
+// hostServers reports whether a host-level protocol (AmneziaWG, DNSCrypt) is
+// enabled on this server.
 func hostServers(o *options) bool {
 	protos, err := o.manager().Protocols()
 	if err != nil {

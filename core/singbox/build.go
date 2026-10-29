@@ -23,8 +23,8 @@ type HelperSocks struct {
 	Password string
 }
 
-// ErrOtherEngine marks profiles that another engine of the core runs (SSTP,
-// IKEv2, AmneziaWG): they have no sing-box form.
+// ErrOtherEngine marks profiles that another engine of the core runs
+// (AmneziaWG, a DNS tunnel): they have no sing-box form.
 var ErrOtherEngine = errors.New("not run by sing-box")
 
 // Tags of the built-in outbounds.
@@ -610,8 +610,6 @@ func convertProfile(prof *profile.Profile, tag string) (out obj, isEndpoint bool
 		return ep, true, nil, err
 	case profile.AmneziaWG:
 		return nil, false, nil, fmt.Errorf("%w: amneziawg runs on the dedicated AWG engine (not sing-box)", ErrOtherEngine)
-	case profile.IKEv2, profile.SSTP:
-		return nil, false, nil, fmt.Errorf("%w: %s runs on the built-in classic VPN engine (not sing-box)", ErrOtherEngine, prof.Protocol)
 	case profile.DNSTT:
 		return nil, false, nil, fmt.Errorf("%w: a DNS tunnel runs as a helper next to sing-box", ErrOtherEngine)
 	default:

@@ -7,10 +7,9 @@ import (
 	"github.com/NoobforAl/omnitun/server/logs"
 	"github.com/NoobforAl/omnitun/server/serverconf"
 	"github.com/NoobforAl/omnitun/server/store"
-	"github.com/NoobforAl/omnitun/server/tlsfiles"
 )
 
-// startHostLocked starts the host-level protocols (SSTP, IKEv2, AmneziaWG) that are
+// startHostLocked starts the host-level protocols (AmneziaWG, DNSCrypt) that are
 // enabled and have users, and sets up NAT for their client networks. A
 // failure is logged and leaves the others running: these protocols need the
 // host's cooperation (Linux, CAP_NET_ADMIN, nftables or iptables) that the
@@ -29,25 +28,8 @@ func (s *Server) startHostLocked(st *store.State) {
 			continue
 		}
 		cfg := hostproto.Config{
-			Env: serverconf.Env(st, s.store), Port: proto.Port, Users: serverconf.Accounts(users), DataDir: s.store.Dir,
+			Env: serverconf.Env(st, s.store), Port: proto.Port, Users: serverconf.Accounts(users),
 			Runner: s.runner, Logf: s.hostLogf,
-		}
-		if key == "sstp" || key == "ikev2" {
-			domain := ""
-			if st.Server.ACMEActive() {
-				domain = st.Server.ACME.Domain
-			}
-			src := tlsfiles.New(serverconf.ACMEDir(s.store), domain, s.store.Path(st.Server.CertFile), s.store.Path(st.Server.KeyFile))
-			var err error
-			noCertificate := logs.Record{Msg: key + " did not start: no certificate", Target: key, Op: "start", Code: "NO_CERTIFICATE"}
-			if cfg.CertFile, cfg.KeyFile, err = src.Paths(); err != nil {
-				s.failed(true, noCertificate, err)
-				continue
-			}
-			if cfg.CertPEM, cfg.KeyPEM, err = src.PEM(); err != nil {
-				s.failed(true, noCertificate, err)
-				continue
-			}
 		}
 		srv, err := hostproto.Start(key, cfg)
 		if err != nil {
@@ -79,7 +61,7 @@ func (s *Server) startHostLocked(st *store.State) {
 	undo, err := hostproto.EnableNAT(s.runner, s.store.Dir, pools)
 	if err != nil {
 		s.failed(true, logs.Record{
-			Msg:    "NAT for the clients of SSTP, IKEv2 and AmneziaWG failed (they can connect but will not reach the internet)",
+			Msg:    "NAT for the clients of AmneziaWG failed (they can connect but will not reach the internet)",
 			Target: "nat", Op: "start", Code: "NAT_FAILED",
 		}, err)
 		return

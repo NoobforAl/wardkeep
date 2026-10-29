@@ -24,8 +24,6 @@ func SystemResolver(ctx context.Context, host string) ([]netip.Addr, error) {
 // open sockets to unknown addresses.
 var unsupported = map[string]bool{
 	profile.Tor:       true,
-	profile.IKEv2:     true,
-	profile.SSTP:      true,
 	profile.AmneziaWG: true,
 	profile.DNSTT:     true, // its helper sockets go to resolvers the kill switch does not know
 }

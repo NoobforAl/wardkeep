@@ -1348,9 +1348,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get flReservedBytes => 'Ayrılmış baytlar';
 
   @override
-  String get flAuthentication => 'Kimlik doğrulama';
-
-  @override
   String get flAuthDigest => 'Doğrulama özeti';
 
   @override
@@ -1378,21 +1375,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get flVerifyServerName => 'Sunucu adını doğrula';
 
   @override
-  String get flYourIdentity => 'Kimliğiniz';
-
-  @override
-  String get flServerIdentity => 'Sunucu kimliği';
-
-  @override
-  String get flServerCertTrust => 'Güvenilecek sunucu sertifikası (PEM)';
-
-  @override
-  String get flUseSystemIke => 'Telefonun kendi IKEv2 istemcisini kullan';
-
-  @override
-  String get flUseTcp => 'TCP kullan';
-
-  @override
   String get flHostKeys => 'Ana makine anahtarları';
 
   @override
@@ -1418,10 +1400,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'authorized_keys biçimi; boşsa her anahtar kabul edilir';
 
   @override
-  String get hpIkeTcp =>
-      'UDP\'yi engelleyen ağlar için IKE ve ESP\'yi TCP üzerinden taşır';
-
-  @override
   String get hpDefaultsToServer => 'Varsayılan olarak sunucu adresi kullanılır';
 
   @override
@@ -1443,10 +1421,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get hpOnlySelfSigned =>
       'Yalnızca sabitleyemediğiniz, kendinden imzalı sertifikalı sunucular için';
-
-  @override
-  String get hpSafeSstp =>
-      'SSTP için güvenli: parola değişimi sunucuyu doğrular';
 
   @override
   String get hpHysteriaObfs =>

@@ -61,8 +61,8 @@ const defaultDNSUpstream = "1.1.1.1:53"
 // VPNClientRanges are the networks the VPN servers give their clients; the
 // resolver answers them.
 var VPNClientRanges = mustPrefixes(
-	"10.30.0.0/16", "10.31.0.0/16", protocols.SSTPPool, protocols.IKEv2Pool, "10.18.0.0/16", "10.19.0.0/16",
-	protocols.WGPool6, protocols.AWGPool6, protocols.IKEv2Pool6, "fd18:0:0:1::/64", "fd19:0:0:1::/64",
+	"10.30.0.0/16", "10.31.0.0/16", "10.18.0.0/16", "10.19.0.0/16",
+	protocols.WGPool6, protocols.AWGPool6, "fd18:0:0:1::/64", "fd19:0:0:1::/64",
 )
 
 func mustPrefixes(list ...string) []netip.Prefix {

@@ -1,7 +1,6 @@
 package importer
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -134,75 +133,6 @@ func parseNaive(link string) (*profile.Profile, error) {
 		prof.Naive = opts
 	}
 	return prof, nil
-}
-
-// ikev2://[user:password@]host[:port]?auth=eap|psk|cert&psk=..&remote_id=..&local_id=..&ca=<PEM>&tcp=1&system=1#name
-// tcp=1 carries IKE/ESP over TCP (RFC 8229, port = the TCP port); system=1
-// uses the OS's IKEv2 client instead of the built-in one.
-func parseIKEv2(link string) (*profile.Profile, error) {
-	uri, err := url.Parse(link)
-	if err != nil {
-		return nil, err
-	}
-	if uri.Hostname() == "" {
-		return nil, errMissingServer
-	}
-	query := uri.Query()
-	port := 500
-	if v := uri.Port(); v != "" {
-		if port, err = strconv.Atoi(v); err != nil {
-			return nil, err
-		}
-	}
-	password, _ := uri.User.Password()
-	opts := &profile.IKEv2Opts{
-		Auth:     strings.ToLower(query.Get("auth")),
-		PSK:      query.Get("psk"),
-		LocalID:  query.Get("local_id"),
-		RemoteID: query.Get("remote_id"),
-		CACert:   query.Get("ca"),
-		TCP:      truthy(query.Get("tcp")),
-		System:   truthy(query.Get("system")),
-	}
-	opts.MTU, _ = strconv.Atoi(query.Get("mtu"))
-	if opts.Auth == "" {
-		opts.Auth = "eap"
-		if opts.PSK != "" {
-			opts.Auth = "psk"
-		}
-	}
-	return &profile.Profile{
-		Name: fragmentName(uri), Protocol: profile.IKEv2, Server: uri.Hostname(), Port: port,
-		Username: uri.User.Username(), Password: password, IKEv2: opts,
-	}, nil
-}
-
-var errMissingServer = errors.New("missing server address")
-
-// sstp://user:password@host[:port]?insecure=1#name  (port 443 by default)
-func parseSSTP(link string) (*profile.Profile, error) {
-	uri, err := url.Parse(link)
-	if err != nil {
-		return nil, err
-	}
-	if uri.Hostname() == "" {
-		return nil, errMissingServer
-	}
-	port := 443
-	if v := uri.Port(); v != "" {
-		if port, err = strconv.Atoi(v); err != nil {
-			return nil, err
-		}
-	}
-	password, _ := uri.User.Password()
-	query := uri.Query()
-	return &profile.Profile{
-		Name: fragmentName(uri), Protocol: profile.SSTP, Server: uri.Hostname(), Port: port,
-		Username: uri.User.Username(), Password: password,
-		// SSTP servers mostly use self-signed certificates; MS-CHAPv2 still
-		// authenticates the server (it must know the password).
-		TLS: &profile.TLS{Enabled: true, Insecure: query.Get("insecure") != "0"},
-	}, nil
 }
 
 // dnstt://<server key>@<domain>?resolver=udp://1.1.1.1:53&resolver=https://dns.google/dns-query&user=u&pass=p#name

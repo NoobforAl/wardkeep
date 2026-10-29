@@ -317,14 +317,6 @@
       "url": "naive+https://alice:alicepassword@203.0.113.7:8447/#Lab%20Naive"
     },
     {
-      "protocol": "sstp",
-      "url": "sstp://alice:alicepassword@203.0.113.7:8448#Lab%20SSTP"
-    },
-    {
-      "protocol": "ikev2",
-      "url": "ikev2://alice:alicepassword@203.0.113.7:4500?auth=eap\u0026remote_id=203.0.113.7\u0026ca=CERT-PEM%0A\u0026tcp=1#Lab%20IKEv2"
-    },
-    {
       "protocol": "amneziawg",
       "url": "awg://YWxpY2UtcHJpdmF0ZQ==@203.0.113.7:51821?publickey=YXdnLXB1YmxpYw%3D%3D\u0026address=10.31.0.2%2F32\u0026allowedips=0.0.0.0%2F0%2C%3A%3A%2F0\u0026dns=1.1.1.1%2C8.8.8.8\u0026mtu=1380\u0026keepalive=25\u0026h1=1043474670\u0026h2=1207032647\u0026h3=682630448\u0026h4=1230328733\u0026jc=5\u0026jmax=105\u0026jmin=42\u0026s1=30\u0026s2=94#Lab%20AmneziaWG"
     },
@@ -415,8 +407,6 @@
       }
     ],
     "extra_links": [
-      "sstp://alice:alicepassword@203.0.113.7:8448#Lab%20SSTP",
-      "ikev2://alice:alicepassword@203.0.113.7:4500?auth=eap\u0026remote_id=203.0.113.7\u0026ca=CERT-PEM%0A\u0026tcp=1#Lab%20IKEv2",
       "awg://YWxpY2UtcHJpdmF0ZQ==@203.0.113.7:51821?publickey=YXdnLXB1YmxpYw%3D%3D\u0026address=10.31.0.2%2F32\u0026allowedips=0.0.0.0%2F0%2C%3A%3A%2F0\u0026dns=1.1.1.1%2C8.8.8.8\u0026mtu=1380\u0026keepalive=25\u0026h1=1043474670\u0026h2=1207032647\u0026h3=682630448\u0026h4=1230328733\u0026jc=5\u0026jmax=105\u0026jmin=42\u0026s1=30\u0026s2=94#Lab%20AmneziaWG",
       "dnstt://b2b3e1cf0a1ae0f0b2a2f0b6c4e0e0d5a4f1bde3d2d79f7b8a4f2c6e1d5b7a90@t.example.com?resolver=udp%3A%2F%2F8.8.8.8%3A53\u0026resolver=udp%3A%2F%2F1.1.1.1%3A53\u0026resolver=https%3A%2F%2Fdns.google%2Fdns-query\u0026user=alice\u0026pass=alicepassword#Lab%20DNS"
     ],

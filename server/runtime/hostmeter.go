@@ -9,9 +9,9 @@ import (
 )
 
 // hostMeters turns the cumulative per-user counts of the host-level servers
-// (SSTP, IKEv2, AmneziaWG) into the tracker's per-user and per-protocol
-// totals, and into live connection counts and speed. sing-box's own
-// connections are counted by the collector instead.
+// (AmneziaWG) into the tracker's per-user and per-protocol totals, and into
+// live connection counts and speed. sing-box's own connections are counted by
+// the collector instead.
 type hostMeters struct {
 	mu   sync.Mutex
 	by   map[string]*meterState // by protocol key

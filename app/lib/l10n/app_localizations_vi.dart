@@ -1328,9 +1328,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get flReservedBytes => 'Byte dành riêng';
 
   @override
-  String get flAuthentication => 'Xác thực';
-
-  @override
   String get flAuthDigest => 'Digest xác thực';
 
   @override
@@ -1358,21 +1355,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get flVerifyServerName => 'Xác minh tên máy chủ';
 
   @override
-  String get flYourIdentity => 'Danh tính của bạn';
-
-  @override
-  String get flServerIdentity => 'Danh tính máy chủ';
-
-  @override
-  String get flServerCertTrust => 'Chứng chỉ máy chủ cần tin cậy (PEM)';
-
-  @override
-  String get flUseSystemIke => 'Dùng ứng dụng IKEv2 có sẵn của điện thoại';
-
-  @override
-  String get flUseTcp => 'Dùng TCP';
-
-  @override
   String get flHostKeys => 'Khóa host';
 
   @override
@@ -1398,9 +1380,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'định dạng authorized_keys; để trống sẽ chấp nhận mọi khóa';
 
   @override
-  String get hpIkeTcp => 'Truyền IKE và ESP qua TCP cho mạng chặn UDP';
-
-  @override
   String get hpDefaultsToServer => 'Mặc định là địa chỉ máy chủ';
 
   @override
@@ -1422,10 +1401,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get hpOnlySelfSigned =>
       'Chỉ dùng cho máy chủ có chứng chỉ tự ký mà không thể ghim';
-
-  @override
-  String get hpSafeSstp =>
-      'An toàn với SSTP: việc trao đổi mật khẩu xác thực máy chủ';
 
   @override
   String get hpHysteriaObfs =>

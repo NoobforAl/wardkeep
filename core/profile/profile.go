@@ -32,8 +32,6 @@ const (
 	Hysteria    = "hysteria" // v1
 	AnyTLS      = "anytls"
 	SSH         = "ssh"
-	IKEv2       = "ikev2" // in-core (veepin); optionally the OS's IKEv2 client
-	SSTP        = "sstp"
 	Tailscale   = "tailscale" // mesh VPN: Tailscale, or a Headscale control server
 	DNSTT       = "dnstt"     // a TCP tunnel inside DNS queries, for networks where only DNS gets out
 )
@@ -62,7 +60,6 @@ type Profile struct {
 	OpenVPN    *OVPN          `json:"openvpn,omitempty"`
 	SSH        *SSHOpts       `json:"ssh,omitempty"`
 	Naive      *NaiveOpts     `json:"naive,omitempty"`
-	IKEv2      *IKEv2Opts     `json:"ikev2,omitempty"`
 	Tor        *TorOpts       `json:"tor,omitempty"`
 	Tailscale  *TailscaleOpts `json:"tailscale,omitempty"`
 	DNSTT      *DNSTTOpts     `json:"dnstt,omitempty"`
@@ -196,27 +193,6 @@ type WG struct {
 
 // ViaSchemes are the link schemes of the proxies that can carry WireGuard: the ones that pass UDP.
 var ViaSchemes = []string{"vless", "vmess", "trojan", "ss", "hysteria2", "hy2", "tuic"}
-
-// IKEv2Opts holds IKEv2/IPsec settings for the OS's IKEv2 client.
-// Username/Password are used for EAP (MSCHAPv2) authentication.
-type IKEv2Opts struct {
-	// Auth is "eap" (username + password), "psk" (pre-shared key) or "cert".
-	Auth     string `json:"auth"`
-	PSK      string `json:"psk,omitempty"`
-	LocalID  string `json:"local_id,omitempty"`  // default: username, or the server address for PSK
-	RemoteID string `json:"remote_id,omitempty"` // default: the server address
-	// CACert (PEM) verifies the server for EAP and certificate auth; empty
-	// uses the system's trusted CAs.
-	CACert     string `json:"ca_cert,omitempty"`
-	ClientCert string `json:"client_cert,omitempty"` // PEM, for "cert"
-	ClientKey  string `json:"client_key,omitempty"`  // PEM PKCS#8, for "cert"
-	MTU        int    `json:"mtu,omitempty"`
-	// TCP carries IKE and ESP over TCP (RFC 8229) for networks that block UDP.
-	TCP bool `json:"tcp,omitempty"`
-	// System uses the OS's IKEv2 client (Android 11+ with IPsec support)
-	// instead of the built-in one.
-	System bool `json:"system,omitempty"`
-}
 
 // TorOpts configures a Tor profile (Server and Port are unused).
 type TorOpts struct {
@@ -366,28 +342,6 @@ func (p *Profile) Validate() error {
 	case TUIC:
 		if p.UUID == "" {
 			return fmt.Errorf("profile %q: missing uuid", p.Name)
-		}
-	case SSTP:
-		if p.Username == "" || p.Password == "" {
-			return fmt.Errorf("profile %q: missing SSTP username or password", p.Name)
-		}
-	case IKEv2:
-		opts := p.IKEv2
-		if opts == nil {
-			return fmt.Errorf("profile %q: missing IKEv2 settings", p.Name)
-		}
-		switch opts.Auth {
-		case "psk":
-			if opts.PSK == "" {
-				return fmt.Errorf("profile %q: missing IKEv2 pre-shared key", p.Name)
-			}
-		case "eap":
-		case "cert":
-			if opts.ClientCert == "" || opts.ClientKey == "" {
-				return fmt.Errorf("profile %q: missing IKEv2 client certificate or key", p.Name)
-			}
-		default:
-			return fmt.Errorf("profile %q: unknown IKEv2 auth %q", p.Name, opts.Auth)
 		}
 	case Naive:
 		if p.Username == "" || p.Password == "" {

@@ -128,32 +128,6 @@ func (s *Source) GetCertificate(*tls.ClientHelloInfo) (*tls.Certificate, error) 
 	return l.cert, nil
 }
 
-// Paths returns the certificate and key files currently served.
-func (s *Source) Paths() (cert, key string, err error) {
-	l, err := s.current()
-	if err != nil {
-		return "", "", err
-	}
-	return l.certPath, l.keyPath, nil
-}
-
-// PEM returns the certificate chain and private key currently served, for
-// servers that take PEM bytes (SSTP). They are read when called, so a renewed
-// certificate is used the next time such a server is started.
-func (s *Source) PEM() (cert, key []byte, err error) {
-	loaded, err := s.current()
-	if err != nil {
-		return nil, nil, err
-	}
-	if cert, err = os.ReadFile(loaded.certPath); err != nil {
-		return nil, nil, err
-	}
-	if key, err = os.ReadFile(loaded.keyPath); err != nil {
-		return nil, nil, err
-	}
-	return cert, key, nil
-}
-
 // TLSConfig returns a server TLS configuration using the source.
 func (s *Source) TLSConfig() *tls.Config {
 	return &tls.Config{MinVersion: tls.VersionTLS12, GetCertificate: s.GetCertificate}

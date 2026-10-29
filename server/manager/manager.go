@@ -60,8 +60,8 @@ type ServerInfo struct {
 	Connections int `json:"connections"`
 	// StartedAt is when the running server started.
 	StartedAt *time.Time `json:"started_at,omitempty"`
-	// IPv6 is true when users get an IPv6 address inside WireGuard, AmneziaWG,
-	// OpenVPN and IKEv2 tunnels.
+	// IPv6 is true when users get an IPv6 address inside WireGuard, AmneziaWG
+	// and OpenVPN tunnels.
 	IPv6 bool `json:"ipv6"`
 }
 
@@ -91,8 +91,8 @@ type ProtocolInfo struct {
 	NeedsCertificate bool `json:"needs_certificate"`
 	// ShareLink is false for protocols that travel as a config file (OpenVPN).
 	ShareLink bool `json:"share_link"`
-	// Host marks protocols served outside sing-box (SSTP, IKEv2): they need
-	// Linux and CAP_NET_ADMIN.
+	// Host marks protocols served outside sing-box (AmneziaWG, the DNSCrypt
+	// resolver); AmneziaWG needs Linux and CAP_NET_ADMIN.
 	Host bool `json:"host,omitempty"`
 	// AmneziaWGVersion is "2.0" or "1.x" for the amneziawg protocol, empty for the others.
 	AmneziaWGVersion string `json:"amneziawg_version,omitempty" enum:"1.x,2.0"`
@@ -216,8 +216,10 @@ func (m *Manager) serverInfo(st *store.State) *ServerInfo {
 			info.Connections += u.Connections
 		}
 	}
-	for _, p := range st.Server.Protocols {
-		if p.Enabled {
+	// Only protocols the server has count: a state written by an older version
+	// can still name one that was removed.
+	for _, key := range store.AllProtocols {
+		if p := st.Server.Protocols[key]; p != nil && p.Enabled {
 			info.Protocols++
 		}
 	}
@@ -299,9 +301,6 @@ func portUses(key string, port int) []protocols.PortUse {
 	proto, ok := protocols.Get(key)
 	if !ok {
 		return []protocols.PortUse{{Port: port, Proto: "tcp"}}
-	}
-	if pp, ok := proto.(protocols.PortProtocol); ok {
-		return pp.Listens(port)
 	}
 	switch proto.Spec().Transport {
 	case "udp":

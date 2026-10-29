@@ -92,7 +92,7 @@ Protocols: ` + strings.Join(protocols.Keys(), ", ") + `.`,
 	flags.StringToIntVar(&ports, "port", nil, "port for a protocol, e.g. --port trojan=9443 (repeatable)")
 	flags.StringVar(&firstUser, "first-user", "", "also create this user and print the subscription link")
 	flags.StringVar(&opts.AmneziaWGVersion, "awg-version", "2.0", "AmneziaWG parameters: 2.0 (harder to recognise) or 1.x (classic, for old clients)")
-	flags.BoolVar(&opts.IPv6, "ipv6", false, "give users an IPv6 address in WireGuard, AmneziaWG, OpenVPN and IKEv2 tunnels (the host needs IPv6 to the internet)")
+	flags.BoolVar(&opts.IPv6, "ipv6", false, "give users an IPv6 address in WireGuard, AmneziaWG and OpenVPN tunnels (the host needs IPv6 to the internet)")
 	flags.BoolVar(&wizard, "wizard", false, "ask the questions even when --host is given")
 	return cmd
 }

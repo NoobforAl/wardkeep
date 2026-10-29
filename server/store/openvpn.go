@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"math/big"
+	"slices"
 	"strings"
 	"time"
 )
@@ -87,7 +88,8 @@ func staticKey() string {
 	return b.String()
 }
 
-// migrate fills in settings added after the state was created. It reports
+// migrate fills in settings added after the state was created and drops the
+// protocols the server no longer has (SSTP and IKEv2 were removed). It reports
 // whether anything changed. New protocols start disabled on existing servers,
 // so an upgrade never opens ports by itself.
 func (st *State) migrate() (bool, error) {
@@ -101,6 +103,12 @@ func (st *State) migrate() (bool, error) {
 	}
 	if st.Server.Protocols == nil {
 		st.Server.Protocols = map[string]*Proto{}
+	}
+	for key := range st.Server.Protocols {
+		if !slices.Contains(AllProtocols, key) {
+			delete(st.Server.Protocols, key)
+			changed = true
+		}
 	}
 	for _, p := range AllProtocols {
 		if st.Server.Protocols[p] == nil {

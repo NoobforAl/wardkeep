@@ -6,18 +6,16 @@ import (
 )
 
 // IPv6 inside the tunnels. A server with Env.IPv6 gives each user a second
-// address in every tunnel that can carry one: WireGuard, AmneziaWG, OpenVPN
-// and IKEv2/IPsec (SSTP cannot). The addresses are unique local (fd00::/8), so
-// the server's NAT66 has to hide them like it hides the IPv4 ones, and they
-// are derived from the IPv4 address the user already has, so nothing is stored
-// and a user keeps both across a restart.
+// address in every tunnel that can carry one: WireGuard, AmneziaWG and
+// OpenVPN. The addresses are unique local (fd00::/8), so the server's NAT66
+// has to hide them like it hides the IPv4 ones, and they are derived from the
+// IPv4 address the user already has, so nothing is stored and a user keeps
+// both across a restart.
 const (
 	WGPool6          = "fd30:0:0:1::/64"
 	wgServerAddress6 = "fd30:0:0:1::1/64"
 	AWGPool6         = "fd31:0:0:1::/64"
 	awgServerAddr6   = "fd31:0:0:1::1/64"
-	// IKEv2Pool6 is the pool the IKEv2 server hands out v6 addresses from.
-	IKEv2Pool6 = "fd10:10:10::/64"
 
 	openvpnUDPAddress6 = "fd18:0:0:1::1/64"
 	openvpnTCPAddress6 = "fd19:0:0:1::1/64"

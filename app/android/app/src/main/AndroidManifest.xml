@@ -51,8 +51,6 @@
                 <data android:scheme="wireguard" />
                 <data android:scheme="awg" />
                 <data android:scheme="anytls" />
-                <data android:scheme="sstp" />
-                <data android:scheme="ikev2" />
                 <data android:scheme="nordvpn" />
                 <data android:scheme="naive+https" />
             </intent-filter>

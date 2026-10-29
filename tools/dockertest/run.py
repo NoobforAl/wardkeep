@@ -2,9 +2,8 @@
 """Docker end-to-end tests of the server's VPN protocols with real clients on real Linux.
 
 A server container (this repo's Linux binary, with a TUN device and NAT) and client
-containers with the standard client for each protocol: OpenVPN, WireGuard (wg-quick),
-SSTP (sstp-client + pppd), IKEv2 (strongSwan) and AmneziaWG (our own client on a kernel
-TUN). A client reaches a "web" container on a network only the server can reach, through
+containers with the standard client for each protocol: OpenVPN, WireGuard (wg-quick)
+and AmneziaWG (our own client on a kernel TUN). A client reaches a "web" container on a network only the server can reach, through
 the tunnel; the answer shows the address the web server saw, which proves the server's
 NAT. Then the server's traffic accounting is read.
 
@@ -20,7 +19,7 @@ Three parts (each can be left out):
               possible on this machine's Docker)
 
     python tools/dockertest/run.py                  # everything, every protocol
-    python tools/dockertest/run.py sstp ikev2       # some protocols
+    python tools/dockertest/run.py wireguard amneziawg   # some protocols
     python tools/dockertest/run.py --only concurrent
     python tools/dockertest/run.py --keep           # leave the containers running
 
@@ -37,7 +36,6 @@ import shutil
 import subprocess
 import sys
 import time
-import urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -55,11 +53,11 @@ V6_A, V6_B = "fdb0:e2e:a::/64", "2001:db8:e2e:b::/64"
 SERVER_A6, SERVER_B6, WEB_B6 = "fdb0:e2e:a::2", "2001:db8:e2e:b::2", "2001:db8:e2e:b::10"
 # What the tunnel's IPv6 address of each protocol starts with.
 V6_PREFIX = {"wireguard": "fd30:0:0:1:", "amneziawg": "fd31:0:0:1:", "openvpn-udp": "fd18:0:0:1:",
-             "openvpn-tcp": "fd19:0:0:1:", "ikev2": "fd10:10:10:"}
-PROTOCOLS = ["openvpn-udp", "openvpn-tcp", "wireguard", "amneziawg", "sstp", "ikev2"]
+             "openvpn-tcp": "fd19:0:0:1:"}
+PROTOCOLS = ["openvpn-udp", "openvpn-tcp", "wireguard", "amneziawg"]
 USERS = ["alice", "bob", "carol"]
 # Who connects through what at the same time; a round with fewer than two chosen protocols is skipped.
-ROUNDS = [["openvpn-udp", "wireguard", "sstp"], ["amneziawg", "ikev2", "openvpn-tcp"]]
+ROUNDS = [["openvpn-udp", "wireguard", "amneziawg"], ["amneziawg", "openvpn-tcp", "wireguard"]]
 MB = 1 << 20
 
 
@@ -131,7 +129,7 @@ def start_world(first_user="alice"):
        "--sysctl", "net.ipv6.conf.all.forwarding=1", "--sysctl", "net.ipv6.conf.all.disable_ipv6=0",
        IMG_SERVER, "sleep", "infinity")
     sh("docker", "network", "connect", "--ip", SERVER_B, *ip6(SERVER_B6), NET_B, SERVER)
-    protos = "openvpn-udp,openvpn-tcp,wireguard,amneziawg,sstp,ikev2"
+    protos = ",".join(PROTOCOLS)
     print(dx(SERVER, "omnitun-server --data /data init --host %s --protocols %s --first-user %s" % (SERVER_A, protos, first_user)).stdout[-300:])
     for u in USERS:
         if u != first_user:
@@ -183,8 +181,10 @@ def proto_bytes(key):
 def credentials(user):
     """The subscription URL and the password of a user, as the server hands them out now."""
     d = json.loads(dx(SERVER, "omnitun-server --data /data link %s --json" % user).stdout)
-    urls = {l["protocol"]: l["url"] for l in d["links"]}
-    return d["subscription"], urllib.parse.unquote(urllib.parse.urlparse(urls["sstp"]).password)
+    # No link of the protocols under test carries the password (OpenVPN signs in with it), so it is read from the state.
+    state = json.loads(dx(SERVER, "cat /data/state.json").stdout)
+    # A signed subscription link ends in "#pk=<key>"; the config files are paths under the link without it.
+    return d["subscription"].split("#", 1)[0], next(u["password"] for u in state["users"] if u["name"] == user)
 
 
 def wait_reload(mark, seconds=40):
@@ -220,9 +220,9 @@ class Client:
         self.v6 = False  # also route the IPv6 test network into the tunnel
 
     def start(self):
-        """Privileged because SSTP's pppd needs /dev/ppp, which Docker's VM only creates for privileged containers."""
+        """The clients open a TUN device and set its addresses and routes."""
         sh("docker", "rm", "-f", self.name, check=False)
-        sh("docker", "run", "-d", "--name", self.name, "--network", NET_A, "--privileged",
+        sh("docker", "run", "-d", "--name", self.name, "--network", NET_A, "--cap-add", "NET_ADMIN", "--device", "/dev/net/tun",
            "--sysctl", "net.ipv6.conf.all.disable_ipv6=0", IMG_CLIENT, "sleep", "infinity")
         self.refresh()
 
@@ -248,9 +248,9 @@ class Client:
 
     def stop_tunnel(self):
         """Ends whatever the client runs, so it can connect again (with what it has in /tmp)."""
-        self.dx("timeout 10 wg-quick down /tmp/wg0.conf >/dev/null 2>&1; timeout 10 swanctl --terminate --ike omnitun --timeout 5 >/dev/null 2>&1; "
-                "pkill -x openvpn; pkill -x awgclient; pkill -x sstpc; pkill -x charon; sleep 1; "
-                "ip -br link | awk '{print $1}' | grep -E '^(ppp|omnitun|wg)' | xargs -r -n1 ip link del; "
+        self.dx("timeout 10 wg-quick down /tmp/wg0.conf >/dev/null 2>&1; "
+                "pkill -x openvpn; pkill -x awgclient; sleep 1; "
+                "ip -br link | awk '{print $1}' | grep -E '^(omnitun|wg)' | xargs -r -n1 ip link del; "
                 "rm -f /tmp/*.log; true", check=False)
 
     def through_tunnel(self, seconds=8, v6=False):
@@ -292,60 +292,9 @@ def t_amneziawg(c, fetch=True):
     return c.wait_for("grep -q 'awgclient: up' /tmp/awg.log", "the AmneziaWG client", 15)
 
 
-def t_sstp(c, fetch=True):
-    c.bg("sstpc --log-level 4 --log-stderr --cert-warn --user %s --password %s %s:8448 noauth "
-         "refuse-pap refuse-chap refuse-mschap refuse-eap nodefaultroute nodetach > /tmp/sstp.log 2>&1" % (c.user, c.pw, SERVER_A))
-    if not c.wait_for("ip -4 addr show | grep -q 'inet .* peer'", "the SSTP link", 25):
-        return False
-    c.dx("dev=$(ip -o -4 addr show | awk '/ peer /{print $2}' | head -1); ip route add 198.18.0.0/24 dev $dev")
-    return True
-
-
-def t_ikev2(c, fetch=True):
-    if fetch:
-        sh("docker", "cp", SERVER + ":/data/tls.crt", os.path.join(BUILD, "server.crt"))
-        conf = """connections {
-  omnitun {
-    version = 2
-    remote_addrs = %(srv)s
-    vips = %(vips)s
-    local { auth = eap-mschapv2
-            id = %(user)s
-            eap_id = %(user)s }
-    remote { auth = pubkey
-             id = %(srv)s
-             certs = server.crt }
-    children { net {
-      remote_ts = %(ts)s
-      esp_proposals = aes256-sha256-modp2048,aes128-sha1-modp1024,aes256gcm16-modp2048
-      start_action = none } }
-    proposals = aes256-sha256-modp2048,aes128-sha1-modp2048,aes256-sha384-modp3072,aes128-sha256-ecp256
-    mobike = no
-    fragmentation = no
-  }
-}
-secrets { eap-%(user)s { id = %(user)s
-                      secret = %(pw)s } }
-""" % {"srv": SERVER_A, "pw": c.pw, "user": c.user, "vips": "0.0.0.0, ::" if c.v6 else "0.0.0.0",
-       "ts": "198.18.0.0/24, " + V6_B if c.v6 else "198.18.0.0/24"}
-        path = os.path.join(BUILD, "swanctl-%s.conf" % c.user)
-        open(path, "w", newline="\n").write(conf)
-        c.dx("mkdir -p /etc/swanctl/x509 /etc/swanctl/conf.d")
-        sh("docker", "cp", os.path.join(BUILD, "server.crt"), c.name + ":/etc/swanctl/x509/server.crt")
-        sh("docker", "cp", path, c.name + ":/etc/swanctl/swanctl.conf")
-    c.bg("/usr/lib/ipsec/charon > /tmp/charon.log 2>&1")
-    if not c.wait_for("swanctl --stats >/dev/null 2>&1", "strongSwan to start", 15):
-        return False
-    c.dx("swanctl --load-all 2>&1")
-    r = c.dx("swanctl --initiate --child net --timeout 20 2>&1", check=False, timeout=60)
-    if r.returncode != 0:
-        print(r.stdout[-1500:])
-    return r.returncode == 0
-
-
 CLIENTS = {
     "openvpn-udp": t_openvpn("openvpn-udp"), "openvpn-tcp": t_openvpn("openvpn-tcp"),
-    "wireguard": t_wireguard, "amneziawg": t_amneziawg, "sstp": t_sstp, "ikev2": t_ikev2,
+    "wireguard": t_wireguard, "amneziawg": t_amneziawg,
 }
 
 
@@ -543,7 +492,7 @@ def isolate(clients, check):
     print("  note: alice's %d MB transfer %s" % (8, "finished: the restart that applies the changes did not interrupt her" if survived
           else "did not finish (%s): the restart that applies the changes interrupts connected users" % (r,)))
     if not alice.tunnel_ok(10):
-        # Clients that do not reconnect by themselves (SSTP, IKEv2) are started again, like a person would.
+        # A client that does not reconnect by itself is started again, like a person would.
         alice.stop_tunnel()
         check("alice connects again with what she had", connect(alice, fetch=False))
     else:
@@ -573,8 +522,8 @@ def isolate(clients, check):
 
 
 def v6_addresses(c):
-    """The global IPv6 addresses the tunnel gave the client. strongSwan puts its virtual address on the container's own
-    interface, so every interface is read and the container's address on the Docker network is left out."""
+    """The global IPv6 addresses the tunnel gave the client: those of every interface but the container's own address
+    on the Docker network."""
     out = c.dx("ip -6 -o addr show scope global | awk '{print $4}'", check=False).stdout.split()
     return [a for a in out if not a.startswith(V6_A.split("/")[0][:-2])]
 
@@ -600,10 +549,6 @@ def part_ipv6(protos, check, quick):
         print("\n  -- %s" % name)
         c.start()
         try:
-            if name == "sstp":
-                up = connect(c)
-                check("sstp connects (and has no IPv6: SSTP cannot carry it)", up and not v6_addresses(c), str(v6_addresses(c)))
-                continue
             up = connect(c)
             check("%s connects with IPv6 on" % name, up)
             if not up:

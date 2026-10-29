@@ -39,7 +39,6 @@ body:
         - AnyTLS / ShadowTLS / NaiveProxy
         - WireGuard / AmneziaWG
         - OpenVPN
-        - SSTP / IKEv2
         - Tor (bridges, meek, ...)
         - Subscription link
         - Other

@@ -45,6 +45,20 @@ void main() {
     expect(second.read(settingsProvider).splitApps, ['com.android.chrome']);
   });
 
+  test('profiles of removed protocols (IKEv2, SSTP) are dropped on load and from the store', () {
+    final store = AppStore.memory({
+      'profiles': [
+        {'id': 'x', 'name': 'X', 'protocol': 'vless', 'server': 'x.example.com', 'port': 443},
+        {'id': 'i', 'name': 'I', 'protocol': 'ikev2', 'server': 'i.example.com', 'port': 4500, 'ikev2': {'auth': 'eap'}},
+        {'id': 's', 'name': 'S', 'protocol': 'sstp', 'server': 's.example.com', 'port': 443},
+      ],
+    });
+    final c = _container(store);
+    addTearDown(c.dispose);
+    expect(c.read(profilesProvider).map((p) => p.id), ['x']);
+    expect((store.read<List<dynamic>>('profiles') ?? const []).map((p) => (p as Map)['id']), ['x']);
+  });
+
   test('duplicate imports are skipped and corrupt entries ignored', () {
     final store = AppStore.memory({
       'profiles': [

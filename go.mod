@@ -24,7 +24,6 @@ require (
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/cobra v1.10.2
 	github.com/tailscale/wf v0.0.0-20240214030419-6fbb0a674ee6
-	github.com/xen0bit/veepin v0.9.8
 	github.com/xtaci/kcp-go/v5 v5.6.72
 	github.com/xtaci/smux v1.5.57
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird v0.0.0-20261008205628-362a60bb4e3f
@@ -296,6 +295,5 @@ tool (
 	github.com/sagernet/gomobile/cmd/gomobile
 )
 
-replace github.com/xen0bit/veepin => ./third_party/veepin
 
 replace github.com/sagernet/sing-openvpn => ./third_party/sing-openvpn

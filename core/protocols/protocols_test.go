@@ -102,8 +102,8 @@ func TestEveryProtocolIsCoherent(t *testing.T) {
 			if p.Protocol != s.Profile || p.Server != wantServer || !strings.HasPrefix(p.Name, env.Name) {
 				t.Fatalf("profile = %+v", p)
 			}
-			// SSTP, IKEv2 and AmneziaWG run on the core's own engines, not sing-box.
-			if _, _, _, err := singbox.Outbound(p, "t"); err != nil && !strings.Contains(err.Error(), "built-in") && !strings.Contains(err.Error(), "not run by sing-box") {
+			// AmneziaWG and the DNS tunnel run on the core's own engines, not sing-box.
+			if _, _, _, err := singbox.Outbound(p, "t"); err != nil && !errors.Is(err, singbox.ErrOtherEngine) {
 				t.Fatalf("not usable as a sing-box outbound: %v", err)
 			}
 

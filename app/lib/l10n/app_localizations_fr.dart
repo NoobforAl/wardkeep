@@ -1367,9 +1367,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flReservedBytes => 'Octets réservés';
 
   @override
-  String get flAuthentication => 'Authentification';
-
-  @override
   String get flAuthDigest => 'Condensat d’authentification';
 
   @override
@@ -1397,21 +1394,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flVerifyServerName => 'Vérifier le nom du serveur';
 
   @override
-  String get flYourIdentity => 'Votre identité';
-
-  @override
-  String get flServerIdentity => 'Identité du serveur';
-
-  @override
-  String get flServerCertTrust => 'Certificat du serveur à approuver (PEM)';
-
-  @override
-  String get flUseSystemIke => 'Utiliser le client IKEv2 du téléphone';
-
-  @override
-  String get flUseTcp => 'Utiliser TCP';
-
-  @override
   String get flHostKeys => 'Clés d’hôte';
 
   @override
@@ -1437,10 +1419,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'format authorized_keys ; vide accepte n’importe quelle clé';
 
   @override
-  String get hpIkeTcp =>
-      'Transporte IKE et ESP sur TCP pour les réseaux qui bloquent l’UDP';
-
-  @override
   String get hpDefaultsToServer => 'Par défaut : l’adresse du serveur';
 
   @override
@@ -1462,10 +1440,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get hpOnlySelfSigned =>
       'Uniquement pour les serveurs à certificat auto-signé que vous ne pouvez pas épingler';
-
-  @override
-  String get hpSafeSstp =>
-      'Sans risque pour SSTP : l’échange de mot de passe authentifie le serveur';
 
   @override
   String get hpHysteriaObfs =>

@@ -34,22 +34,6 @@ type Platform interface {
 	// a second while connected, with traffic, so the notification can show speed.
 	// The native side stops its VPN service on "disconnected" and "error".
 	StateChanged(stateJSON string)
-	// StartPlatformVPN starts a tunnel the OS implements (IKEv2) for the
-	// profile JSON and returns at once; report progress with PlatformVPNStatus.
-	StartPlatformVPN(profileJSON string) error
-	// StopPlatformVPN stops it. It must not call PlatformVPNStatus synchronously.
-	StopPlatformVPN()
-}
-
-// PlatformVPNStatus reports the OS tunnel state: "connected", "disconnected"
-// or "failed" (with a message).
-func PlatformVPNStatus(status, message string) {
-	mu.Lock()
-	s := srv
-	mu.Unlock()
-	if s != nil {
-		s.Engine().PlatformVPNStatus(status, message)
-	}
 }
 
 // DefaultNetworkListener receives default-network updates from the platform.
@@ -78,10 +62,9 @@ func Start(dataDir string, platform Platform) (string, error) {
 		DataDir: dataDir,
 		// Android pauses apps in the background, so a quiet UI connection means
 		// nothing; the VPN service stops the tunnel when the task is removed.
-		Grace:       -1,
-		Platform:    wrapper,
-		Tun:         tunProvider{platform},
-		PlatformVPN: platform,
+		Grace:    -1,
+		Platform: wrapper,
+		Tun:      tunProvider{platform},
 		// Go cannot read the Android system CA store; use the embedded Mozilla bundle.
 		CertificateStore: "mozilla",
 		OnState: func(st engine.State) {

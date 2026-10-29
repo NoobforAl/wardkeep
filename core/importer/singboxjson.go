@@ -95,7 +95,7 @@ func ImportSingBoxJSON(text string) (*Result, error) {
 	var doc struct {
 		Outbounds []json.RawMessage `json:"outbounds"`
 		Endpoints []json.RawMessage `json:"endpoints"`
-		// ExtraLinks carries what sing-box cannot express (SSTP, IKEv2): Wardkeep
+		// ExtraLinks carries what sing-box cannot express (AmneziaWG): Wardkeep
 		// servers list those profiles as share links next to the outbounds.
 		ExtraLinks []string `json:"extra_links"`
 	}

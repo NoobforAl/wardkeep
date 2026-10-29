@@ -2,7 +2,7 @@
 
 `omnitun-server` is one program that serves many VPN protocols to your own users, with one subscription link per user, quotas and traffic accounting, a terminal UI and a web API.
 
-**Honest status.** The sing-box protocols (the first ten below) are tested end to end against Wardkeep's own client. SSTP, IKEv2/IPsec and AmneziaWG have also run on Linux in Docker with real clients (`make docker-e2e`: `sstpc`, strongSwan, OpenVPN, `wg-quick` and an AmneziaWG client connect, reach a web server through the server's NAT, and are counted; see [Tests](#tests)). The same test connects three users at once through three protocols and checks IPv6 inside the tunnels. The installer, the firewall helpers and ACME were written and unit-tested here on Windows with a fake command runner; **they have not run on a real Linux host yet**, and the Windows, iOS and Android IKEv2/SSTP clients have not been tried. Try `install --dry-run` first, then a fresh VPS you can throw away.
+**Honest status.** The sing-box protocols (the first ten below) are tested end to end against Wardkeep's own client. OpenVPN, WireGuard and AmneziaWG have also run on Linux in Docker with real clients (`make docker-e2e`: OpenVPN, `wg-quick` and an AmneziaWG client connect, reach a web server through the server's NAT, and are counted; see [Tests](#tests)). The same test connects three users at once through three protocols and checks IPv6 inside the tunnels. The installer, the firewall helpers and ACME were written and unit-tested here on Windows with a fake command runner; **they have not run on a real Linux host yet**. Try `install --dry-run` first, then a fresh VPS you can throw away.
 
 ## Quick start (a VPS you own)
 
@@ -38,20 +38,20 @@ omnitun-server init --host vpn.example.com --protocols vless-reality,trojan,hyst
 | NaiveProxy | 8447/tcp | needs a certificate clients trust (use ACME) |
 | WireGuard | 51820/udp | every user gets a key pair and a fixed address (10.30.0.0/16); standard `.conf` download |
 | OpenVPN UDP / TCP | 1194 | `.ovpn` download |
-| SSTP | 8448/tcp | **Linux, root or `CAP_NET_ADMIN`**; off by default |
-| IKEv2/IPsec | 4500/udp (+ 500/udp, TCP 4500) | **Linux, root or `CAP_NET_ADMIN`**; off by default; the server proves itself with its certificate, users sign in with EAP-MSCHAPv2 |
 | AmneziaWG | 51821/udp | **Linux, root or `CAP_NET_ADMIN`**; off by default; random obfuscation parameters per server; AmneziaWG 2.0 by default, 1.x on request (see below) |
 | DNS tunnel | 53/udp | for users on networks where only DNS gets out; slow; off by default, needs `dnstt domain` first and two DNS records; see *DNS tunnel* below |
 | DNSCrypt resolver | 5443/tcp+udp | not a way to connect: a DNS resolver for the tunnel's users; off by default, needs `dnscrypt listen <tunnel address>` first; see *DNSCrypt resolver* below |
 
 ```sh
 omnitun-server proto list                  # ports, status, traffic this month
-omnitun-server proto enable sstp
+omnitun-server proto enable amneziawg
 omnitun-server proto port trojan 9443
 omnitun-server firewall                    # open the ports again after changing protocols
 ```
 
-SSTP, IKEv2 and AmneziaWG need a TUN device and NAT on the host. The server sets up and removes narrow nftables (or iptables) rules itself: clients may reach the internet; client-to-client traffic and the host's private networks are dropped. Docker's own firewall policy can still block forwarding. Native Windows and iOS IKEv2/SSTP clients need a certificate they trust, so use `cert acme` for those.
+AmneziaWG needs a TUN device and NAT on the host. The server sets up and removes narrow nftables (or iptables) rules itself: clients may reach the internet; client-to-client traffic and the host's private networks are dropped. Docker's own firewall policy can still block forwarding.
+
+SSTP and IKEv2/IPsec were removed. A server that had them drops them from its state on the first start of this version (they no longer count as enabled protocols, and `firewall` no longer opens their ports); close 8448/tcp, 500/udp and 4500/tcp+udp yourself if they are still open.
 
 ### AmneziaWG: 2.0 or 1.x
 
@@ -77,7 +77,7 @@ omnitun-server proto ipv6 on                           # an existing one (off to
 sysctl -w net.ipv6.conf.all.forwarding=1               # the host must forward IPv6 (the server warns when it does not)
 ```
 
-With it on, every user gets a second, unique-local address in **WireGuard** (`fd30:0:0:1::/64`), **AmneziaWG** (`fd31:0:0:1::/64`), **OpenVPN** (`fd18:0:0:1::/64` UDP, `fd19:0:0:1::/64` TCP) and **IKEv2/IPsec** (`fd10:10:10::/64`); the address is derived from the user's IPv4 tunnel address, nothing more is stored. The server forwards and masquerades it (nftables `ip6` table, or `ip6tables`) with the same narrow policy as IPv4: the internet only, not client-to-client or the host's private networks (`fc00::/7`, `fe80::/10`, `::1`). IPv6 traffic is counted for the user like IPv4. **SSTP cannot carry IPv6.** The users' configs and links change (an extra address), so they import them again. If the host gets its own IPv6 address from a router advertisement, `forwarding=1` also switches that off unless `net.ipv6.conf.all.accept_ra=2` is set.
+With it on, every user gets a second, unique-local address in **WireGuard** (`fd30:0:0:1::/64`), **AmneziaWG** (`fd31:0:0:1::/64`) and **OpenVPN** (`fd18:0:0:1::/64` UDP, `fd19:0:0:1::/64` TCP); the address is derived from the user's IPv4 tunnel address, nothing more is stored. The server forwards and masquerades it (nftables `ip6` table, or `ip6tables`) with the same narrow policy as IPv4: the internet only, not client-to-client or the host's private networks (`fc00::/7`, `fe80::/10`, `::1`). IPv6 traffic is counted for the user like IPv4. The users' configs and links change (an extra address), so they import them again. If the host gets its own IPv6 address from a router advertisement, `forwarding=1` also switches that off unless `net.ipv6.conf.all.accept_ra=2` is set.
 
 ### DNS tunnel (optional)
 
@@ -150,7 +150,7 @@ omnitun-server subscription rotate-key                   # new key: every user n
 
 A user's subscription URL carries the usage, quota and expiry in the standard `Subscription-Userinfo` header, so apps like Wardkeep show them. The monthly quota is counted per UTC calendar month and **blocks** the user (their connections are dropped) until the month rolls over or you raise it. `user usage <name> --reset` clears the count.
 
-Traffic, live connections and speed are counted per user and per protocol for every protocol. OpenVPN users are told apart by the tunnel address they were given (this needs the patched copy of the OpenVPN library in `third_party/sing-openvpn`). A WireGuard-style protocol (AmneziaWG) has no sessions, so a user counts as connected for three minutes after the last handshake. IKEv2 can miss the last two seconds before a client disconnects.
+Traffic, live connections and speed are counted per user and per protocol for every protocol. OpenVPN users are told apart by the tunnel address they were given (this needs the patched copy of the OpenVPN library in `third_party/sing-openvpn`). A WireGuard-style protocol (AmneziaWG) has no sessions, so a user counts as connected for three minutes after the last handshake.
 
 ## Certificates
 
@@ -180,7 +180,7 @@ The API listens on 127.0.0.1 by default. Reach it over an SSH tunnel, or turn on
 
 **Log.** `server.log` holds one JSON record per line (the format of [logging.md](logging.md)): time, level, source (`server`, `sing-box`, `dnstt`), message and, where they apply, the protocol or inbound (`target`), the user, an error code and the error. `run` writes the same records to stderr (the systemd journal). A release build keeps `error` and `fatal` records only, a development build `debug` and above; `logs level` (or `run --log-level` for one run, or `PATCH /api/v1/logging`) changes that. Debug and trace logging slow the server down and keep more detail (client IP addresses appear only at debug); put it back to `default` when you are done. Destinations, keys, passwords, tokens and subscription URLs are never logged. Older text lines in the file are still shown.
 
-**Alerts.** A failure nothing else handles is an alert: a protocol that does not start (sing-box, SSTP, IKEv2, AmneziaWG, DNSCrypt, the DNS tunnel), the DNS tunnel, the subscription endpoint or the web API stopping on its own, a sing-box fatal error, NAT that could not be set up, a failed reload, an ACME certificate that was not issued within an hour or not renewed in time, and a crash (`fatal`, with the stack; the server keeps running). The same failure (target and code) within an hour is one alert with a count. The newest 200 are kept in `alerts.json` in the data directory, so a restart keeps them. The terminal UI shows a badge with the number of new alerts on every screen and an Alerts tab (`enter` details, `a` acknowledge, `A` all); the web API has `GET /api/v1/alerts` and `POST /api/v1/alerts/ack` (`{"ids":["3"]}` or `{"all":true}`), and `GET /api/v1/logs?level=&since=&limit=` returns the records (the older `?lines=` still answers text lines). `alerts collect off` (`"alerts": false` under `logging` in `state.json`) stops collecting them.
+**Alerts.** A failure nothing else handles is an alert: a protocol that does not start (sing-box, AmneziaWG, DNSCrypt, the DNS tunnel), the DNS tunnel, the subscription endpoint or the web API stopping on its own, a sing-box fatal error, NAT that could not be set up, a failed reload, an ACME certificate that was not issued within an hour or not renewed in time, and a crash (`fatal`, with the stack; the server keeps running). The same failure (target and code) within an hour is one alert with a count. The newest 200 are kept in `alerts.json` in the data directory, so a restart keeps them. The terminal UI shows a badge with the number of new alerts on every screen and an Alerts tab (`enter` details, `a` acknowledge, `A` all); the web API has `GET /api/v1/alerts` and `POST /api/v1/alerts/ack` (`{"ids":["3"]}` or `{"all":true}`), and `GET /api/v1/logs?level=&since=&limit=` returns the records (the older `?lines=` still answers text lines). `alerts collect off` (`"alerts": false` under `logging` in `state.json`) stops collecting them.
 
 ## Backup, restore, moving from Xray
 
@@ -194,15 +194,15 @@ omnitun-server import xray /etc/xray/config.json --host vpn.example.com --adopt-
 
 ## Tests
 
-Go tests (`go test ./server/... ./cmd/omnitun-server ./core/protocols`) cover the manager, the CLI, the API, the terminal UI, the in-process AmneziaWG, SSTP and IKEv2 servers (including a handshake between a client device built from the link or `.conf` the server hands out and the server's own device) and the NAT rule sets.
+Go tests (`go test ./server/... ./cmd/omnitun-server ./core/protocols`) cover the manager, the CLI, the API, the terminal UI, the in-process AmneziaWG server (including a handshake between a client device built from the link or `.conf` the server hands out and the server's own device) and the NAT rule sets.
 
-`make docker-e2e` (`tools/dockertest/run.py`; needs Docker; about 25 minutes the first time) runs the real thing: this repo's Linux server in a container with a TUN device and NAT, a web server on a network only the server reaches, and client containers with the standard clients (`openvpn`, `wg-quick`, `sstpc`, strongSwan, and this repo's AmneziaWG client). It has three parts:
+`make docker-e2e` (`tools/dockertest/run.py`; needs Docker; about 25 minutes the first time) runs the real thing: this repo's Linux server in a container with a TUN device and NAT, a web server on a network only the server reaches, and client containers with the standard clients (`openvpn`, `wg-quick` and this repo's AmneziaWG client). It has three parts:
 
 - **single**: one user at a time, per protocol: the tunnel works and the web server sees the server's address (NAT), the server shows the live connection and speed, and the traffic is counted for the user and for the protocol.
-- **concurrent**: alice, bob and carol connected **at the same time** through three different protocols (OpenVPN UDP, WireGuard and SSTP; then AmneziaWG, IKEv2 and OpenVPN TCP), downloading 8, 4 and 2 MB. Each gets their own live numbers and their own counted bytes (checked against what each downloaded, so a mix-up between users would show), and the protocol totals match. Then bob is disabled and carol is reset while alice keeps downloading: the disabled user and the old credentials are refused, enabling brings bob back with his old credentials, carol's new ones work. **One thing this shows: a change to the user list restarts the listeners, so connected users are cut for a moment.** AmneziaWG and WireGuard clients pick up again by themselves and a transfer survives; an OpenVPN transfer did not, and SSTP and IKEv2 clients have to connect again. Changes that do not touch the listeners (a note, a quota figure, the API settings) no longer restart anything.
-- **ipv6**: `proto ipv6 on`, then WireGuard, AmneziaWG, OpenVPN (UDP and TCP) and IKEv2 each get an IPv6 address in the tunnel, reach an IPv6 web server through the server's NAT66, and the IPv6 traffic is counted for the user; SSTP is checked to have none.
+- **concurrent**: alice, bob and carol connected **at the same time** through three different protocols (OpenVPN UDP, WireGuard and AmneziaWG; then AmneziaWG, OpenVPN TCP and WireGuard), downloading 8, 4 and 2 MB. Each gets their own live numbers and their own counted bytes (checked against what each downloaded, so a mix-up between users would show), and the protocol totals match. Then bob is disabled and carol is reset while alice keeps downloading: the disabled user and the old credentials are refused, enabling brings bob back with his old credentials, carol's new ones work. **One thing this shows: a change to the user list restarts the listeners, so connected users are cut for a moment.** AmneziaWG and WireGuard clients pick up again by themselves and a transfer survives; an OpenVPN transfer did not. Changes that do not touch the listeners (a note, a quota figure, the API settings) no longer restart anything.
+- **ipv6**: `proto ipv6 on`, then WireGuard, AmneziaWG and OpenVPN (UDP and TCP) each get an IPv6 address in the tunnel, reach an IPv6 web server through the server's NAT66, and the IPv6 traffic is counted for the user.
 
-`E2E_PREFIX=name` prefixes the containers and networks (default `e2e`), `--only single|concurrent|ipv6`, `--quick`, `--keep`, and `PROTO="sstp ikev2"` choose parts. `.github/workflows/docker-e2e.yml` runs it on GitHub (Ubuntu runner, read-only token, no secrets, every action pinned by hash); that workflow has been checked for syntax only and **has not run on GitHub yet**.
+`E2E_PREFIX=name` prefixes the containers and networks (default `e2e`), `--only single|concurrent|ipv6`, `--quick`, `--keep`, and `PROTO="wireguard amneziawg"` choose parts. `.github/workflows/docker-e2e.yml` runs it on GitHub (Ubuntu runner, read-only token, no secrets, every action pinned by hash); that workflow has been checked for syntax only and **has not run on GitHub yet**.
 
 ## Files
 

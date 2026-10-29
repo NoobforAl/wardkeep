@@ -1330,9 +1330,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get flReservedBytes => 'Byte cadangan';
 
   @override
-  String get flAuthentication => 'Autentikasi';
-
-  @override
   String get flAuthDigest => 'Digest autentikasi';
 
   @override
@@ -1360,21 +1357,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get flVerifyServerName => 'Verifikasi nama server';
 
   @override
-  String get flYourIdentity => 'Identitas Anda';
-
-  @override
-  String get flServerIdentity => 'Identitas server';
-
-  @override
-  String get flServerCertTrust => 'Sertifikat server yang dipercaya (PEM)';
-
-  @override
-  String get flUseSystemIke => 'Gunakan klien IKEv2 bawaan ponsel';
-
-  @override
-  String get flUseTcp => 'Gunakan TCP';
-
-  @override
   String get flHostKeys => 'Kunci host';
 
   @override
@@ -1400,10 +1382,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Format authorized_keys; kosong menerima kunci apa pun';
 
   @override
-  String get hpIkeTcp =>
-      'Bawa IKE dan ESP lewat TCP untuk jaringan yang memblokir UDP';
-
-  @override
   String get hpDefaultsToServer => 'Default-nya alamat server';
 
   @override
@@ -1425,10 +1403,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get hpOnlySelfSigned =>
       'Hanya untuk server dengan sertifikat self-signed yang tidak bisa Anda sematkan';
-
-  @override
-  String get hpSafeSstp =>
-      'Aman untuk SSTP: pertukaran kata sandi membuktikan server';
 
   @override
   String get hpHysteriaObfs =>

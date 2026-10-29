@@ -4,14 +4,12 @@ package runtime
 
 import (
 	"net"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/classicvpn"
 	"github.com/NoobforAl/omnitun/server/manager"
 	"github.com/NoobforAl/omnitun/server/store"
 )
@@ -35,61 +33,46 @@ func (r *recordingRunner) commands() string {
 	return strings.Join(r.ran, "\n")
 }
 
-type nopDevice struct{ closed chan struct{} }
-
-func (d nopDevice) Read([]byte) (int, error)    { <-d.closed; return 0, os.ErrClosed }
-func (d nopDevice) Write(p []byte) (int, error) { return len(p), nil }
-func (d nopDevice) Close() error                { return nil }
-
-// Enabling SSTP starts its server and the NAT for its clients; disabling it
-// stops both again.
+// Enabling the DNSCrypt resolver starts its host server; disabling it stops
+// the server again.
 func TestHostProtocolsFollowTheConfiguration(t *testing.T) {
-	classicvpn.ServerOpener = func(classicvpn.Interface) (classicvpn.Device, error) {
-		return nopDevice{make(chan struct{})}, nil
-	}
-	defer func() { classicvpn.ServerOpener = nil }()
-
 	s, srv := setup(t)
-	runner := &recordingRunner{}
-	srv.runner = runner
+	srv.runner = &recordingRunner{}
 
 	m := manager.New(s)
-	if srv.hosts["sstp"] != nil {
-		t.Fatal("SSTP runs although it is off by default")
+	if srv.hosts[store.DNSCryptKey] != nil {
+		t.Fatal("DNSCrypt runs although it is off by default")
+	}
+	if _, err := m.SetDNSCryptListen("127.0.0.1"); err != nil {
+		t.Fatal(err)
 	}
 	port := freeTCP(t)
 	on := true
-	if _, err := m.SetProtocol(store.SSTP, manager.ProtocolPatch{Enabled: &on, Port: &port}); err != nil {
+	if _, err := m.SetProtocol(store.DNSCryptKey, manager.ProtocolPatch{Enabled: &on, Port: &port}); err != nil {
 		t.Fatal(err)
 	}
 	if err := srv.Reload(); err != nil {
 		t.Fatal(err)
 	}
-	if srv.hosts["sstp"] == nil {
-		t.Fatalf("SSTP did not start; log: %v", nil)
+	if srv.hosts[store.DNSCryptKey] == nil {
+		t.Fatal("DNSCrypt did not start")
 	}
-	waitFor(t, "SSTP to listen", 5*time.Second, func() bool {
+	waitFor(t, "DNSCrypt to listen", 5*time.Second, func() bool {
 		c, err := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)), 200*time.Millisecond)
 		if err == nil {
 			c.Close()
 		}
 		return err == nil
 	})
-	if cmds := runner.commands(); !strings.Contains(cmds, "nft -f") {
-		t.Fatalf("NAT was not set up: %q", cmds)
-	}
 
 	off := false
-	if _, err := m.SetProtocol(store.SSTP, manager.ProtocolPatch{Enabled: &off}); err != nil {
+	if _, err := m.SetProtocol(store.DNSCryptKey, manager.ProtocolPatch{Enabled: &off}); err != nil {
 		t.Fatal(err)
 	}
 	if err := srv.Reload(); err != nil {
 		t.Fatal(err)
 	}
-	if srv.hosts["sstp"] != nil {
-		t.Fatal("SSTP still runs after being disabled")
-	}
-	if cmds := runner.commands(); !strings.HasSuffix(cmds, "nft delete table ip omnitun_hosts") {
-		t.Fatalf("NAT rules were not removed: %q", cmds)
+	if srv.hosts[store.DNSCryptKey] != nil {
+		t.Fatal("DNSCrypt still runs after being disabled")
 	}
 }

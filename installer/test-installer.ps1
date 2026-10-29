@@ -20,7 +20,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $appId = '8F3A5C2E-6B1D-4E7A-9C40-2D5B7E9A1F36'
-$schemes = 'vless', 'vmess', 'trojan', 'ss', 'hysteria2', 'hy2', 'hysteria', 'tuic', 'wireguard', 'awg', 'anytls', 'sstp', 'ikev2', 'nordvpn', 'naive+https', 'wardkeep'
+$schemes = 'vless', 'vmess', 'trojan', 'ss', 'hysteria2', 'hy2', 'hysteria', 'tuic', 'wireguard', 'awg', 'anytls', 'nordvpn', 'naive+https', 'wardkeep'
 $extensions = '.ovpn', '.conf', '.json', '.yaml', '.yml', '.txt'
 $classes = 'HKCU:\Software\Classes'
 $run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'

@@ -84,8 +84,6 @@
 				<string>wireguard</string>
 				<string>awg</string>
 				<string>anytls</string>
-				<string>sstp</string>
-				<string>ikev2</string>
 				<string>nordvpn</string>
 				<string>naive+https</string>
 			</array>

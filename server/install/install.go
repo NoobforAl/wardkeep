@@ -39,8 +39,9 @@ type Options struct {
 	// Firewall is "auto", "ufw", "firewalld" or "none".
 	Firewall string
 	Ports    []Port
-	// HostServers is true when SSTP or IKEv2 is enabled: the service then
-	// needs CAP_NET_ADMIN (TUN device, NAT rules) and IP forwarding.
+	// HostServers is true when a host-level protocol (AmneziaWG) is enabled:
+	// the service then needs CAP_NET_ADMIN (TUN device, NAT rules) and IP
+	// forwarding.
 	HostServers bool
 }
 
@@ -95,7 +96,7 @@ func Unit(binary, dataDir, user string, hostServers bool) string {
 	// Binding ports below 1024 (443) without being root.
 	caps := "CAP_NET_BIND_SERVICE"
 	if hostServers {
-		caps += " CAP_NET_ADMIN" // the TUN device and the NAT rules of SSTP/IKEv2
+		caps += " CAP_NET_ADMIN" // the TUN device and the NAT rules of AmneziaWG
 	}
 	fmt.Fprintf(&out, "AmbientCapabilities=%s\nCapabilityBoundingSet=%s\nNoNewPrivileges=true\n", caps, caps)
 	out.WriteString("ProtectSystem=full\nProtectHome=true\nPrivateTmp=true\n")
@@ -196,7 +197,7 @@ func BuildPlan(opts Options, fw string) (Plan, error) {
 	})
 	if opts.HostServers {
 		plan.Steps = append(plan.Steps, Step{
-			Description: "enable IP forwarding (SSTP and IKEv2 clients are routed through this host)",
+			Description: "enable IP forwarding (AmneziaWG clients are routed through this host)",
 			File:        SysctlPath, FileMode: 0o644, Content: "net.ipv4.ip_forward=1\n",
 		})
 		step("apply the sysctl settings", false, "sysctl", "--system")

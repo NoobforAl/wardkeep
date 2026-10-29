@@ -237,7 +237,7 @@ func TestHostServersNeedCapabilitiesAndForwarding(t *testing.T) {
 		t.Fatalf("forwarding not enabled: %+v / %v", sysctl, commands(plan))
 	}
 
-	// Without SSTP/IKEv2 the service keeps the smaller capability set and
+	// Without host servers the service keeps the smaller capability set and
 	// does not touch the host's forwarding.
 	plain, _ := BuildPlan(Options{Binary: "/opt/ots", DataDir: "/srv/ots", User: "omnitun"}, "none")
 	for _, s := range plain.Steps {

@@ -1376,9 +1376,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get flReservedBytes => 'Зарезервированные байты';
 
   @override
-  String get flAuthentication => 'Аутентификация';
-
-  @override
   String get flAuthDigest => 'Дайджест аутентификации';
 
   @override
@@ -1406,21 +1403,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get flVerifyServerName => 'Проверять имя сервера';
 
   @override
-  String get flYourIdentity => 'Ваш идентификатор';
-
-  @override
-  String get flServerIdentity => 'Идентификатор сервера';
-
-  @override
-  String get flServerCertTrust => 'Сертификат сервера, которому доверять (PEM)';
-
-  @override
-  String get flUseSystemIke => 'Использовать встроенный клиент IKEv2 телефона';
-
-  @override
-  String get flUseTcp => 'Использовать TCP';
-
-  @override
   String get flHostKeys => 'Ключи хоста';
 
   @override
@@ -1446,10 +1428,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Формат authorized_keys; пусто — принимается любой ключ';
 
   @override
-  String get hpIkeTcp =>
-      'Передавать IKE и ESP по TCP для сетей, блокирующих UDP';
-
-  @override
   String get hpDefaultsToServer => 'По умолчанию — адрес сервера';
 
   @override
@@ -1471,10 +1449,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get hpOnlySelfSigned =>
       'Только для серверов с самоподписанным сертификатом, который нельзя закрепить';
-
-  @override
-  String get hpSafeSstp =>
-      'Для SSTP безопасно: обмен паролями подтверждает сервер';
 
   @override
   String get hpHysteriaObfs =>

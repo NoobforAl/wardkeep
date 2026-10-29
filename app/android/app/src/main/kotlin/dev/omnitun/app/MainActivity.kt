@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.net.Uri
+import android.net.VpnManager
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
@@ -28,7 +29,6 @@ import java.util.concurrent.Executors
  * Bridges Flutter to the core over the "omnitun/core" channel:
  *  - start: launch the in-process core, returns {"addr","token"} for the control protocol
  *  - prepareVpn: show the system VPN consent dialog if needed, returns true when granted
- *  - prepareIkev2: register an IKEv2 profile with the system (its own consent dialog)
  *  - requestNotifications: ask for POST_NOTIFICATIONS (Android 13+)
  *
  * and the "omnitun/notify" channel: a failure nothing handled (docs/logging.md §5) as a system notification
@@ -55,11 +55,24 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        removeOldIkev2Profile()
         // Only a fresh start: after a rotation the same intent would import the file again.
         if (savedInstanceState == null) {
             takeIncoming(intent)
             if (intent?.action == ACTION_SHOW_LOGS) openLogs = intent.getStringExtra(EXTRA_CONN) ?: ""
         }
+    }
+
+    /**
+     * Versions with IKEv2 registered a VPN profile with Android's own IKEv2 client. IKEv2 is gone, so the
+     * profile is deleted once (Android 11+), or it would stay in the system's VPN settings.
+     */
+    private fun removeOldIkev2Profile() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+        val prefs = getSharedPreferences(CLEANUP_PREFS, MODE_PRIVATE)
+        if (prefs.getBoolean(KEY_IKEV2_PROFILE_REMOVED, false)) return
+        runCatching { getSystemService(VpnManager::class.java)?.deleteProvisionedVpnProfile() }
+        prefs.edit().putBoolean(KEY_IKEV2_PROFILE_REMOVED, true).apply()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -243,23 +256,6 @@ class MainActivity : FlutterActivity() {
                         startActivityForResult(intent, REQUEST_VPN)
                     }
                 }
-                "prepareIkev2" -> {
-                    // The system asks once to allow this app's IKEv2 VPN profile.
-                    if (!Ikev2.supported) {
-                        result.error("UNSUPPORTED", "IKEv2 needs Android 11 or newer", null)
-                    } else {
-                        val intent = runCatching { Ikev2.provision(this, call.arguments as String) }
-                            .getOrElse { result.error("BAD_PROFILE", it.message, null); return@setMethodCallHandler }
-                        if (intent == null) {
-                            result.success(true)
-                        } else {
-                            pendingVpn?.success(false)
-                            pendingVpn = result
-                            @Suppress("DEPRECATION")
-                            startActivityForResult(intent, REQUEST_VPN)
-                        }
-                    }
-                }
                 "listApps" -> io.execute {
                     // [{package, label, system}] for the split-tunneling picker.
                     val res = runCatching {
@@ -339,6 +335,8 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val REQUEST_VPN = 1001
+        private const val CLEANUP_PREFS = "cleanup"
+        private const val KEY_IKEV2_PROFILE_REMOVED = "ikev2_profile_removed"
         private const val REQUEST_NOTIFICATIONS = 1002
         private const val ERRORS_CHANNEL = "errors"
         private const val ERROR_NOTIFICATION_BASE = 0x10000 // above the VPN service's own (1)

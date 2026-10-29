@@ -12,7 +12,7 @@ const fallbackDNS = "1.1.1.1"
 
 // installResolver replaces Go's default resolver for the whole process. Go reads
 // /etc/resolv.conf, which Android does not have, so it would ask [::1]:53 and every host
-// name (AmneziaWG, SSTP and IKEv2 servers, the connectivity check, ...) would fail with
+// name (AmneziaWG servers, the connectivity check, ...) would fail with
 // "connection refused". This one asks the resolvers of the network the phone is online
 // through, over sockets that bypass the VPN.
 func installResolver(wrapper *platformWrapper) {

@@ -7,7 +7,7 @@ Omnitun is MIT licensed. It includes the software below under their own licenses
 | License | Packages |
 |---|---|
 | MIT OR Apache-2.0 | 269 |
-| MIT | 181 |
+| MIT | 180 |
 | Apache-2.0 OR MIT | 46 |
 | BSD-3-Clause | 41 |
 | Apache-2.0 | 35 |
@@ -183,7 +183,6 @@ Omnitun is MIT licensed. It includes the software below under their own licenses
 | Go | github.com/txthinking/socks5 | v0.0.0-20260601051520-339b044ab0eb | MIT |
 | Go | github.com/vishvananda/netns | v0.0.5 | Apache-2.0 |
 | Go | github.com/wlynxg/anet | v0.0.5 | BSD-3-Clause |
-| Go | github.com/xen0bit/veepin | v0.9.8 | MIT |
 | Go | github.com/xo/terminfo | v1.2.0 | MIT |
 | Go | github.com/xtaci/kcp-go/v5 | v5.6.72 | MIT |
 | Go | github.com/xtaci/smux | v1.5.57 | MIT |
@@ -5206,32 +5205,6 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-```
-
-### Used by: Go github.com/xen0bit/veepin v0.9.8
-
-```text
-MIT License
-
-Copyright (c) 2026 Remy
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 ```
 
 ### Used by: Go github.com/xo/terminfo v1.2.0

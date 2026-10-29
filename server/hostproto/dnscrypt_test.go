@@ -317,12 +317,12 @@ func TestDNSCryptDefaultUpstreamIsPublicNotTheHosts(t *testing.T) {
 
 func TestGateAllowsClientsAndDropsTheRest(t *testing.T) {
 	g := newGate(mustPrefixes("203.0.113.0/24"))
-	for _, ok := range []string{"127.0.0.1", "::1", "10.30.4.5", "10.31.0.9", "10.9.0.3", "10.10.10.7", "10.18.0.2", "fd30:0:0:1::5", "::ffff:10.30.0.2", "203.0.113.9"} {
+	for _, ok := range []string{"127.0.0.1", "::1", "10.30.4.5", "10.31.0.9", "10.18.0.2", "fd30:0:0:1::5", "::ffff:10.30.0.2", "203.0.113.9"} {
 		if !g.permitted(netip.MustParseAddr(ok)) {
 			t.Errorf("%s was refused", ok)
 		}
 	}
-	for _, no := range []string{"8.8.8.8", "198.51.100.7", "10.32.0.1", "2606:4700::1111", "192.168.1.5", "203.0.114.1"} {
+	for _, no := range []string{"8.8.8.8", "198.51.100.7", "10.32.0.1", "2606:4700::1111", "192.168.1.5", "203.0.114.1", "10.9.0.3", "10.10.10.7"} {
 		if g.permitted(netip.MustParseAddr(no)) {
 			t.Errorf("%s was allowed", no)
 		}

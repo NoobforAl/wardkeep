@@ -39,8 +39,6 @@ var formSamples = map[string]map[string]string{
 	profile.AmneziaWG: {"server": "203.0.113.5", "port": "51821", "private_key": wgPriv, "peer_public_key": wgPub, "address": "10.31.0.2/32",
 		"amnezia.jc": "4", "amnezia.jmin": "40", "amnezia.jmax": "70", "amnezia.s1": "15", "amnezia.s2": "20",
 		"amnezia.h1": "11", "amnezia.h2": "12", "amnezia.h3": "13", "amnezia.h4": "14", "amnezia.i1": "<b 0xc0ff><r 16>"},
-	profile.SSTP:  {"server": "vpn.example.com", "username": "alice", "password": "pw", "tls.insecure": "true"},
-	profile.IKEv2: {"server": "vpn.example.com", "username": "alice", "password": "pw", "ikev2.tcp": "true", "ikev2.remote_id": "vpn.example.com"},
 	profile.Tor:   {"tor.builtin": "snowflake"},
 	profile.DNSTT: {"dnstt.domain": "t.example.com", "dnstt.pubkey": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff", "dnstt.resolvers": "udp://1.1.1.1:53, https://dns.google/dns-query", "username": "u", "password": "p"},
 	profile.Tailscale: {"password": "tskey-auth-kABC123-secret", "tailscale.control_url": "https://hs.example.com", "tailscale.hostname": "phone",
@@ -110,7 +108,7 @@ func TestFormProfilesExportImportAndBuild(t *testing.T) {
 				t.Fatalf("link: %v", err)
 			}
 			switch protocol {
-			case profile.AmneziaWG, profile.SSTP, profile.IKEv2, profile.Tor, profile.Tailscale, profile.DNSTT:
+			case profile.AmneziaWG, profile.Tor, profile.Tailscale, profile.DNSTT:
 				return // not sing-box outbounds
 			}
 			if _, _, _, err := singbox.Outbound(p, "t"); err != nil {

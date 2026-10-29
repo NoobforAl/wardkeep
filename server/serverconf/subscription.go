@@ -36,7 +36,7 @@ func SingBoxSubscription(st *store.State, s *store.Store, u *store.User) ([]byte
 		return nil, err
 	}
 	outbounds, endpoints := []any{}, []any{}
-	extraLinks := []string{} // profiles another engine of the client runs (SSTP, IKEv2)
+	extraLinks := []string{} // profiles another engine of the client runs (AmneziaWG)
 	for _, prof := range profiles {
 		out, isEndpoint, extras, err := singbox.Outbound(prof, prof.Name)
 		if errors.Is(err, singbox.ErrOtherEngine) {

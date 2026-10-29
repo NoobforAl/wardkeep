@@ -98,7 +98,7 @@ def go_modules():
             continue
         path, version, directory = line.split("\t")
         seen[path] = (version, directory)
-    # The vendored copy of veepin is a replace directive; go list reports its directory.
+    # Vendored copies (sing-openvpn) are replace directives; go list reports their directory.
     return [(p, v, d) for p, (v, d) in sorted(seen.items())]
 
 

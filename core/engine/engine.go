@@ -99,8 +99,6 @@ type Config struct {
 	// Tun opens TUN devices for engines other than sing-box (AmneziaWG).
 	// Provided on Android by core/mobile; nil elsewhere.
 	Tun TunProvider
-	// PlatformVPN runs OS-implemented tunnels (Android IKEv2); nil elsewhere.
-	PlatformVPN PlatformVPN
 }
 
 // TunRequest describes the VPN interface to open (JSON sent to the platform).
@@ -117,7 +115,7 @@ type TunRequest struct {
 	IncludePackage    []string `json:"include_package"`
 	ExcludePackage    []string `json:"exclude_package"`
 	// ExcludeSelf keeps this app's own traffic out of the VPN (engines whose
-	// sockets can't be protected one by one, e.g. SSTP/IKEv2).
+	// sockets can't be protected one by one).
 	ExcludeSelf bool `json:"exclude_self,omitempty"`
 	HTTPProxy   *struct {
 		Server       string   `json:"server"`
@@ -142,10 +140,6 @@ type Engine struct {
 	state    State
 	// awgRun is the running AmneziaWG tunnel when the selected profile uses it.
 	awgRun *awgRun
-	// platformRun is the OS-owned tunnel (IKEv2) when one is running.
-	platformRun *platformRun
-	// classicRun is the SSTP/IKEv2 tunnel run in the core.
-	classicRun *classicRun
 	// torRun is the Tor client behind a selected Tor profile.
 	torRun *torRun
 	// dnsttRun is the DNS tunnel behind a selected DNS tunnel profile.
@@ -347,12 +341,6 @@ func (e *Engine) startLocked(profiles []*profile.Profile, opts singbox.Options) 
 	if sel := findProfile(profiles, selected); sel != nil && sel.Protocol == profile.DNSTT {
 		return e.startDNSTTLocked(sel, profiles, opts)
 	}
-	if sel := findProfile(profiles, selected); sel != nil && usesClassic(sel) {
-		return e.startClassicLocked(sel, profiles, opts)
-	}
-	if sel := findProfile(profiles, selected); sel != nil && isPlatformProtocol(sel.Protocol) {
-		return e.startPlatformLocked(sel, profiles, opts)
-	}
 	// AmneziaWG has its own engine (sing-box doesn't support it).
 	if sel := findProfile(profiles, selected); sel != nil && sel.Protocol == profile.AmneziaWG {
 		if opts.Mode != singbox.ModeTUN || e.cfg.Tun == nil {
@@ -502,9 +490,9 @@ func (e *Engine) Select(tag string) error {
 	// AmneziaWG runs outside sing-box, so switching to or from it restarts the tunnel.
 	target := findProfile(e.profiles, tag)
 	// A mesh profile joins its network only while it is selected, so switching to or from one restarts.
-	if e.awgRun != nil || e.platformRun != nil || e.classicRun != nil || e.torRun != nil || e.dnsttRun != nil ||
+	if e.awgRun != nil || e.torRun != nil || e.dnsttRun != nil ||
 		(e.instance != nil && (e.meshID != "" || (target != nil && target.Protocol == profile.Tailscale)) && tag != e.meshID) ||
-		(e.instance != nil && target != nil && (target.Protocol == profile.Tor || target.Protocol == profile.DNSTT || target.Protocol == profile.AmneziaWG || isPlatformProtocol(target.Protocol) || usesClassic(target))) {
+		(e.instance != nil && target != nil && (target.Protocol == profile.Tor || target.Protocol == profile.DNSTT || target.Protocol == profile.AmneziaWG)) {
 		if tag != singbox.TagAuto && target == nil {
 			return fmt.Errorf("unknown profile %q", tag)
 		}
@@ -536,12 +524,6 @@ func (e *Engine) Selected() string {
 	defer e.mu.Unlock()
 	if e.awgRun != nil {
 		return e.awgRun.profile.ID
-	}
-	if e.platformRun != nil {
-		return e.platformRun.profile.ID
-	}
-	if e.classicRun != nil {
-		return e.classicRun.profile.ID
 	}
 	if e.torRun != nil && e.instance == nil {
 		return e.torRun.profile.ID
@@ -592,7 +574,7 @@ func (e *Engine) Stop() error {
 }
 
 func (e *Engine) stopLocked() error {
-	if e.instance == nil && e.awgRun == nil && e.platformRun == nil && e.classicRun == nil && e.torRun == nil {
+	if e.instance == nil && e.awgRun == nil && e.torRun == nil {
 		return nil
 	}
 	err := e.teardownLocked()
@@ -612,17 +594,6 @@ func (e *Engine) teardownLocked() error {
 	if run := e.dnsttRun; run != nil {
 		e.dnsttRun = nil
 		defer run.stop()
-	}
-	if run := e.classicRun; run != nil {
-		e.classicRun = nil
-		run.stop()
-	}
-	if run := e.platformRun; run != nil {
-		if run.timer != nil {
-			run.timer.Stop()
-		}
-		e.platformRun = nil
-		e.cfg.PlatformVPN.StopPlatformVPN()
 	}
 	if e.awgRun != nil {
 		e.awgRun.stop()

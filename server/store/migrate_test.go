@@ -64,6 +64,43 @@ func TestMigrateAddsOpenVPN(t *testing.T) {
 	}
 }
 
+// Protocols the server no longer has (SSTP and IKEv2) are dropped from an old
+// state, so they are not counted or offered anywhere; the others stay as they were.
+func TestMigrateDropsRemovedProtocols(t *testing.T) {
+	s := Open(tempDir(t))
+	old := map[string]any{
+		"version": 1,
+		"server": map[string]any{
+			"name": "Old", "public_host": "1.2.3.4",
+			"protocols": map[string]any{
+				"trojan": map[string]any{"enabled": true, "port": 8443},
+				"sstp":   map[string]any{"enabled": true, "port": 8448},
+				"ikev2":  map[string]any{"enabled": true, "port": 4500},
+			},
+		},
+		"users": []any{},
+	}
+	data, _ := json.Marshal(old)
+	if err := os.WriteFile(filepath.Join(s.Dir, "state.json"), data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	st, err := s.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"sstp", "ikev2"} {
+		if _, ok := st.Server.Protocols[key]; ok {
+			t.Errorf("%s is still in the state", key)
+		}
+	}
+	if p := st.Server.Protocols[Trojan]; p == nil || !p.Enabled || p.Port != 8443 {
+		t.Fatalf("trojan = %+v", p)
+	}
+	if len(st.Server.Protocols) != len(AllProtocols) {
+		t.Errorf("%d protocols in the state, want %d", len(st.Server.Protocols), len(AllProtocols))
+	}
+}
+
 // Old 10-year self-signed certificates are replaced; fresh ones are kept.
 func TestRenewSelfSignedCert(t *testing.T) {
 	s := Open(tempDir(t))

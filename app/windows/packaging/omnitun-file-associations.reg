@@ -105,20 +105,6 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\anytls\shell\open\command]
 @="\"C:\\Program Files\\Wardkeep\\omnitun.exe\" \"%1\""
 
-[HKEY_CURRENT_USER\Software\Classes\sstp]
-@="URL:sstp link"
-"URL Protocol"=""
-
-[HKEY_CURRENT_USER\Software\Classes\sstp\shell\open\command]
-@="\"C:\\Program Files\\Wardkeep\\omnitun.exe\" \"%1\""
-
-[HKEY_CURRENT_USER\Software\Classes\ikev2]
-@="URL:ikev2 link"
-"URL Protocol"=""
-
-[HKEY_CURRENT_USER\Software\Classes\ikev2\shell\open\command]
-@="\"C:\\Program Files\\Wardkeep\\omnitun.exe\" \"%1\""
-
 [HKEY_CURRENT_USER\Software\Classes\nordvpn]
 @="URL:nordvpn link"
 "URL Protocol"=""

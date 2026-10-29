@@ -65,8 +65,8 @@ Much of this codebase is load-bearing in ways that are not local. The parts wher
   never exercised with real elevation, so read the code twice and say what you could not run.
 - **`server/` and `cmd/omnitun-server`**: users, quotas, the web API and the firewall and NAT setup. Anything
   that touches credentials, tokens or what the API exposes needs its reasoning written down.
-- **`third_party/veepin`**: a patched copy of a library. Changes go in `PATCHES.md` too, so the patch can be
-  carried to a newer upstream.
+- **`third_party/sing-openvpn` and `third_party/dnstt`**: patched copies of libraries. Changes go in their
+  `PATCHES.md` too, so the patch can be carried to a newer upstream.
 - **Credentials and keys**: never commit a keystore, a `.env` or a password. `scripts/android-keystore.sh` and the
   release docs say where they live and that they are git-ignored.
 
