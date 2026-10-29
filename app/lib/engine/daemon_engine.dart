@@ -97,8 +97,18 @@ class DaemonEngine implements VpnEngine {
     engine._listen();
     final hello = await engine._call('hello', {'token': token}) as Map<String, dynamic>;
     engine._applyState(hello['state'] as Map<String, dynamic>);
-    engine._ping = Timer.periodic(const Duration(seconds: 4), (_) => engine._call('ping').ignore());
+    engine._ping = Timer.periodic(const Duration(seconds: 4), (_) => engine._sendPing());
     return engine;
+  }
+
+  bool _pingInFlight = false;
+
+  /// One ping at a time: a core that keeps the socket open but stops answering would otherwise collect a
+  /// pending request every 4 seconds until the connection drops.
+  void _sendPing() {
+    if (_pingInFlight) return;
+    _pingInFlight = true;
+    _call('ping').whenComplete(() => _pingInFlight = false).ignore();
   }
 
   static String defaultControlFile() {
