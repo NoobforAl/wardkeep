@@ -236,26 +236,29 @@ void main() {
           'logging.get' => {'level': 'debug', 'default': 'error', 'mode': 'release', 'until': '2026-10-30T00:00:00Z'},
           _ => null,
         };
-        client.write('${jsonEncode({'id': request['id'], 'result': result})}\n');
-        if (request['method'] == 'hello') {
+        // The log event goes out before the logging.get answer, and only then: `logs` is a broadcast stream, so
+        // an event sent before the test listens would be dropped (it raced the subscription on a fast runner).
+        if (request['method'] == 'logging.get') {
           client.write('${jsonEncode({
             'event': 'log',
             'data': {'time': '2026-10-29T01:02:03.456Z', 'level': 'error', 'source': 'core', 'message': 'old core', 'conn': 'c1'},
           })}\n');
         }
+        client.write('${jsonEncode({'id': request['id'], 'result': result})}\n');
       });
     });
     final engine = await DaemonEngine.attachTo('127.0.0.1:${server.port}', 'token');
     addTearDown(engine.dispose);
-    final first = await engine.logs.first;
-    expect(first.msg, 'old core');
-    expect(first.conn, 'c1');
 
     await engine.setLogging('trace', until: DateTime.utc(2026, 10, 30, 1, 2, 3, 456, 789));
     final set = requests.firstWhere((request) => request['method'] == 'logging.set');
     expect(set['params'], {'level': 'trace', 'until': '2026-10-30T01:02:03.456Z'});
 
+    final firstLog = engine.logs.first; // listening before the core can send it
     final mode = await engine.loggingMode();
+    final first = await firstLog.timeout(const Duration(seconds: 5));
+    expect(first.msg, 'old core');
+    expect(first.conn, 'c1');
     expect(mode.level, 'debug');
     expect(mode.defaultLevel, 'error');
     expect(mode.mode, 'release');
