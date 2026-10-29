@@ -14,7 +14,7 @@
 //!     (a log record, docs/logging.md: Arti's logs and ours at --log-level and above, and panics)
 //! stderr carries nothing on purpose. The process exits when stdin closes, so it never outlives the core.
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, PoisonError};
 
 use anyhow::Context;
 
@@ -193,7 +193,8 @@ fn report_path(shared: &Shared, stream: &arti_client::DataStream) {
         return;
     }
 
-    let mut last = shared.last.lock().unwrap();
+    // A path report is only for the globe: never let a poisoned lock end every connection over it.
+    let mut last = shared.last.lock().unwrap_or_else(PoisonError::into_inner);
     if *last != countries {
         let names: Vec<Option<&str>> = countries
             .iter()
@@ -260,7 +261,11 @@ async fn run(args: args::Args) -> anyhow::Result<()> {
     tokio::spawn(async move {
         let mut last = -1;
         while let Some(status) = events.next().await {
-            let percent = (status.as_frac() * 100.0) as i32;
+            #[allow(
+                clippy::cast_possible_truncation,
+                reason = "a fraction clamped to 0..=1 times 100 fits an i32; dropping the decimals is the point"
+            )]
+            let percent = (status.as_frac().clamp(0.0, 1.0) * 100.0) as i32;
             if percent != last {
                 last = percent;
                 let mut event =

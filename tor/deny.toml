@@ -1,0 +1,50 @@
+# cargo-deny: `cargo deny check` (from tor/). Fails on a new vulnerability, a license outside this list, or a
+# crate from anywhere but crates.io.
+
+[graph]
+all-features = false
+
+[advisories]
+# Vulnerabilities fail; unmaintained and yanked crates are listed so they are seen, not ignored.
+unmaintained = "workspace"
+yanked = "warn"
+ignore = [
+    # rsa: Marvin attack, timing of RSA private-key decryption and signing. No fixed version exists. Arti only
+    # verifies relays' legacy RSA identity signatures with their public keys; a Tor client does no RSA
+    # private-key operation an attacker could time.
+    { id = "RUSTSEC-2023-0071", reason = "only RSA public-key verification is used; Marvin needs private-key operations" },
+]
+# `cargo audit` reads Cargo.lock alone and also reports crypto-bigint 0.5 (RUSTSEC-2026-0387), bincode and paste
+# (unmaintained): they are locked as optional dependencies but not built (cargo-deny, which follows the real
+# dependency graph, does not see them). That is why the check here is cargo-deny, not cargo-audit.
+
+[licenses]
+# Every license the dependency tree uses today (`cargo deny list`); a new one has to be added here on purpose.
+allow = [
+    "0BSD",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-1-Clause",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "LGPL-2.1-or-later",
+    "LGPL-3.0-or-later",
+    "MIT",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Unlicense",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+# Arti pulls several versions of some crates (syn, windows-sys, rand, ...): reported, not fatal.
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

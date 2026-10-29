@@ -57,3 +57,22 @@ debug = 1
 # Debug builds of Arti's crypto are far too slow to verify a consensus.
 [profile.dev.package."*"]
 opt-level = 2
+
+# Lints beyond clippy's defaults that matter for a process carrying other people's traffic: no unsafe code, no
+# hidden panics in normal code (a panic ends every connection), and no silent number truncation.
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+mem_forget = "warn"
+cast_possible_truncation = "warn"
+cast_sign_loss = "warn"
+cast_possible_wrap = "warn"
+large_futures = "warn"
