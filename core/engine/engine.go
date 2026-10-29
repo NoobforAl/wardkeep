@@ -535,8 +535,17 @@ func (e *Engine) Selected() string {
 	if !ok {
 		return ""
 	}
-	if now, ok := out.(interface{ Now() string }); ok {
-		return now.Now()
+	// sing-box 1.14.4 dropped Selector.Now(); OutboundGroup.Selected is its replacement. A selector that has
+	// not chosen yet routes through its first member, as Now() reported.
+	group, ok := out.(adapter.OutboundGroup)
+	if !ok {
+		return ""
+	}
+	if selected := group.Selected("tcp"); selected != nil {
+		return selected.Tag()
+	}
+	if members := group.All(); len(members) > 0 {
+		return members[0]
 	}
 	return ""
 }
