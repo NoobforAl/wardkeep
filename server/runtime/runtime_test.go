@@ -84,6 +84,9 @@ func setup(t *testing.T) (*store.Store, *Server) {
 			store.Naive:        freeTCP(t),
 			store.OpenVPNUDP:   freeUDP(t),
 			store.OpenVPNTCP:   freeTCP(t),
+			// Not the defaults (51820/51821): two test packages running at once would both bind them.
+			store.WireGuardKey: freeUDP(t),
+			store.AmneziaWGKey: freeUDP(t),
 		},
 		RealityHandshake: "localhost:" + decoyPort,
 		SubPort:          freeTCP(t),
