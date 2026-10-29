@@ -174,7 +174,7 @@ Future<void> _toggle(BuildContext context, WidgetRef ref) async {
       !profile.hasCredentials) {
     if (!await askCredentials(context, ref, profile)) return;
   }
-  ctrl.toggle();
+  unawaited(ctrl.toggle());
 }
 
 /// The country the connection exits in: what the service saw, else the guess from
@@ -413,15 +413,15 @@ class _Earth extends ConsumerWidget {
         onSpotTap: (spot, index) {
           switch (spot) {
             case GlobeSpot.home:
-              showHopInfo(context, ref, HopKind.you);
+              unawaited(showHopInfo(context, ref, HopKind.you));
             case GlobeSpot.via:
               final hop = hops[viaHop[index]];
-              showHopInfo(context, ref, hopKindOfRole(hop.role), country: hop.country);
+              unawaited(showHopInfo(context, ref, hopKindOfRole(hop.role), country: hop.country));
             case GlobeSpot.exit:
               if (hops.isEmpty) {
-                showHopInfo(context, ref, HopKind.server);
+                unawaited(showHopInfo(context, ref, HopKind.server));
               } else {
-                showHopInfo(context, ref, HopKind.exit, country: hops.last.country);
+                unawaited(showHopInfo(context, ref, HopKind.exit, country: hops.last.country));
               }
           }
         },

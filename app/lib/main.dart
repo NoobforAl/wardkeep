@@ -111,7 +111,7 @@ class _WindowMemory with WindowListener {
 
   @override
   void onWindowMoved() {
-    _fit();
+    unawaited(_fit());
     _remember();
   }
 
@@ -157,7 +157,7 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
       // A tap on a system notification of a failure opens the log of that connection.
       unawaited(ref.read(systemNotificationsProvider).start(_openLogs));
       // Update subscriptions whose refresh interval has passed.
-      ref.read(subscriptionsProvider.notifier).refreshDue();
+      unawaited(ref.read(subscriptionsProvider.notifier).refreshDue());
       // A link or file sent by another app comes first; the introduction steps aside for it.
       final shared = await IncomingShare.start(
         (text) => importShared(_navigator, ref, text),
@@ -166,7 +166,7 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
       );
       // The app's own default configuration (Tor) is there from the first start.
       await ref.read(defaultProfileIdProvider.notifier).ensureTorDefaults();
-      if (!shared) _introduction();
+      if (!shared) await _introduction();
     });
   }
 
@@ -184,7 +184,7 @@ class _OmnitunAppState extends ConsumerState<OmnitunApp> {
       AppRoute(fullscreenDialog: true, builder: (_) => const OnboardingScreen()),
     );
     final overlay = _navigator.currentState?.overlay;
-    if (addServer == true && overlay != null && overlay.mounted) showImportSheet(overlay.context, ref);
+    if (addServer == true && overlay != null && overlay.mounted) unawaited(showImportSheet(overlay.context, ref));
   }
 
   /// The log page, narrowed to one connect attempt when [conn] is given.

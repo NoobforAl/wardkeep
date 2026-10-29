@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// The loading screen: the whole shield (assets/shield.png, from scripts/gen-icon.py) on the app's ground,
@@ -54,9 +56,9 @@ class _SplashCoverState extends State<SplashCover> with SingleTickerProviderStat
       return;
     }
     // Starts once the picture is decoded, so the shield does not pop in halfway through.
-    precacheImage(SplashCover.asset, context).whenComplete(() {
+    unawaited(precacheImage(SplashCover.asset, context).whenComplete(() {
       if (mounted) _controller.forward();
-    });
+    }));
   }
 
   @override

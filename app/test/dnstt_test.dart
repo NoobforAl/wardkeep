@@ -12,7 +12,7 @@ import 'package:omnitun/ui/theme.dart';
 
 /// A mock whose forms include the DNS tunnel editor, the way the core sends it.
 class _TunnelEngine extends MockEngine {
-  Object? scanError;
+  Exception? scanError;
   int scans = 0;
   String? scannedDomain, scannedKey;
 

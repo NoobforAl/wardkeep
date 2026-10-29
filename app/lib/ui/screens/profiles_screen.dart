@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
@@ -43,7 +44,7 @@ class ProfilesScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: context.l10n.addSubscriptionTooltip,
-            onPressed: () => Navigator.of(context).push(AppRoute(builder: (_) => const SubscriptionScreen())),
+            onPressed: () => Navigator.of(context).push(AppRoute<void>(builder: (_) => const SubscriptionScreen())),
             icon: const Icon(Icons.add_link),
           ),
           IconButton(
@@ -216,8 +217,8 @@ class _GroupList extends ConsumerWidget {
                         ref.read(defaultProfileIdProvider.notifier).set(profile.id);
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.defaultSetToast(profile.name))));
                       }
-                      if (choice == 'move') _moveToGroup(context, ref, profile);
-                      if (choice == 'credentials') askCredentials(context, ref, profile);
+                      if (choice == 'move') unawaited(_moveToGroup(context, ref, profile));
+                      if (choice == 'credentials') unawaited(askCredentials(context, ref, profile));
                       if (choice == 'usage') ref.read(profileUsageProvider.notifier).reset(profile.id);
                     },
                     itemBuilder: (_) => [
@@ -498,7 +499,7 @@ class _SubscriptionHeader extends ConsumerWidget {
               PopupMenuButton<String>(
                 onSelected: (choice) {
                   if (choice == 'edit') {
-                    Navigator.of(context).push(AppRoute(builder: (_) => SubscriptionScreen(existing: sub)));
+                    Navigator.of(context).push(AppRoute<void>(builder: (_) => SubscriptionScreen(existing: sub)));
                   } else if (choice == 'delete') {
                     ref.read(subscriptionsProvider.notifier).remove(sub.id);
                   }
@@ -615,7 +616,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
   void _openSubscription([String url = '']) {
     final navigator = Navigator.of(context);
     navigator.pop();
-    navigator.push(AppRoute(builder: (_) => SubscriptionScreen(initialUrl: url)));
+    navigator.push(AppRoute<void>(builder: (_) => SubscriptionScreen(initialUrl: url)));
   }
 
   Future<void> _import() async {
@@ -726,7 +727,7 @@ class _ImportSheetState extends ConsumerState<_ImportSheet> {
                   tooltip: context.l10n.importAddTor,
                   onSelected: (kind) {
                     _controller.text = 'tor://$kind';
-                    _import();
+                    unawaited(_import());
                   },
                   itemBuilder: (_) => [
                     PopupMenuItem(value: '', child: Text(context.l10n.importTorDirect)),

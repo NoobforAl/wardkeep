@@ -91,12 +91,19 @@ class DaemonEngine implements VpnEngine {
 
   static Future<DaemonEngine> _connect(String addr, String token, Process? process) async {
     final colon = addr.lastIndexOf(':');
+    // ignore: close_sinks — the engine owns the socket from here on; its dispose() destroys it (also on a failed hello)
     final socket = await Socket.connect(addr.substring(0, colon), int.parse(addr.substring(colon + 1)),
         timeout: const Duration(seconds: 5));
     final engine = DaemonEngine._(socket, process);
-    engine._listen();
-    final hello = await engine._call('hello', {'token': token}) as Map<String, dynamic>;
-    engine._applyState(hello['state'] as Map<String, dynamic>);
+    try {
+      engine._listen();
+      final hello = await engine._call('hello', {'token': token}) as Map<String, dynamic>;
+      engine._applyState(hello['state'] as Map<String, dynamic>);
+    } catch (_) {
+      // A refused token or a broken hello: nobody gets the engine, so its socket (and process) go now.
+      engine.dispose();
+      rethrow;
+    }
     engine._ping = Timer.periodic(const Duration(seconds: 4), (_) => engine._sendPing());
     return engine;
   }
@@ -391,7 +398,7 @@ class DaemonEngine implements VpnEngine {
     _ping?.cancel();
     _socket.destroy();
     _process?.kill();
-    _states.close();
-    _logs.close();
+    unawaited(_states.close());
+    unawaited(_logs.close());
   }
 }

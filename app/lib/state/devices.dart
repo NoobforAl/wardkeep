@@ -47,7 +47,7 @@ class DevicesController extends Notifier<DevicesState> {
   DevicesState build() {
     final timer = Timer.periodic(refreshEvery, (_) => refresh());
     ref.onDispose(timer.cancel);
-    Future.microtask(refresh);
+    unawaited(Future.microtask(refresh));
     return const DevicesState();
   }
 

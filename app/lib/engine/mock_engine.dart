@@ -292,7 +292,7 @@ class MockEngine implements VpnEngine {
   @override
   void dispose() {
     _traffic?.cancel();
-    _states.close();
-    _logs.close();
+    unawaited(_states.close());
+    unawaited(_logs.close());
   }
 }

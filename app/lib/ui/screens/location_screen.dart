@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,7 +124,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
             onSelected: (choice) {
               switch (choice) {
                 case 'import':
-                  showImportSheet(context, ref);
+                  unawaited(showImportSheet(context, ref));
                 case 'new':
                   Navigator.of(context).push(AppRoute<void>(builder: (_) => const NewServerScreen()));
                 case 'subscription':
@@ -343,7 +345,7 @@ class _ServerRow extends ConsumerWidget {
                   final code = await pickCountry(context, ref.read(profileCountryProvider)(profile));
                   if (code != null) ref.read(countryOverridesProvider.notifier).set(profile.id, code == '' ? null : code);
                 case 'credentials':
-                  askCredentials(context, ref, profile);
+                  await askCredentials(context, ref, profile);
                 case 'usage':
                   ref.read(profileUsageProvider.notifier).reset(profile.id);
                 case 'delete':

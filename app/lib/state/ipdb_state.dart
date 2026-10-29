@@ -113,7 +113,7 @@ class IpDbController extends Notifier<IpDbState> {
   @override
   IpDbState build() {
     ref.onDispose(() => _cancel?.cancel());
-    Future.microtask(_init);
+    unawaited(Future.microtask(_init));
     return IpDbState(enabled: ref.read(storeProvider).read<bool>(_enabledKey) ?? true);
   }
 
@@ -229,10 +229,10 @@ class DbCountries extends Notifier<Map<String, String>> {
         state = {};
         ref.read(storeProvider).write(_key, <String, String>{});
       }
-      _resolveAll();
+      unawaited(_resolveAll());
     });
     ref.listen(profilesProvider, (prev, next) => _resolveAll());
-    Future.microtask(_resolveAll);
+    unawaited(Future.microtask(_resolveAll));
     return {for (final e in saved.entries) e.key: e.value as String};
   }
 

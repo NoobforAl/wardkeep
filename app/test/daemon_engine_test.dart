@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -66,7 +67,7 @@ void main() {
         req.response.headers.set('subscription-userinfo', 'upload=10; download=20; total=100; expire=1893456000');
         req.response.write(base64.encode(utf8.encode('trojan://pw@a.example.com:443#A\nhy2://pw@b.example.com:443#B')));
       }
-      req.response.close();
+      unawaited(req.response.close());
     });
 
     final dir = await Directory.systemTemp.createTemp('omnitun-test');
@@ -197,7 +198,7 @@ void main() {
     addTearDown(() => server.close(force: true));
     server.listen((req) {
       req.response.write('trojan://pw@a.example.com:443#A');
-      req.response.close();
+      unawaited(req.response.close());
     });
     final dir = await Directory.systemTemp.createTemp('omnitun-test');
     final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');

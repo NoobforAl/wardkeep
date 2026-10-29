@@ -93,7 +93,7 @@ class CoreEngine implements VpnEngine {
 
   void _adopt(VpnEngine engine) {
     for (final sub in _subs) {
-      sub.cancel();
+      unawaited(sub.cancel());
     }
     _subs
       ..clear()
@@ -314,13 +314,13 @@ class CoreEngine implements VpnEngine {
   void dispose() {
     _disposed = true;
     for (final sub in _subs) {
-      sub.cancel();
+      unawaited(sub.cancel());
     }
     _inner?.dispose();
     for (final engine in [_local, _service]) {
       if (engine != null && !identical(engine, _inner)) engine.dispose();
     }
-    _states.close();
-    _logs.close();
+    unawaited(_states.close());
+    unawaited(_logs.close());
   }
 }

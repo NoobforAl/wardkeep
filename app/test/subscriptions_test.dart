@@ -12,7 +12,7 @@ ProfileInfo _p(String id) =>
 /// Mock engine whose subscription responses the test controls.
 class SubEngine extends MockEngine {
   List<ProfileInfo> next = [];
-  Object? failWith;
+  Error? failWith;
   Map<String, dynamic>? lastRequest;
 
   @override

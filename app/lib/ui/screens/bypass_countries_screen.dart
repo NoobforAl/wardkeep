@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,7 +34,7 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ref.read(ipDbProvider).db != null) return;
       for (final c in ref.read(settingsProvider).bypassCountries) {
-        ref.read(countryZonesProvider.notifier).ensure(c);
+        unawaited(ref.read(countryZonesProvider.notifier).ensure(c));
       }
     });
   }
@@ -43,7 +45,7 @@ class _BypassCountriesScreenState extends ConsumerState<BypassCountriesScreen> {
       if (on) next.add(code);
       return settings.copyWith(bypassCountries: next);
     });
-    if (on && !hasDb) ref.read(countryZonesProvider.notifier).ensure(code);
+    if (on && !hasDb) unawaited(ref.read(countryZonesProvider.notifier).ensure(code));
   }
 
   @override

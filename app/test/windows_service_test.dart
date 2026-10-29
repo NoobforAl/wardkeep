@@ -15,7 +15,7 @@ void main() {
   final sep = Platform.pathSeparator;
 
   ProfileInfo profile(Map<String, dynamic> j) => ProfileInfo.fromJson(j);
-  final tor = profile({'id': 'tor1', 'name': 'Tor', 'protocol': 'tor', 'server': '', 'port': 0, 'tor': {}});
+  final tor = profile({'id': 'tor1', 'name': 'Tor', 'protocol': 'tor', 'server': '', 'port': 0, 'tor': <String, dynamic>{}});
 
   test('the service control file is in ProgramData, in a directory of its own', () {
     expect(DaemonEngine.serviceControlFile({'ProgramData': r'D:\PD'}), r'D:\PD\omnitun\control\control.json');

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -54,9 +56,9 @@ class _WindowFrameState extends State<WindowFrame> with WindowListener {
   void initState() {
     super.initState();
     windowManager.addListener(this);
-    windowManager.isMaximized().then((v) {
+    unawaited(windowManager.isMaximized().then((v) {
       if (mounted) setState(() => _maximized = v);
-    });
+    }));
   }
 
   @override

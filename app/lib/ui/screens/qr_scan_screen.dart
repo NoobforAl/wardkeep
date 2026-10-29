@@ -136,9 +136,9 @@ class _ZxingCameraState extends State<_ZxingCamera> {
   @override
   void initState() {
     super.initState();
-    _hasCamera.then((has) {
+    unawaited(_hasCamera.then((has) {
       if (!has) widget.onError('noCamera');
-    }, onError: (Object e) => widget.onError(_errorCode(e)));
+    }, onError: (Object e) => widget.onError(_errorCode(e))));
   }
 
   static String _errorCode(Object e) => switch (e) {

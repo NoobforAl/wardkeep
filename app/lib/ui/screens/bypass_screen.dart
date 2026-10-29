@@ -102,11 +102,11 @@ class BypassScreen extends ConsumerWidget {
             onSelected: (choice) {
               switch (choice) {
                 case 'paste':
-                  _fromClipboard(context);
+                  unawaited(_fromClipboard(context));
                 case 'file':
-                  _fromFile(context);
+                  unawaited(_fromFile(context));
                 case 'url':
-                  _fromUrl(context);
+                  unawaited(_fromUrl(context));
                 case 'type':
                   _edit(context, name: context.l10n.bypassDefaultName);
               }
@@ -201,21 +201,31 @@ class BypassScreen extends ConsumerWidget {
   }
 }
 
+/// Why [downloadList] failed, already in the user's language.
+class ListDownloadException implements Exception {
+  const ListDownloadException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 /// Downloads a list from a link (plain text, up to 5 MB).
 Future<String> downloadList(AppLocalizations l, String url) async {
   final uri = Uri.parse(url.trim());
   if (!(uri.isScheme('http') || uri.isScheme('https')) || uri.host.isEmpty) {
-    throw l.bypassHttpLink;
+    throw ListDownloadException(l.bypassHttpLink);
   }
   final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
   try {
     final request = await client.getUrl(uri).timeout(const Duration(seconds: 20));
     final response = await request.close().timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) throw l.bypassServerAnswered(response.statusCode);
+    if (response.statusCode != 200) throw ListDownloadException(l.bypassServerAnswered(response.statusCode));
     final bytes = <int>[];
     await for (final chunk in response) {
       bytes.addAll(chunk);
-      if (bytes.length > 5 << 20) throw l.bypassTooLarge;
+      if (bytes.length > 5 << 20) throw ListDownloadException(l.bypassTooLarge);
     }
     return utf8.decode(bytes, allowMalformed: true);
   } finally {
@@ -281,7 +291,7 @@ class _BypassEditScreenState extends ConsumerState<BypassEditScreen> {
   @override
   void initState() {
     super.initState();
-    _checkNow();
+    unawaited(_checkNow());
   }
 
   @override

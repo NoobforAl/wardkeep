@@ -213,7 +213,7 @@ class BypassReport {
     domains: (j['domains'] as num?)?.toInt() ?? 0,
     ranges: (j['ranges'] as num?)?.toInt() ?? 0,
     issues: [
-      for (final i in (j['issues'] as List? ?? const []))
+      for (final i in (j['issues'] as List? ?? const []).cast<Map<String, dynamic>>())
         BypassIssue(
           (i['line'] as num).toInt(),
           i['text'] as String,

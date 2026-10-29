@@ -26,7 +26,7 @@ void main() {
         tester.platformDispatcher.textScaleFactorTestValue = scale;
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearAllTestValues);
-        final store = AppStore.memory({'onboarded': true, 'profiles': []});
+        final store = AppStore.memory({'onboarded': true, 'profiles': <Object>[]});
         await tester.pumpWidget(ProviderScope(
           overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(MockEngine(connectDelay: Duration.zero))],
           child: MaterialApp(

@@ -15,7 +15,7 @@ import 'package:omnitun/ui/screens/location_screen.dart';
 class MeshEngine extends MockEngine {
   MeshEngine() : super(connectDelay: Duration.zero);
   final exitCalls = <String>[];
-  Object? exitFails;
+  Exception? exitFails;
 
   @override
   Future<MeshStatus> setMeshExit(String id) async {

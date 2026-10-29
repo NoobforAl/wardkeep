@@ -124,7 +124,7 @@ void main() {
       tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      final store = AppStore.memory({'onboarded': true, 'profiles': []});
+      final store = AppStore.memory({'onboarded': true, 'profiles': <Object>[]});
       await tester.pumpWidget(ProviderScope(
         overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(_Engine(answer))],
         child: MaterialApp(

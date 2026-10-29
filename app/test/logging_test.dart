@@ -34,7 +34,7 @@ class _LogEngine extends MockEngine {
 
   @override
   void dispose() {
-    records.close();
+    unawaited(records.close());
     super.dispose();
   }
 }

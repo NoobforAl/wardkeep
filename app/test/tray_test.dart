@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show Locale;
 
 import 'package:flutter/services.dart';
@@ -158,17 +159,17 @@ void main() {
       engine.dispose();
     });
 
-    List<Map> items([List<MethodCall>? calls]) {
+    List<_Json> items([List<MethodCall>? calls]) {
       final last = (calls ?? tray).lastWhere((c) => c.method == 'setContextMenu');
-      return [for (final i in (last.arguments['menu'] as Map)['items'] as List) i as Map];
+      return [for (final i in (last.arg('menu')! as _Json)['items']! as List) i as _Json];
     }
 
-    Map find(String key, [List<Map>? from]) {
+    _Json find(String key, [List<_Json>? from]) {
       for (final i in from ?? items()) {
         if (i['key'] == key) return i;
-        final sub = i['submenu'] as Map?;
+        final sub = i['submenu'] as _Json?;
         if (sub != null) {
-          final inner = find(key, [for (final s in sub['items'] as List) s as Map]);
+          final inner = find(key, [for (final s in sub['items']! as List) s as _Json]);
           if (inner.isNotEmpty) return inner;
         }
       }
@@ -199,8 +200,8 @@ void main() {
       await start();
       expect(controller.isUp, isTrue);
       final icon = tray.firstWhere((c) => c.method == 'setIcon');
-      expect((icon.arguments['iconPath'] as String).replaceAll('\\', '/'), endsWith('data/flutter_assets/assets/tray.ico'));
-      expect(tray.firstWhere((c) => c.method == 'setToolTip').arguments['toolTip'], contains('Wardkeep'));
+      expect((icon.arg('iconPath') as String).replaceAll('\\', '/'), endsWith('data/flutter_assets/assets/tray.ico'));
+      expect(tray.firstWhere((c) => c.method == 'setToolTip').arg('toolTip'), contains('Wardkeep'));
       expect(labels(), ['Not connected', 'Connect', 'Switch server', 'Open Wardkeep', 'Quit']);
     });
 
@@ -211,7 +212,7 @@ void main() {
       final ru = lookupAppLocalizations(const Locale('ru'));
       expect(ru.trayOpen, isNot('Open Wardkeep'));
       expect(labels(), [ru.statusDisconnected, ru.buttonConnect, ru.traySwitchServer, ru.trayOpen, ru.trayQuit]);
-      expect(tray.lastWhere((c) => c.method == 'setToolTip').arguments['toolTip'], startsWith('Wardkeep: '));
+      expect(tray.lastWhere((c) => c.method == 'setToolTip').arg('toolTip'), startsWith('Wardkeep: '));
     });
 
     test('follows the connection and the servers, and sends the menu only when it changed', () async {
@@ -286,7 +287,7 @@ void main() {
       await pumpEventQueue();
       final pop = tray.lastWhere((c) => c.method == 'popUpContextMenu');
       // the system closes a menu on a click elsewhere only if the app is in front while it is open
-      expect(pop.arguments['bringAppToFront'], isTrue);
+      expect(pop.arg('bringAppToFront'), isTrue);
     });
 
     test('Open brings the window back', () async {
@@ -306,7 +307,7 @@ void main() {
     test('closing the window ends the app as before while the tray setting is off', () async {
       await start();
       // nothing holds the close back, and a close does not hide the window
-      expect(window.where((c) => c.method == 'setPreventClose' && c.arguments['isPreventClose'] == true), isEmpty);
+      expect(window.where((c) => c.method == 'setPreventClose' && c.arg('isPreventClose') == true), isEmpty);
       await _fromSystem('window_manager', 'onEvent', {'eventName': 'close'});
       await pumpEventQueue();
       expect(count(window, 'hide'), 0);
@@ -316,7 +317,7 @@ void main() {
       await start();
       container.read(settingsProvider.notifier).update((s) => s.copyWith(keepInTray: true));
       await pumpEventQueue();
-      expect(window.lastWhere((c) => c.method == 'setPreventClose').arguments['isPreventClose'], isTrue);
+      expect(window.lastWhere((c) => c.method == 'setPreventClose').arg('isPreventClose'), isTrue);
       await _fromSystem('window_manager', 'onEvent', {'eventName': 'close'});
       await pumpEventQueue();
       expect(count(window, 'hide'), 1);
@@ -324,7 +325,7 @@ void main() {
 
       container.read(settingsProvider.notifier).update((s) => s.copyWith(keepInTray: false));
       await pumpEventQueue();
-      expect(window.lastWhere((c) => c.method == 'setPreventClose').arguments['isPreventClose'], isFalse);
+      expect(window.lastWhere((c) => c.method == 'setPreventClose').arg('isPreventClose'), isFalse);
       await _fromSystem('window_manager', 'onEvent', {'eventName': 'close'});
       await pumpEventQueue();
       expect(count(window, 'hide'), 1);
@@ -343,7 +344,7 @@ void main() {
       ]);
       controller = container.read(trayProvider);
       await start();
-      expect(window.lastWhere((c) => c.method == 'setPreventClose').arguments['isPreventClose'], isTrue);
+      expect(window.lastWhere((c) => c.method == 'setPreventClose').arg('isPreventClose'), isTrue);
     });
 
     test('if the icon cannot be made, the window is never held back from closing', () async {
@@ -385,10 +386,18 @@ void main() {
 /// A call from the native side to Dart, as the plugins make them.
 Future<void> _fromSystem(String channel, String method, Object? arguments) {
   final done = Future<void>.value();
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.handlePlatformMessage(
+  unawaited(TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.handlePlatformMessage(
     channel,
     const StandardMethodCodec().encodeMethodCall(MethodCall(method, arguments)),
     (_) {},
-  );
+  ));
   return done;
+}
+
+/// A map as the platform channels decode it.
+typedef _Json = Map<Object?, Object?>;
+
+extension on MethodCall {
+  /// One named argument of a call whose arguments are a map.
+  Object? arg(String key) => (arguments as _Json)[key];
 }

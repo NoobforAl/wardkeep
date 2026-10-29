@@ -104,7 +104,7 @@ final countryZonesDownloaderProvider = Provider<CountryZonesDownloader>((ref) =>
 class CountryZonesController extends Notifier<Map<String, ZoneState>> {
   @override
   Map<String, ZoneState> build() {
-    Future.microtask(_load);
+    unawaited(Future.microtask(_load));
     return const {};
   }
 

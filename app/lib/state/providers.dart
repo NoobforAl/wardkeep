@@ -422,7 +422,7 @@ class ExitController extends Notifier<ExitInfo?> {
       }
       // Once per connection (and again after a failover moved it).
       if (prev?.$1 == ConnStatus.connected && prev?.$2 == id) return;
-      _lookup(id);
+      unawaited(_lookup(id));
     });
     return null;
   }
@@ -486,16 +486,17 @@ final directLookupProvider = Provider<DirectLookup>((ref) {
       },
       () async => ExitInfo.fromJson(jsonDecode(await get('https://api.country.is/')) as Map<String, dynamic>),
     ];
-    Object? last;
+    (Object, StackTrace)? last;
     for (final source in sources) {
       try {
         final info = await source();
         if (info.country != null) return info;
-      } catch (e) {
-        last = e;
+      } catch (e, stack) {
+        last = (e, stack);
       }
     }
-    throw last ?? const HttpException('no answer');
+    if (last == null) throw const HttpException('no answer');
+    Error.throwWithStackTrace(last.$1, last.$2);
   };
 });
 
@@ -512,7 +513,7 @@ class HomeLocation extends Notifier<ExitInfo?> {
   @override
   ExitInfo? build() {
     ref.listen(connectionProvider.select((s) => s.status), (prev, next) {
-      if (next == ConnStatus.disconnected && prev != next) _lookup(const Duration(milliseconds: 1500));
+      if (next == ConnStatus.disconnected && prev != next) unawaited(_lookup(const Duration(milliseconds: 1500)));
     });
     // The database loads from disk while the first lookup is already under way: an answer that came without
     // it (a service may place an address in the wrong country) is corrected as soon as it is there.
@@ -523,9 +524,9 @@ class HomeLocation extends Notifier<ExitInfo?> {
       _show(withDbCountry(raw, next));
     });
     ref.listen(settingsProvider.select((s) => s.showExit), (prev, next) {
-      if (next && !prev!) _lookup();
+      if (next && !prev!) unawaited(_lookup());
     });
-    Future.microtask(_lookup);
+    unawaited(Future.microtask(_lookup));
     final saved = ref.read(storeProvider).read<String>(_key);
     return saved == null ? null : ExitInfo('', saved);
   }
@@ -573,7 +574,7 @@ class LogsController extends Notifier<List<LogRecord>> {
   List<LogRecord> build() {
     final sub = ref.watch(engineProvider).logs.listen(add);
     ref.onDispose(() {
-      sub.cancel();
+      unawaited(sub.cancel());
       _publish?.cancel();
     });
     _records.clear();
@@ -904,8 +905,8 @@ class SettingsController extends Notifier<SettingsState> {
     }
     // The native side needs this to act when the OS closes the app.
     final engine = ref.read(engineProvider);
-    Future.microtask(() => engine.setStopOnClose(settings.stopOnClose));
-    if (settings.logLevel.isNotEmpty) Future.microtask(() => _sendLogging(settings));
+    unawaited(Future.microtask(() => engine.setStopOnClose(settings.stopOnClose)));
+    if (settings.logLevel.isNotEmpty) unawaited(Future.microtask(() => _sendLogging(settings)));
     _scheduleLoggingEnd(settings);
     ref.onDispose(() => _loggingEnd?.cancel());
     return settings;
@@ -918,10 +919,10 @@ class SettingsController extends Notifier<SettingsState> {
     state = change(state);
     ref.read(storeProvider).write(_key, state.toJson());
     if (state.stopOnClose != before.stopOnClose) {
-      ref.read(engineProvider).setStopOnClose(state.stopOnClose);
+      unawaited(ref.read(engineProvider).setStopOnClose(state.stopOnClose));
     }
     if (state.logLevel != before.logLevel || state.logUntil != before.logUntil) {
-      _sendLogging(state);
+      unawaited(_sendLogging(state));
       _scheduleLoggingEnd(state);
     }
   }

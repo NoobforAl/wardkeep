@@ -11,7 +11,7 @@ import 'package:omnitun/state/store.dart';
 class ExitEngine extends MockEngine {
   ExitEngine() : super(connectDelay: Duration.zero);
   int asked = 0;
-  Object? failWith;
+  Exception? failWith;
 
   @override
   Future<ExitInfo> exitInfo() async {

@@ -24,6 +24,12 @@ class _Feeder extends MockEngine {
 
   @override
   Stream<EngineState> get states => controller.stream;
+
+  @override
+  void dispose() {
+    unawaited(controller.close());
+    super.dispose();
+  }
 }
 
 void main() {

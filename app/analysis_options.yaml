@@ -1,12 +1,6 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
-
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
+# The analyzer settings for the app: Flutter's recommended lints plus stricter typing
+# and a set of extra rules that catch real bugs (leaked subscriptions and sinks,
+# lost futures, dynamic calls) rather than style. Run with `flutter analyze`.
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
@@ -17,21 +11,62 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    # Written by `flutter gen-l10n` from the .arb files (see l10n.yaml).
+    - lib/l10n/app_localizations*.dart
+
+  language:
+    # No implicit downcasts from dynamic: a JSON field that is not what the code thinks fails here, not at run time.
+    strict-casts: true
+    # No silent `dynamic` where the type could not be inferred (empty literals, untyped closures).
+    strict-inference: true
+    # No raw generics (`List`, `Future`) that quietly mean `<dynamic>`.
+    strict-raw-types: true
+
+  # A left-out required argument or a non-void function that can end without a value is already a compile
+  # error under null safety. The lints below that point at leaks and lost errors are raised from info to
+  # warning so they stand out in the IDE (`flutter analyze` fails on any finding, infos included).
+  errors:
+    cancel_subscriptions: warning
+    close_sinks: warning
+    unawaited_futures: warning
+    discarded_futures: warning
+    only_throw_errors: warning
+    avoid_dynamic_calls: warning
 
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
-
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+    # Leaks: a StreamSubscription that is never cancelled, a StreamController / sink that is never closed.
+    cancel_subscriptions: true
+    close_sinks: true
+    # Lost futures: in async functions (unawaited_futures) and in sync ones (discarded_futures).
+    # Fire-and-forget calls say so with unawaited().
+    unawaited_futures: true
+    discarded_futures: true
+    # Calls on `dynamic` skip all checking (typos in JSON field access compile fine).
+    avoid_dynamic_calls: true
+    # toString() of a runtime type is minified in release builds, so comparing it breaks only there.
+    avoid_type_to_string: true
+    # A missing comma in a list of strings silently joins two items.
+    no_adjacent_strings_in_list: true
+    # operator== without a type check throws on other types instead of returning false.
+    test_types_in_equals: true
+    # return / throw in finally swallows the real exception.
+    throw_in_finally: true
+    # A statement with no effect (e.g. `x == y;` meant as an assignment).
+    unnecessary_statements: true
+    # Only Exception / Error subclasses are thrown, so catch blocks and stack traces work.
+    only_throw_errors: true
+    # `if (true)`-style conditions: dead code or a typo.
+    literal_only_boolean_expressions: true
+    # `x = x;`, usually a constructor field mix-up.
+    no_self_assignments: true
+    # A function without a declared return type returns dynamic (and hides mistakes).
+    always_declare_return_types: true
+    # Nested async callbacks: a return type of void where a Future was meant (the future is then lost).
+    avoid_void_async: true
+    # pubspec: no http:// or git:// dependency URLs.
+    secure_pubspec_urls: true
+    # Imports of packages that are only there as a transitive dependency.
+    depend_on_referenced_packages: true
+    # A catch-all `catch (e)` stays allowed: the app talks to the platform and the core, where any
+    # error must end up in the UI, so avoid_catches_without_on_clauses would mostly be noise.
