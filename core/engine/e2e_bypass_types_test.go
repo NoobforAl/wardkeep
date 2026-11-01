@@ -128,7 +128,7 @@ func TestBypassPerformance(t *testing.T) {
 	}
 	zones := os.Getenv("WARDKEEP_ZONES")
 	read := func(cc string) string {
-		b, err := os.ReadFile(filepath.Join(zones, cc+".txt"))
+		b, err := os.ReadFile(filepath.Join(zones, cc+".txt")) //nolint:gosec // G703: a folder the developer names for a measurement
 		if err != nil {
 			t.Skipf("no list for %s: %v", cc, err)
 		}

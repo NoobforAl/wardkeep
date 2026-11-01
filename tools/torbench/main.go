@@ -73,7 +73,7 @@ func main() {
 	smallURL := flag.String("small", "https://check.torproject.org/api/ip", "small request")
 	largeURL := flag.String("large", "https://speed.cloudflare.com/__down?bytes=1000000", "large request (1 MB)")
 	flag.Parse()
-	if err := os.MkdirAll(*out, 0o755); err != nil {
+	if err := os.MkdirAll(*out, 0o750); err != nil {
 		fail(err)
 	}
 	cpu, err := os.Create(filepath.Join(*out, "go-cpu.pprof"))
@@ -167,7 +167,7 @@ func main() {
 	}
 	_ = logFile.Close()
 	summary, _ := json.MarshalIndent(rep, "", "  ")
-	_ = os.WriteFile(filepath.Join(*out, "summary.json"), summary, 0o644)
+	_ = os.WriteFile(filepath.Join(*out, "summary.json"), summary, 0o600)
 	fmt.Println(string(summary))
 }
 
@@ -216,7 +216,12 @@ func runLoad(socks, smallURL, largeURL string, d time.Duration, workers int) (sm
 }
 
 func fetch(client *http.Client, target string) (int64, error) {
-	resp, err := client.Get(target)
+	// The client's Timeout bounds the request.
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, target, nil)
+	if err != nil {
+		return 0, err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return 0, err
 	}
