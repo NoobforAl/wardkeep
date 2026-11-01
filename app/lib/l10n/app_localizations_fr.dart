@@ -351,6 +351,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'une ligne de pont Tor n’est pas valide (il faut un transport, une adresse et une empreinte)';
 
   @override
+  String get errTorMeek =>
+      'les ponts meek ne sont plus pris en charge ; choisissez Snowflake ou obfs4 dans le profil';
+
+  @override
   String get errTorMissing => 'cette version n’inclut pas le client Tor';
 
   @override

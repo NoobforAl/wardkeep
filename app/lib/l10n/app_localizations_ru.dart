@@ -350,6 +350,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'строка моста Tor недействительна (нужны транспорт, адрес и отпечаток)';
 
   @override
+  String get errTorMeek =>
+      'мосты meek больше не поддерживаются; выберите в профиле Snowflake или obfs4';
+
+  @override
   String get errTorMissing => 'в этой сборке нет клиента Tor';
 
   @override

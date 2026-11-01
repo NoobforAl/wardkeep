@@ -348,6 +348,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'خط پل Tor معتبر نیست (باید نوع انتقال، نشانی و اثر انگشت داشته باشد)';
 
   @override
+  String get errTorMeek =>
+      'پل‌های meek دیگر پشتیبانی نمی‌شوند؛ در پروفایل Snowflake یا obfs4 را انتخاب کنید';
+
+  @override
   String get errTorMissing => 'این نسخه شامل برنامه Tor نیست';
 
   @override

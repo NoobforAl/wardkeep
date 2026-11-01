@@ -2,6 +2,7 @@ package importer
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -31,13 +32,11 @@ func TestTorLinkWithOwnBridges(t *testing.T) {
 		t.Errorf("name = %q, err = %v", p.Name, err)
 	}
 
-	// A list of links holds one with bridges next to the others, and a comment line is skipped.
+	// A list of links holds one with bridges next to the others, and a comment line is skipped; tor://meek is
+	// refused (meek is not supported) and the others are kept.
 	res, err := Import("# Wardkeep group: Mine\ntor://snowflake\n" + link + "\ntor://meek#Meek%20bridge")
-	if err != nil || len(res.Profiles) != 3 {
+	if err != nil || len(res.Profiles) != 2 || len(res.Errors) != 1 || !strings.Contains(res.Errors[0], "meek bridges are not supported") {
 		t.Fatalf("res = %+v, err = %v", res, err)
-	}
-	if res.Profiles[2].Name != "Meek bridge" || res.Profiles[2].Tor.Builtin != "meek" {
-		t.Errorf("third = %+v", res.Profiles[2])
 	}
 
 	for _, bad := range []string{"tor://?bridge=hello", "tor://?bridge=", "tor://conjure"} {

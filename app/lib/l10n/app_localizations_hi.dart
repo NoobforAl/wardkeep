@@ -350,6 +350,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'Tor ब्रिज लाइन मान्य नहीं है (इसमें ट्रांसपोर्ट, पता और फ़िंगरप्रिंट चाहिए)';
 
   @override
+  String get errTorMeek =>
+      'meek ब्रिज अब समर्थित नहीं हैं; प्रोफ़ाइल में Snowflake या obfs4 चुनें';
+
+  @override
   String get errTorMissing => 'इस बिल्ड में Tor क्लाइंट शामिल नहीं है';
 
   @override

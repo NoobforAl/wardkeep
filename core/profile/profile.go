@@ -197,7 +197,7 @@ var ViaSchemes = []string{"vless", "vmess", "trojan", "ss", "hysteria2", "hy2", 
 // TorOpts configures a Tor profile (Server and Port are unused).
 type TorOpts struct {
 	// Builtin picks Tor Browser's built-in bridges: "obfs4", "snowflake" or
-	// "meek"; empty with no Bridges connects to Tor directly.
+	// empty with no Bridges connects to Tor directly.
 	Builtin string `json:"builtin,omitempty"`
 	// Bridges are custom bridge lines (as in a torrc, without "Bridge ").
 	Bridges []string `json:"bridges,omitempty"`

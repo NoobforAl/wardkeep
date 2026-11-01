@@ -70,6 +70,9 @@ func torBridges(prof *profile.Profile) ([]string, error) {
 		}
 	}
 	if k := prof.Tor.Builtin; k != "" {
+		if k == "meek" {
+			return nil, errMeek
+		}
 		b := tor.Builtin(k)
 		if len(b) == 0 {
 			return nil, fmt.Errorf("unknown built-in bridge kind %q", k)

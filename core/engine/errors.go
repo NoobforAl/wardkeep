@@ -32,6 +32,8 @@ const (
 	ErrTorBridgeTimeout   = "TOR_BRIDGE_TIMEOUT"
 	ErrTorBadBridge       = "TOR_BAD_BRIDGE"
 	ErrTorMissing         = "TOR_MISSING"
+	// ErrTorMeek is a profile saved with meek bridges, which are not supported any more.
+	ErrTorMeek = "TOR_MEEK"
 )
 
 // errorKind ties a code to the raw error text it is recognised by and to the
@@ -80,6 +82,7 @@ const (
 	msgTorTimeout        = "Tor did not finish connecting in time. This network may block Tor; use a bridge (Snowflake or obfs4)"
 	msgTorBadBridge      = "a Tor bridge line is not valid (it needs a transport, address and fingerprint)"
 	msgTorClientNotBuilt = "this build does not include the Tor client"
+	msgTorMeek           = "meek bridges are not supported any more; choose Snowflake or obfs4 in the profile"
 )
 
 // plainError words an error for the user: raw network and library messages
@@ -102,6 +105,10 @@ func plainError(err error) string {
 
 // errNoFingerprint marks a Tor bridge line without the relay fingerprint that
 // the Tor client (Arti) requires.
+// errMeek marks a profile saved with meek bridges (removed: Tor Browser's meek line has no relay fingerprint,
+// which Arti requires).
+var errMeek = errors.New(msgTorMeek)
+
 var errNoFingerprint = errors.New("a Tor bridge line needs the bridge's fingerprint (40 hex characters) after its address; copy a complete line from bridges.torproject.org")
 
 // torErrorText words a Tor failure for the user.
@@ -132,6 +139,8 @@ func errorCode(message string) string {
 		return ErrTorBridgeTimeout
 	case strings.Contains(message, msgTorTimeout):
 		return ErrTorTimeout
+	case strings.Contains(message, msgTorMeek):
+		return ErrTorMeek
 	case strings.Contains(message, msgTorBadBridge):
 		return ErrTorBadBridge
 	case strings.Contains(message, msgTorClientNotBuilt):

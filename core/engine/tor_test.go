@@ -19,14 +19,14 @@ func TestBridgeFingerprint(t *testing.T) {
 		"obfs4 192.0.2.1:443 " + testFingerprint + " cert=abc iat-mode=0":  true,
 		"snowflake 192.0.2.3:80 fingerprint=" + testFingerprint + " url=x": true,
 		"192.0.2.2:9001 " + testFingerprint:                                true,
-		"meek_lite 192.0.2.20:80 url=https://x.example front=y utls=Hello": false,
+		"webtunnel 192.0.2.20:443 url=https://x.example/y":                 false,
 		"obfs4 192.0.2.1:443 cert=abc iat-mode=0":                          false,
 	} {
 		if got := hasFingerprint(line); got != want {
 			t.Errorf("hasFingerprint(%q) = %v, want %v", line, got, want)
 		}
 	}
-	p := &profile.Profile{Protocol: profile.Tor, Tor: &profile.TorOpts{Bridges: []string{"meek_lite 192.0.2.20:80 url=x"}}}
+	p := &profile.Profile{Protocol: profile.Tor, Tor: &profile.TorOpts{Bridges: []string{"webtunnel 192.0.2.20:443 url=https://x.example/y"}}}
 	if _, err := torBridges(p); err == nil {
 		t.Error("a bridge line without a fingerprint was accepted")
 	}
@@ -57,7 +57,7 @@ func TestTorBridgeWithoutFingerprintIsReported(t *testing.T) {
 	var logs []string
 	e := New(Config{DataDir: tempDir(t), OnLog: func(rec logrec.Record) { logs = append(logs, rec.Level.String()+" "+rec.Msg) }})
 	p := &profile.Profile{Name: "Tor", Protocol: profile.Tor, Tor: &profile.TorOpts{
-		Bridges: []string{"meek_lite 192.0.2.20:80 url=https://x.example front=y"},
+		Bridges: []string{"webtunnel 192.0.2.20:443 url=https://x.example/y"},
 	}}
 	p.EnsureID()
 	if err := e.Start([]*profile.Profile{p}, singbox.Options{Mode: singbox.ModeProxy, Selected: p.ID}); err == nil {
@@ -74,7 +74,7 @@ func TestTorBridgeWithoutFingerprintIsReported(t *testing.T) {
 // quietly switching to a non-Tor profile.
 func TestTorDoesNotFailOverToOtherProfiles(t *testing.T) {
 	e := New(Config{DataDir: tempDir(t)})
-	tp := &profile.Profile{Name: "Tor", Protocol: profile.Tor, Tor: &profile.TorOpts{Bridges: []string{"meek_lite 192.0.2.20:80 url=x"}}}
+	tp := &profile.Profile{Name: "Tor", Protocol: profile.Tor, Tor: &profile.TorOpts{Bridges: []string{"webtunnel 192.0.2.20:443 url=https://x.example/y"}}}
 	ss := &profile.Profile{Name: "SS", Protocol: profile.Shadowsocks, Server: "127.0.0.1", Port: 1, Method: "aes-128-gcm", Password: "x"}
 	tp.EnsureID()
 	ss.EnsureID()

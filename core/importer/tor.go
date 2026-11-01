@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
@@ -9,10 +10,10 @@ import (
 	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
-var torTransports = []string{"obfs4", "webtunnel", "snowflake", "meek_lite"}
+var torTransports = []string{"obfs4", "webtunnel", "snowflake"}
 
 // torBuiltinKinds are the built-in bridge sets a tor:// link can name.
-var torBuiltinKinds = []string{"obfs4", "snowflake", "meek"}
+var torBuiltinKinds = []string{"obfs4", "snowflake"}
 
 // bridgeLine returns line without a torrc "Bridge " prefix and reports whether
 // it looks like a Tor bridge line: "<transport> <addr> ..." or a plain
@@ -63,7 +64,7 @@ func parseBridgeLines(text string) *profile.Profile {
 	return prof
 }
 
-// parseTorLink parses tor:// (direct), tor://obfs4, tor://snowflake and tor://meek (Tor Browser's built-in
+// parseTorLink parses tor:// (direct), tor://obfs4 and tor://snowflake (Tor Browser's built-in
 // bridges), and the same with the user's own bridges: tor://?bridge=<bridge line>&bridge=<another>. A fragment
 // is the profile's name.
 func parseTorLink(link string) (*profile.Profile, error) {
@@ -73,8 +74,11 @@ func parseTorLink(link string) (*profile.Profile, error) {
 	kind := strings.ToLower(strings.Trim(rest, "/ "))
 	prof := &profile.Profile{Name: "Tor", Protocol: profile.Tor, Tor: &profile.TorOpts{}}
 	if kind != "" {
+		if kind == "meek" {
+			return nil, errors.New("meek bridges are not supported; use tor://snowflake or tor://obfs4")
+		}
 		if !slices.Contains(torBuiltinKinds, kind) {
-			return nil, fmt.Errorf("unknown Tor bridge kind %q (use obfs4, snowflake or meek)", kind)
+			return nil, fmt.Errorf("unknown Tor bridge kind %q (use obfs4 or snowflake)", kind)
 		}
 		prof.Tor.Builtin = kind
 		prof.Name = "Tor (" + kind + ")"

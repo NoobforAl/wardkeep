@@ -103,6 +103,7 @@
   "errTorTimeout": "Tor không kết nối xong kịp thời. Mạng này có thể chặn Tor; hãy dùng cầu nối (Snowflake hoặc obfs4)",
   "errTorBridgeTimeout": "Tor không kết nối xong kịp thời. Cầu nối có thể bị chặn hoặc quá tải; hãy thử loại cầu nối khác (Snowflake hoặc obfs4)",
   "errTorBadBridge": "một dòng cầu nối Tor không hợp lệ (cần giao thức truyền tải, địa chỉ và dấu vân tay)",
+  "errTorMeek": "cầu nối meek không còn được hỗ trợ; hãy chọn Snowflake hoặc obfs4 trong hồ sơ",
   "errTorMissing": "bản dựng này không có ứng dụng khách Tor",
   "errPermission": "quyền VPN chưa được cấp",
   "errCoreLost": "Mất kết nối với dịch vụ lõi",

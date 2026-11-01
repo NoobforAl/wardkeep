@@ -16,9 +16,11 @@ func validateTor(profile *Profile) error {
 		return nil
 	}
 	switch profile.Tor.Builtin {
-	case "", "obfs4", "snowflake", "meek":
+	case "", "obfs4", "snowflake":
+	case "meek":
+		return fmt.Errorf("profile %q: meek bridges are not supported any more; choose snowflake or obfs4", profile.Name)
 	default:
-		return fmt.Errorf("profile %q: unknown built-in bridge kind %q (use obfs4, snowflake or meek)", profile.Name, profile.Tor.Builtin)
+		return fmt.Errorf("profile %q: unknown built-in bridge kind %q (use obfs4 or snowflake)", profile.Name, profile.Tor.Builtin)
 	}
 	for i, bridge := range profile.Tor.Bridges {
 		bridge = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(bridge), "Bridge "))

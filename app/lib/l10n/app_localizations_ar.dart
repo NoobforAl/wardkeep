@@ -345,6 +345,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'سطر جسر Tor غير صالح (يلزمه نوع النقل والعنوان والبصمة)';
 
   @override
+  String get errTorMeek =>
+      'جسور meek لم تعد مدعومة؛ اختر Snowflake أو obfs4 في الملف الشخصي';
+
+  @override
   String get errTorMissing => 'لا يتضمن هذا الإصدار عميل Tor';
 
   @override

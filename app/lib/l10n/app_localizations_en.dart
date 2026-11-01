@@ -349,6 +349,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'a Tor bridge line is not valid (it needs a transport, address and fingerprint)';
 
   @override
+  String get errTorMeek =>
+      'meek bridges are not supported any more; choose Snowflake or obfs4 in the profile';
+
+  @override
   String get errTorMissing => 'this build does not include the Tor client';
 
   @override

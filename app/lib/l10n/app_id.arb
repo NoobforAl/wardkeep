@@ -103,6 +103,7 @@
   "errTorTimeout": "Tor tidak selesai terhubung tepat waktu. Jaringan ini mungkin memblokir Tor; gunakan bridge (Snowflake atau obfs4)",
   "errTorBridgeTimeout": "Tor tidak selesai terhubung tepat waktu. Bridge mungkin diblokir atau kelebihan beban; coba jenis bridge lain (Snowflake atau obfs4)",
   "errTorBadBridge": "ada baris bridge Tor yang tidak valid (perlu transport, alamat, dan sidik jari)",
+  "errTorMeek": "bridge meek tidak didukung lagi; pilih Snowflake atau obfs4 di profil",
   "errTorMissing": "build ini tidak menyertakan klien Tor",
   "errPermission": "izin VPN tidak diberikan",
   "errCoreLost": "Koneksi ke layanan inti terputus",

@@ -210,7 +210,7 @@ func TestImportTorBridges(t *testing.T) {
 	if p.Protocol != "tor" || len(p.Tor.Bridges) != 2 || p.Tor.Bridges[0][:5] != "obfs4" {
 		t.Fatalf("profile = %+v", p)
 	}
-	for link, kind := range map[string]string{"tor://": "", "tor://snowflake": "snowflake", "tor://obfs4/": "obfs4", "tor://meek": "meek"} {
+	for link, kind := range map[string]string{"tor://": "", "tor://snowflake": "snowflake", "tor://obfs4/": "obfs4"} {
 		p, err := ParseLink(link)
 		if err != nil || p.Protocol != "tor" || p.Tor.Builtin != kind {
 			t.Errorf("%s: %+v %v", link, p, err)
@@ -218,5 +218,9 @@ func TestImportTorBridges(t *testing.T) {
 	}
 	if _, err := ParseLink("tor://nope"); err == nil {
 		t.Error("tor://nope should fail")
+	}
+	// meek is not supported.
+	if _, err := ParseLink("tor://meek"); err == nil || !strings.Contains(err.Error(), "meek bridges are not supported") {
+		t.Errorf("tor://meek: %v", err)
 	}
 }

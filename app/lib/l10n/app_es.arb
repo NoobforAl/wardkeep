@@ -103,6 +103,7 @@
   "errTorTimeout": "Tor no terminó de conectarse a tiempo. Puede que esta red bloquee Tor; usa un puente (Snowflake u obfs4)",
   "errTorBridgeTimeout": "Tor no terminó de conectarse a tiempo. Puede que el puente esté bloqueado o sobrecargado; prueba otro tipo de puente (Snowflake u obfs4)",
   "errTorBadBridge": "una línea de puente de Tor no es válida (necesita transporte, dirección y huella)",
+  "errTorMeek": "los puentes meek ya no son compatibles; elige Snowflake u obfs4 en el perfil",
   "errTorMissing": "esta versión no incluye el cliente de Tor",
   "errPermission": "no se concedió el permiso de VPN",
   "errCoreLost": "Se perdió la conexión con el servicio principal",

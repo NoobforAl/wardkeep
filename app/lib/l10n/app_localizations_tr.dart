@@ -352,6 +352,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'bir Tor köprü satırı geçerli değil (aktarım, adres ve parmak izi gerekir)';
 
   @override
+  String get errTorMeek =>
+      'meek köprüleri artık desteklenmiyor; profilde Snowflake veya obfs4 seçin';
+
+  @override
   String get errTorMissing => 'bu sürüm Tor istemcisini içermiyor';
 
   @override

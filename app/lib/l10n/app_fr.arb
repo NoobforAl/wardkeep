@@ -103,6 +103,7 @@
   "errTorTimeout": "Tor n’a pas fini de se connecter à temps. Ce réseau bloque peut-être Tor ; utilisez un pont (Snowflake ou obfs4)",
   "errTorBridgeTimeout": "Tor n’a pas fini de se connecter à temps. Le pont est peut-être bloqué ou surchargé ; essayez un autre type de pont (Snowflake ou obfs4)",
   "errTorBadBridge": "une ligne de pont Tor n’est pas valide (il faut un transport, une adresse et une empreinte)",
+  "errTorMeek": "les ponts meek ne sont plus pris en charge ; choisissez Snowflake ou obfs4 dans le profil",
   "errTorMissing": "cette version n’inclut pas le client Tor",
   "errPermission": "l’autorisation VPN n’a pas été accordée",
   "errCoreLost": "Connexion perdue avec le service principal",

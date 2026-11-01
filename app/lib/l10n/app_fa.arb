@@ -103,6 +103,7 @@
   "errTorTimeout": "Tor به‌موقع وصل نشد. ممکن است این شبکه Tor را مسدود کرده باشد؛ از پل (Snowflake یا obfs4) استفاده کنید",
   "errTorBridgeTimeout": "Tor به‌موقع وصل نشد. ممکن است پل مسدود یا شلوغ باشد؛ نوع دیگری از پل (Snowflake یا obfs4) را امتحان کنید",
   "errTorBadBridge": "خط پل Tor معتبر نیست (باید نوع انتقال، نشانی و اثر انگشت داشته باشد)",
+  "errTorMeek": "پل‌های meek دیگر پشتیبانی نمی‌شوند؛ در پروفایل Snowflake یا obfs4 را انتخاب کنید",
   "errTorMissing": "این نسخه شامل برنامه Tor نیست",
   "errPermission": "مجوز VPN داده نشد",
   "errCoreLost": "ارتباط با سرویس هسته قطع شد",

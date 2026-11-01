@@ -350,6 +350,10 @@ class AppLocalizationsId extends AppLocalizations {
       'ada baris bridge Tor yang tidak valid (perlu transport, alamat, dan sidik jari)';
 
   @override
+  String get errTorMeek =>
+      'bridge meek tidak didukung lagi; pilih Snowflake atau obfs4 di profil';
+
+  @override
   String get errTorMissing => 'build ini tidak menyertakan klien Tor';
 
   @override

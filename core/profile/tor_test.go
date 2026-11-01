@@ -14,7 +14,7 @@ func TestTorBridgesAreChecked(t *testing.T) {
 	}{
 		"direct":               {TorOpts{}, ""},
 		"built-in snowflake":   {TorOpts{Builtin: "snowflake"}, ""},
-		"built-in meek":        {TorOpts{Builtin: "meek"}, ""},
+		"built-in meek":        {TorOpts{Builtin: "meek"}, "meek bridges are not supported"},
 		"unknown built-in":     {TorOpts{Builtin: "conjure"}, "unknown built-in bridge kind"},
 		"obfs4 with print":     {TorOpts{Bridges: []string{"obfs4 192.0.2.5:443 " + testBridgeFingerprint + " cert=x iat-mode=0"}}, ""},
 		"torrc prefix":         {TorOpts{Bridges: []string{"Bridge obfs4 192.0.2.5:443 " + testBridgeFingerprint + " cert=x"}}, ""},

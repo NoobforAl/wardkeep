@@ -14,7 +14,7 @@ import (
 var builtinJSON []byte
 
 // Builtin returns Tor Browser's built-in bridges of a kind ("obfs4",
-// "snowflake", "meek"); nil for an unknown kind.
+// "snowflake"); nil for an unknown kind.
 func Builtin(kind string) []string {
 	var cfg struct {
 		Bridges map[string][]string `json:"bridges"`
@@ -26,7 +26,7 @@ func Builtin(kind string) []string {
 }
 
 // BuiltinKinds lists the built-in bridge kinds.
-func BuiltinKinds() []string { return []string{"obfs4", "snowflake", "meek"} }
+func BuiltinKinds() []string { return []string{"obfs4", "snowflake"} }
 
 // NormalizeBridge trims a bridge line and drops a torrc "Bridge " prefix.
 func NormalizeBridge(line string) string {

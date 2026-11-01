@@ -350,6 +350,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'một dòng cầu nối Tor không hợp lệ (cần giao thức truyền tải, địa chỉ và dấu vân tay)';
 
   @override
+  String get errTorMeek =>
+      'cầu nối meek không còn được hỗ trợ; hãy chọn Snowflake hoặc obfs4 trong hồ sơ';
+
+  @override
   String get errTorMissing => 'bản dựng này không có ứng dụng khách Tor';
 
   @override

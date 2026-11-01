@@ -47,13 +47,12 @@ String _note(AppLocalizations l, HopKind kind) => switch (kind) {
   HopKind.exit => l.hopExitNote,
 };
 
-/// The pluggable transport of a Tor profile's bridges ("Snowflake", "Obfs4", "Meek"), null when it has none.
+/// The pluggable transport of a Tor profile's bridges ("Snowflake", "Obfs4"), null when it has none.
 String? _transport(ProfileInfo p) {
   final tor = p.raw['tor'];
   if (tor is! Map) return null;
   String name(String w) {
-    final base = w == 'meek_lite' ? 'meek' : w;
-    return base.isEmpty ? base : base[0].toUpperCase() + base.substring(1);
+    return w.isEmpty ? w : w[0].toUpperCase() + w.substring(1);
   }
 
   final builtin = tor['builtin'];

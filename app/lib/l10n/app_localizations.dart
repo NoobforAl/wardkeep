@@ -738,6 +738,12 @@ abstract class AppLocalizations {
   /// **'a Tor bridge line is not valid (it needs a transport, address and fingerprint)'**
   String get errTorBadBridge;
 
+  /// A profile saved with meek bridges, which were removed
+  ///
+  /// In en, this message translates to:
+  /// **'meek bridges are not supported any more; choose Snowflake or obfs4 in the profile'**
+  String get errTorMeek;
+
   /// No description provided for @errTorMissing.
   ///
   /// In en, this message translates to:

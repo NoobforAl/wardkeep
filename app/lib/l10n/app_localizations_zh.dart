@@ -333,6 +333,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errTorBadBridge => 'Tor 网桥行无效（需要传输方式、地址和指纹）';
 
   @override
+  String get errTorMeek => '已不再支持 meek 网桥；请在配置中选择 Snowflake 或 obfs4';
+
+  @override
   String get errTorMissing => '此版本不包含 Tor 客户端';
 
   @override

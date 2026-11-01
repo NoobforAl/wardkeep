@@ -103,6 +103,7 @@
   "errTorTimeout": "Tor zamanında bağlanmayı tamamlayamadı. Bu ağ Tor'u engelliyor olabilir; bir köprü kullanın (Snowflake veya obfs4)",
   "errTorBridgeTimeout": "Tor zamanında bağlanmayı tamamlayamadı. Köprü engellenmiş veya aşırı yüklenmiş olabilir; başka bir köprü türü deneyin (Snowflake veya obfs4)",
   "errTorBadBridge": "bir Tor köprü satırı geçerli değil (aktarım, adres ve parmak izi gerekir)",
+  "errTorMeek": "meek köprüleri artık desteklenmiyor; profilde Snowflake veya obfs4 seçin",
   "errTorMissing": "bu sürüm Tor istemcisini içermiyor",
   "errPermission": "VPN izni verilmedi",
   "errCoreLost": "Çekirdek hizmetle bağlantı kesildi",

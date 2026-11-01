@@ -103,6 +103,7 @@
   "errTorTimeout": "Tor 没有及时连接完成。此网络可能屏蔽了 Tor；请使用网桥（Snowflake 或 obfs4）",
   "errTorBridgeTimeout": "Tor 没有及时连接完成。网桥可能被屏蔽或过载；请尝试其他类型的网桥（Snowflake 或 obfs4）",
   "errTorBadBridge": "Tor 网桥行无效（需要传输方式、地址和指纹）",
+  "errTorMeek": "已不再支持 meek 网桥；请在配置中选择 Snowflake 或 obfs4",
   "errTorMissing": "此版本不包含 Tor 客户端",
   "errPermission": "未授予 VPN 权限",
   "errCoreLost": "与核心服务的连接已断开",

@@ -103,6 +103,7 @@
   "errTorTimeout": "Tor وقت پر منسلک نہیں ہو سکا۔ یہ نیٹ ورک Tor کو روک سکتا ہے؛ برج (Snowflake یا obfs4) استعمال کریں",
   "errTorBridgeTimeout": "Tor وقت پر منسلک نہیں ہو سکا۔ برج بلاک یا حد سے زیادہ مصروف ہو سکتا ہے؛ کسی دوسری قسم کا برج (Snowflake یا obfs4) آزمائیں",
   "errTorBadBridge": "Tor برج لائن درست نہیں (اس میں ٹرانسپورٹ، پتہ اور فنگر پرنٹ درکار ہے)",
+  "errTorMeek": "meek برج اب معاون نہیں؛ پروفائل میں Snowflake یا obfs4 منتخب کریں",
   "errTorMissing": "اس بلڈ میں Tor کلائنٹ شامل نہیں ہے",
   "errPermission": "VPN کی اجازت نہیں دی گئی",
   "errCoreLost": "کور سروس سے کنکشن ٹوٹ گیا",

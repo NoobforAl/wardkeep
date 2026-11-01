@@ -350,6 +350,10 @@ class AppLocalizationsUr extends AppLocalizations {
       'Tor برج لائن درست نہیں (اس میں ٹرانسپورٹ، پتہ اور فنگر پرنٹ درکار ہے)';
 
   @override
+  String get errTorMeek =>
+      'meek برج اب معاون نہیں؛ پروفائل میں Snowflake یا obfs4 منتخب کریں';
+
+  @override
   String get errTorMissing => 'اس بلڈ میں Tor کلائنٹ شامل نہیں ہے';
 
   @override

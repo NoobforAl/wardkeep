@@ -63,7 +63,6 @@ func TestExportRoundTrip(t *testing.T) {
 		"dnstt open":          "dnstt://00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff@t.example.com?resolver=tls%3A%2F%2Fdns.google%3A853#open",
 		"tor":                 "tor://",
 		"tor snowflake":       "tor://snowflake",
-		"tor meek":            "tor://meek",
 		"tor bridges":         "tor://?bridge=obfs4+192.0.2.5%3A443+0123456789ABCDEF0123456789ABCDEF01234567+cert%3DAbC%2B%2Fx+iat-mode%3D0&bridge=webtunnel+%5B2001%3Adb8%3A%3A1%5D%3A443+89ABCDEF0123456789ABCDEF0123456789ABCDEF+url%3Dhttps%3A%2F%2Fexample.com%2Fx#Friends",
 		"tor snowflake named": "tor://snowflake#My%20Tor",
 		"vmess":               "",

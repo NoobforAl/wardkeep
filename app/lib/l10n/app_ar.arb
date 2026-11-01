@@ -103,6 +103,7 @@
   "errTorTimeout": "لم يكتمل اتصال Tor في الوقت المناسب. قد تحجب هذه الشبكة Tor؛ استخدم جسرًا (Snowflake أو obfs4)",
   "errTorBridgeTimeout": "لم يكتمل اتصال Tor في الوقت المناسب. قد يكون الجسر محجوبًا أو مزدحمًا؛ جرّب نوعًا آخر من الجسور (Snowflake أو obfs4)",
   "errTorBadBridge": "سطر جسر Tor غير صالح (يلزمه نوع النقل والعنوان والبصمة)",
+  "errTorMeek": "جسور meek لم تعد مدعومة؛ اختر Snowflake أو obfs4 في الملف الشخصي",
   "errTorMissing": "لا يتضمن هذا الإصدار عميل Tor",
   "errPermission": "لم يتم منح إذن VPN",
   "errCoreLost": "انقطع الاتصال بخدمة النواة",
