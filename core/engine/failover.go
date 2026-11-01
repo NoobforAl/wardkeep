@@ -173,23 +173,51 @@ func (e *Engine) probe(ctx context.Context, instance *box.Box, tag, testURL stri
 	// Tor builds circuits on the first connection, which takes a while.
 	timeout := 8 * time.Second
 	e.mu.Lock()
-	if e.torRun != nil || e.dnsttRun != nil {
+	viaTor := e.torRun != nil
+	if viaTor || e.dnsttRun != nil {
 		timeout = 40 * time.Second
 	}
 	e.mu.Unlock()
-	for {
+	if viaTor {
+		readyBy = time.Now().Add(torProbeBudget)
+	}
+	for attempt := 1; ; attempt++ {
 		pctx, cancel := context.WithTimeout(ctx, timeout)
 		_, err := urltest.URLTest(pctx, testURL, dialer)
 		cancel()
-		if err == nil || !strings.Contains(err.Error(), "not ready") || time.Now().After(readyBy) {
+		if err == nil || time.Now().After(readyBy) {
+			return err
+		}
+		pause := 250 * time.Millisecond
+		switch {
+		case strings.Contains(err.Error(), "not ready"):
+		case viaTor && attempt < torProbeAttempts && torStreamFailed(err):
+			// Tor gave up on one stream (its exit or circuit was slow); the next one may take another circuit.
+			e.logWith(logrec.LevelInfo, logFields{profile: tag, err: err}, "the test request through Tor failed; trying again (%d/%d)", attempt+1, torProbeAttempts)
+			pause = time.Second
+		default:
 			return err
 		}
 		select {
 		case <-ctx.Done():
 			return err
-		case <-time.After(250 * time.Millisecond):
+		case <-time.After(pause):
 		}
 	}
+}
+
+// A test request through Tor is tried up to torProbeAttempts times within torProbeBudget: Arti answers a stream
+// it could not open in about 10 s with a SOCKS failure, and the first streams of a new circuit often are that slow.
+const (
+	torProbeAttempts = 4
+	torProbeBudget   = 90 * time.Second
+)
+
+// torStreamFailed reports a failure of one Tor stream (worth another try), as opposed to Tor being gone.
+func torStreamFailed(err error) bool {
+	text := err.Error()
+	return strings.Contains(text, "socks5: request rejected") || strings.Contains(text, "TTL expired") ||
+		strings.Contains(text, "deadline exceeded") || strings.Contains(text, "timeout")
 }
 
 // endpointReadyTimeout is how long a probe waits for an endpoint that is still connecting.
