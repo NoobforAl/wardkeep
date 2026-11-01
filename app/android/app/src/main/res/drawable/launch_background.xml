@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The loading screen before Flutter draws: only the ground. The shield and its animation are drawn by Flutter (ui/widgets/splash.dart). -->
+<!-- The loading screen before Flutter draws: the ground and the shield (drawable-nodpi/splash_shield.png, assets/shield.png
+     at 480 px), 160 dp and centered, exactly where ui/widgets/splash.dart draws it, so the hand-over does not show. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background" />
+    <item android:width="160dp" android:height="160dp" android:gravity="center" android:drawable="@drawable/splash_shield" />
 </layer-list>

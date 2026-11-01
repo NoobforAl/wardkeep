@@ -31,11 +31,14 @@ import 'ui/layout.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  // The phone's loading screen: the shield is decoded while the app starts, so Flutter's first frame has it.
+  final splash = Platform.isAndroid ? SplashCover.prepare() : null;
   startInBackground = args.contains('--background');
   final store = await AppStore.open();
   await _setUpWindow(store);
   // On a computer, opening a link or config file with Wardkeep starts it with that as an argument.
   final startup = await IncomingShare.fromArguments(args);
+  await splash;
   runApp(ProviderScope(
     overrides: [storeProvider.overrideWithValue(store), startupSharesProvider.overrideWithValue(startup)],
     child: const WardkeepApp(),
