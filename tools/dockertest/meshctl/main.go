@@ -1,5 +1,5 @@
 // Command meshctl is a small control-protocol client for the Docker mesh test
-// (tools/dockertest/mesh.py): it talks to a running omnitun-svc like the app
+// (tools/dockertest/mesh.py): it talks to a running wardkeep-svc like the app
 // does, so the test drives the core through the same calls the app makes.
 //
 //	meshctl -control /data/control.json connect "tailscale://KEY@hs:8080?scheme=http" 2080
@@ -18,8 +18,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/control"
-	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/wardkeep/core/control"
+	"github.com/NoobforAl/wardkeep/core/importer"
 )
 
 func fail(format string, args ...any) {

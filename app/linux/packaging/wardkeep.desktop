@@ -4,9 +4,9 @@ Name=Wardkeep
 GenericName=VPN client
 Comment=VPN, proxy and Tor client
 Keywords=VPN;Proxy;Tor;WireGuard;OpenVPN;Privacy;
-Exec=omnitun %U
+Exec=wardkeep %U
 Icon=dev.omnitun.app
-StartupWMClass=omnitun
+StartupWMClass=wardkeep
 Terminal=false
 Categories=Network;Security;
 # The system offers Wardkeep for these: VPN config files and share links (vless://, trojan://, ...).

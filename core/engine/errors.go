@@ -114,7 +114,7 @@ func torErrorText(err error, bridges bool) string {
 		return msgTorTimeout
 	case strings.Contains(err.Error(), "bad bridge line"):
 		return msgTorBadBridge
-	case strings.Contains(err.Error(), "the Tor client (omnitun-tor) is not installed"):
+	case strings.Contains(err.Error(), "the Tor client (wardkeep-tor) is not installed"):
 		return msgTorClientNotBuilt
 	}
 	return plainError(err)

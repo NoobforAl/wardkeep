@@ -17,8 +17,8 @@ import (
 	box "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/include"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // startServer runs a sing-box server with the given inbound on localhost.

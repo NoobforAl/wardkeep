@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/ui/widgets/splash.dart';
+import 'package:wardkeep/ui/widgets/splash.dart';
 
 void main() {
   Widget app({bool reduceMotion = false}) => MaterialApp(

@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/core_engine.dart';
-import 'package:omnitun/engine/daemon_engine.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/l10n/errors.dart';
-import 'package:omnitun/l10n/form_text.dart';
-import 'package:omnitun/l10n/l10n.dart';
-import 'package:omnitun/state/countries.dart';
-import 'package:omnitun/state/country_names.dart';
+import 'package:wardkeep/engine/core_engine.dart';
+import 'package:wardkeep/engine/daemon_engine.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/l10n/errors.dart';
+import 'package:wardkeep/l10n/form_text.dart';
+import 'package:wardkeep/l10n/l10n.dart';
+import 'package:wardkeep/state/countries.dart';
+import 'package:wardkeep/state/country_names.dart';
 
 const _languages = ['en', 'fa', 'ru', 'zh', 'ar', 'es', 'hi', 'fr', 'pt', 'ur', 'id', 'tr', 'vi'];
 
@@ -176,10 +176,10 @@ void main() {
   test('a real core reports editor and import problems with codes that are translated', () async {
     final exe = CoreEngine.findDaemonExecutable();
     if (exe == null) {
-      markTestSkipped('omnitun-svc not built');
+      markTestSkipped('wardkeep-svc not built');
       return;
     }
-    final dir = await Directory.systemTemp.createTemp('omnitun-msg');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-msg');
     final engine = await DaemonEngine.launch(exe, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();

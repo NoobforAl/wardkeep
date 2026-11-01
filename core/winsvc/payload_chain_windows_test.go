@@ -33,7 +33,7 @@ func TestCheckSourceAcceptsASystemFile(t *testing.T) {
 
 func TestCheckSourceRefusesAUserFileAndNamesIt(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "omnitun-svc.exe")
+	path := filepath.Join(dir, "wardkeep-svc.exe")
 	write(t, path, "x")
 	f, err := openSource(path)
 	if err != nil {
@@ -115,10 +115,10 @@ func TestTrimExtendedPrefix(t *testing.T) {
 // copy is done, and the unsafe verdict comes from the held handles.
 func TestOpenPlanHoldsTheFiles(t *testing.T) {
 	dir := t.TempDir()
-	write(t, filepath.Join(dir, "omnitun-svc.exe"), "svc")
+	write(t, filepath.Join(dir, "wardkeep-svc.exe"), "svc")
 	write(t, filepath.Join(dir, "libcronet.dll"), "dll")
 	write(t, filepath.Join(dir, "evil.dll"), "evil")
-	plan, err := planInstall(filepath.Join(dir, "omnitun-svc.exe"))
+	plan, err := planInstall(filepath.Join(dir, "wardkeep-svc.exe"))
 	if err != nil {
 		t.Fatal(err)
 	}

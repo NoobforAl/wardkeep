@@ -2339,26 +2339,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "omnitun-tor"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "arti-client",
- "dhat",
- "futures",
- "humantime",
- "rustls",
- "serde_json",
- "tokio",
- "tor-geoip",
- "tor-linkspec",
- "tor-proto",
- "tor-rtcompat",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5106,6 +5086,26 @@ checksum = "29790946404f91d9c5d06f9874efddea1dc06c5efe94541a7d6863108e3a5e4b"
 dependencies = [
  "same-file",
  "winapi-util",
+]
+
+[[package]]
+name = "wardkeep-tor"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arti-client",
+ "dhat",
+ "futures",
+ "humantime",
+ "rustls",
+ "serde_json",
+ "tokio",
+ "tor-geoip",
+ "tor-linkspec",
+ "tor-proto",
+ "tor-rtcompat",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

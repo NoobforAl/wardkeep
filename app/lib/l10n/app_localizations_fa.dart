@@ -1519,7 +1519,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'این پیکربندی سرور Xray‎ است. آن را روی سرور وارد کنید (‎omnitun-server import xray‎)، نه به‌عنوان نمایه کلاینت';
+      'این پیکربندی سرور Xray‎ است. آن را روی سرور وارد کنید (‎wardkeep-server import xray‎)، نه به‌عنوان نمایه کلاینت';
 
   @override
   String get subAuthFailed =>

@@ -245,7 +245,7 @@ class SettingsScreen extends ConsumerWidget {
 
 Future<void> _openVpnSettings(BuildContext context) async {
   final l = context.l10n;
-  final opened = await const MethodChannel('omnitun/core').invokeMethod<bool>('openVpnSettings') ?? false;
+  final opened = await const MethodChannel('wardkeep/core').invokeMethod<bool>('openVpnSettings') ?? false;
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.openVpnSettingsFallback)));
   }

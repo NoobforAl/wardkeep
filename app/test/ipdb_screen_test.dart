@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/l10n/l10n.dart';
-import 'package:omnitun/state/ipdb.dart';
-import 'package:omnitun/state/ipdb_state.dart';
-import 'package:omnitun/ui/screens/ipdb_screen.dart';
-import 'package:omnitun/ui/theme.dart';
+import 'package:wardkeep/l10n/l10n.dart';
+import 'package:wardkeep/state/ipdb.dart';
+import 'package:wardkeep/state/ipdb_state.dart';
+import 'package:wardkeep/ui/screens/ipdb_screen.dart';
+import 'package:wardkeep/ui/theme.dart';
 
 void main() {
   group('the offline database screen', () {

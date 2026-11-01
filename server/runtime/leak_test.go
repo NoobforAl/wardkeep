@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/leakcheck"
+	"github.com/NoobforAl/wardkeep/core/leakcheck"
 )
 
 // Every user change makes the server stop and rebuild its listeners. A server

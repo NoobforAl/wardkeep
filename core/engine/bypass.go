@@ -3,7 +3,7 @@ package engine
 import (
 	"net/netip"
 
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // applyLocalBypass removes local-network ranges from req's routes so LAN

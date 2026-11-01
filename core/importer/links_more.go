@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // hysteria://host:port?protocol=udp&auth=..&peer=sni&insecure=1&upmbps=10&downmbps=50&alpn=hysteria&obfsParam=..#name

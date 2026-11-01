@@ -18,7 +18,7 @@ import (
 	"github.com/amnezia-vpn/amneziawg-go/tun"
 	"golang.org/x/crypto/curve25519"
 
-	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/wardkeep/core/importer"
 )
 
 func ep() netip.AddrPort { return netip.MustParseAddrPort("203.0.113.5:51820") }

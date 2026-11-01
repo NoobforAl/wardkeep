@@ -3,7 +3,7 @@ package importer
 import (
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 func wantMux(t *testing.T, p *profile.Profile, want profile.Mux) {

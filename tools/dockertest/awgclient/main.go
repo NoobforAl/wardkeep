@@ -22,8 +22,8 @@ import (
 	"github.com/amnezia-vpn/amneziawg-go/device"
 	"github.com/amnezia-vpn/amneziawg-go/tun"
 
-	"github.com/NoobforAl/omnitun/core/awg"
-	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/wardkeep/core/awg"
+	"github.com/NoobforAl/wardkeep/core/importer"
 )
 
 func run(name string, args ...string) {
@@ -35,7 +35,7 @@ func run(name string, args ...string) {
 func main() {
 	confPath := flag.String("conf", "", "client .conf")
 	route := flag.String("route", "", "comma separated networks to send through the tunnel")
-	name := flag.String("name", "omnitun-awgc", "interface name")
+	name := flag.String("name", "wardkeep-awgc", "interface name")
 	flag.Parse()
 
 	text, err := os.ReadFile(*confPath)

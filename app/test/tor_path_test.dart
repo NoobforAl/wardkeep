@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
 
 Map<String, dynamic> _data(String protocol) => {
   'onboarded': true,
@@ -22,7 +22,7 @@ Future<MockEngine> _connect(WidgetTester tester, String protocol, List<TorHop> p
   await tester.pumpWidget(
     ProviderScope(
       overrides: [storeProvider.overrideWithValue(AppStore.memory(_data(protocol))), engineProvider.overrideWithValue(engine)],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ),
   );
   await tester.pumpAndSettle();

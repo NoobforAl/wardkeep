@@ -217,7 +217,7 @@ func TestListWintunAdaptersAndCleanupOfAnAdapterThatIsNotThere(t *testing.T) {
 		t.Fatalf("listing needs no rights: %v", err)
 	}
 	t.Logf("%d Wintun adapter(s) on this machine", len(list))
-	const name = "omnitun-test-no-such-adapter-4417"
+	const name = "wardkeep-test-no-such-adapter-4417"
 	want := WintunGUID(name).String()
 	for _, a := range list {
 		if strings.EqualFold(a.NetCfgInstanceID, want) {

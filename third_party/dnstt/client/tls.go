@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NoobforAl/omnitun/third_party/dnstt/turbotunnel"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/turbotunnel"
 )
 
 const dialTimeout = 30 * time.Second

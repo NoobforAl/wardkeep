@@ -21,8 +21,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // checkThrough imports link, connects the engine in proxy mode and fetches a

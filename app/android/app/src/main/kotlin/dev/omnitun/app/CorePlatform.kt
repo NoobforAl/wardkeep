@@ -20,22 +20,22 @@ class CorePlatform(context: Context) : Platform {
 
     private val app = context.applicationContext
     private val cm = app.getSystemService(ConnectivityManager::class.java)
-    private val thread = HandlerThread("omnitun-net").apply { start() }
+    private val thread = HandlerThread("wardkeep-net").apply { start() }
     private val handler = Handler(thread.looper)
     private var callback: ConnectivityManager.NetworkCallback? = null
 
     override fun openTun(tunJSON: String): Int =
-        OmnitunVpnService.startAndAwait(app).openTun(tunJSON)
+        WardkeepVpnService.startAndAwait(app).openTun(tunJSON)
 
     override fun protect(fd: Int) {
         // Without a running VPN nothing needs protecting (e.g. latency tests).
-        val service = OmnitunVpnService.instance ?: return
+        val service = WardkeepVpnService.instance ?: return
         if (!service.protect(fd)) throw IllegalStateException("protect($fd) failed")
     }
 
     override fun stateChanged(stateJSON: String) {
         val state = runCatching { JSONObject(stateJSON) }.getOrNull() ?: return
-        val service = OmnitunVpnService.instance ?: return
+        val service = WardkeepVpnService.instance ?: return
         when (val status = state.optString("status")) {
             // A stop: the user's, or the system's (VPN revoked). Nothing to tell.
             "disconnected" -> service.stopVpn()
@@ -164,7 +164,7 @@ class CorePlatform(context: Context) : Platform {
             info?.let { return it }
             val dataDir = context.filesDir.resolve("core").apply { mkdirs() }
             // The Tor client ships as a native library so Android lets us run it.
-            Mobile.setTorBinary(context.applicationInfo.nativeLibraryDir + "/libomnitun_tor.so")
+            Mobile.setTorBinary(context.applicationInfo.nativeLibraryDir + "/libwardkeep_tor.so")
             return Mobile.start(dataDir.absolutePath, CorePlatform(context)).also { info = it }
         }
     }

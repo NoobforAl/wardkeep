@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // On the Protocols tab, v switches AmneziaWG between 2.0 and 1.x, and the list

@@ -47,12 +47,12 @@ fi
 
 echo "== install"
 check "installs" setup_sh
-check "the program" test -x "$prefix/omnitun"
-check "the core next to it" test -x "$prefix/omnitun-svc"
+check "the program" test -x "$prefix/wardkeep"
+check "the core next to it" test -x "$prefix/wardkeep-svc"
 check "the uninstaller" test -x "$prefix/uninstall.sh"
 check "the license" test -f "$prefix/LICENSE.txt"
-check "the command is a link to the program" test "$(readlink "$link")" = "$prefix/omnitun"
-check "the menu entry runs the program" grep -qx "Exec=\"$prefix/omnitun\" %U" "$desktop"
+check "the command is a link to the program" test "$(readlink "$link")" = "$prefix/wardkeep"
+check "the menu entry runs the program" grep -qx "Exec=\"$prefix/wardkeep\" %U" "$desktop"
 check "the menu entry has the icon name" grep -qx "Icon=dev.omnitun.app" "$desktop"
 check "the menu entry offers share links" grep -q "x-scheme-handler/vless;" "$desktop"
 check "the icon" test -s "$icon"
@@ -62,15 +62,15 @@ fi
 if command -v xdg-mime >/dev/null 2>&1; then
   check "vless:// opens Wardkeep" test "$(xdg-mime query default x-scheme-handler/vless)" = dev.omnitun.app.desktop
 fi
-if command -v ldd >/dev/null 2>&1 && LD_LIBRARY_PATH="$prefix/lib" ldd "$prefix/omnitun" >/dev/null 2>&1; then
-  check "all libraries of the program are found" bash -c "! LD_LIBRARY_PATH='$prefix/lib' ldd '$prefix/omnitun' '$prefix'/lib/*.so | grep -q 'not found'"
+if command -v ldd >/dev/null 2>&1 && LD_LIBRARY_PATH="$prefix/lib" ldd "$prefix/wardkeep" >/dev/null 2>&1; then
+  check "all libraries of the program are found" bash -c "! LD_LIBRARY_PATH='$prefix/lib' ldd '$prefix/wardkeep' '$prefix'/lib/*.so | grep -q 'not found'"
 fi
 
 echo "== update"
 touch "$prefix/stale"
 check "installs over itself" setup_sh
 check "the old files are gone" test ! -e "$prefix/stale"
-check "the program is there again" test -x "$prefix/omnitun"
+check "the program is there again" test -x "$prefix/wardkeep"
 
 echo "== uninstall keeps the data"
 mkdir -p "$HOME/.config/omnitun" "$HOME/.local/share/dev.omnitun.app"
@@ -95,7 +95,7 @@ check "the core's folder is deleted" test ! -e "$HOME/.config/omnitun"
 
 echo "== another folder"
 check "installs into --prefix" setup_sh --prefix "$HOME/apps/my wardkeep"
-check "the menu entry names it" grep -qx "Exec=\"$HOME/apps/my wardkeep/omnitun\" %U" "$desktop"
+check "the menu entry names it" grep -qx "Exec=\"$HOME/apps/my wardkeep/wardkeep\" %U" "$desktop"
 check "uninstalls from there" setup_sh --uninstall --prefix "$HOME/apps/my wardkeep"
 check "it is gone" test ! -e "$HOME/apps/my wardkeep"
 

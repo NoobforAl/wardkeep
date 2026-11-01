@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/wardkeep/core/importer"
 )
 
 func TestTunnelAddressesInIPv6(t *testing.T) {

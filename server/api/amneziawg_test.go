@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 // The web API lists the AmneziaWG version and changes it with the same patch

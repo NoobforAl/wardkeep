@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/server"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/noise"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/server"
 )
 
 const zone = "t.example.com"

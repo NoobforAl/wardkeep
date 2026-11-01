@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // kindOfJSON tells Xray/V2Ray configs, SIP008 server lists and sing-box

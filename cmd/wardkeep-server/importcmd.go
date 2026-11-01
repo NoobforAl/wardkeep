@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 func newImportCmd(global *options) *cobra.Command {
@@ -56,7 +56,7 @@ users are added; --adopt-reality also takes over the imported Reality identity.`
 				for _, n := range res.Notes {
 					fmt.Println("note:", n)
 				}
-				fmt.Println("\nShow a user's new links with: omnitun-server link <name>")
+				fmt.Println("\nShow a user's new links with: wardkeep-server link <name>")
 			})
 		},
 	}

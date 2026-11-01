@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // amneziaKeys are the AmneziaWG obfuscation fields in the [Interface] section.

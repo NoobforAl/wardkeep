@@ -11,10 +11,10 @@ import (
 	"github.com/sagernet/sing-box/common/urltest"
 	M "github.com/sagernet/sing/common/metadata"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/netcheck"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/netcheck"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // FailoverEvent is reported in State when the engine switches profiles on its own.

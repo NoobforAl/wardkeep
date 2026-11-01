@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/subscription"
+	"github.com/NoobforAl/wardkeep/core/subscription"
 )
 
 var countryCode = regexp.MustCompile(`^[A-Z]{2}$`)

@@ -6,25 +6,25 @@ import (
 	"os"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // TestLiveLatency measures a real profile over the internet. Opt-in:
 //
-//	OMNITUN_LIVE_LINK='ss://...' go test -run TestLiveLatency ./core/engine
+//	WARDKEEP_LIVE_LINK='ss://...' go test -run TestLiveLatency ./core/engine
 func TestLiveLatency(t *testing.T) {
-	link := os.Getenv("OMNITUN_LIVE_LINK")
+	link := os.Getenv("WARDKEEP_LIVE_LINK")
 	if link == "" {
-		t.Skip("OMNITUN_LIVE_LINK not set")
+		t.Skip("WARDKEEP_LIVE_LINK not set")
 	}
 	res, err := importer.Import(link)
 	if err != nil {
 		t.Fatal(err)
 	}
 	e := New(Config{DataDir: tempDir(t), CertificateStore: "mozilla", OnLog: func(rec logrec.Record) { t.Log(rec.Level, rec.Msg) }})
-	results, err := e.TestLatency(t.Context(), res.Profiles, os.Getenv("OMNITUN_LIVE_URL"))
+	results, err := e.TestLatency(t.Context(), res.Profiles, os.Getenv("WARDKEEP_LIVE_URL"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,10 +37,10 @@ func TestLiveLatency(t *testing.T) {
 }
 
 // TestLiveNetCheck checks the "is the device online" probe through a running
-// tunnel's direct outbound. Opt-in: OMNITUN_LIVE_NET=1.
+// tunnel's direct outbound. Opt-in: WARDKEEP_LIVE_NET=1.
 func TestLiveNetCheck(t *testing.T) {
-	if os.Getenv("OMNITUN_LIVE_NET") == "" {
-		t.Skip("OMNITUN_LIVE_NET not set")
+	if os.Getenv("WARDKEEP_LIVE_NET") == "" {
+		t.Skip("WARDKEEP_LIVE_NET not set")
 	}
 	res, err := importer.Import("ss://aes-128-gcm:x@127.0.0.1:1#dead")
 	if err != nil {

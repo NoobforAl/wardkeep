@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // parseTailscaleLink reads a mesh link:

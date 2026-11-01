@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // IPv6 in the tunnels is off for a new server; switching it on adds an address to the WireGuard

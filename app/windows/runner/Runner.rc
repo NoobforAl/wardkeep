@@ -89,12 +89,14 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
+            // CompanyName and ProductName keep the old project name: Flutter names the data folder
+            // %APPDATA%\dev.omnitun\omnitun after them, where existing installs keep their profiles.
             VALUE "CompanyName", "dev.omnitun" "\0"
             VALUE "FileDescription", "Wardkeep" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "omnitun" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 dev.omnitun. All rights reserved." "\0"
-            VALUE "OriginalFilename", "omnitun.exe" "\0"
+            VALUE "InternalName", "wardkeep" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Wardkeep. All rights reserved." "\0"
+            VALUE "OriginalFilename", "wardkeep.exe" "\0"
             VALUE "ProductName", "omnitun" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END

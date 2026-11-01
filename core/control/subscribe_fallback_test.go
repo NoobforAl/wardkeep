@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/subscription"
+	"github.com/NoobforAl/wardkeep/core/subscription"
 )
 
 const fallbackBody = "trojan://pw@a.example.com:443#A\ntrojan://pw@b.example.com:443#B"

@@ -1,4 +1,4 @@
-// Package tui is the interactive manager for omnitun-server: users, their
+// Package tui is the interactive manager for wardkeep-server: users, their
 // links and QR codes, protocols and the web API settings. Everything goes
 // through server/manager, the same layer the CLI and the web API use; a
 // running server picks changes up within seconds.
@@ -16,10 +16,10 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/qrterm"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/qrterm"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 type view int
@@ -732,7 +732,7 @@ func (m *model) serverView() string {
 	case m.cert.Mode == "acme":
 		out.WriteString(errStyle.Render(fmt.Sprintf("certificate: waiting for %s from the CA (self-signed meanwhile)", m.cert.Domain)))
 	default:
-		out.WriteString(dimStyle.Render("certificate: self-signed (omnitun-server cert acme --domain … for a real one)"))
+		out.WriteString(dimStyle.Render("certificate: self-signed (wardkeep-server cert acme --domain … for a real one)"))
 	}
 	out.WriteString("\n\nWeb API\n")
 	state := errStyle.Render("off")

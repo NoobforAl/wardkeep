@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/ui/screens/home_screen.dart';
+import 'package:wardkeep/ui/screens/home_screen.dart';
 
 void main() {
   test('an address is shown in part only', () {

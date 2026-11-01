@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/noise"
 )
 
 // DNSTTKey is the protocol key of the DNS tunnel.

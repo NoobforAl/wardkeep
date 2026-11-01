@@ -7,8 +7,8 @@ how to measure again. Numbers are from one Windows 11 PC (11th-gen i5, 12 thread
 
 ### Go (core and server)
 
-- **Profiles of a running program.** `omnitun-server run --pprof 127.0.0.1:6060` and
-  `omnitun-svc --pprof 127.0.0.1:6060` serve Go's runtime profiles on a loopback address (other
+- **Profiles of a running program.** `wardkeep-server run --pprof 127.0.0.1:6060` and
+  `wardkeep-svc --pprof 127.0.0.1:6060` serve Go's runtime profiles on a loopback address (other
   addresses are refused; off by default). Block and mutex profiling come on with the flag.
   ```
   go tool pprof -top http://127.0.0.1:6060/debug/pprof/heap
@@ -18,8 +18,8 @@ how to measure again. Numbers are from one Windows 11 PC (11th-gen i5, 12 thread
   ```
 - **Leak tests** (goroutines and heap after many cycles; `core/leakcheck`):
   `core/control` (client churn, request bursts), `server/runtime` (reload), `core/engine` (start/stop,
-  opt-in: `OMNITUN_LEAK=1`, about a minute; `OMNITUN_LEAK_CYCLES`, `OMNITUN_LEAK_SETTLE` tune it).
-  `OMNITUN_LEAK=1` also enables `TestLatencyConcurrencyCost`.
+  opt-in: `WARDKEEP_LEAK=1`, about a minute; `WARDKEEP_LEAK_CYCLES`, `WARDKEEP_LEAK_SETTLE` tune it).
+  `WARDKEEP_LEAK=1` also enables `TestLatencyConcurrencyCost`.
 - **Benchmarks:** `go test -run xxx -bench . -benchmem ./server/stats ./server/logs ./core/control`.
 - **Race detector.** Windows has no gcc, so run it in Docker:
   ```
@@ -36,7 +36,7 @@ how to measure again. Numbers are from one Windows 11 PC (11th-gen i5, 12 thread
 - `cargo build --profile profiling --features dhat-heap` adds a heap profiler: run the binary, close its
   stdin (or let the core do it), and it writes `dhat-heap.json` (open it at
   https://nnethercote.github.io/dh_view/dh_view.html) and prints peak and final heap.
-- Memory, handles and threads of the running process: PowerShell `Get-Process omnitun-tor`.
+- Memory, handles and threads of the running process: PowerShell `Get-Process wardkeep-tor`.
 
 ### Flutter (`app/`)
 
@@ -77,7 +77,7 @@ Race detector: clean in `core/pprofsrv`, `core/control` (the tests that do not s
   socket per stop, about 230 KiB of heap each (100 cycles with no pause: +104 goroutines, +22 MiB). Its UDP DNS
   transport has no `Close`, so the connection that is open at that moment is never closed. With 2 s between start
   and stop it does not happen. A user who connects and disconnects within the first seconds, many times in one
-  run of the app, collects them. Worth reporting upstream; `OMNITUN_LEAK_SETTLE=0` reproduces it.
+  run of the app, collects them. Worth reporting upstream; `WARDKEEP_LEAK_SETTLE=0` reproduces it.
 - The race detector reports two races in sing-box's urltest group (`URLTest.References` reading fields that
   `performUpdateCheck` writes), seen in `TestCallRunsMethodsInProcess` and `TestNoLeaseKeepsTunnel`.
 - `server/hostproto` once failed with `sync: WaitGroup is reused before previous Wait has returned` inside

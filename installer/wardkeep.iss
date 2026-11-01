@@ -3,7 +3,7 @@
 ;
 ;   ISCC.exe installer\wardkeep.iss /DAppVersion=0.1.0 /DSourceDir=dist\app /DOutputDir=dist
 ;
-; SourceDir is the Flutter release folder (omnitun.exe, the DLLs, data\) with omnitun-svc.exe, the core,
+; SourceDir is the Flutter release folder (wardkeep.exe, the DLLs, data\) with wardkeep-svc.exe, the core,
 ; next to it: the same folder that goes into the ZIP. Defines:
 ;   AppVersion      numbers only, x.y.z (the version the installer and Windows' "Apps" list show)
 ;   AppVersionName  the version as written in the file name (0.1.0, 0.2.0-rc1, dev-abc1234); default AppVersion
@@ -17,7 +17,7 @@
 ;   * copies the app to %LOCALAPPDATA%\Programs\Wardkeep (the folder can be changed, and /DIR= works);
 ;   * a Start menu shortcut; optional: a desktop shortcut, start with Windows (to the tray: --background);
 ;   * optional: registers Wardkeep for share links (vless://, vmess://, ...) and offers it for VPN config
-;     files, like app\windows\packaging\omnitun-file-associations.reg does for a hand-made install;
+;     files, like app\windows\packaging\wardkeep-file-associations.reg does for a hand-made install;
 ;   * the uninstaller removes all of that, and asks whether to keep the servers and settings
 ;     (%APPDATA%\dev.omnitun\omnitun). Silent: they are kept; add /DELETEDATA to delete them.
 
@@ -37,7 +37,7 @@
   #define MutexName "Local\Wardkeep.SingleInstance"
 #endif
 #define AppName "Wardkeep"
-#define ExeName "omnitun.exe"
+#define ExeName "wardkeep.exe"
 
 [Setup]
 AppId={{8F3A5C2E-6B1D-4E7A-9C40-2D5B7E9A1F36}
@@ -118,6 +118,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+
+[InstallDelete]
+; The programs of an install from before the rename to Wardkeep.
+Type: files; Name: "{app}\omnitun.exe"
+Type: files; Name: "{app}\omnitun-svc.exe"
+Type: files; Name: "{app}\omnitun-tor.exe"
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#ExeName}"
@@ -219,7 +225,8 @@ var
 begin
   if CurUninstallStep <> usPostUninstall then Exit;
   Roaming := ExpandConstant('{userappdata}');
-  // The app's servers and settings, and the core's cache and control file.
+  // The app's servers and settings, and the core's cache and control file (folders named with the old
+  // project name, kept so updates find them).
   Settings := Roaming + '\dev.omnitun';
   Core := Roaming + '\omnitun';
   if not (DirExists(Settings) or DirExists(Core)) then Exit;

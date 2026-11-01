@@ -3,8 +3,8 @@ package manager
 import (
 	"fmt"
 
-	"github.com/NoobforAl/omnitun/server/store"
-	"github.com/NoobforAl/omnitun/server/v2ray"
+	"github.com/NoobforAl/wardkeep/server/store"
+	"github.com/NoobforAl/wardkeep/server/v2ray"
 )
 
 // ImportXrayOptions controls moving an Xray/V2Ray server to Wardkeep.

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Tries the Windows service of the core (omnitun-svc) from install to uninstall.
+  Tries the Windows service of the core (wardkeep-svc) from install to uninstall.
 
 .DESCRIPTION
   Run it from an ELEVATED PowerShell (Run as administrator). It has NOT been run by
@@ -8,7 +8,7 @@
   it first and expect to fix small things.
 
   What it does, in order. Every step prints what it is about to do and whether it passed:
-    1. installs the service (copies omnitun-svc.exe to Program Files, registers it)
+    1. installs the service (copies wardkeep-svc.exe to Program Files, registers it)
     2. starts it and checks the folder that holds the control file (token) is closed to other users
     3. asks the service as a NORMAL (unelevated) process whether it can use it
     4. VPN-mode test: starts a TUN with a profile that goes nowhere, but routes only the
@@ -25,8 +25,8 @@
   interrupt it briefly. The adapter checks only look at the adapter named "Wardkeep".
 
 .PARAMETER Exe
-  The omnitun-svc.exe to install. Default: ..\bin\omnitun-svc.exe next to this script's folder.
-  Build it first:  go build -tags "with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_acme,badlinkname,tfogo_checklinkname0" -ldflags=-checklinkname=0 -o bin\omnitun-svc.exe .\cmd\omnitun-svc
+  The wardkeep-svc.exe to install. Default: ..\bin\wardkeep-svc.exe next to this script's folder.
+  Build it first:  go build -tags "with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_acme,badlinkname,tfogo_checklinkname0" -ldflags=-checklinkname=0 -o bin\wardkeep-svc.exe .\cmd\wardkeep-svc
 
 .PARAMETER UnsafeSource
   Pass --unsafe-source to install: needed when the exe is in a folder normal users can write to (bin\ of the
@@ -73,7 +73,7 @@ function Test-Admin {
 function Svc {
   # Runs the installed or source program with arguments and returns its exit code; output is shown.
   param([string[]]$Arguments)
-  Info ("omnitun-svc " + ($Arguments -join ' '))
+  Info ("wardkeep-svc " + ($Arguments -join ' '))
   # Windows PowerShell 5.1 turns a native program's stderr into errors; here it is just output.
   $old = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
@@ -124,7 +124,7 @@ function Wait-State {
 }
 
 if (-not (Test-Admin)) { Write-Host "Run this from an elevated PowerShell (Run as administrator)." -ForegroundColor Red; exit 2 }
-if (-not $Exe) { $Exe = Join-Path $PSScriptRoot '..\bin\omnitun-svc.exe' }
+if (-not $Exe) { $Exe = Join-Path $PSScriptRoot '..\bin\wardkeep-svc.exe' }
 if (-not (Test-Path $Exe)) { Write-Host "Cannot find $Exe . Build it first (see Get-Help)." -ForegroundColor Red; exit 2 }
 $script:ExePath = (Resolve-Path $Exe).Path
 $installed = $false
@@ -133,11 +133,11 @@ try {
   Step "0. Before: is the service already there?"
   $existing = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
   if ($existing) {
-    Write-Host "The service $ServiceName already exists ($($existing.Status)). Remove it first with: omnitun-svc uninstall" -ForegroundColor Red
+    Write-Host "The service $ServiceName already exists ($($existing.Status)). Remove it first with: wardkeep-svc uninstall" -ForegroundColor Red
     exit 2
   }
   if (Get-Adapter) {
-    Write-Host "A network adapter named '$AdapterName' already exists (a leftover?). Run: omnitun-svc cleanup" -ForegroundColor Red
+    Write-Host "A network adapter named '$AdapterName' already exists (a leftover?). Run: wardkeep-svc cleanup" -ForegroundColor Red
     exit 2
   }
   Pass "no service, no '$AdapterName' adapter"
@@ -153,7 +153,7 @@ try {
   $installed = $true
   $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
   Check ($null -ne $svc) "the service is registered"
-  Check (Test-Path (Join-Path $env:ProgramFiles 'Omnitun\omnitun-svc.exe')) "the program was copied to Program Files (only administrators can write there)"
+  Check (Test-Path (Join-Path $env:ProgramFiles 'Omnitun\wardkeep-svc.exe')) "the program was copied to Program Files (only administrators can write there)"
   $rc = Svc @('status')
   Check ($rc -eq 3) "status says installed but not running (exit $rc, expected 3)"
 
@@ -172,7 +172,7 @@ try {
   Check (-not [regex]::IsMatch($rootAcl, 'Everyone|BUILTIN\\Users|Authenticated Users')) "the parent folder $CommonDir is closed to normal users too"
 
   Step "3. A normal (unelevated) process asks the service"
-  $tmp = Join-Path $env:TEMP ("omnitun-status-" + [guid]::NewGuid().ToString('N') + '.txt')
+  $tmp = Join-Path $env:TEMP ("wardkeep-status-" + [guid]::NewGuid().ToString('N') + '.txt')
   # runas /trustlevel:0x20000 starts the program with the limited ("basic user") token: what the app has.
   & runas /trustlevel:0x20000 "cmd.exe /c `"`"$script:ExePath`" status > `"$tmp`" 2>&1`"" | Out-Null
   for ($i = 0; $i -lt 40 -and -not (Test-Path $tmp); $i++) { Start-Sleep -Milliseconds 250 }

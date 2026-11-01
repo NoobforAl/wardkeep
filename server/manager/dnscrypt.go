@@ -4,10 +4,10 @@ import (
 	"net"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/protocols"
 
-	"github.com/NoobforAl/omnitun/server/serverconf"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/serverconf"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // DNSCryptInfo describes the server's optional DNSCrypt resolver.

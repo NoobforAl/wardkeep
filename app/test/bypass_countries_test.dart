@@ -4,15 +4,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/l10n/app_localizations.dart';
-import 'package:omnitun/state/bypass_countries.dart';
-import 'package:omnitun/state/ipdb.dart';
-import 'package:omnitun/state/ipdb_state.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
-import 'package:omnitun/ui/screens/bypass_countries_screen.dart';
-import 'package:omnitun/ui/theme.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/l10n/app_localizations.dart';
+import 'package:wardkeep/state/bypass_countries.dart';
+import 'package:wardkeep/state/ipdb.dart';
+import 'package:wardkeep/state/ipdb_state.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
+import 'package:wardkeep/ui/screens/bypass_countries_screen.dart';
+import 'package:wardkeep/ui/theme.dart';
 
 /// The database controller with a database already installed (the real one reads it from disk
 /// on its own schedule, which a test cannot wait for under fake time).

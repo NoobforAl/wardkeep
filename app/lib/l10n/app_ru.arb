@@ -424,7 +424,7 @@
   "formRealityKeyRequired": "При защите Reality нужен открытый ключ Reality",
   "importUnsupported": "Это не ссылка на сервер, не подписка и не конфигурация, которую Wardkeep может прочитать",
   "importUnsupportedScheme": "Ссылки, начинающиеся с {scheme}://, не поддерживаются",
-  "importXrayServer": "Это конфигурация сервера Xray. Импортируйте её на сервере (omnitun-server import xray), а не как клиентский профиль",
+  "importXrayServer": "Это конфигурация сервера Xray. Импортируйте её на сервере (wardkeep-server import xray), а не как клиентский профиль",
   "subAuthFailed": "Подписка отклонила вход. Проверьте имя пользователя, пароль или токен",
   "subHttp": "Сервер подписки ответил HTTP {status}",
   "subTooLarge": "Подписка больше 10 МБ",

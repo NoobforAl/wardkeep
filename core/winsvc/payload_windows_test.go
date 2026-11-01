@@ -51,13 +51,13 @@ func TestWritersOfPathOnRealFolders(t *testing.T) {
 
 func TestPlanInstallCopiesOnlyTheAllowlist(t *testing.T) {
 	dir := t.TempDir()
-	for _, n := range []string{"omnitun-svc.exe", "libcronet.dll", "omnitun-tor.exe", "evil.dll", "version.dll", "flutter_windows.dll", "omnitun-tor-evil.exe", "notes.txt"} {
+	for _, n := range []string{"wardkeep-svc.exe", "libcronet.dll", "wardkeep-tor.exe", "evil.dll", "version.dll", "flutter_windows.dll", "wardkeep-tor-evil.exe", "notes.txt"} {
 		write(t, filepath.Join(dir, n), n)
 	}
 	if err := os.Mkdir(filepath.Join(dir, "libcronet.dll.d"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	plan, err := planInstall(filepath.Join(dir, "omnitun-svc.exe"))
+	plan, err := planInstall(filepath.Join(dir, "wardkeep-svc.exe"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func TestPlanInstallCopiesOnlyTheAllowlist(t *testing.T) {
 		}
 		got[name] = true
 	}
-	want := map[string]bool{ExeName: true, "libcronet.dll": true, "omnitun-tor.exe": true}
+	want := map[string]bool{ExeName: true, "libcronet.dll": true, "wardkeep-tor.exe": true}
 	if len(got) != len(want) {
 		t.Fatalf("plan = %v, want %v", got, want)
 	}

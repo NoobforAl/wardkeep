@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/engine"
-	"github.com/NoobforAl/omnitun/core/killswitch"
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/engine"
+	"github.com/NoobforAl/wardkeep/core/killswitch"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // ksState follows one connection's kill switch (core/killswitch), which the

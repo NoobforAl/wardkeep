@@ -417,7 +417,7 @@
   "formRealityKeyRequired": "सुरक्षा Reality होने पर Reality पब्लिक की ज़रूरी है",
   "importUnsupported": "यह सर्वर लिंक, सब्सक्रिप्शन या कॉन्फ़िग नहीं है जिसे Wardkeep पढ़ सके",
   "importUnsupportedScheme": "{scheme}:// से शुरू होने वाले लिंक समर्थित नहीं हैं",
-  "importXrayServer": "यह Xray सर्वर कॉन्फ़िग है। इसे सर्वर पर इम्पोर्ट करें (omnitun-server import xray), क्लाइंट प्रोफ़ाइल के रूप में नहीं",
+  "importXrayServer": "यह Xray सर्वर कॉन्फ़िग है। इसे सर्वर पर इम्पोर्ट करें (wardkeep-server import xray), क्लाइंट प्रोफ़ाइल के रूप में नहीं",
   "subAuthFailed": "सब्सक्रिप्शन ने साइन-इन अस्वीकार कर दिया। यूज़रनेम, पासवर्ड या टोकन जाँचें",
   "subHttp": "सब्सक्रिप्शन सर्वर ने HTTP {status} जवाब दिया",
   "subTooLarge": "सब्सक्रिप्शन 10 MB से बड़ा है",

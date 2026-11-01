@@ -10,10 +10,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	"github.com/NoobforAl/omnitun/core/tor"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/tor"
 )
 
 // Bootstrap progress fills this slice of the connection ring (between
@@ -36,7 +36,7 @@ type torRun struct {
 	// inUse is set once the tunnel runs on this Tor client; before, its failures are retried and the state reports
 	// the last one, so its records do not notify.
 	inUse atomic.Bool
-	// notified is set once one of its records told the user (a crash of omnitun-tor), so watchTor does not again.
+	// notified is set once one of its records told the user (a crash of wardkeep-tor), so watchTor does not again.
 	notified atomic.Bool
 }
 
@@ -264,7 +264,7 @@ func (e *Engine) torPath(run *torRun, path []tor.Hop) {
 	}
 }
 
-// torRecord passes on a record of omnitun-tor (it is scrubbed on the way, like every record). While Tor is still
+// torRecord passes on a record of wardkeep-tor (it is scrubbed on the way, like every record). While Tor is still
 // bootstrapping a failure is retried, so it does not notify then.
 func (e *Engine) torRecord(run *torRun, rec logrec.Record) {
 	if rec.Level < logrec.LevelFatal && !logrec.Enabled(rec.Level) && !rec.Notify {

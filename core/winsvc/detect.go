@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/control"
+	"github.com/NoobforAl/wardkeep/core/control"
 )
 
 // ReadControlFile reads the control file of a running core.

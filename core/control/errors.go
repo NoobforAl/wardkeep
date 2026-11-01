@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/subscription"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/subscription"
 )
 
 // badRequest is the error reply for a request whose values are wrong; an

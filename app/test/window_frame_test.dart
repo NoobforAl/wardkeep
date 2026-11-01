@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/l10n/app_localizations.dart';
-import 'package:omnitun/state/window_bounds.dart';
-import 'package:omnitun/ui/theme.dart';
-import 'package:omnitun/ui/widgets/window_frame.dart';
+import 'package:wardkeep/l10n/app_localizations.dart';
+import 'package:wardkeep/state/window_bounds.dart';
+import 'package:wardkeep/ui/theme.dart';
+import 'package:wardkeep/ui/widgets/window_frame.dart';
 
 /// The app's own title bar (Windows): its three buttons are there, named, and do what they say.
 void main() {

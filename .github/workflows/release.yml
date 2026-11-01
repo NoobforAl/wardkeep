@@ -36,7 +36,7 @@ name: Release
 #              ANDROID_KEYSTORE_PASSWORD  its password (the key has the same one, alias omnitun)
 #              ANDROID_KEY_PASSWORD       the key password
 #            Keep the keystore and .env backed up: an update of an installed app must be signed with the same key.
-#   Windows  omnitun.exe, omnitun-svc.exe, the setup file and its uninstaller, only if the repository has the secrets
+#   Windows  wardkeep.exe, wardkeep-svc.exe, the setup file and its uninstaller, only if the repository has the secrets
 #            WINDOWS_CERT_PFX_BASE64 (the .pfx file, base64) and WINDOWS_CERT_PASSWORD; without them the files are
 #            unsigned and SmartScreen warns on the first start.
 #
@@ -178,7 +178,7 @@ jobs:
 
       - name: Go core (gomobile)
         env:
-          OMNITUN_BUILD_MODE: release # core/buildinfo: release log levels (docs/logging.md)
+          WARDKEEP_BUILD_MODE: release # core/buildinfo: release log levels (docs/logging.md)
         run: bash scripts/build-android-core.sh
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -272,17 +272,17 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
-      - name: Core (omnitun-svc.exe)
+      - name: Core (wardkeep-svc.exe)
         shell: pwsh
         env:
-          OMNITUN_BUILD_MODE: release # core/buildinfo: release log levels (docs/logging.md)
+          WARDKEEP_BUILD_MODE: release # core/buildinfo: release log levels (docs/logging.md)
         run: |
           New-Item -ItemType Directory -Force out | Out-Null
-          ./scripts/go.ps1 build -trimpath -o out/omnitun-svc.exe ./cmd/omnitun-svc
+          ./scripts/go.ps1 build -trimpath -o out/wardkeep-svc.exe ./cmd/wardkeep-svc
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: core-windows
-          path: out/omnitun-svc.exe
+          path: out/wardkeep-svc.exe
           if-no-files-found: error
           retention-days: 1
 
@@ -357,13 +357,13 @@ jobs:
           'The files will be signed.'
 
       # Before the installer is built: it then holds the signed programs.
-      - name: Sign omnitun.exe and omnitun-svc.exe
+      - name: Sign wardkeep.exe and wardkeep-svc.exe
         if: steps.cert.outputs.signed == 'true'
         env:
           WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
         run: |
-          ./installer/sign.ps1 -Pfx '${{ steps.cert.outputs.pfx }}' -Files dist/app/omnitun.exe, dist/app/omnitun-svc.exe
-          Get-AuthenticodeSignature dist/app/omnitun.exe, dist/app/omnitun-svc.exe | Format-Table Status, Path
+          ./installer/sign.ps1 -Pfx '${{ steps.cert.outputs.pfx }}' -Files dist/app/wardkeep.exe, dist/app/wardkeep-svc.exe
+          Get-AuthenticodeSignature dist/app/wardkeep.exe, dist/app/wardkeep-svc.exe | Format-Table Status, Path
 
       - name: Installer
         env:
@@ -407,15 +407,15 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: go.mod
-      - name: Core (omnitun-svc)
+      - name: Core (wardkeep-svc)
         run: |
           TAGS="with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_acme,badlinkname,tfogo_checklinkname0"
-          CGO_ENABLED=0 go build -tags "$TAGS" -trimpath -ldflags "-s -w -checklinkname=0 -X github.com/NoobforAl/omnitun/core/buildinfo.Mode=release" -o out/omnitun-svc ./cmd/omnitun-svc
-          file out/omnitun-svc
+          CGO_ENABLED=0 go build -tags "$TAGS" -trimpath -ldflags "-s -w -checklinkname=0 -X github.com/NoobforAl/wardkeep/core/buildinfo.Mode=release" -o out/wardkeep-svc ./cmd/wardkeep-svc
+          file out/wardkeep-svc
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: core-linux
-          path: out/omnitun-svc
+          path: out/wardkeep-svc
           if-no-files-found: error
           retention-days: 1
 
@@ -489,7 +489,7 @@ jobs:
 
       - name: Installer
         run: |
-          chmod +x bundle/omnitun bundle/omnitun-svc # artifacts do not keep the executable bit
+          chmod +x bundle/wardkeep bundle/wardkeep-svc # artifacts do not keep the executable bit
           bash installer/linux/build-installer.sh "$VER" bundle dist
 
       # Install into a throw-away home folder, look at the files, update, uninstall, and see that nothing is left.

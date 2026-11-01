@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/subscription"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/subscription"
 )
 
 func TestEditorProblemsKeepTheirCodeAndArguments(t *testing.T) {

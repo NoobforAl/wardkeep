@@ -17,9 +17,9 @@ import (
 	"github.com/sagernet/sing-box/option"
 	sjson "github.com/sagernet/sing/common/json"
 
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/serverconf"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/serverconf"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // The generated ACME configuration must be accepted by sing-box (provider

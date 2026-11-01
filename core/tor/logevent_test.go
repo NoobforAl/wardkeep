@@ -3,10 +3,10 @@ package tor
 import (
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
-// omnitun-tor's "log" events become records with their own level, and the keys outside the contract stay.
+// wardkeep-tor's "log" events become records with their own level, and the keys outside the contract stay.
 func TestParseLogEvent(t *testing.T) {
 	line := `{"event":"log","time":"2026-10-29T01:02:03.456Z","level":"warn","source":"tor","target":"tor_guardmgr",` +
 		`"msg":"guard unusable","op":"connect","code":"TOR_STREAM_FAILED","kind":"timeout","max":3,"caller":"guard.rs:10"}`

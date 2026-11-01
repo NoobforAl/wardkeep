@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/state/incoming.dart';
+import 'package:wardkeep/state/incoming.dart';
 
 void main() {
   test('what the command line asks to open: links as they are, files by their contents', () async {

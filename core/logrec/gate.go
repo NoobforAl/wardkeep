@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/buildinfo"
+	"github.com/NoobforAl/wardkeep/core/buildinfo"
 )
 
 // The level gate is process-wide: the engine, the control server, sing-box and the helper processes it starts all

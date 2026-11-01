@@ -4,15 +4,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/core_engine.dart';
-import 'package:omnitun/engine/daemon_engine.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/l10n/form_text.dart';
-import 'package:omnitun/l10n/l10n.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
+import 'package:wardkeep/engine/core_engine.dart';
+import 'package:wardkeep/engine/daemon_engine.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/l10n/form_text.dart';
+import 'package:wardkeep/l10n/l10n.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
 
 const _languages = ['en', 'fa', 'ru', 'zh', 'ar', 'es', 'hi', 'fr', 'pt', 'ur', 'id', 'tr', 'vi'];
 const _rtl = {'fa', 'ar', 'ur'};
@@ -158,7 +158,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(MockEngine())],
-          child: const OmnitunApp(),
+          child: const WardkeepApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -222,11 +222,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(MockEngine())],
-        child: const OmnitunApp(),
+        child: const WardkeepApp(),
       ),
     );
     await tester.pumpAndSettle();
-    final c = ProviderScope.containerOf(tester.element(find.byType(OmnitunApp)));
+    final c = ProviderScope.containerOf(tester.element(find.byType(WardkeepApp)));
     expect(find.text('Not connected'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Settings'));
@@ -259,10 +259,10 @@ void main() {
   test('every label, help text and warning of the real core editors is translated', () async {
     final exe = CoreEngine.findDaemonExecutable();
     if (exe == null) {
-      markTestSkipped('omnitun-svc not built');
+      markTestSkipped('wardkeep-svc not built');
       return;
     }
-    final dir = await Directory.systemTemp.createTemp('omnitun-l10n');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-l10n');
     final engine = await DaemonEngine.launch(exe, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();

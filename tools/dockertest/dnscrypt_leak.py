@@ -3,11 +3,11 @@
 
 Four containers (names and networks start with "wkdnsc"):
 
-    client --- net A --- server --- net B --- resolver (omnitun-server's own DNSCrypt resolver)
+    client --- net A --- server --- net B --- resolver (wardkeep-server's own DNSCrypt resolver)
                                        |
                                       web   (the only name anyone asks for)
 
-The client runs this repo's core engine (`omnitun run -tun -dns sdns://...`) in TUN mode, with a
+The client runs this repo's core engine (`wardkeep run -tun -dns sdns://...`) in TUN mode, with a
 Shadowsocks profile of the server. Its /etc/resolv.conf names an address (203.0.113.53) that
 nothing answers: a lookup that is not caught by the VPN can only leave through the network card.
 The resolver and the web server are on a network the client cannot reach at all.
@@ -82,7 +82,7 @@ def build():
     os.makedirs(BUILD, exist_ok=True)
     env = dict(os.environ, GOOS="linux", GOARCH="amd64", CGO_ENABLED="0")
     print("building the Linux binaries...")
-    for name, pkg in (("omnitun-server", "./cmd/omnitun-server"), ("omnitun", "./cmd/omnitun")):
+    for name, pkg in (("wardkeep-server", "./cmd/wardkeep-server"), ("wardkeep", "./cmd/wardkeep")):
         subprocess.run(["go", "build", "-tags", TAGS, "-trimpath", "-ldflags", "-s -w -checklinkname=0",
                         "-o", os.path.join(BUILD, name), pkg], cwd=ROOT, env=env, check=True)
     shutil.copy(os.path.join(HERE, "web.py"), os.path.join(BUILD, "web.py"))
@@ -113,22 +113,22 @@ def start_world():
     # It must be told the one address to listen on and who may ask: here only the VPN server (a proxy
     # protocol's users reach it from the server's own address). Its upstream is the host's own resolver,
     # Docker's DNS, which knows the web server's name: that needs the explicit `upstream system`.
-    dx(RESOLVER, "omnitun-server --data /data init --host %s --protocols shadowsocks" % RESOLVER_B)
-    dx(RESOLVER, "omnitun-server --data /data dnscrypt listen %s && omnitun-server --data /data dnscrypt allow %s && "
-                 "omnitun-server --data /data dnscrypt upstream system && "
-                 "omnitun-server --data /data proto enable dnscrypt" % (RESOLVER_B, SERVER_B))
-    sh("docker", "exec", "-d", RESOLVER, "sh", "-c", "omnitun-server --data /data run > /run.log 2>&1")
+    dx(RESOLVER, "wardkeep-server --data /data init --host %s --protocols shadowsocks" % RESOLVER_B)
+    dx(RESOLVER, "wardkeep-server --data /data dnscrypt listen %s && wardkeep-server --data /data dnscrypt allow %s && "
+                 "wardkeep-server --data /data dnscrypt upstream system && "
+                 "wardkeep-server --data /data proto enable dnscrypt" % (RESOLVER_B, SERVER_B))
+    sh("docker", "exec", "-d", RESOLVER, "sh", "-c", "wardkeep-server --data /data run > /run.log 2>&1")
     log = wait_for(RESOLVER, "/run.log", "serving dnscrypt")
     print("resolver:", [l for l in log.splitlines() if "dnscrypt" in l][:2])
-    stamp = dx(RESOLVER, "omnitun-server --data /data link --stamp").stdout.strip()
+    stamp = dx(RESOLVER, "wardkeep-server --data /data link --stamp").stdout.strip()
 
     # The VPN server: Shadowsocks only, on both networks.
     sh("docker", "run", "-d", "--name", SERVER, "--network", NET_A, "--ip", SERVER_A, "--cap-add", "NET_ADMIN", IMG, "sleep", "infinity")
     sh("docker", "network", "connect", "--ip", SERVER_B, NET_B, SERVER)
-    dx(SERVER, "omnitun-server --data /data init --host %s --protocols shadowsocks --first-user alice" % SERVER_A)
-    sh("docker", "exec", "-d", SERVER, "sh", "-c", "omnitun-server --data /data run > /run.log 2>&1")
+    dx(SERVER, "wardkeep-server --data /data init --host %s --protocols shadowsocks --first-user alice" % SERVER_A)
+    sh("docker", "exec", "-d", SERVER, "sh", "-c", "wardkeep-server --data /data run > /run.log 2>&1")
     wait_for(SERVER, "/run.log", "Ctrl+C")
-    d = json.loads(dx(SERVER, "omnitun-server --data /data link alice --json").stdout)
+    d = json.loads(dx(SERVER, "wardkeep-server --data /data link alice --json").stdout)
     link = next(l["url"] for l in d["links"] if l["protocol"] == "shadowsocks")
 
     # The client: only on network A, TUN allowed, and a resolv.conf that names a dead end.
@@ -170,11 +170,11 @@ def main():
         plain = packets(CLIENT, "control", "udp and dst host %s and dst port 53" % NOWHERE)
         check(len(plain) > 0, "the capture sees a plain DNS query leaving the card", "%d packets" % len(plain))
 
-        print("\nthe VPN: omnitun run -tun -dns <stamp>")
+        print("\nthe VPN: wardkeep run -tun -dns <stamp>")
         capture_start(CLIENT, "vpn", "")
         capture_start(RESOLVER, "resolver", "port 5443")
-        sh("docker", "exec", "-d", CLIENT, "sh", "-c", "omnitun run -tun -dns '%s' '%s' > /omnitun.log 2>&1" % (stamp, link))
-        log = wait_for(CLIENT, "/omnitun.log", "state: connected", 90)
+        sh("docker", "exec", "-d", CLIENT, "sh", "-c", "wardkeep run -tun -dns '%s' '%s' > /wardkeep.log 2>&1" % (stamp, link))
+        log = wait_for(CLIENT, "/wardkeep.log", "state: connected", 90)
         up = "state: connected" in log
         check(up, "the tunnel is up", "" if up else log[-600:])
         if up:
@@ -185,7 +185,7 @@ def main():
             check("client=" in r.stdout, "the page is fetched by that name", r.stdout.strip())
             for n in ("a", "b", "c"):
                 dx(CLIENT, "getent hosts %s" % NAME, check=False, timeout=60)
-            print("engine log:", [l for l in dx(CLIENT, "cat /omnitun.log").stdout.splitlines() if "DNS" in l][:3])
+            print("engine log:", [l for l in dx(CLIENT, "cat /wardkeep.log").stdout.splitlines() if "DNS" in l][:3])
         capture_stop(CLIENT, "vpn")
         capture_stop(RESOLVER, "resolver")
 

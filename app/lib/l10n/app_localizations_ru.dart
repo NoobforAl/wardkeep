@@ -1552,7 +1552,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'Это конфигурация сервера Xray. Импортируйте её на сервере (omnitun-server import xray), а не как клиентский профиль';
+      'Это конфигурация сервера Xray. Импортируйте её на сервере (wardkeep-server import xray), а не как клиентский профиль';
 
   @override
   String get subAuthFailed =>

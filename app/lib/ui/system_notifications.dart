@@ -8,10 +8,10 @@ import 'package:window_manager/window_manager.dart';
 import '../engine/engine.dart';
 
 /// Notifications of the system for failures nothing handled (docs/logging.md §5, setting `notifyOs`):
-/// Android's notification shade (MainActivity's "omnitun/notify" channel, on its "errors" channel), the
+/// Android's notification shade (MainActivity's "wardkeep/notify" channel, on its "errors" channel), the
 /// desktop's notification centre (local_notifier). Tapping one opens the log page filtered by its connection.
 class SystemNotifications {
-  static const _channel = MethodChannel('omnitun/notify');
+  static const _channel = MethodChannel('wardkeep/notify');
 
   void Function(String conn)? _openLogs;
   bool _desktopReady = false;

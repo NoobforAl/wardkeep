@@ -8,7 +8,7 @@ import (
 
 	"github.com/sagernet/sing-box/log"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
 // recordSink collects an engine's log records.

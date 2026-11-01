@@ -14,17 +14,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/client"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/dns"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/client"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/dns"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/noise"
 )
 
 // Config is one tunnel.
 type Config struct {
 	// Domain is the DNS zone delegated to the tunnel server, such as t.example.com.
 	Domain string
-	// PubKey is the server's public key, 64 hex digits (omnitun-server prints it).
+	// PubKey is the server's public key, 64 hex digits (wardkeep-server prints it).
 	PubKey string
 	// Resolvers are tried in order: udp://IP:port, tls://host:port, https://host/path.
 	Resolvers []string

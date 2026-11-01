@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/nordlynx"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/nordlynx"
 )
 
 // DefaultUserAgent asks panels for the plain share-link list most of them

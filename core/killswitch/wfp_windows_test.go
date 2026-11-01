@@ -111,7 +111,7 @@ func TestToWFRejectsBadValues(t *testing.T) {
 }
 
 func TestTunLUIDUnknownAdapter(t *testing.T) {
-	if _, err := tunLUID("omnitun-test-no-such-adapter-4417"); err == nil {
+	if _, err := tunLUID("wardkeep-test-no-such-adapter-4417"); err == nil {
 		t.Error("expected an error for a missing adapter")
 	}
 }

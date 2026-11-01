@@ -1539,7 +1539,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'Esta é uma configuração de servidor Xray. Importe-a no servidor (omnitun-server import xray), não como perfil de cliente';
+      'Esta é uma configuração de servidor Xray. Importe-a no servidor (wardkeep-server import xray), não como perfil de cliente';
 
   @override
   String get subAuthFailed =>

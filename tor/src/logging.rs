@@ -438,11 +438,11 @@ mod tests {
             .with("count", 3)
             .with("notify", false);
 
-        record.target = Some("omnitun_tor".into());
+        record.target = Some("wardkeep_tor".into());
         record.caller = Some("src/main.rs:12".into());
 
         let line = record.to_line(UNIX_EPOCH);
-        assert!(line.starts_with(r#"{"event":"log","time":"1970-01-01T00:00:00.000Z","level":"warn","source":"tor","target":"omnitun_tor","msg":"stream failed""#));
+        assert!(line.starts_with(r#"{"event":"log","time":"1970-01-01T00:00:00.000Z","level":"warn","source":"tor","target":"wardkeep_tor","msg":"stream failed""#));
 
         let object = parse_line(&line);
         assert_eq!(object["op"], "connect");
@@ -562,7 +562,7 @@ mod tests {
         assert_eq!(record.msg, "stream 7 failed");
         assert_eq!(
             record.target.as_deref(),
-            Some("omnitun_tor::logging::tests")
+            Some("wardkeep_tor::logging::tests")
         );
 
         assert!(

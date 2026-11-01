@@ -20,6 +20,7 @@ set -eu
 
 VERSION="@VERSION@"
 PAYLOAD_SHA256="@PAYLOAD_SHA256@"
+# The old project name, kept (also in the data folders below): it names the app's data folder and menu entry.
 APP_ID="dev.omnitun.app"
 APP_ID_RE='dev\.omnitun\.app'
 MARKER=".wardkeep-install"
@@ -105,7 +106,7 @@ need() { command -v "$1" >/dev/null 2>&1 || die "$1 is needed but not installed"
 # Libraries the program links to that this system lacks: a warning, not a stop (they can be installed later).
 check_libraries() {
   command -v ldd >/dev/null 2>&1 || return 0
-  missing=$(LD_LIBRARY_PATH="$1/lib" ldd "$1/omnitun" "$1"/lib/*.so 2>/dev/null |
+  missing=$(LD_LIBRARY_PATH="$1/lib" ldd "$1/wardkeep" "$1"/lib/*.so 2>/dev/null |
     sed -n 's/^[[:space:]]*\(.*\) => not found.*/\1/p' | sort -u)
   [ -z "$missing" ] && return 0
   warn "these libraries are missing, and Wardkeep will not start without them:"
@@ -141,7 +142,7 @@ install_app() {
 
   say "Unpacking Wardkeep $VERSION ..."
   tail -n +"$start" "$0" | tar -xJf - -C "$stage"
-  [ -x "$stage/app/omnitun" ] && [ -x "$stage/app/omnitun-svc" ] || die "the installer is incomplete (the program or its core is missing)"
+  [ -x "$stage/app/wardkeep" ] && [ -x "$stage/app/wardkeep-svc" ] || die "the installer is incomplete (the program or its core is missing)"
   check_libraries "$stage/app"
 
   if [ -e "$PREFIX" ]; then
@@ -172,14 +173,14 @@ install_app() {
   if [ -e "$LINK" ] && [ ! -L "$LINK" ]; then
     warn "$LINK exists and is not a link: left alone"
   else
-    ln -sfn "$PREFIX/omnitun" "$LINK"
+    ln -sfn "$PREFIX/wardkeep" "$LINK"
   fi
 
   # The menu entry and its icon.
   mkdir -p "$(dirname "$DESKTOP_FILE")" "$(dirname "$ICON_FILE")"
   cp "$stage/wardkeep.png" "$ICON_FILE"
   new="$DESKTOP_FILE.new.$$"
-  sed -e "s|^Exec=.*|Exec=\"$PREFIX/omnitun\" %U|" -e "s|^Icon=.*|Icon=$APP_ID|" "$stage/$APP_ID.desktop" |
+  sed -e "s|^Exec=.*|Exec=\"$PREFIX/wardkeep\" %U|" -e "s|^Icon=.*|Icon=$APP_ID|" "$stage/$APP_ID.desktop" |
     if [ "$LINKS" = 1 ]; then cat; else sed '/^MimeType=/d'; fi >"$new"
   mv "$new" "$DESKTOP_FILE"
   if command -v update-desktop-database >/dev/null 2>&1; then
@@ -202,7 +203,7 @@ install_app() {
   say "  start it from the application menu, or run: wardkeep"
   case ":$PATH:" in
     *":$BIN_DIR:"*) ;;
-    *) say "  ($BIN_DIR is not in your PATH; use $PREFIX/omnitun)" ;;
+    *) say "  ($BIN_DIR is not in your PATH; use $PREFIX/wardkeep)" ;;
   esac
   say "  remove it with: sh $PREFIX/uninstall.sh [--purge]"
 }
@@ -211,7 +212,7 @@ marker_value() { sed -n "s/^$1=//p" "$PREFIX/$MARKER" | head -n 1; }
 
 uninstall_app() {
   if [ -f "$PREFIX/$MARKER" ]; then
-    if command -v pgrep >/dev/null 2>&1 && pgrep -u "$(id -u)" -f "$PREFIX/omnitun" >/dev/null 2>&1; then
+    if command -v pgrep >/dev/null 2>&1 && pgrep -u "$(id -u)" -f "$PREFIX/wardkeep" >/dev/null 2>&1; then
       warn "Wardkeep is running: it keeps running until it is closed"
     fi
     desktop=$(marker_value desktop)
@@ -221,7 +222,7 @@ uninstall_app() {
     link=$(marker_value link)
     case "$link" in */wardkeep) ;; *) link=$LINK ;; esac
 
-    [ "$(readlink "$link" 2>/dev/null || true)" = "$PREFIX/omnitun" ] && rm -f "$link"
+    [ "$(readlink "$link" 2>/dev/null || true)" = "$PREFIX/wardkeep" ] && rm -f "$link"
     rm -f "$desktop" "$icon"
     if command -v update-desktop-database >/dev/null 2>&1; then
       update-desktop-database -q "$(dirname "$desktop")" 2>/dev/null || true

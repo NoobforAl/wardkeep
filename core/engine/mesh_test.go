@@ -7,7 +7,7 @@ import (
 
 	"github.com/sagernet/sing-box/adapter"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 func TestMeshCallsNeedAMeshTunnel(t *testing.T) {

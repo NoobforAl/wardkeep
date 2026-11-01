@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/hostproto"
-	"github.com/NoobforAl/omnitun/server/stats"
+	"github.com/NoobforAl/wardkeep/server/hostproto"
+	"github.com/NoobforAl/wardkeep/server/stats"
 )
 
 // hostMeters turns the cumulative per-user counts of the host-level servers

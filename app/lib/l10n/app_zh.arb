@@ -424,7 +424,7 @@
   "formRealityKeyRequired": "安全方式为 Reality 时必须填写 Reality 公钥",
   "importUnsupported": "这不是 Wardkeep 能读取的服务器链接、订阅或配置",
   "importUnsupportedScheme": "不支持以 {scheme}:// 开头的链接",
-  "importXrayServer": "这是 Xray 服务器配置。请在服务器上导入（omnitun-server import xray），不要作为客户端配置导入",
+  "importXrayServer": "这是 Xray 服务器配置。请在服务器上导入（wardkeep-server import xray），不要作为客户端配置导入",
   "subAuthFailed": "订阅拒绝了登录。请检查用户名、密码或令牌",
   "subHttp": "订阅服务器返回了 HTTP {status}",
   "subTooLarge": "订阅超过 10 MB",

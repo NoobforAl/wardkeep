@@ -1525,7 +1525,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'Bu bir Xray sunucu yapılandırması. İstemci profili olarak değil, sunucuda içe aktarın (omnitun-server import xray)';
+      'Bu bir Xray sunucu yapılandırması. İstemci profili olarak değil, sunucuda içe aktarın (wardkeep-server import xray)';
 
   @override
   String get subAuthFailed =>

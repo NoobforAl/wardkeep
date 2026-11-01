@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/ui/theme.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/ui/theme.dart';
 
 /// WCAG 2 contrast ratio of two colours.
 double _contrast(Color a, Color b) {

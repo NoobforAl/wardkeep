@@ -424,7 +424,7 @@
   "formRealityKeyRequired": "المفتاح العام لـ Reality‎ مطلوب عندما تكون الحماية Reality",
   "importUnsupported": "هذا ليس رابط خادم أو اشتراكًا أو إعدادًا يستطيع Wardkeep‎ قراءته",
   "importUnsupportedScheme": "الروابط التي تبدأ بـ ‎{scheme}://‎ غير مدعومة",
-  "importXrayServer": "هذا إعداد خادم Xray‎. استورده على الخادم (‎omnitun-server import xray‎) لا كملف تعريف عميل",
+  "importXrayServer": "هذا إعداد خادم Xray‎. استورده على الخادم (‎wardkeep-server import xray‎) لا كملف تعريف عميل",
   "subAuthFailed": "رفض الاشتراك تسجيل الدخول. تحقق من اسم المستخدم أو كلمة المرور أو الرمز",
   "subHttp": "ردّ خادم الاشتراك بـ ‎HTTP {status}",
   "subTooLarge": "حجم الاشتراك أكبر من 10 ميغابايت",

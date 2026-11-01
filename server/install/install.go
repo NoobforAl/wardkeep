@@ -66,6 +66,7 @@ type Plan struct {
 }
 
 // UnitName is the systemd service name.
+// UnitName keeps the old project name: renaming it would leave the installed unit running next to a new one.
 const UnitName = "omnitun-server"
 
 // SysctlPath enables IP forwarding for the host-level protocols.
@@ -84,7 +85,7 @@ func (o *Options) defaults() {
 }
 
 // Unit returns the systemd unit for the server. It is also what
-// `omnitun-server service` prints.
+// `wardkeep-server service` prints.
 func Unit(binary, dataDir, user string, hostServers bool) string {
 	var out strings.Builder
 	out.WriteString("[Unit]\nDescription=Wardkeep VPN server\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\n")
@@ -105,7 +106,8 @@ func Unit(binary, dataDir, user string, hostServers bool) string {
 	return out.String()
 }
 
-// firewallRuleComment tags the rules so uninstall can remove exactly them.
+// firewallRuleComment tags the rules so uninstall can remove exactly them. Like SysctlPath it keeps the
+// old project name, so the rules of existing installs are still found.
 const firewallRuleComment = "omnitun"
 
 func portArg(p Port) string { return strconv.Itoa(p.Port) + "/" + p.Proto }
@@ -176,7 +178,7 @@ func BuildPlan(opts Options, fw string) (Plan, error) {
 	if strings.ContainsAny(opts.DataDir+opts.BinDir+opts.User, " \t\r\n\"'\\$") {
 		return Plan{}, errors.New("the directories and user name may not contain spaces or shell characters")
 	}
-	target := path.Join(opts.BinDir, "omnitun-server")
+	target := path.Join(opts.BinDir, "wardkeep-server")
 	var plan Plan
 	step := func(desc string, ignore bool, argv ...string) {
 		plan.Steps = append(plan.Steps, Step{Description: desc, Command: argv, IgnoreError: ignore})
@@ -217,7 +219,7 @@ func BuildPlan(opts Options, fw string) (Plan, error) {
 		}
 	}
 	step("start the server now and at every boot", false, "systemctl", "enable", "--now", UnitName)
-	plan.Notes = append(plan.Notes, "Check it with: systemctl status "+UnitName+"   and   omnitun-server --data "+filepath.ToSlash(opts.DataDir)+" logs -f")
+	plan.Notes = append(plan.Notes, "Check it with: systemctl status "+UnitName+"   and   wardkeep-server --data "+filepath.ToSlash(opts.DataDir)+" logs -f")
 	return plan, nil
 }
 

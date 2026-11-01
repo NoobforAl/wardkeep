@@ -417,7 +417,7 @@
   "formRealityKeyRequired": "La clé publique Reality est obligatoire quand Sécurité vaut Reality",
   "importUnsupported": "Ceci n’est pas un lien de serveur, un abonnement ou une config que Wardkeep sait lire",
   "importUnsupportedScheme": "Les liens commençant par {scheme}:// ne sont pas pris en charge",
-  "importXrayServer": "Il s’agit d’une config de serveur Xray. Importez-la sur le serveur (omnitun-server import xray), pas comme profil client",
+  "importXrayServer": "Il s’agit d’une config de serveur Xray. Importez-la sur le serveur (wardkeep-server import xray), pas comme profil client",
   "subAuthFailed": "L’abonnement a rejeté la connexion. Vérifiez le nom d’utilisateur, le mot de passe ou le jeton",
   "subHttp": "Le serveur d’abonnement a répondu HTTP {status}",
   "subTooLarge": "L’abonnement dépasse 10 Mo",

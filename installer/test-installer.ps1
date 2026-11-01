@@ -67,13 +67,13 @@ $log = Join-Path ([System.IO.Path]::GetTempPath()) "wardkeep-setup-$PID.log"
 $p = Start-Process $Setup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=`"$Dir`" /TASKS=`"links,startup,desktopicon`" /LOG=`"$log`"" -Wait -PassThru
 Check ($p.ExitCode -eq 0) "setup exits with 0 (was $($p.ExitCode))"
 
-foreach ($f in 'omnitun.exe', 'omnitun-svc.exe', 'flutter_windows.dll', 'LICENSE.txt', 'unins000.exe', 'data\app.so', 'data\icudtl.dat', 'data\flutter_assets\assets\tray.ico') {
+foreach ($f in 'wardkeep.exe', 'wardkeep-svc.exe', 'flutter_windows.dll', 'LICENSE.txt', 'unins000.exe', 'data\app.so', 'data\icudtl.dat', 'data\flutter_assets\assets\tray.ico') {
   if ($f -eq 'data\app.so' -and -not (Test-Path (Join-Path $Dir $f))) { continue } # not in every build mode
   Check (Test-Path (Join-Path $Dir $f)) "installed: $f"
 }
 Check (Test-Path $startMenu) 'Start menu shortcut'
 Check (Test-Path (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Wardkeep.lnk')) 'desktop shortcut (task)'
-$exe = Join-Path $Dir 'omnitun.exe'
+$exe = Join-Path $Dir 'wardkeep.exe'
 foreach ($s in $schemes) {
   $cmd = (Get-ItemProperty "$classes\$s\shell\open\command" -ErrorAction SilentlyContinue).'(default)'
   Check ($cmd -eq "`"$exe`" `"%1`"") "link $s`:// opens $exe"

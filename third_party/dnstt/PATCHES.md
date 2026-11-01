@@ -1,4 +1,4 @@
-# Omnitun patches to dnstt
+# Wardkeep patches to dnstt
 
 Upstream: https://www.bamsoftware.com/git/dnstt.git (David Fifield), commit
 `0c5c52a57d899c05428c116898941761a2ed83c2` ("Update CHANGELOG to v1.20260501.0.").
@@ -12,7 +12,7 @@ The wire format is upstream's, byte for byte: a client of this package works wit
 `dnstt-server`, and the server here with a stock `dnstt-client`. Upstream's tests are kept.
 
 1. Import path: `www.bamsoftware.com/git/dnstt.git/...` →
-   `github.com/NoobforAl/omnitun/third_party/dnstt/...`; the two programs are packages
+   `github.com/NoobforAl/wardkeep/third_party/dnstt/...`; the two programs are packages
    (`client`, `server`), not `main`.
 2. `client/client.go` (new, replaces `dnstt-client/main.go`): the session as a library.
    `Open` builds the DNS transport, the KCP connection, the Noise channel and the smux

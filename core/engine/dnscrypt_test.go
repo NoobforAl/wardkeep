@@ -19,9 +19,9 @@ import (
 	"github.com/miekg/dns"
 	M "github.com/sagernet/sing/common/metadata"
 
-	"github.com/NoobforAl/omnitun/core/dnscrypt"
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/dnscrypt"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // dnsCryptResolver runs the library's DNSCrypt server on loopback; it answers

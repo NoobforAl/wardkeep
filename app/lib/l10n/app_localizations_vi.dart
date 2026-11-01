@@ -1503,7 +1503,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'Đây là cấu hình máy chủ Xray. Hãy nhập nó trên máy chủ (omnitun-server import xray), không phải làm hồ sơ máy khách';
+      'Đây là cấu hình máy chủ Xray. Hãy nhập nó trên máy chủ (wardkeep-server import xray), không phải làm hồ sơ máy khách';
 
   @override
   String get subAuthFailed =>

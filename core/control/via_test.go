@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 func TestCheckVia(t *testing.T) {

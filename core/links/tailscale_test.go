@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 func TestTailscaleLinkFields(t *testing.T) {

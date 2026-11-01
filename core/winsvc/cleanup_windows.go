@@ -14,7 +14,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 	"golang.zx2c4.com/wireguard/windows/tunnel/winipcfg"
 
-	"github.com/NoobforAl/omnitun/core/killswitch"
+	"github.com/NoobforAl/wardkeep/core/killswitch"
 )
 
 // CleanupSteps are the steps that remove what a crashed run left (see the list

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
 func TestLoggingGetSet(t *testing.T) {

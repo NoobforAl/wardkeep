@@ -5,7 +5,7 @@ import (
 	"net"
 	"sort"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // PortRule is a port the firewall must let through for the server to work.

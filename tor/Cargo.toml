@@ -1,5 +1,5 @@
 [package]
-name = "omnitun-tor"
+name = "wardkeep-tor"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
@@ -9,7 +9,7 @@ description = "Tor client (Arti) for Wardkeep: a local SOCKS5 port the Go core r
 crate-type = ["rlib"]
 
 [[bin]]
-name = "omnitun-tor"
+name = "wardkeep-tor"
 path = "src/main.rs"
 
 [dependencies]

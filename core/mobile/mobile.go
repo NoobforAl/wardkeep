@@ -1,6 +1,6 @@
 // Package mobile is the gomobile-bound entry point for Android (and later iOS).
 //
-// It runs the same control server as omnitun-svc inside the app process, so
+// It runs the same control server as wardkeep-svc inside the app process, so
 // the Flutter UI talks to it exactly like on desktop, and plugs the OS VPN
 // API into sing-box through Platform.
 package mobile
@@ -12,9 +12,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/NoobforAl/omnitun/core/control"
-	"github.com/NoobforAl/omnitun/core/engine"
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/control"
+	"github.com/NoobforAl/wardkeep/core/engine"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
 // Platform is implemented natively (Kotlin VpnService on Android).
@@ -92,7 +92,7 @@ func Start(dataDir string, platform Platform) (string, error) {
 // SetTorBinary tells the core where the Tor client executable is (the app's
 // native library directory, where Android allows executing it). Go does not
 // see environment variables set natively after startup, hence this call.
-func SetTorBinary(path string) { os.Setenv("OMNITUN_TOR_BIN", path) }
+func SetTorBinary(path string) { os.Setenv("WARDKEEP_TOR_BIN", path) }
 
 // StopTunnel stops the running tunnel but keeps the server (e.g. VPN revoked by the OS).
 func StopTunnel() {

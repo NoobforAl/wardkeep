@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // parseURL parses a link and returns the URL with its host and port split out.

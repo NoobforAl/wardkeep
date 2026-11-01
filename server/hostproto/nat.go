@@ -35,7 +35,8 @@ func (ExecRunner) Has(name string) bool {
 	return err == nil
 }
 
-// natTable is the nftables table the server owns; it is removed on stop.
+// natTable is the nftables table the server owns; it is removed on stop. It keeps the old project name,
+// so a server updated while running still removes its table.
 const natTable = "omnitun_hosts"
 
 // privateRanges are never reachable from clients: their traffic leaves the

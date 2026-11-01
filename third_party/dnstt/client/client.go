@@ -21,9 +21,9 @@ import (
 	"github.com/xtaci/kcp-go/v5"
 	"github.com/xtaci/smux"
 
-	"github.com/NoobforAl/omnitun/third_party/dnstt/dns"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/turbotunnel"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/dns"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/noise"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/turbotunnel"
 )
 
 // smux streams will be closed after this much time without receiving data.

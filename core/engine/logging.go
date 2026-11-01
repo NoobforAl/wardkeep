@@ -10,7 +10,7 @@ import (
 
 	"github.com/sagernet/sing-box/log"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
 // Codes of failures that only the log reports (with notify), next to the State.ErrorCode values in errors.go.
@@ -18,7 +18,7 @@ const (
 	ErrTorExited   = "TOR_EXITED"   // the Tor client ended on its own while the tunnel used it
 	ErrDNSTTExited = "DNSTT_EXITED" // the DNS tunnel ended on its own while the tunnel used it
 	ErrEngineFatal = "ENGINE_FATAL" // sing-box reported a fatal error
-	// ErrTorStreamFailed is omnitun-tor's code for one stream that could not be opened (logged at warn).
+	// ErrTorStreamFailed is wardkeep-tor's code for one stream that could not be opened (logged at warn).
 	ErrTorStreamFailed = "TOR_STREAM_FAILED"
 	ErrPanic           = logrec.CodePanic
 )
@@ -184,7 +184,7 @@ func singboxLevel(level log.Level) logrec.Level {
 // singboxLogLevel is the level sing-box is started with: the effective level (sing-box has the same names).
 func singboxLogLevel() string { return logrec.Current().String() }
 
-// torLogLevel is the --log-level omnitun-tor is started with (it takes the same names).
+// torLogLevel is the --log-level wardkeep-tor is started with (it takes the same names).
 func torLogLevel() string { return logrec.Current().String() }
 
 // singboxPrefix is what sing-box puts before a line it hands the platform writer: the level label with seconds

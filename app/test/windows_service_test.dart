@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/core_engine.dart';
-import 'package:omnitun/engine/daemon_engine.dart';
-import 'package:omnitun/engine/engine.dart';
+import 'package:wardkeep/engine/core_engine.dart';
+import 'package:wardkeep/engine/daemon_engine.dart';
+import 'package:wardkeep/engine/engine.dart';
 
 /// The Windows service (core/winsvc): where its control file is, how the app
 /// detects it and when it prefers it. Nothing here installs or starts a
@@ -39,7 +39,7 @@ void main() {
 
   group('detection', () {
     late Directory dir;
-    setUp(() async => dir = await Directory.systemTemp.createTemp('omnitun-svc-detect'));
+    setUp(() async => dir = await Directory.systemTemp.createTemp('wardkeep-svc-detect'));
     tearDown(() async => dir.delete(recursive: true).catchError((_) => dir));
 
     test('no control file: not installed or not running', () async {
@@ -68,7 +68,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 800));
       await File(file).writeAsString(stale);
       expect(await DaemonEngine.attachService(controlFile: file), isNull);
-    }, skip: exe == null ? 'omnitun-svc not built' : false);
+    }, skip: exe == null ? 'wardkeep-svc not built' : false);
 
     test('a wrong token is not accepted', () async {
       final file = '${dir.path}${sep}control.json';
@@ -78,7 +78,7 @@ void main() {
       final bad = '${dir.path}${sep}bad.json';
       await File(bad).writeAsString(jsonEncode({...j, 'token': 'wrong'}));
       expect(await DaemonEngine.attachService(controlFile: bad), isNull);
-    }, skip: exe == null ? 'omnitun-svc not built' : false);
+    }, skip: exe == null ? 'wardkeep-svc not built' : false);
   });
 
   // CoreEngine uses the service for VPN mode and the per-user daemon for the
@@ -86,7 +86,7 @@ void main() {
   // profile with the kill switch, which the core refuses before it opens any
   // tunnel, so no adapter is made even if this runs with administrator rights.
   test('VPN mode goes to the service when there is one, proxy mode to the own daemon', () async {
-    final dir = await Directory.systemTemp.createTemp('omnitun-svc-route');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-svc-route');
     addTearDown(() => dir.delete(recursive: true).catchError((_) => dir));
     final serviceFile = '${dir.path}${sep}service.json';
     final localFile = '${dir.path}${sep}local.json';
@@ -122,11 +122,11 @@ void main() {
   }, skip: !Platform.isWindows
       ? 'the service exists on Windows only'
       : exe == null
-          ? 'omnitun-svc not built'
+          ? 'wardkeep-svc not built'
           : false, timeout: const Timeout(Duration(seconds: 90)));
 
   test('without a service VPN mode stays on the own daemon', () async {
-    final dir = await Directory.systemTemp.createTemp('omnitun-svc-noroute');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-svc-noroute');
     addTearDown(() => dir.delete(recursive: true).catchError((_) => dir));
     final engine = CoreEngine(
       serviceControlFile: '${dir.path}${sep}missing.json',
@@ -144,6 +144,6 @@ void main() {
   }, skip: !Platform.isWindows
       ? 'the service exists on Windows only'
       : exe == null
-          ? 'omnitun-svc not built'
+          ? 'wardkeep-svc not built'
           : false, timeout: const Timeout(Duration(seconds: 60)));
 }

@@ -1,24 +1,24 @@
 # Wardkeep server
 
-`omnitun-server` is one program that serves many VPN protocols to your own users, with one subscription link per user, quotas and traffic accounting, a terminal UI and a web API.
+`wardkeep-server` is one program that serves many VPN protocols to your own users, with one subscription link per user, quotas and traffic accounting, a terminal UI and a web API.
 
 **Honest status.** The sing-box protocols (the first ten below) are tested end to end against Wardkeep's own client. OpenVPN, WireGuard and AmneziaWG have also run on Linux in Docker with real clients (`make docker-e2e`: OpenVPN, `wg-quick` and an AmneziaWG client connect, reach a web server through the server's NAT, and are counted; see [Tests](#tests)). The same test connects three users at once through three protocols and checks IPv6 inside the tunnels. The installer, the firewall helpers and ACME were written and unit-tested here on Windows with a fake command runner; **they have not run on a real Linux host yet**. Try `install --dry-run` first, then a fresh VPS you can throw away.
 
 ## Quick start (a VPS you own)
 
 ```sh
-# 1. put the binary on the server (a release build, or: go build ./cmd/omnitun-server)
+# 1. put the binary on the server (a release build, or: go build ./cmd/wardkeep-server)
 # 2. as root:
-omnitun-server init                    # a guided wizard: address, protocols, ports, the site to imitate, first user
-omnitun-server install --dry-run       # shows every step
-omnitun-server install                 # system user, hardened systemd unit, starts now and at boot, opens the firewall
-omnitun-server link alice --qr         # links and QR codes for alice; --sub prints only her subscription URL
+wardkeep-server init                    # a guided wizard: address, protocols, ports, the site to imitate, first user
+wardkeep-server install --dry-run       # shows every step
+wardkeep-server install                 # system user, hardened systemd unit, starts now and at boot, opens the firewall
+wardkeep-server link alice --qr         # links and QR codes for alice; --sub prints only her subscription URL
 ```
 
 No terminal wizard? Give everything as flags:
 
 ```sh
-omnitun-server init --host vpn.example.com --protocols vless-reality,trojan,hysteria2 \
+wardkeep-server init --host vpn.example.com --protocols vless-reality,trojan,hysteria2 \
     --port trojan=9443 --first-user alice
 ```
 
@@ -43,10 +43,10 @@ omnitun-server init --host vpn.example.com --protocols vless-reality,trojan,hyst
 | DNSCrypt resolver | 5443/tcp+udp | not a way to connect: a DNS resolver for the tunnel's users; off by default, needs `dnscrypt listen <tunnel address>` first; see *DNSCrypt resolver* below |
 
 ```sh
-omnitun-server proto list                  # ports, status, traffic this month
-omnitun-server proto enable amneziawg
-omnitun-server proto port trojan 9443
-omnitun-server firewall                    # open the ports again after changing protocols
+wardkeep-server proto list                  # ports, status, traffic this month
+wardkeep-server proto enable amneziawg
+wardkeep-server proto port trojan 9443
+wardkeep-server firewall                    # open the ports again after changing protocols
 ```
 
 AmneziaWG needs a TUN device and NAT on the host. The server sets up and removes narrow nftables (or iptables) rules itself: clients may reach the internet; client-to-client traffic and the host's private networks are dropped. Docker's own firewall policy can still block forwarding.
@@ -60,9 +60,9 @@ A new server makes **AmneziaWG 2.0** parameters: junk packets (`Jc` 4-12, `Jmin`
 **Classic 1.x** (single-number headers, no `S3`/`S4`) is for old third-party clients that never learned 2.0:
 
 ```sh
-omnitun-server init --host vpn.example.com --awg-version 1.x     # a new server (2.0 without the flag; the wizard asks too)
-omnitun-server proto awg-version 1.x                             # an existing one: new parameters, same keys
-omnitun-server proto list                                        # the AmneziaWG row shows 2.0 or 1.x
+wardkeep-server init --host vpn.example.com --awg-version 1.x     # a new server (2.0 without the flag; the wizard asks too)
+wardkeep-server proto awg-version 1.x                             # an existing one: new parameters, same keys
+wardkeep-server proto list                                        # the AmneziaWG row shows 2.0 or 1.x
 ```
 
 Over the web API: `PATCH /api/v1/protocols/amneziawg` with `{"amneziawg_version": "1.x"}`; in the terminal UI: `v` on the AmneziaWG line of the Protocols tab. Changing the version makes new parameters (the server's keys and the users' keys stay), so **every AmneziaWG user imports their config or link again**; asking for the version the server already has changes nothing. A server stored by an older build keeps the 1.x parameters it has until you change them.
@@ -72,8 +72,8 @@ Over the web API: `PATCH /api/v1/protocols/amneziawg` with `{"amneziawg_version"
 Off by default, because a host without IPv6 to the internet would make apps wait for addresses that go nowhere:
 
 ```sh
-omnitun-server init --host vpn.example.com --ipv6      # a new server
-omnitun-server proto ipv6 on                           # an existing one (off to switch back); PUT /api/v1/server/ipv6
+wardkeep-server init --host vpn.example.com --ipv6      # a new server
+wardkeep-server proto ipv6 on                           # an existing one (off to switch back); PUT /api/v1/server/ipv6
 sysctl -w net.ipv6.conf.all.forwarding=1               # the host must forward IPv6 (the server warns when it does not)
 ```
 
@@ -84,15 +84,15 @@ With it on, every user gets a second, unique-local address in **WireGuard** (`fd
 Users on a network that lets DNS through and blocks everything else can still connect, inside DNS queries ([dnstt](https://www.bamsoftware.com/software/dnstt/): Noise over KCP over DNS). It is slow, TCP only and the volume of queries is visible, so it is a last resort, off until asked for. It uses dnstt's wire format unchanged, so stock dnstt tools should talk to it (not tried here).
 
 ```sh
-omnitun-server dnstt domain t.example.com   # the zone to delegate; prints the two DNS records to create
-omnitun-server proto enable dnstt           # answers UDP port 53 (open it in the firewall)
-omnitun-server dnstt status                 # the key and the records again
-omnitun-server link alice                   # the user's dnstt:// link: domain, key and login
-omnitun-server dnstt rotate-key             # a new key: every user needs a new link
+wardkeep-server dnstt domain t.example.com   # the zone to delegate; prints the two DNS records to create
+wardkeep-server proto enable dnstt           # answers UDP port 53 (open it in the firewall)
+wardkeep-server dnstt status                 # the key and the records again
+wardkeep-server link alice                   # the user's dnstt:// link: domain, key and login
+wardkeep-server dnstt rotate-key             # a new key: every user needs a new link
 ```
 
 * **DNS records.** At the provider of `example.com`: an `NS` record for `t.example.com` naming a host (`tns.example.com`) and an `A` record for that host with this server's address. `dnstt domain` prints them; check with `dig NS t.example.com`.
-* **Port 53 must be free.** On Ubuntu `systemd-resolved` listens on `127.0.0.53:53` and may need `DNSStubListener=no` in `/etc/systemd/resolved.conf`. If the port cannot be bound the server says so in its log and everything else keeps running. Binding port 53 needs no root with the service unit `omnitun-server install` writes (`CAP_NET_BIND_SERVICE`).
+* **Port 53 must be free.** On Ubuntu `systemd-resolved` listens on `127.0.0.53:53` and may need `DNSStubListener=no` in `/etc/systemd/resolved.conf`. If the port cannot be bound the server says so in its log and everything else keeps running. Binding port 53 needs no root with the service unit `wardkeep-server install` writes (`CAP_NET_BIND_SERVICE`).
 * **Users.** The tunnel hands each connection to a SOCKS5 inbound of sing-box that listens on `127.0.0.1:5300` and asks for the user's name and password, so users, quotas, expiry and the traffic counts work as for the other protocols. Nothing but the DNS port is reachable from outside.
 * **Keys.** `init` makes the server's key pair; the public half is in every link. `rotate-key` makes a new one (restart the server).
 * **Not tried** against real recursive resolvers or a real delegated zone; tested with the client and the server over loopback, and with a real client engine and a real server runtime.
@@ -102,13 +102,13 @@ omnitun-server dnstt rotate-key             # a new key: every user needs a new 
 `dnscrypt` (5443, TCP and UDP) is not a way to connect: it is a DNS resolver for your users, encrypted and authenticated with [DNSCrypt](https://www.dnscrypt.org/), so the VPN's DNS is private and under your control. It is **off by default**, and it is **never open to the internet**: it does not start until you name the one address it listens on, it answers only the VPN's clients, and it asks a public resolver unless you choose otherwise.
 
 ```sh
-omnitun-server dnscrypt listen 10.30.0.1   # the server's side of the tunnel your users are in (see below)
-omnitun-server proto enable dnscrypt       # refused until a listen address is set; a running server picks the change up
-omnitun-server link --stamp                # the DNS stamp (sdns://...) to give to clients
-omnitun-server dnscrypt status             # listen address, who may ask, key, upstream, stamp
-omnitun-server dnscrypt allow 203.0.113.0/24   # more source ranges that may ask (no argument clears them)
-omnitun-server dnscrypt upstream 9.9.9.9   # the resolver it asks (default 1.1.1.1; `system` = the host's resolv.conf)
-omnitun-server dnscrypt rotate-key         # a new long-term key: the stamp changes, give clients the new one
+wardkeep-server dnscrypt listen 10.30.0.1   # the server's side of the tunnel your users are in (see below)
+wardkeep-server proto enable dnscrypt       # refused until a listen address is set; a running server picks the change up
+wardkeep-server link --stamp                # the DNS stamp (sdns://...) to give to clients
+wardkeep-server dnscrypt status             # listen address, who may ask, key, upstream, stamp
+wardkeep-server dnscrypt allow 203.0.113.0/24   # more source ranges that may ask (no argument clears them)
+wardkeep-server dnscrypt upstream 9.9.9.9   # the resolver it asks (default 1.1.1.1; `system` = the host's resolv.conf)
+wardkeep-server dnscrypt rotate-key         # a new long-term key: the stamp changes, give clients the new one
 ```
 
 * **Listen address.** One specific address, never `0.0.0.0` or `::` (refused, as is an unset address: `proto enable dnscrypt` and `init --protocols dnscrypt` say how to set it). Use the server's address inside the tunnel: 10.30.0.1 (WireGuard), 10.31.0.1 (AmneziaWG), 10.18.0.1 / 10.19.0.1 (OpenVPN UDP / TCP), or 127.0.0.1 for tests. That interface must exist when the server starts. The stamp names this address and the port, so it works from inside the tunnel. The `firewall` command opens the port for enabled protocols; if the listen address is a tunnel address that is harmless, since nothing outside can reach it. Do not point it at a public address unless you also want the cost of that.
@@ -122,25 +122,25 @@ omnitun-server dnscrypt rotate-key         # a new long-term key: the stamp chan
 ## Users, links and quotas
 
 ```sh
-omnitun-server user add alice --days 30 --quota 100 --note "Alice's phone"
-omnitun-server user list                   # state, expiry, usage, live speed
-omnitun-server user quota alice 200        # GB per month, 0 = none
-omnitun-server user expire alice never
-omnitun-server user disable alice
-omnitun-server user reset alice            # new credentials; the old links stop working
-omnitun-server link alice --ovpn udp       # the OpenVPN config file
+wardkeep-server user add alice --days 30 --quota 100 --note "Alice's phone"
+wardkeep-server user list                   # state, expiry, usage, live speed
+wardkeep-server user quota alice 200        # GB per month, 0 = none
+wardkeep-server user expire alice never
+wardkeep-server user disable alice
+wardkeep-server user reset alice            # new credentials; the old links stop working
+wardkeep-server link alice --ovpn udp       # the OpenVPN config file
 ```
 
 ### Signed subscriptions
 
-Every subscription answer is signed with the server's Ed25519 key (header `X-Signature: ed25519=<base64>`, with `X-Signature-Time`). The public key is at the end of the link `omnitun-server link <user>` prints, after `#pk=`: a fragment, so it never reaches the server. Wardkeep reads it from there and from then on refuses an answer that was changed on the way, served for another address or user, or played back from before the last one it accepted. A client that does not know the key sees an ordinary subscription.
+Every subscription answer is signed with the server's Ed25519 key (header `X-Signature: ed25519=<base64>`, with `X-Signature-Time`). The public key is at the end of the link `wardkeep-server link <user>` prints, after `#pk=`: a fragment, so it never reaches the server. Wardkeep reads it from there and from then on refuses an answer that was changed on the way, served for another address or user, or played back from before the last one it accepted. A client that does not know the key sees an ordinary subscription.
 
 ```sh
-omnitun-server subscription status                       # the public key and the protocol order
-omnitun-server subscription order vless,hysteria2        # clients try these first, for everyone
-omnitun-server subscription order --country IR hysteria2,vless
-omnitun-server subscription order --country IR           # clear one country's order
-omnitun-server subscription rotate-key                   # new key: every user needs the new link
+wardkeep-server subscription status                       # the public key and the protocol order
+wardkeep-server subscription order vless,hysteria2        # clients try these first, for everyone
+wardkeep-server subscription order --country IR hysteria2,vless
+wardkeep-server subscription order --country IR           # clear one country's order
+wardkeep-server subscription rotate-key                   # new key: every user needs the new link
 ```
 
 * **What is signed:** a version tag, the request target as sent (path and query), the time, the usage / expiry / title / interval headers, the protocol-order headers, and the body, so a changed usage bar or order fails too. A client with the key follows no redirect, and keeps the time of the last answer it accepted and refuses an older one (no clock is compared, so a phone with a wrong clock works). If you restore an old backup of the server, clients refuse its answers until the user opens the subscription in the app and saves it again.
@@ -157,9 +157,9 @@ Traffic, live connections and speed are counted per user and per protocol for ev
 The server starts with a self-signed certificate (clients are told to pin it). For a real one:
 
 ```sh
-omnitun-server cert acme --domain vpn.example.com --email you@example.com   # Let's Encrypt by default
-omnitun-server cert status
-omnitun-server cert self-signed            # go back
+wardkeep-server cert acme --domain vpn.example.com --email you@example.com   # Let's Encrypt by default
+wardkeep-server cert status
+wardkeep-server cert self-signed            # go back
 ```
 
 `--dns cloudflare|alidns --dns-token …` uses a DNS challenge; otherwise port 80 must be reachable (`--http-port` to change it). The certificate renews while the server runs. **ACME has not been run against a real CA from here**: try it on a real domain before relying on it.
@@ -167,13 +167,13 @@ omnitun-server cert self-signed            # go back
 ## Web API, terminal UI, logs
 
 ```sh
-omnitun-server api enable                  # then `run` serves it; docs at /docs (OpenAPI)
-omnitun-server api token                   # the bearer token; --new replaces it at once
-omnitun-server api tls on                  # HTTPS with the server certificate
-omnitun-server tui                         # users, links with QR codes, protocols, server, logs, alerts
-omnitun-server logs -f [--level warn]      # what the server reported: reloads, quota blocks, warnings, errors
-omnitun-server logs level [debug|default]  # what the server writes to its log (applied within seconds)
-omnitun-server alerts                      # failures nothing handled; `alerts ack <id>|--all`, `alerts collect off`
+wardkeep-server api enable                  # then `run` serves it; docs at /docs (OpenAPI)
+wardkeep-server api token                   # the bearer token; --new replaces it at once
+wardkeep-server api tls on                  # HTTPS with the server certificate
+wardkeep-server tui                         # users, links with QR codes, protocols, server, logs, alerts
+wardkeep-server logs -f [--level warn]      # what the server reported: reloads, quota blocks, warnings, errors
+wardkeep-server logs level [debug|default]  # what the server writes to its log (applied within seconds)
+wardkeep-server alerts                      # failures nothing handled; `alerts ack <id>|--all`, `alerts collect off`
 ```
 
 The API listens on 127.0.0.1 by default. Reach it over an SSH tunnel, or turn on `api tls` before listening publicly (the server warns when it listens publicly without TLS).
@@ -185,16 +185,16 @@ The API listens on 127.0.0.1 by default. Reach it over an SSH tunnel, or turn on
 ## Backup, restore, moving from Xray
 
 ```sh
-omnitun-server backup omnitun.tar.gz       # state, keys, certificates: it holds every secret
-omnitun-server restore omnitun.tar.gz [--force]
-omnitun-server import xray /etc/xray/config.json --host vpn.example.com --adopt-reality
+wardkeep-server backup wardkeep.tar.gz       # state, keys, certificates: it holds every secret
+wardkeep-server restore wardkeep.tar.gz [--force]
+wardkeep-server import xray /etc/xray/config.json --host vpn.example.com --adopt-reality
 ```
 
 `import xray` moves an Xray or V2Ray server's users (with their UUIDs and Trojan passwords) and, for a new server, the VLESS+Reality key, short id, site and port, so existing client links keep working.
 
 ## Tests
 
-Go tests (`go test ./server/... ./cmd/omnitun-server ./core/protocols`) cover the manager, the CLI, the API, the terminal UI, the in-process AmneziaWG server (including a handshake between a client device built from the link or `.conf` the server hands out and the server's own device) and the NAT rule sets.
+Go tests (`go test ./server/... ./cmd/wardkeep-server ./core/protocols`) cover the manager, the CLI, the API, the terminal UI, the in-process AmneziaWG server (including a handshake between a client device built from the link or `.conf` the server hands out and the server's own device) and the NAT rule sets.
 
 `make docker-e2e` (`tools/dockertest/run.py`; needs Docker; about 25 minutes the first time) runs the real thing: this repo's Linux server in a container with a TUN device and NAT, a web server on a network only the server reaches, and client containers with the standard clients (`openvpn`, `wg-quick` and this repo's AmneziaWG client). It has three parts:
 
@@ -206,4 +206,4 @@ Go tests (`go test ./server/... ./cmd/omnitun-server ./core/protocols`) cover th
 
 ## Files
 
-The data directory is `/var/lib/omnitun-server` as root and `~/.omnitun-server` otherwise (`--data` or `OMNITUN_SERVER_DATA`). It holds `state.json` (users and keys), `stats.json`, `server.log` (rotated at 4 MB, one old file kept), `alerts.json` and the certificates. Several commands can write at the same time; changes are picked up by a running server without a restart.
+The data directory is `/var/lib/omnitun-server` as root and `~/.omnitun-server` otherwise (`--data` or `WARDKEEP_SERVER_DATA`). It holds `state.json` (users and keys), `stats.json`, `server.log` (rotated at 4 MB, one old file kept), `alerts.json` and the certificates. Several commands can write at the same time; changes are picked up by a running server without a restart.

@@ -3,9 +3,9 @@ package singbox_test
 import (
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/engine"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/engine"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // What Build makes for a mesh profile is accepted by sing-box itself (its option

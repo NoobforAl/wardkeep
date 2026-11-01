@@ -4,7 +4,7 @@ import (
 	"net/netip"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // A WireGuard user is told apart by the tunnel address a connection comes from, by the

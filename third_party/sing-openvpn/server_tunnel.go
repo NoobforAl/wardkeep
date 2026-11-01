@@ -3,7 +3,7 @@ package openvpn
 import "net/netip"
 
 // SessionEvent tells an embedding server which user holds which tunnel address
-// (Omnitun patch). Without it nothing outside this package can tell, so traffic
+// (Wardkeep patch). Without it nothing outside this package can tell, so traffic
 // seen from a tunnel address cannot be charged to the user behind it.
 type SessionEvent struct {
 	// Username is the user/password the peer signed in with; empty when the

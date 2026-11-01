@@ -18,8 +18,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 // Options configures the API.
@@ -107,7 +107,7 @@ func New(opts Options) http.Handler {
 	}
 	cfg := huma.DefaultConfig("Wardkeep Server API", version)
 	cfg.Info.Description = "Manage an Wardkeep server: protocols, users and share links. " +
-		"Send the token printed by `omnitun-server api token` as `Authorization: Bearer <token>`."
+		"Send the token printed by `wardkeep-server api token` as `Authorization: Bearer <token>`."
 	cfg.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
 		"bearer": {Type: "http", Scheme: "bearer"},
 	}
@@ -394,7 +394,7 @@ func New(opts Options) http.Handler {
 			ContentType        string `header:"Content-Type"`
 			ContentDisposition string `header:"Content-Disposition"`
 			Body               []byte
-		}{ContentType: "application/gzip", ContentDisposition: `attachment; filename="omnitun-server-backup.tar.gz"`, Body: buf.Bytes()}, nil
+		}{ContentType: "application/gzip", ContentDisposition: `attachment; filename="wardkeep-server-backup.tar.gz"`, Body: buf.Bytes()}, nil
 	})
 
 	huma.Register(humaAPI, huma.Operation{

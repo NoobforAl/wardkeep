@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/dnscrypt"
+	"github.com/NoobforAl/wardkeep/core/dnscrypt"
 )
 
 // IsDNSStamp reports whether a resolver setting is a DNS stamp ("sdns://...").

@@ -417,7 +417,7 @@
   "formRealityKeyRequired": "سیکیورٹی Reality ہونے پر Reality پبلک کلید درکار ہے",
   "importUnsupported": "یہ سرور لنک، سبسکرپشن یا کنفیگ نہیں ہے جسے Wardkeep پڑھ سکے",
   "importUnsupportedScheme": "{scheme}:// سے شروع ہونے والے لنک معاون نہیں ہیں",
-  "importXrayServer": "یہ Xray سرور کنفیگ ہے۔ اسے سرور پر درآمد کریں (omnitun-server import xray)، کلائنٹ پروفائل کے طور پر نہیں",
+  "importXrayServer": "یہ Xray سرور کنفیگ ہے۔ اسے سرور پر درآمد کریں (wardkeep-server import xray)، کلائنٹ پروفائل کے طور پر نہیں",
   "subAuthFailed": "سبسکرپشن نے سائن اِن مسترد کر دیا۔ صارف نام، پاس ورڈ یا ٹوکن جانچیں",
   "subHttp": "سبسکرپشن سرور نے HTTP {status} جواب دیا",
   "subTooLarge": "سبسکرپشن 10 MB سے بڑا ہے",

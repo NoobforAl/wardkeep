@@ -15,7 +15,7 @@ func TestAncestorDirs(t *testing.T) {
 	}{
 		{filepath.Join(root, "a", "b", "f.exe"), []string{filepath.Join(root, "a", "b"), filepath.Join(root, "a"), root}},
 		{filepath.Join(root, "f.exe"), []string{root}},
-		{filepath.Join(root, "Program Files", "Omnitun", "omnitun-svc.exe"), []string{filepath.Join(root, "Program Files", "Omnitun"), filepath.Join(root, "Program Files"), root}},
+		{filepath.Join(root, "Program Files", "Omnitun", "wardkeep-svc.exe"), []string{filepath.Join(root, "Program Files", "Omnitun"), filepath.Join(root, "Program Files"), root}},
 	}
 	for _, c := range cases {
 		if got := ancestorDirs(c.file); !slices.Equal(got, c.want) {

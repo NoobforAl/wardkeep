@@ -35,7 +35,7 @@ body:
         - Android
         - Windows
         - Linux (desktop app)
-        - Server (omnitun-server)
+        - Server (wardkeep-server)
         - All of them
   - type: checkboxes
     id: checks

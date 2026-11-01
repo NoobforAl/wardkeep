@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // HelperSocks is where a helper tunnel's local port is, and the SOCKS5 login its far end asks for (both empty: none).

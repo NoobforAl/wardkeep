@@ -2625,7 +2625,7 @@ abstract class AppLocalizations {
   /// No description provided for @importXrayServer.
   ///
   /// In en, this message translates to:
-  /// **'This is an Xray server config. Import it on the server (omnitun-server import xray), not as a client profile'**
+  /// **'This is an Xray server config. Import it on the server (wardkeep-server import xray), not as a client profile'**
   String get importXrayServer;
 
   /// No description provided for @subAuthFailed.

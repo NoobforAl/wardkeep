@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/control"
+	"github.com/NoobforAl/wardkeep/core/control"
 )
 
 func TestLayoutFrom(t *testing.T) {

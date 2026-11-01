@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 func awgVersionInList(t *testing.T, dir string) string {

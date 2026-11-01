@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // same compares two profiles by what they connect with (not Source or ID).

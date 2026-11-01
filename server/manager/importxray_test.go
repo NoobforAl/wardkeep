@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func xrayServerConfig(t *testing.T) (config, pub string) {

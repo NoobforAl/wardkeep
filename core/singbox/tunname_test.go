@@ -3,7 +3,7 @@ package singbox
 import (
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 func tunInbound(t *testing.T, opts Options) map[string]any {

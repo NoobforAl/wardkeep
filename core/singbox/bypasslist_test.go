@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 func TestParseBypassListEveryKind(t *testing.T) {

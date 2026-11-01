@@ -19,7 +19,7 @@ import (
 
 	"github.com/gofrs/flock"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/protocols"
 )
 
 const fileName = "state.json"
@@ -251,8 +251,8 @@ func (s *Store) Path(name string) string {
 	return filepath.Join(s.Dir, name)
 }
 
-// ErrNotInitialized means `omnitun-server init` has not been run.
-var ErrNotInitialized = errors.New("server not initialized (run: omnitun-server init)")
+// ErrNotInitialized means `wardkeep-server init` has not been run.
+var ErrNotInitialized = errors.New("server not initialized (run: wardkeep-server init)")
 
 // Exists reports whether the state file exists.
 func (s *Store) Exists() bool {
@@ -343,7 +343,7 @@ func (s *Store) withLock(fn func() error) error {
 		return fmt.Errorf("lock %s: %w", s.Dir, err)
 	}
 	if !ok {
-		return fmt.Errorf("another omnitun-server command is writing to %s; try again", s.Dir)
+		return fmt.Errorf("another wardkeep-server command is writing to %s; try again", s.Dir)
 	}
 	defer func() { _ = lock.Unlock() }()
 	return fn()

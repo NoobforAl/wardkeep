@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/state/ipdb.dart';
+import 'package:wardkeep/state/ipdb.dart';
 
 const _v4 = '1.0.0.0,1.0.0.255,AU\n'
     '1.0.1.0,1.0.1.255,AU\n'

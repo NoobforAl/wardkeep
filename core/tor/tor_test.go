@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
 func TestBridgeLines(t *testing.T) {
@@ -58,19 +58,19 @@ func TestStartTransports(t *testing.T) {
 }
 
 // TestLiveTor bootstraps through real built-in bridges when
-// OMNITUN_LIVE_TOR is set to a kind (obfs4, snowflake, meek, or "direct")
-// and OMNITUN_TOR_BIN points at the omnitun-tor binary.
+// WARDKEEP_LIVE_TOR is set to a kind (obfs4, snowflake, meek, or "direct")
+// and WARDKEEP_TOR_BIN points at the wardkeep-tor binary.
 func TestLiveTor(t *testing.T) {
-	kind := os.Getenv("OMNITUN_LIVE_TOR")
+	kind := os.Getenv("WARDKEEP_LIVE_TOR")
 	if kind == "" {
-		t.Skip("set OMNITUN_LIVE_TOR=obfs4|snowflake|meek|direct and OMNITUN_TOR_BIN")
+		t.Skip("set WARDKEEP_LIVE_TOR=obfs4|snowflake|meek|direct and WARDKEEP_TOR_BIN")
 	}
 	var bridges []string
 	if kind != "direct" {
 		bridges = Builtin(kind)
 	}
 	pathCh := make(chan []Hop, 8)
-	dir := os.Getenv("OMNITUN_LIVE_TOR_DATA")
+	dir := os.Getenv("WARDKEEP_LIVE_TOR_DATA")
 	if dir == "" {
 		dir = t.TempDir()
 	}

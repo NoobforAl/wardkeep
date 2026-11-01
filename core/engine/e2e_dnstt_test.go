@@ -13,14 +13,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/server"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/noise"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/server"
 )
 
 // startDNSTTServer runs a dnstt server on loopback UDP in front of a SOCKS5 upstream that wants user/password, the
-// way omnitun-server sets it up, and returns the resolver address and the server key.
+// way wardkeep-server sets it up, and returns the resolver address and the server key.
 func startDNSTTServer(t *testing.T, zone string) (resolver, keyHex string) {
 	t.Helper()
 	upstreamPort := freePort(t)

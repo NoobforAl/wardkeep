@@ -5,11 +5,11 @@ import 'dart:isolate';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
-import 'package:omnitun/ui/widgets/earth_globe.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
+import 'package:wardkeep/ui/widgets/earth_globe.dart';
 import 'package:vm_service/vm_service_io.dart';
 
 /// Frame times of the real app. Run it in profile mode (debug mode is several times slower and says
@@ -34,7 +34,7 @@ void main() {
     final engine = MockEngine(connectDelay: Duration.zero);
     await tester.pumpWidget(ProviderScope(
       overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(engine)],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ));
     await tester.pumpAndSettle();
 

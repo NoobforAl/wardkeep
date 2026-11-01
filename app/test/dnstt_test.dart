@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/countries.dart';
-import 'package:omnitun/state/location.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
-import 'package:omnitun/ui/theme.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/countries.dart';
+import 'package:wardkeep/state/location.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
+import 'package:wardkeep/ui/theme.dart';
 
 /// A mock whose forms include the DNS tunnel editor, the way the core sends it.
 class _TunnelEngine extends MockEngine {
@@ -68,11 +68,11 @@ Future<ProviderContainer> _start(WidgetTester tester, _TunnelEngine engine) asyn
         ),
         engineProvider.overrideWithValue(engine),
       ],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ),
   );
   await tester.pump();
-  return ProviderScope.containerOf(tester.element(find.byType(OmnitunApp)));
+  return ProviderScope.containerOf(tester.element(find.byType(WardkeepApp)));
 }
 
 Future<void> _openEditor(WidgetTester tester) async {

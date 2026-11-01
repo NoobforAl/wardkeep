@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 // levelHelp is the help text of every option that sets the log level.

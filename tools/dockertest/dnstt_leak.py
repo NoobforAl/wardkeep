@@ -4,9 +4,9 @@
 Three containers (names and networks start with "wkdnst"):
 
     client --- net A --- server --- net B --- web
-                (UDP 53)  (omnitun-server, the DNS tunnel on)
+                (UDP 53)  (wardkeep-server, the DNS tunnel on)
 
-The client runs this repo's core engine (`omnitun run -tun -select <id> <dnstt link>`) in TUN mode. The
+The client runs this repo's core engine (`wardkeep run -tun -select <id> <dnstt link>`) in TUN mode. The
 link names the server as its resolver (all a resolver does is pass the queries to the zone's server).
 The web server is on a network the client cannot reach.
 
@@ -80,7 +80,7 @@ def build():
     os.makedirs(BUILD, exist_ok=True)
     env = dict(os.environ, GOOS="linux", GOARCH="amd64", CGO_ENABLED="0")
     print("building the Linux binaries...")
-    for name, pkg in (("omnitun-server", "./cmd/omnitun-server"), ("omnitun", "./cmd/omnitun")):
+    for name, pkg in (("wardkeep-server", "./cmd/wardkeep-server"), ("wardkeep", "./cmd/wardkeep")):
         subprocess.run(["go", "build", "-tags", TAGS, "-trimpath", "-ldflags", "-s -w -checklinkname=0",
                         "-o", os.path.join(BUILD, name), pkg], cwd=ROOT, env=env, check=True)
     shutil.copy(os.path.join(HERE, "web.py"), os.path.join(BUILD, "web.py"))
@@ -108,12 +108,12 @@ def start_world():
     # The server: on both networks; the DNS tunnel on UDP port 53 (it runs as root here, so it may bind it).
     sh("docker", "run", "-d", "--name", SERVER, "--network", NET_A, "--ip", SERVER_A, "--cap-add", "NET_ADMIN", IMG, "sleep", "infinity")
     sh("docker", "network", "connect", "--ip", SERVER_B, NET_B, SERVER)
-    dx(SERVER, "omnitun-server --data /data init --host %s --protocols shadowsocks --first-user alice" % SERVER_A)
-    dx(SERVER, "omnitun-server --data /data dnstt domain %s && omnitun-server --data /data proto enable dnstt" % DOMAIN)
-    sh("docker", "exec", "-d", SERVER, "sh", "-c", "omnitun-server --data /data run > /run.log 2>&1")
+    dx(SERVER, "wardkeep-server --data /data init --host %s --protocols shadowsocks --first-user alice" % SERVER_A)
+    dx(SERVER, "wardkeep-server --data /data dnstt domain %s && wardkeep-server --data /data proto enable dnstt" % DOMAIN)
+    sh("docker", "exec", "-d", SERVER, "sh", "-c", "wardkeep-server --data /data run > /run.log 2>&1")
     log = wait_for(SERVER, "/run.log", "serving the DNS tunnel")
     print("server:", [l for l in log.splitlines() if "DNS tunnel" in l][:2])
-    d = json.loads(dx(SERVER, "omnitun-server --data /data link alice --json").stdout)
+    d = json.loads(dx(SERVER, "wardkeep-server --data /data link alice --json").stdout)
     link = next(l["url"] for l in d["links"] if l["protocol"] == "dnstt")
     # The client has no internet: its resolver is the server itself.
     u = urllib.parse.urlsplit(link)
@@ -150,7 +150,7 @@ def main():
     try:
         build()
         link = start_world()
-        profile = json.loads(dx(CLIENT, "omnitun import - <<'EOF'\n%s\nEOF" % link).stdout)
+        profile = json.loads(dx(CLIENT, "wardkeep import - <<'EOF'\n%s\nEOF" % link).stdout)
         pid = profile[0]["id"]
         print("the profile:", pid, profile[0].get("name"))
 
@@ -158,10 +158,10 @@ def main():
         r = dx(CLIENT, "curl -s -m 5 http://%s:8080/" % WEB_B, check=False, timeout=30)
         check("client=" not in r.stdout, "the client cannot reach the web server by itself", r.stdout.strip()[:80])
 
-        print("\nthe tunnel: omnitun run -tun -select <id>")
+        print("\nthe tunnel: wardkeep run -tun -select <id>")
         capture_start(CLIENT, "card", "eth0")
-        sh("docker", "exec", "-d", CLIENT, "sh", "-c", "omnitun run -tun -select %s '%s' > /omnitun.log 2>&1" % (pid, link))
-        log = wait_for(CLIENT, "/omnitun.log", "state: connected", 120)
+        sh("docker", "exec", "-d", CLIENT, "sh", "-c", "wardkeep run -tun -select %s '%s' > /wardkeep.log 2>&1" % (pid, link))
+        log = wait_for(CLIENT, "/wardkeep.log", "state: connected", 120)
         up = "state: connected" in log
         check(up, "the tunnel is up", "" if up else log[-800:])
         if up:

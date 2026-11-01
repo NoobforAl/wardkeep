@@ -19,8 +19,8 @@ import (
 	"github.com/sagernet/sing-box/include"
 	"golang.org/x/crypto/curve25519"
 
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // wgKeys makes a WireGuard key pair (base64, as configs carry them).

@@ -1,6 +1,6 @@
-//! `omnitun-tor`: Arti behind a local SOCKS5 port, started by the Go core.
+//! `wardkeep-tor`: Arti behind a local SOCKS5 port, started by the Go core.
 //!
-//! Usage: omnitun-tor --data DIR [--socks-port N] [--bridge LINE]... [--transport NAME=HOST:PORT]...
+//! Usage: wardkeep-tor --data DIR [--socks-port N] [--bridge LINE]... [--transport NAME=HOST:PORT]...
 //!                     [--log-level trace|debug|info|warn|error|fatal]
 //!
 //! stdout carries one JSON object per line for the core:
@@ -23,9 +23,9 @@ use arti_client::config::{BoolOrAuto, BridgeConfigBuilder, TorClientConfigBuilde
 use arti_client::{HasKind, TorClient, TorClientConfig};
 
 use futures::StreamExt;
-use omnitun_tor::logging::{self, Level, Record};
-use omnitun_tor::{args, path, socks};
 use serde_json::json;
+use wardkeep_tor::logging::{self, Level, Record};
+use wardkeep_tor::{args, path, socks};
 
 use tokio::io::AsyncReadExt;
 use tokio::net::{TcpListener, TcpStream};

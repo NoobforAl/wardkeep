@@ -25,7 +25,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/wardkeep/core/importer"
 )
 
 // naiveServerCert issues a certificate for naive.test from a fresh CA and
@@ -84,7 +84,7 @@ func TestEndToEndNaive(t *testing.T) {
 		"users": []any{map[string]any{"username": "nu", "password": "np"}},
 		"tls":   map[string]any{"enabled": true, "certificate": cert, "key": key},
 	})
-	// As served by omnitun-server's sing-box subscription: the certificate is pinned.
+	// As served by wardkeep-server's sing-box subscription: the certificate is pinned.
 	doc, _ := json.Marshal(map[string]any{"outbounds": []any{map[string]any{
 		"type": "naive", "tag": "naive", "server": "127.0.0.1", "server_port": port,
 		"username": "nu", "password": "np",

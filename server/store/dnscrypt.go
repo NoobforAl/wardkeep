@@ -13,7 +13,7 @@ import (
 // DNSCrypt is the identity of the server's optional DNSCrypt resolver: a
 // long-term Ed25519 key that signs the resolver's certificates, and the
 // provider name. The public key and the provider name are in the resolver's
-// DNS stamp (`omnitun-server link --stamp`), so changing the key changes the
+// DNS stamp (`wardkeep-server link --stamp`), so changing the key changes the
 // stamp and every client has to take the new one. The short-term keys the
 // certificates carry are made by the running server and replaced regularly;
 // they are not kept here.
@@ -47,7 +47,7 @@ var nonName = regexp.MustCompile(`[^a-z0-9-]+`)
 func DNSCryptProviderName(name string) string {
 	slug := strings.Trim(nonName.ReplaceAllString(strings.ToLower(name), "-"), "-")
 	if slug == "" {
-		slug = "omnitun"
+		slug = "omnitun" // old project name, kept: the DNS stamps users already have name it
 	}
 	if len(slug) > 40 {
 		slug = strings.Trim(slug[:40], "-")
@@ -119,7 +119,7 @@ func (st *State) RotateDNSCryptKey() error {
 }
 
 // ErrDNSCryptListen is why the resolver cannot be switched on yet.
-var ErrDNSCryptListen = fmt.Errorf("the DNSCrypt resolver needs the address to listen on first: omnitun-server dnscrypt listen <ip> " +
+var ErrDNSCryptListen = fmt.Errorf("the DNSCrypt resolver needs the address to listen on first: wardkeep-server dnscrypt listen <ip> " +
 	"(a VPN tunnel address such as 10.30.0.1 for WireGuard users, or 127.0.0.1); it never listens on all interfaces")
 
 // ParseDNSCryptListen checks the listen address: one specific IP, not a wildcard.

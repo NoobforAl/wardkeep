@@ -15,11 +15,11 @@ import (
 // client is found next to it) become code that runs with system rights.
 //
 //   - libcronet.dll: the NaiveProxy outbound's Chromium network stack;
-//   - omnitun-tor.exe: the Tor client.
+//   - wardkeep-tor.exe: the Tor client.
 //
 // Nothing else is loaded from the program's folder: Wintun is embedded in the
 // program and the Flutter app's DLLs belong to the app, not to the service.
-var payloadNames = []string{"libcronet.dll", "omnitun-tor.exe"}
+var payloadNames = []string{"libcronet.dll", "wardkeep-tor.exe"}
 
 // PayloadNames returns a copy of the allowlist.
 func PayloadNames() []string { return slices.Clone(payloadNames) }
@@ -127,7 +127,7 @@ func writersWith(owner string, entries []aceEntry, mask uint32) []string {
 // "a folder above it").
 func unsafeSourceError(what, path string, writers []string) error {
 	return fmt.Errorf("%s (%s) can be changed by accounts that are not administrators (%s), and the service would run what they put there as SYSTEM; "+
-		"copy omnitun-svc.exe (and libcronet.dll / omnitun-tor.exe if you use them) to a folder where neither it nor any folder above it "+
+		"copy wardkeep-svc.exe (and libcronet.dll / wardkeep-tor.exe if you use them) to a folder where neither it nor any folder above it "+
 		"can be changed by anyone but administrators, for example one under Program Files, and run install from there "+
 		"(--unsafe-source skips this check; for development only)",
 		what, path, strings.Join(writers, ", "))

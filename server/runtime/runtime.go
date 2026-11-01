@@ -1,6 +1,6 @@
 // Package runtime runs the VPN server: a sing-box instance built from the
 // state file plus the subscription endpoint. It reloads when the state file
-// changes, so `omnitun-server user ...` and the TUI apply without a restart.
+// changes, so `wardkeep-server user ...` and the TUI apply without a restart.
 package runtime
 
 import (
@@ -26,13 +26,13 @@ import (
 	sjson "github.com/sagernet/sing/common/json"
 	"github.com/sagernet/sing/service"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
-	"github.com/NoobforAl/omnitun/server/hostproto"
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/serverconf"
-	"github.com/NoobforAl/omnitun/server/stats"
-	"github.com/NoobforAl/omnitun/server/store"
-	"github.com/NoobforAl/omnitun/server/tlsfiles"
+	"github.com/NoobforAl/wardkeep/core/protocols"
+	"github.com/NoobforAl/wardkeep/server/hostproto"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/serverconf"
+	"github.com/NoobforAl/wardkeep/server/stats"
+	"github.com/NoobforAl/wardkeep/server/store"
+	"github.com/NoobforAl/wardkeep/server/tlsfiles"
 )
 
 // Server is a running VPN server.

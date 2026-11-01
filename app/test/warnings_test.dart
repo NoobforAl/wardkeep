@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/l10n/form_text.dart';
-import 'package:omnitun/l10n/l10n.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/l10n/form_text.dart';
+import 'package:wardkeep/l10n/l10n.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
 
 const _protocolWarning = WarningSpec(code: 'VMESS_LEGACY', text: 'english fallback');
 const _fieldWarning = WarningSpec(code: 'TLS_INSECURE', text: 'english fallback');
@@ -41,11 +41,11 @@ Future<ProviderContainer> _start(WidgetTester tester, AppStore store) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(_WarnEngine())],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ),
   );
   await tester.pump();
-  return ProviderScope.containerOf(tester.element(find.byType(OmnitunApp)));
+  return ProviderScope.containerOf(tester.element(find.byType(WardkeepApp)));
 }
 
 Future<void> _openPicker(WidgetTester tester) async {

@@ -23,8 +23,8 @@ package control
 import (
 	"encoding/json"
 
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // Version of the control protocol.

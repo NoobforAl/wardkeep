@@ -29,7 +29,7 @@ func Serve(ctx context.Context, host string, port int, handler http.Handler, tls
 	srv := &http.Server{Handler: handler, ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, ErrorLog: errorLog}
 	logf("web API on %s://%s (docs at /docs)", scheme, ln.Addr())
 	if ip := net.ParseIP(host); host != "localhost" && (ip == nil || !ip.IsLoopback()) && tlsConfig == nil {
-		logf("warning: the web API listens on a public address over plain HTTP; turn on its TLS (omnitun-server api tls on), or use an SSH tunnel")
+		logf("warning: the web API listens on a public address over plain HTTP; turn on its TLS (wardkeep-server api tls on), or use an SSH tunnel")
 	}
 	go func() {
 		<-ctx.Done()

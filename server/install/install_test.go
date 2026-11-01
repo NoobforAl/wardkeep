@@ -59,7 +59,7 @@ func TestDetectFirewall(t *testing.T) {
 }
 
 func TestPlanWithUFW(t *testing.T) {
-	plan, err := BuildPlan(Options{Binary: "/tmp/omnitun-server", DataDir: "/var/lib/omnitun-server", User: "omnitun", Ports: ports}, "ufw")
+	plan, err := BuildPlan(Options{Binary: "/tmp/wardkeep-server", DataDir: "/var/lib/omnitun-server", User: "omnitun", Ports: ports}, "ufw")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestPlanWithUFW(t *testing.T) {
 		"mkdir -p /var/lib/omnitun-server",
 		"chown -R omnitun:omnitun /var/lib/omnitun-server",
 		"chmod 700 /var/lib/omnitun-server",
-		"install -m 0755 /tmp/omnitun-server /usr/local/bin/omnitun-server",
+		"install -m 0755 /tmp/wardkeep-server /usr/local/bin/wardkeep-server",
 		"systemctl daemon-reload",
 		"ufw allow 443/tcp comment omnitun: vless-reality",
 		"ufw allow 8388/udp comment omnitun: shadowsocks",
@@ -103,7 +103,7 @@ func TestPlanWithUFW(t *testing.T) {
 		t.Fatal("no unit file step")
 	}
 	for _, want := range []string{
-		"ExecStart=/usr/local/bin/omnitun-server --data /var/lib/omnitun-server run",
+		"ExecStart=/usr/local/bin/wardkeep-server --data /var/lib/omnitun-server run",
 		"User=omnitun", "AmbientCapabilities=CAP_NET_BIND_SERVICE", "NoNewPrivileges=true",
 		"ReadWritePaths=/var/lib/omnitun-server", "Restart=on-failure", "WantedBy=multi-user.target",
 	} {

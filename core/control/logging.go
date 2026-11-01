@@ -5,8 +5,8 @@ import (
 	"maps"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/buildinfo"
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/buildinfo"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
 // LogEntry is pushed as a "log" event: one record of docs/logging.md (keys time, level, source, msg, and the

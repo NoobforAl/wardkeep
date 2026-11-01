@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // looksLikeOVPN reports whether text is an OpenVPN client config.

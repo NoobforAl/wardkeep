@@ -78,7 +78,7 @@ def build():
     env = dict(os.environ, GOOS="linux", GOARCH="amd64", CGO_ENABLED="0")
     print("building the Linux binaries...")
     subprocess.run(["go", "build", "-tags", TAGS, "-trimpath", "-ldflags", "-s -w -checklinkname=0",
-                    "-o", os.path.join(BUILD, "omnitun-server"), "./cmd/omnitun-server"], cwd=ROOT, env=env, check=True)
+                    "-o", os.path.join(BUILD, "wardkeep-server"), "./cmd/wardkeep-server"], cwd=ROOT, env=env, check=True)
     subprocess.run(["go", "build", "-trimpath", "-o", os.path.join(BUILD, "awgclient"), "./tools/dockertest/awgclient"],
                    cwd=ROOT, env=env, check=True)
     shutil.copy(os.path.join(HERE, "web.py"), os.path.join(BUILD, "web.py"))
@@ -130,11 +130,11 @@ def start_world(first_user="alice"):
        IMG_SERVER, "sleep", "infinity")
     sh("docker", "network", "connect", "--ip", SERVER_B, *ip6(SERVER_B6), NET_B, SERVER)
     protos = ",".join(PROTOCOLS)
-    print(dx(SERVER, "omnitun-server --data /data init --host %s --protocols %s --first-user %s" % (SERVER_A, protos, first_user)).stdout[-300:])
+    print(dx(SERVER, "wardkeep-server --data /data init --host %s --protocols %s --first-user %s" % (SERVER_A, protos, first_user)).stdout[-300:])
     for u in USERS:
         if u != first_user:
-            dx(SERVER, "omnitun-server --data /data user add %s" % u)
-    sh("docker", "exec", "-d", SERVER, "sh", "-c", "omnitun-server --data /data run > /var/log/run.log 2>&1")
+            dx(SERVER, "wardkeep-server --data /data user add %s" % u)
+    sh("docker", "exec", "-d", SERVER, "sh", "-c", "wardkeep-server --data /data run > /var/log/run.log 2>&1")
     log = ""
     for _ in range(40):
         time.sleep(1)
@@ -151,7 +151,7 @@ def start_world(first_user="alice"):
 
 
 def cli(*args, check=False):
-    return dx(SERVER, "omnitun-server --data /data " + " ".join(args), check=check)
+    return dx(SERVER, "wardkeep-server --data /data " + " ".join(args), check=check)
 
 
 def cli_json(*args):
@@ -180,7 +180,7 @@ def proto_bytes(key):
 
 def credentials(user):
     """The subscription URL and the password of a user, as the server hands them out now."""
-    d = json.loads(dx(SERVER, "omnitun-server --data /data link %s --json" % user).stdout)
+    d = json.loads(dx(SERVER, "wardkeep-server --data /data link %s --json" % user).stdout)
     # No link of the protocols under test carries the password (OpenVPN signs in with it), so it is read from the state.
     state = json.loads(dx(SERVER, "cat /data/state.json").stdout)
     # A signed subscription link ends in "#pk=<key>"; the config files are paths under the link without it.
@@ -250,7 +250,7 @@ class Client:
         """Ends whatever the client runs, so it can connect again (with what it has in /tmp)."""
         self.dx("timeout 10 wg-quick down /tmp/wg0.conf >/dev/null 2>&1; "
                 "pkill -x openvpn; pkill -x awgclient; sleep 1; "
-                "ip -br link | awk '{print $1}' | grep -E '^(omnitun|wg)' | xargs -r -n1 ip link del; "
+                "ip -br link | awk '{print $1}' | grep -E '^(omnitun|wardkeep|wg)' | xargs -r -n1 ip link del; "
                 "rm -f /tmp/*.log; true", check=False)
 
     def through_tunnel(self, seconds=8, v6=False):

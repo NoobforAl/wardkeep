@@ -424,7 +424,7 @@
   "formRealityKeyRequired": "وقتی امنیت روی Reality‎ است، کلید عمومی آن الزامی است",
   "importUnsupported": "این پیوند سرور، اشتراک یا پیکربندی‌ای نیست که Wardkeep‎ بتواند بخواند",
   "importUnsupportedScheme": "پیوندهایی که با ‎{scheme}://‎ شروع می‌شوند پشتیبانی نمی‌شوند",
-  "importXrayServer": "این پیکربندی سرور Xray‎ است. آن را روی سرور وارد کنید (‎omnitun-server import xray‎)، نه به‌عنوان نمایه کلاینت",
+  "importXrayServer": "این پیکربندی سرور Xray‎ است. آن را روی سرور وارد کنید (‎wardkeep-server import xray‎)، نه به‌عنوان نمایه کلاینت",
   "subAuthFailed": "اشتراک ورود را نپذیرفت. نام کاربری، گذرواژه یا توکن را بررسی کنید",
   "subHttp": "سرور اشتراک با ‎HTTP {status}‎ پاسخ داد",
   "subTooLarge": "اشتراک بزرگ‌تر از ۱۰ مگابایت است",

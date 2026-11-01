@@ -371,5 +371,11 @@ func copyProgram(files []*sourceFile, dir string, logf func(string, ...any)) (st
 		}
 		logf("copied %s to %s (sha256 %s)", filepath.Base(src.found), dir, sum)
 	}
+	// The programs of an install from before the rename to Wardkeep; a file still in use stays until the next install.
+	for _, legacy := range []string{"omnitun-svc.exe", "omnitun-tor.exe"} {
+		if os.Remove(filepath.Join(dir, legacy)) == nil {
+			logf("removed the old %s from %s", legacy, dir)
+		}
+	}
 	return filepath.Join(dir, ExeName), nil
 }

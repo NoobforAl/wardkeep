@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // Changes the listeners never read (a note, a quota figure, the API settings) do not restart

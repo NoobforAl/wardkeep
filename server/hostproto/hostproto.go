@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/protocols"
 )
 
 // Config is what a host server needs.

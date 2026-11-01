@@ -9,9 +9,9 @@ import (
 
 	sblog "github.com/sagernet/sing-box/log"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/serverconf"
-	"github.com/NoobforAl/omnitun/server/tlsfiles"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/serverconf"
+	"github.com/NoobforAl/wardkeep/server/tlsfiles"
 )
 
 // sbLog is the platform log writer sing-box needs before it creates its

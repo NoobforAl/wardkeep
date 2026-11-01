@@ -21,8 +21,8 @@ import (
 
 	singtls "github.com/sagernet/sing-box/common/tls"
 
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // selfSigned makes a certificate for localhost and 127.0.0.1 and returns it and its key as PEM.

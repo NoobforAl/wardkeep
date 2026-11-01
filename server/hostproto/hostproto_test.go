@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/protocols"
 )
 
 func checksum(b []byte) uint16 {
@@ -33,7 +33,7 @@ func echoRequest(src, dst net.IP, id uint16) []byte {
 	binary.BigEndian.PutUint16(p[10:], checksum(p[:20]))
 	p[20] = 8
 	binary.BigEndian.PutUint16(p[24:], id)
-	copy(p[28:], "omnitun!")
+	copy(p[28:], "wardkeep")
 	binary.BigEndian.PutUint16(p[22:], checksum(p[20:]))
 	return p
 }
@@ -54,7 +54,7 @@ func echoReply(p []byte) []byte {
 
 func tempDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "omnitun-host-")
+	dir, err := os.MkdirTemp("", "wardkeep-host-")
 	if err != nil {
 		t.Fatal(err)
 	}

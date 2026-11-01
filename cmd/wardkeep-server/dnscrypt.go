@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 func newDNSCryptCmd(global *options) *cobra.Command {
@@ -19,9 +19,9 @@ It is off by default, and it never listens on every interface: name the one
 address first (the server's side of the tunnel the users are in, e.g. 10.30.0.1
 for WireGuard, 10.31.0.1 for AmneziaWG; or 127.0.0.1), then switch it on:
 
-  omnitun-server dnscrypt listen 10.30.0.1
-  omnitun-server proto enable dnscrypt
-  omnitun-server link --stamp        # the DNS stamp (sdns://...) to give to clients
+  wardkeep-server dnscrypt listen 10.30.0.1
+  wardkeep-server proto enable dnscrypt
+  wardkeep-server link --stamp        # the DNS stamp (sdns://...) to give to clients
 
 It answers only the VPN's clients (the tunnel networks), the server itself and
 ranges you add with 'dnscrypt allow'; everything else is dropped. It asks the
@@ -30,7 +30,7 @@ host's own resolver only if you say 'dnscrypt upstream system'. Keep the port
 closed to the internet in the firewall: users reach it through the tunnel.`,
 	}
 	show := func(info *manager.DNSCryptInfo) {
-		state := "off (omnitun-server proto enable dnscrypt)"
+		state := "off (wardkeep-server proto enable dnscrypt)"
 		if info.Enabled {
 			state = fmt.Sprintf("on, port %d (TCP and UDP)", info.Port)
 		}
@@ -43,7 +43,7 @@ closed to the internet in the firewall: users reach it through the tunnel.`,
 		}
 		listen := info.Listen
 		if listen == "" {
-			listen = "not set (omnitun-server dnscrypt listen <ip>)"
+			listen = "not set (wardkeep-server dnscrypt listen <ip>)"
 		}
 		allow := "VPN clients, loopback, this server"
 		if len(info.Allow) > 0 {
@@ -73,7 +73,7 @@ closed to the internet in the firewall: users reach it through the tunnel.`,
 		Short: "Make a new long-term key; this changes the stamp",
 		Long: `Make a new long-term key for the resolver. Its public half is in the stamp, so
 the stamp changes and every client must take the new one; restart the server
-(omnitun-server run) to use the new key. The short-term keys the certificates
+(wardkeep-server run) to use the new key. The short-term keys the certificates
 carry are replaced by the running server on its own (every 7 days).`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {

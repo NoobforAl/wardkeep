@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/dnscrypt"
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/dnscrypt"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 	box "github.com/sagernet/sing-box"
 	M "github.com/sagernet/sing/common/metadata"
 )

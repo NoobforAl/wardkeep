@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func tempDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "omnitun-tls-")
+	dir, err := os.MkdirTemp("", "wardkeep-tls-")
 	if err != nil {
 		t.Fatal(err)
 	}

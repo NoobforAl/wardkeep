@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
 
 /// While connected the core reports the speed every second. These count how much of the
 /// screen is built again for each report: the numbers the user sees change, the page does not.
@@ -24,7 +24,7 @@ void main() {
     });
     await tester.pumpWidget(ProviderScope(
       overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(engine)],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Connect').last); // on a wide window the rail's label comes first

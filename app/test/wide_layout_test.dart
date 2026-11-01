@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
-import 'package:omnitun/ui/screens/profiles_screen.dart';
-import 'package:omnitun/ui/screens/settings_screen.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
+import 'package:wardkeep/ui/screens/profiles_screen.dart';
+import 'package:wardkeep/ui/screens/settings_screen.dart';
 
 /// The computer layout (a window from `wideBreakpoint` wide): a rail of destinations on the left, the
 /// controls in a column beside a large globe, and the other pages inside the window, not behind a button.
@@ -33,7 +33,7 @@ void main() {
     });
     await tester.pumpWidget(ProviderScope(
       overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(MockEngine(connectDelay: Duration.zero))],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ));
     await tester.pumpAndSettle();
   }

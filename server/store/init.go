@@ -16,7 +16,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/protocols"
 )
 
 // InitOptions configures a new server.

@@ -33,7 +33,7 @@ func baseOptions() Options {
 	return Options{
 		ServerAddrs: []netip.Addr{netip.MustParseAddr("203.0.113.7"), netip.MustParseAddr("2001:db8::7")},
 		TunLUID:     0x6001000000000,
-		Apps:        []string{`C:\Program Files\Omnitun\omnitun-svc.exe`},
+		Apps:        []string{`C:\Program Files\Omnitun\wardkeep-svc.exe`},
 		AllowLAN:    true,
 	}
 }

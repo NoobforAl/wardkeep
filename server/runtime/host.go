@@ -3,10 +3,10 @@ package runtime
 import (
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/hostproto"
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/serverconf"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/hostproto"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/serverconf"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // startHostLocked starts the host-level protocols (AmneziaWG, DNSCrypt) that are
@@ -34,7 +34,7 @@ func (s *Server) startHostLocked(st *store.State) {
 		srv, err := hostproto.Start(key, cfg)
 		if err != nil {
 			s.failed(true, logs.Record{
-				Msg:    key + " did not start (it needs Linux and CAP_NET_ADMIN; see `omnitun-server install`)",
+				Msg:    key + " did not start (it needs Linux and CAP_NET_ADMIN; see `wardkeep-server install`)",
 				Target: key, Op: "start", Code: "START_FAILED",
 			}, err)
 			continue
@@ -68,7 +68,7 @@ func (s *Server) startHostLocked(st *store.State) {
 	}
 	s.undoNAT = undo
 	if !hostproto.ForwardingEnabled() {
-		s.logf(logs.LevelWarn, "IP forwarding is off; enable it with `sysctl -w net.ipv4.ip_forward=1` or run `omnitun-server install`")
+		s.logf(logs.LevelWarn, "IP forwarding is off; enable it with `sysctl -w net.ipv4.ip_forward=1` or run `wardkeep-server install`")
 	}
 	if ipv6 && !hostproto.ForwardingEnabled6() {
 		s.logf(logs.LevelWarn, "IPv6 forwarding is off, so IPv6 clients cannot get out; enable it with `sysctl -w net.ipv6.conf.all.forwarding=1` "+

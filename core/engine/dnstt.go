@@ -9,11 +9,11 @@ import (
 	box "github.com/sagernet/sing-box"
 	M "github.com/sagernet/sing/common/metadata"
 
-	"github.com/NoobforAl/omnitun/core/dnstt"
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	dnsttclient "github.com/NoobforAl/omnitun/third_party/dnstt/client"
+	"github.com/NoobforAl/wardkeep/core/dnstt"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	dnsttclient "github.com/NoobforAl/wardkeep/third_party/dnstt/client"
 )
 
 // dnsttRun is the DNS tunnel behind a selected DNS tunnel profile. Its local port is a SOCKS5 outbound of the

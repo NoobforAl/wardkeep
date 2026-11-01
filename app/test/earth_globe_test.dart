@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/l10n/app_localizations.dart';
-import 'package:omnitun/ui/widgets/earth_globe.dart';
+import 'package:wardkeep/l10n/app_localizations.dart';
+import 'package:wardkeep/ui/widgets/earth_globe.dart';
 
 const _tehran = (35.7, 51.4);
 const _berlin = (52.5, 13.4);

@@ -417,7 +417,7 @@
   "formRealityKeyRequired": "Kunci publik Reality wajib diisi jika Keamanan adalah Reality",
   "importUnsupported": "Ini bukan tautan server, langganan, atau konfigurasi yang dapat dibaca Wardkeep",
   "importUnsupportedScheme": "Tautan yang diawali {scheme}:// tidak didukung",
-  "importXrayServer": "Ini konfigurasi server Xray. Impor di server (omnitun-server import xray), bukan sebagai profil klien",
+  "importXrayServer": "Ini konfigurasi server Xray. Impor di server (wardkeep-server import xray), bukan sebagai profil klien",
   "subAuthFailed": "Langganan menolak login. Periksa nama pengguna, kata sandi, atau token",
   "subHttp": "Server langganan menjawab HTTP {status}",
   "subTooLarge": "Langganan lebih besar dari 10 MB",

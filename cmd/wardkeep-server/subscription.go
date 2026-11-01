@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 func newSubscriptionCmd(global *options) *cobra.Command {
@@ -13,16 +13,16 @@ func newSubscriptionCmd(global *options) *cobra.Command {
 		Use:   "subscription",
 		Short: "How the subscription is signed, and the order of protocols it asks for",
 		Long: `Every subscription answer is signed with the server's key. The public key is in the
-subscription link after "#pk=" (omnitun-server link --sub): Wardkeep reads it from there,
+subscription link after "#pk=" (wardkeep-server link --sub): Wardkeep reads it from there,
 and from then on refuses an answer that was changed on the way.
 
 The server can also ask clients to try protocols in an order, for everyone or for one
 country (a country where some protocols are blocked). The order is signed with the answer,
 so only a client that has the key trusts it:
 
-  omnitun-server subscription order vless,hysteria2,trojan
-  omnitun-server subscription order --country IR hysteria2,vless
-  omnitun-server subscription order --country IR        # clear the order of one country`,
+  wardkeep-server subscription order vless,hysteria2,trojan
+  wardkeep-server subscription order --country IR hysteria2,vless
+  wardkeep-server subscription order --country IR        # clear the order of one country`,
 	}
 	show := func(info *manager.SubscriptionInfo) {
 		fmt.Printf("signing key (public): %s\n", info.PublicKey)
@@ -78,7 +78,7 @@ take the new link; until they do, clients with the old key refuse the subscripti
 				return err
 			}
 			return global.print(info, func() {
-				fmt.Println("New key made. Give every user the new subscription link (omnitun-server link --sub).")
+				fmt.Println("New key made. Give every user the new subscription link (wardkeep-server link --sub).")
 				show(info)
 			})
 		},

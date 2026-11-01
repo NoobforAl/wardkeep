@@ -132,7 +132,7 @@ func TestProtocolCounters(t *testing.T) {
 // tempDir is t.TempDir with a retrying cleanup (Windows file locks).
 func tempDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "omnitun-stats-")
+	dir, err := os.MkdirTemp("", "wardkeep-stats-")
 	if err != nil {
 		t.Fatal(err)
 	}

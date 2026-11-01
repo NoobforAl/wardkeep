@@ -1,6 +1,6 @@
 package main
 
-import "github.com/NoobforAl/omnitun/server/manager"
+import "github.com/NoobforAl/wardkeep/server/manager"
 
 func apiPatchEnabled(on bool) manager.APIPatch { return manager.APIPatch{Enabled: &on} }
 

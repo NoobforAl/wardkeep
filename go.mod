@@ -1,4 +1,4 @@
-module github.com/NoobforAl/omnitun
+module github.com/NoobforAl/wardkeep
 
 go 1.27.3
 

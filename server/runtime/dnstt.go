@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/store"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
-	dnsttserver "github.com/NoobforAl/omnitun/third_party/dnstt/server"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/store"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/noise"
+	dnsttserver "github.com/NoobforAl/wardkeep/third_party/dnstt/server"
 )
 
 // dnsttSidecar is the DNS tunnel's front end: it answers the queries for the zone on UDP and hands the connections
@@ -34,7 +34,7 @@ func (s *Server) startDNSTTLocked(st *store.State) {
 	conf := st.Server.DNSTT
 	notStarted := logs.Record{Msg: "the DNS tunnel did not start", Target: "dnstt", Op: "start", Code: "START_FAILED"}
 	if conf.Domain == "" {
-		notStarted.Msg += ": it has no domain (omnitun-server dnstt domain <name>)"
+		notStarted.Msg += ": it has no domain (wardkeep-server dnstt domain <name>)"
 		s.failed(true, notStarted, nil)
 		return
 	}

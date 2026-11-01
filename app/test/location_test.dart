@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/countries.dart';
-import 'package:omnitun/state/location.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/countries.dart';
+import 'package:wardkeep/state/location.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
 
 ProfileInfo _p(
   String name, {
@@ -162,11 +162,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(MockEngine())],
-        child: const OmnitunApp(),
+        child: const WardkeepApp(),
       ),
     );
     await tester.pump();
-    final container = ProviderScope.containerOf(tester.element(find.byType(OmnitunApp)));
+    final container = ProviderScope.containerOf(tester.element(find.byType(WardkeepApp)));
 
     expect(find.text('Automatic'), findsOneWidget);
     await tester.tap(find.text('Location'));
@@ -222,11 +222,11 @@ void main() {
           storeProvider.overrideWithValue(store),
           engineProvider.overrideWithValue(MockEngine(connectDelay: Duration.zero)),
         ],
-        child: const OmnitunApp(),
+        child: const WardkeepApp(),
       ),
     );
     await tester.pump();
-    final container = ProviderScope.containerOf(tester.element(find.byType(OmnitunApp)));
+    final container = ProviderScope.containerOf(tester.element(find.byType(WardkeepApp)));
 
     await tester.tap(find.text('Connect'));
     await tester.pump(const Duration(milliseconds: 50));

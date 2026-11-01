@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/engine"
-	"github.com/NoobforAl/omnitun/core/killswitch"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/engine"
+	"github.com/NoobforAl/wardkeep/core/killswitch"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 type ksBackend struct {

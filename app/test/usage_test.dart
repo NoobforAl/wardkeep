@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/l10n/l10n.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
-import 'package:omnitun/state/usage.dart';
-import 'package:omnitun/ui/widgets/profile_subtitle.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/l10n/l10n.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
+import 'package:wardkeep/state/usage.dart';
+import 'package:wardkeep/ui/widgets/profile_subtitle.dart';
 
 EngineState _on(String id, int up, int down, {ConnStatus status = ConnStatus.connected}) =>
     EngineState(status: status, activeProfileId: id, upTotal: up, downTotal: down);

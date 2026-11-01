@@ -4,7 +4,7 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "omnitun")
+set(BINARY_NAME "wardkeep")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "dev.omnitun.app")
@@ -127,6 +127,6 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     COMPONENT Runtime)
 endif()
 
-# Tells the desktop which files and links Wardkeep can open (see packaging/omnitun.desktop).
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/packaging/omnitun.desktop"
+# Tells the desktop which files and links Wardkeep can open (see packaging/wardkeep.desktop).
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/packaging/wardkeep.desktop"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications" COMPONENT Runtime)

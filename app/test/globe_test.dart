@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/state/countries.dart';
-import 'package:omnitun/state/geo_data.dart';
+import 'package:wardkeep/state/countries.dart';
+import 'package:wardkeep/state/geo_data.dart';
 
 void main() {
   test('every country the app names can be found on the globe', () {

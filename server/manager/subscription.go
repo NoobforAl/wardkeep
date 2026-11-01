@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // SubscriptionInfo describes how the subscription is signed and what order of protocols it asks for.

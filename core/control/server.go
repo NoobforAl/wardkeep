@@ -22,16 +22,16 @@ import (
 	"github.com/sagernet/sing-box/option"
 	"github.com/sagernet/sing/common/logger"
 
-	"github.com/NoobforAl/omnitun/core/dnstt"
-	"github.com/NoobforAl/omnitun/core/engine"
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/killswitch"
-	"github.com/NoobforAl/omnitun/core/links"
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/netcheck"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	"github.com/NoobforAl/omnitun/core/subscription"
+	"github.com/NoobforAl/wardkeep/core/dnstt"
+	"github.com/NoobforAl/wardkeep/core/engine"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/killswitch"
+	"github.com/NoobforAl/wardkeep/core/links"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/netcheck"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/subscription"
 )
 
 const (

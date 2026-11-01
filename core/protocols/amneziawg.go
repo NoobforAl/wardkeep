@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // AmneziaWG network: the server is .1 and users get their WireGuard address

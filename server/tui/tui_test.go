@@ -8,9 +8,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // send feeds key presses to the model and returns the last command.
@@ -44,7 +44,7 @@ func send(m *model, ks ...string) tea.Cmd {
 // tempDir is t.TempDir with a cleanup that retries: on Windows a virus
 // scanner can briefly hold a just-written file, failing t.TempDir's cleanup.
 func tempDir(t *testing.T) string {
-	dir, err := os.MkdirTemp("", "omnitun-tui-")
+	dir, err := os.MkdirTemp("", "wardkeep-tui-")
 	if err != nil {
 		t.Fatal(err)
 	}

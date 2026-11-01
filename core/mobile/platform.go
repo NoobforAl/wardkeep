@@ -20,7 +20,7 @@ import (
 	"github.com/sagernet/sing/common/logger"
 	"github.com/sagernet/sing/common/x/list"
 
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 var errUnsupported = errors.New("not supported on this platform")

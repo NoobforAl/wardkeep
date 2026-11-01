@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/server/stats"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/stats"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // Clients show the subscription's usage bar from Subscription-Userinfo: it

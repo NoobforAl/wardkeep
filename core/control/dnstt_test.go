@@ -6,9 +6,9 @@ import (
 	"net"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/dnstt"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/server"
+	"github.com/NoobforAl/wardkeep/core/dnstt"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/noise"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/server"
 )
 
 // The editor's "find working resolvers": which of the candidates reach the tunnel server, best first.

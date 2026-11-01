@@ -417,7 +417,7 @@
   "formRealityKeyRequired": "Güvenlik Reality olduğunda Reality genel anahtarı gerekli",
   "importUnsupported": "Bu, Wardkeep'in okuyabileceği bir sunucu bağlantısı, abonelik veya yapılandırma değil",
   "importUnsupportedScheme": "{scheme}:// ile başlayan bağlantılar desteklenmiyor",
-  "importXrayServer": "Bu bir Xray sunucu yapılandırması. İstemci profili olarak değil, sunucuda içe aktarın (omnitun-server import xray)",
+  "importXrayServer": "Bu bir Xray sunucu yapılandırması. İstemci profili olarak değil, sunucuda içe aktarın (wardkeep-server import xray)",
   "subAuthFailed": "Abonelik oturum açmayı reddetti. Kullanıcı adını, parolayı veya jetonu denetleyin",
   "subHttp": "Abonelik sunucusu HTTP {status} yanıtı verdi",
   "subTooLarge": "Abonelik 10 MB'tan büyük",

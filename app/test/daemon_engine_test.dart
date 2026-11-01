@@ -3,16 +3,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/core_engine.dart';
-import 'package:omnitun/engine/daemon_engine.dart';
-import 'package:omnitun/engine/engine.dart';
+import 'package:wardkeep/engine/core_engine.dart';
+import 'package:wardkeep/engine/daemon_engine.dart';
+import 'package:wardkeep/engine/engine.dart';
 
-/// Drives the real Go daemon. Skipped when bin/omnitun-svc has not been built.
+/// Drives the real Go daemon. Skipped when bin/wardkeep-svc has not been built.
 void main() {
   final exe = CoreEngine.findDaemonExecutable();
 
-  test('import, connect and disconnect through omnitun-svc', () async {
-    final dir = await Directory.systemTemp.createTemp('omnitun-test');
+  test('import, connect and disconnect through wardkeep-svc', () async {
+    final dir = await Directory.systemTemp.createTemp('wardkeep-test');
     final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();
@@ -55,9 +55,9 @@ void main() {
     expect(states.last.error, startsWith('Contacting server failed'));
 
     expect(await engine.testLatency(dead.profiles.single), -1);
-  }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: exe == null ? 'wardkeep-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 
-  test('fetches an authenticated subscription through omnitun-svc', () async {
+  test('fetches an authenticated subscription through wardkeep-svc', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(() => server.close(force: true));
     server.listen((req) {
@@ -70,7 +70,7 @@ void main() {
       unawaited(req.response.close());
     });
 
-    final dir = await Directory.systemTemp.createTemp('omnitun-test');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-test');
     final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();
@@ -95,10 +95,10 @@ void main() {
       }),
       throwsA(isA<EngineException>().having((e) => e.code, 'code', 'AUTH_FAILED')),
     );
-  }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: exe == null ? 'wardkeep-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 
   test('the profile editor of the real core: forms, build, edit, read back and share', () async {
-    final dir = await Directory.systemTemp.createTemp('omnitun-test');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-test');
     final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();
@@ -149,10 +149,10 @@ void main() {
     final torProfile = await engine.buildProfile({'tor.builtin': 'snowflake'}, protocol: 'tor');
     expect(torProfile.protocol, 'tor');
     expect(await engine.exportLink(torProfile), startsWith('tor://snowflake'));
-  }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: exe == null ? 'wardkeep-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 
   test('JSON configs import through the daemon, and a failure says where and why', () async {
-    final dir = await Directory.systemTemp.createTemp('omnitun-json');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-json');
     final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();
@@ -191,7 +191,7 @@ void main() {
     final bad = await engine.importText('{"outbounds": [{"tag": "bad", "protocol": "vless", "settings": {"address": "example.com", "port": 443}}]}');
     expect(bad.failure!.code, 'IMPORT_NOTHING');
     expect(bad.errors.single, contains('bad'));
-  }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: exe == null ? 'wardkeep-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 
   test('a subscription can ask to go through the VPN; without one the core says so', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -200,7 +200,7 @@ void main() {
       req.response.write('trojan://pw@a.example.com:443#A');
       unawaited(req.response.close());
     });
-    final dir = await Directory.systemTemp.createTemp('omnitun-test');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-test');
     final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();
@@ -215,10 +215,10 @@ void main() {
       engine.fetchSubscription({'url': url, 'auth': {'type': 'none'}, 'via': 'tunnel'}),
       throwsA(isA<EngineException>().having((e) => e.message, 'message', contains('VPN'))),
     );
-  }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: exe == null ? 'wardkeep-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 
   test('the exit lookup refuses without a tunnel (it would describe this device, not the VPN)', () async {
-    final dir = await Directory.systemTemp.createTemp('omnitun-test');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-test');
     final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();
@@ -229,10 +229,10 @@ void main() {
       engine.exitInfo(),
       throwsA(isA<EngineException>().having((e) => e.code, 'code', 'NOT_RUNNING')),
     );
-  }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: exe == null ? 'wardkeep-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 
   test('the core checks a bypass list; the connect request carries it', () async {
-    final dir = await Directory.systemTemp.createTemp('omnitun-test');
+    final dir = await Directory.systemTemp.createTemp('wardkeep-test');
     final engine = await DaemonEngine.launch(exe!, controlFile: '${dir.path}${Platform.pathSeparator}control.json');
     addTearDown(() async {
       engine.dispose();
@@ -258,5 +258,5 @@ void main() {
     expect(params['bypass_only'], true);
     // No list: "only these" means nothing, so it is not sent.
     expect(DaemonEngine.startParams(profile, const [], const ConnectOptions(bypassOnly: true)).containsKey('bypass_only'), isFalse);
-  }, skip: exe == null ? 'omnitun-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
+  }, skip: exe == null ? 'wardkeep-svc not built' : false, timeout: const Timeout(Duration(seconds: 60)));
 }

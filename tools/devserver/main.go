@@ -1,6 +1,6 @@
 // Command devserver runs a local Shadowsocks server for manual testing, e.g.
 // with a phone over USB:  adb reverse tcp:8388 tcp:8388  then import
-// ss://aes-128-gcm:omnitun-dev@127.0.0.1:8388#dev  on the phone.
+// ss://aes-128-gcm:wardkeep-dev@127.0.0.1:8388#dev  on the phone.
 package main
 
 import (
@@ -21,7 +21,7 @@ import (
 func main() {
 	listen := flag.String("listen", "127.0.0.1", "listen address")
 	port := flag.Int("port", 8388, "listen port")
-	password := flag.String("password", "omnitun-dev", "shadowsocks password")
+	password := flag.String("password", "wardkeep-dev", "shadowsocks password")
 	logLevel := flag.String("log", "info", "log level")
 	flag.Parse()
 

@@ -417,7 +417,7 @@
   "formRealityKeyRequired": "A chave pública do Reality é obrigatória quando Segurança é Reality",
   "importUnsupported": "Isto não é um link de servidor, assinatura ou configuração que o Wardkeep consiga ler",
   "importUnsupportedScheme": "Links que começam com {scheme}:// não são suportados",
-  "importXrayServer": "Esta é uma configuração de servidor Xray. Importe-a no servidor (omnitun-server import xray), não como perfil de cliente",
+  "importXrayServer": "Esta é uma configuração de servidor Xray. Importe-a no servidor (wardkeep-server import xray), não como perfil de cliente",
   "subAuthFailed": "A assinatura rejeitou o login. Verifique o usuário, a senha ou o token",
   "subHttp": "O servidor da assinatura respondeu HTTP {status}",
   "subTooLarge": "A assinatura é maior que 10 MB",

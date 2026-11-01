@@ -25,12 +25,12 @@ import java.nio.charset.CodingErrorAction
 import java.util.concurrent.Executors
 
 /**
- * Bridges Flutter to the core over the "omnitun/core" channel:
+ * Bridges Flutter to the core over the "wardkeep/core" channel:
  *  - start: launch the in-process core, returns {"addr","token"} for the control protocol
  *  - prepareVpn: show the system VPN consent dialog if needed, returns true when granted
  *  - requestNotifications: ask for POST_NOTIFICATIONS (Android 13+)
  *
- * and the "omnitun/notify" channel: a failure nothing handled (docs/logging.md §5) as a system notification
+ * and the "wardkeep/notify" channel: a failure nothing handled (docs/logging.md §5) as a system notification
  * ("show" {title, body, conn, connection}); tapping it opens the app's log page for that connection ("openLogs"
  * to Flutter while it runs, "takeOpenLogs" from Flutter when the tap started the app). A failure of the
  * connection (connection = true) is left out while the VPN service's "Connection lost" tells it.
@@ -40,7 +40,7 @@ class MainActivity : FlutterActivity() {
     private val io = Executors.newSingleThreadExecutor()
     private var pendingVpn: MethodChannel.Result? = null
 
-    /** A link or config file another app sent us, until Flutter has taken it (see "omnitun/incoming"). */
+    /** A link or config file another app sent us, until Flutter has taken it (see "wardkeep/incoming"). */
     private var incoming: String? = null
 
     /** Why that file could not be read ("empty", "too_large", "not_text", "denied", "missing", "unreadable"). */
@@ -91,9 +91,9 @@ class MainActivity : FlutterActivity() {
      * it when it comes later).
      */
     private fun showError(title: String, body: String, conn: String, connection: Boolean) {
-        if (!OmnitunVpnService.canNotify(this)) return
+        if (!WardkeepVpnService.canNotify(this)) return
         val manager = getSystemService(NotificationManager::class.java)
-        val channel = OmnitunVpnService.errorsChannel(this)
+        val channel = WardkeepVpnService.errorsChannel(this)
         val notificationId = ERROR_NOTIFICATION_BASE + (conn.hashCode() and 0xffff)
         val open = PendingIntent.getActivity(
             this,
@@ -113,7 +113,7 @@ class MainActivity : FlutterActivity() {
             .setAutoCancel(true)
             .build()
         if (connection) {
-            OmnitunVpnService.postConnectionAlert(this) { notificationId.also { manager.notify(it, notification) } }
+            WardkeepVpnService.postConnectionAlert(this) { notificationId.also { manager.notify(it, notification) } }
         } else {
             manager.notify(notificationId, notification)
         }
@@ -205,7 +205,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        incomingChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "omnitun/incoming").also { ch ->
+        incomingChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "wardkeep/incoming").also { ch ->
             ch.setMethodCallHandler { call, result ->
                 if (call.method == "take") {
                     result.success(mapOf("text" to incoming, "error" to incomingError))
@@ -216,7 +216,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
-        notifyChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "omnitun/notify").also { ch ->
+        notifyChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "wardkeep/notify").also { ch ->
             ch.setMethodCallHandler { call, result ->
                 when (call.method) {
                     "show" -> {
@@ -238,7 +238,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "omnitun/core").setMethodCallHandler { call, result ->
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "wardkeep/core").setMethodCallHandler { call, result ->
             when (call.method) {
                 "start" -> io.execute {
                     val res = runCatching { CorePlatform.start(this) }
@@ -284,11 +284,11 @@ class MainActivity : FlutterActivity() {
                     runOnUiThread { result.success(png) }
                 }
                 "setStopOnClose" -> {
-                    OmnitunVpnService.setStopOnClose(this, call.arguments as? Boolean ?: true)
+                    WardkeepVpnService.setStopOnClose(this, call.arguments as? Boolean ?: true)
                     result.success(null)
                 }
                 "saveLastConnect" -> {
-                    OmnitunVpnService.saveLastConnect(this, call.arguments as String)
+                    WardkeepVpnService.saveLastConnect(this, call.arguments as String)
                     result.success(null)
                 }
                 "openVpnSettings" -> {

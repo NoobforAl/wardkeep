@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/awg"
+	"github.com/NoobforAl/wardkeep/core/awg"
 )
 
 // AmneziaWGSubnet is the AmneziaWG tunnel network: the server takes .1 and a

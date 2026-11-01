@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit
  * interface as on a stop and leaves a "Connection lost · reason" notification with
  * Reconnect and Open app; a stop the user asked for leaves nothing.
  */
-class OmnitunVpnService : VpnService() {
+class WardkeepVpnService : VpnService() {
 
     private var tun: ParcelFileDescriptor? = null
 
@@ -262,7 +262,7 @@ class OmnitunVpnService : VpnService() {
         val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), flags)
         val disconnect = PendingIntent.getService(
-            this, 1, Intent(this, OmnitunVpnService::class.java).setAction(ACTION_DISCONNECT), flags,
+            this, 1, Intent(this, WardkeepVpnService::class.java).setAction(ACTION_DISCONNECT), flags,
         )
         val builder = Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_vpn_key)
@@ -281,7 +281,7 @@ class OmnitunVpnService : VpnService() {
     }
 
     companion object {
-        private const val TAG = "OmnitunVpn"
+        private const val TAG = "WardkeepVpn"
         private const val CHANNEL = "vpn"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_DISCONNECT = "dev.omnitun.app.DISCONNECT"
@@ -294,12 +294,13 @@ class OmnitunVpnService : VpnService() {
         /** The longest reason "Connection lost · reason" shows. */
         private const val MAX_REASON = 100
 
+        // Old project name, kept: the settings already saved on phones are under it.
         private const val PREFS = "omnitun"
         private const val KEY_STOP_ON_CLOSE = "stop_on_close"
         private const val KEY_LAST_CONNECT = "last_connect"
 
         @Volatile
-        var instance: OmnitunVpnService? = null
+        var instance: WardkeepVpnService? = null
             private set
 
         /** "Stop VPN when app is closed", mirrored from the Flutter settings. */
@@ -397,7 +398,7 @@ class OmnitunVpnService : VpnService() {
                 openAppIntent(context)
             } else {
                 PendingIntent.getForegroundService(
-                    context, 2, Intent(context, OmnitunVpnService::class.java).setAction(ACTION_RECONNECT),
+                    context, 2, Intent(context, WardkeepVpnService::class.java).setAction(ACTION_RECONNECT),
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 )
             }
@@ -410,9 +411,9 @@ class OmnitunVpnService : VpnService() {
         }
 
         /** Starts the service in the foreground and waits until it is ready. */
-        fun startAndAwait(context: Context, timeoutSeconds: Long = 10): OmnitunVpnService {
+        fun startAndAwait(context: Context, timeoutSeconds: Long = 10): WardkeepVpnService {
             instance?.let { return it }
-            context.startForegroundService(Intent(context, OmnitunVpnService::class.java))
+            context.startForegroundService(Intent(context, WardkeepVpnService::class.java))
             if (!ready.await(timeoutSeconds, TimeUnit.SECONDS)) {
                 throw IllegalStateException("VPN service did not start")
             }

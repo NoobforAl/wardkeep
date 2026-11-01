@@ -14,10 +14,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/links"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/protocols"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/core/links"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/protocols"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 type obj = map[string]any

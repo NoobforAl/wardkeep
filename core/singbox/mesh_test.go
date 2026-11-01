@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 func meshProfileFor(t *testing.T, o *profile.TailscaleOpts) *profile.Profile {

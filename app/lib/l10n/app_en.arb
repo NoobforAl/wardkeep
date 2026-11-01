@@ -839,7 +839,7 @@
       }
     }
   },
-  "importXrayServer": "This is an Xray server config. Import it on the server (omnitun-server import xray), not as a client profile",
+  "importXrayServer": "This is an Xray server config. Import it on the server (wardkeep-server import xray), not as a client profile",
   "subAuthFailed": "The subscription rejected the sign-in. Check the username, password or token",
   "subHttp": "The subscription server answered HTTP {status}",
   "@subHttp": {

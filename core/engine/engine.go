@@ -25,10 +25,10 @@ import (
 	M "github.com/sagernet/sing/common/metadata"
 	"github.com/sagernet/sing/service"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/netcheck"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/netcheck"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // Status of the engine.
@@ -274,6 +274,7 @@ func (e *Engine) dataDir() string {
 	if e.cfg.DataDir != "" {
 		return e.cfg.DataDir
 	}
+	// Old project name, kept so the cache already there is reused.
 	return filepath.Join(osTempDir(), "omnitun")
 }
 

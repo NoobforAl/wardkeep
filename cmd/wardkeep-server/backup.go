@@ -56,7 +56,7 @@ func newRestoreCmd(global *options) *cobra.Command {
 			if err := global.manager().Restore(in, force); err != nil {
 				return err
 			}
-			fmt.Printf("restored into %s; start the server with: omnitun-server run\n", global.dataDir)
+			fmt.Printf("restored into %s; start the server with: wardkeep-server run\n", global.dataDir)
 			return nil
 		},
 	}

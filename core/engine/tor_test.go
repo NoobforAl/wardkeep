@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	"github.com/NoobforAl/omnitun/core/tor"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/tor"
 )
 
 const testFingerprint = "D9A82D2F9C2F65A18407B1D2B764F130847F8B5D"

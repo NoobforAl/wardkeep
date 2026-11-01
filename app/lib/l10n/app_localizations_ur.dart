@@ -1523,7 +1523,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'یہ Xray سرور کنفیگ ہے۔ اسے سرور پر درآمد کریں (omnitun-server import xray)، کلائنٹ پروفائل کے طور پر نہیں';
+      'یہ Xray سرور کنفیگ ہے۔ اسے سرور پر درآمد کریں (wardkeep-server import xray)، کلائنٹ پروفائل کے طور پر نہیں';
 
   @override
   String get subAuthFailed =>

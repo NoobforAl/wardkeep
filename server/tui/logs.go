@@ -7,8 +7,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 var (
@@ -75,7 +75,7 @@ func (m *model) logsView() string {
 	var out strings.Builder
 	out.WriteString("Server log (refreshes every 2 s) · level " + levelStyle(m.logLevel.String()).Render(m.logLevel.String()) + " and above\n\n")
 	if len(m.logs) == 0 {
-		out.WriteString(dimStyle.Render("Nothing logged at this level. The log is written while `omnitun-server run` is running.") + "\n")
+		out.WriteString(dimStyle.Render("Nothing logged at this level. The log is written while `wardkeep-server run` is running.") + "\n")
 	} else {
 		out.WriteString(dimStyle.Render(fmt.Sprintf("%-8s %-5s %-8s %s", "TIME", "LEVEL", "SOURCE", "MESSAGE")) + "\n")
 	}

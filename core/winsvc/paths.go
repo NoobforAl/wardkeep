@@ -44,7 +44,7 @@ const (
 	// Description is shown in services.msc.
 	Description = "Runs the Wardkeep VPN core with system rights, so the VPN mode works from an app that is not run as administrator."
 	// ExeName is the service program's file name.
-	ExeName = "omnitun-svc.exe"
+	ExeName = "wardkeep-svc.exe"
 )
 
 // Layout is where the service keeps its files.
@@ -78,6 +78,8 @@ func LayoutFrom(getenv func(string) string) Layout {
 	if programFiles == "" {
 		programFiles = `C:\Program Files`
 	}
+	// Old project name, kept (like InstallDir and ServiceName): existing installs keep their settings,
+	// data and service registration.
 	common := filepath.Join(programData, "omnitun")
 	control := filepath.Join(common, "control")
 	return Layout{

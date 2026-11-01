@@ -9,8 +9,8 @@ import 'engine.dart';
 import 'mock_engine.dart';
 
 /// Engine used by the app: starts the real core and forwards to it.
-/// Desktop launches the omnitun-svc daemon; Android starts the core inside the
-/// app process (core/mobile) via the "omnitun/core" channel.
+/// Desktop launches the wardkeep-svc daemon; Android starts the core inside the
+/// app process (core/mobile) via the "wardkeep/core" channel.
 ///
 /// The control connection can drop (Android freezes background apps, a
 /// daemon can crash), so it reconnects automatically and only reports an
@@ -23,7 +23,7 @@ class CoreEngine implements VpnEngine {
     _ready = _start();
   }
 
-  static const _channel = MethodChannel('omnitun/core');
+  static const _channel = MethodChannel('wardkeep/core');
   static const _retryDelays = [
     Duration(milliseconds: 200),
     Duration(milliseconds: 500),
@@ -86,7 +86,7 @@ class CoreEngine implements VpnEngine {
     }
     final exe = findDaemonExecutable();
     if (exe == null) {
-      throw StateError('omnitun-svc not found (build it with scripts/go.ps1 build -o bin/ ./cmd/...)');
+      throw StateError('wardkeep-svc not found (build it with scripts/go.ps1 build -o bin/ ./cmd/...)');
     }
     return DaemonEngine.launch(exe, controlFile: _localControlFile);
   }
@@ -172,12 +172,12 @@ class CoreEngine implements VpnEngine {
     }
   }
 
-  /// Looks for the daemon next to the app, via OMNITUN_SVC, or in the repo's bin/ (development).
+  /// Looks for the daemon next to the app, via WARDKEEP_SVC, or in the repo's bin/ (development).
   static String? findDaemonExecutable() {
-    final name = Platform.isWindows ? 'omnitun-svc.exe' : 'omnitun-svc';
+    final name = Platform.isWindows ? 'wardkeep-svc.exe' : 'wardkeep-svc';
     final sep = Platform.pathSeparator;
     final candidates = <String>[
-      ?Platform.environment['OMNITUN_SVC'],
+      ?Platform.environment['WARDKEEP_SVC'],
       '${File(Platform.resolvedExecutable).parent.path}$sep$name',
     ];
     var dir = Directory.current;

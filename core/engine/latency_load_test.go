@@ -11,16 +11,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // "Test all" in the app sends one TestLatency per server, all at once; each builds a
 // temporary sing-box instance. This measures what that costs in memory and goroutines at
-// its peak, for different numbers running at the same time. Opt-in (OMNITUN_LEAK=1): it
+// its peak, for different numbers running at the same time. Opt-in (WARDKEEP_LEAK=1): it
 // waits for unreachable servers.
 func TestLatencyConcurrencyCost(t *testing.T) {
-	if os.Getenv("OMNITUN_LEAK") == "" {
-		t.Skip("set OMNITUN_LEAK=1 to run the latency load measurement")
+	if os.Getenv("WARDKEEP_LEAK") == "" {
+		t.Skip("set WARDKEEP_LEAK=1 to run the latency load measurement")
 	}
 	base := leakProfiles(t)
 	const servers = 32

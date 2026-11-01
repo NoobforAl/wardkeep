@@ -17,9 +17,9 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/core/protocols"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func newInitCmd(global *options) *cobra.Command {
@@ -38,7 +38,7 @@ func newInitCmd(global *options) *cobra.Command {
 Run it without --host in a terminal for a step-by-step wizard, or give
 everything as flags:
 
-  omnitun-server init --host vpn.example.com --protocols vless-reality,trojan,hysteria2 \
+  wardkeep-server init --host vpn.example.com --protocols vless-reality,trojan,hysteria2 \
       --port trojan=9443 --first-user alice
 
 Protocols: ` + strings.Join(protocols.Keys(), ", ") + `.`,
@@ -78,7 +78,7 @@ Protocols: ` + strings.Join(protocols.Keys(), ", ") + `.`,
 					fmt.Printf("\nUser %s:\n\n", firstUser)
 					printLinkSet(added, false, true)
 				}
-				fmt.Println("\nNext: omnitun-server user add <name>   then   omnitun-server run")
+				fmt.Println("\nNext: wardkeep-server user add <name>   then   wardkeep-server run")
 				fmt.Println("Open the ports above in your firewall (see the TRANSPORT column).")
 			})
 		},

@@ -18,7 +18,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // Option describes a setting of a protocol, for building forms and wizards.

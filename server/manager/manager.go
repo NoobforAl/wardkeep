@@ -12,11 +12,11 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/serverconf"
-	"github.com/NoobforAl/omnitun/server/stats"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/core/protocols"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/serverconf"
+	"github.com/NoobforAl/wardkeep/server/stats"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // Error kinds, so front ends can pick an exit code or HTTP status.
@@ -371,7 +371,7 @@ func (m *Manager) SetProtocol(key string, patch ProtocolPatch) (*ProtocolInfo, e
 				}
 			}
 			if *patch.Enabled && key == store.DNSTTKey && st.Server.DNSTT.Domain == "" {
-				return invalid("the DNS tunnel needs its domain first (omnitun-server dnstt domain <name>)")
+				return invalid("the DNS tunnel needs its domain first (wardkeep-server dnstt domain <name>)")
 			}
 			proto.Enabled = *patch.Enabled
 		}

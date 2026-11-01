@@ -20,6 +20,7 @@ class AppStore {
 
   static Future<AppStore> open() async {
     final dir = await getApplicationSupportDirectory();
+    // Old project name, kept: the profiles already saved on devices are in this file.
     final file = File('${dir.path}${Platform.pathSeparator}omnitun.json');
     var data = <String, dynamic>{};
     if (await file.exists()) {

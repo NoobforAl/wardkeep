@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/daemon_engine.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/l10n/l10n.dart';
-import 'package:omnitun/state/dns_resolvers.dart';
-import 'package:omnitun/state/dns_state.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
-import 'package:omnitun/ui/screens/dns_screen.dart';
+import 'package:wardkeep/engine/daemon_engine.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/l10n/l10n.dart';
+import 'package:wardkeep/state/dns_resolvers.dart';
+import 'package:wardkeep/state/dns_state.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
+import 'package:wardkeep/ui/screens/dns_screen.dart';
 
 // Stamps from the public resolver and relay lists; the Go tests (core/dnscrypt) use the same ones.
 const quad9 =

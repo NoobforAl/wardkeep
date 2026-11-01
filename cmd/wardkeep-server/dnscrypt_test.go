@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/dnscrypt"
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/core/dnscrypt"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 // The DNSCrypt resolver is off on a new server, `proto enable` turns it on,

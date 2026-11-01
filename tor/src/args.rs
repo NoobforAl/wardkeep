@@ -1,4 +1,4 @@
-//! Command-line options of the `omnitun-tor` binary.
+//! Command-line options of the `wardkeep-tor` binary.
 
 use std::net::SocketAddr;
 use std::path::PathBuf;

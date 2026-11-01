@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NoobforAl/omnitun/third_party/dnstt/turbotunnel"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/turbotunnel"
 )
 
 // A default Retry-After delay to use when there is no explicit Retry-After

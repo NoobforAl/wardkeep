@@ -7,7 +7,7 @@ import (
 
 	yaml "go.yaml.in/yaml/v3"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // looksLikeClash reports whether text is a Clash / Clash.Meta (mihomo) config.

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/protocols"
 )
 
 // The IPv6 client networks get their own nftables table: replies in, no way to the host's

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/state/window_bounds.dart';
+import 'package:wardkeep/state/window_bounds.dart';
 
 /// Where the desktop window opens: sized from the monitor, never off it, and where the user left it.
 void main() {

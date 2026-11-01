@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // ErrUnsupported is returned for input that no parser recognises.
@@ -18,7 +18,7 @@ var ErrUnsupported = errors.New("unsupported config format")
 var ErrNoProfiles = errors.New("no valid profiles")
 
 // ErrXrayServer is returned for the config of an Xray server (not a client).
-var ErrXrayServer = errors.New("this is an Xray server config; import it on the server (omnitun-server import xray), not as a client profile")
+var ErrXrayServer = errors.New("this is an Xray server config; import it on the server (wardkeep-server import xray), not as a client profile")
 
 // UnsupportedError is a link of a scheme nothing here can read.
 type UnsupportedError struct{ Scheme string }

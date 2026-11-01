@@ -6,7 +6,7 @@ Builds the per-user installer (wardkeep.iss) with Inno Setup.
 
 Writes <OutputDir>\wardkeep-<Version>-windows-x64-setup.exe. -Version is the name used in the file name
 (0.1.0, 0.2.0-rc1, dev-abc1234); the numbers for Windows are taken from it (x.y.z, else 0.0.0).
--SourceDir is the Flutter release folder with omnitun-svc.exe next to omnitun.exe.
+-SourceDir is the Flutter release folder with wardkeep-svc.exe next to wardkeep.exe.
 
 With -Pfx (and WINDOWS_CERT_PASSWORD in the environment) the setup file and its uninstaller are signed by
 sign.ps1. Inno Setup 6 is taken from the usual places (the GitHub runners have it); if it is not there it is

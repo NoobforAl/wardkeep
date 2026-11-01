@@ -9,8 +9,8 @@ import (
 	"net"
 	"sync/atomic"
 
-	"github.com/NoobforAl/omnitun/third_party/dnstt/dns"
-	"github.com/NoobforAl/omnitun/third_party/dnstt/noise"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/dns"
+	"github.com/NoobforAl/wardkeep/third_party/dnstt/noise"
 )
 
 var logger atomic.Pointer[func(format string, args ...any)]

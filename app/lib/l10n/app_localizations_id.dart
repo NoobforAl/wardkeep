@@ -1506,7 +1506,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'Ini konfigurasi server Xray. Impor di server (omnitun-server import xray), bukan sebagai profil klien';
+      'Ini konfigurasi server Xray. Impor di server (wardkeep-server import xray), bukan sebagai profil klien';
 
   @override
   String get subAuthFailed =>

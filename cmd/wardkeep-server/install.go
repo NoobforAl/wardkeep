@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/install"
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/install"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 // installOptions are the flags the install, uninstall and firewall commands share.
@@ -18,6 +18,7 @@ type installFlags struct {
 }
 
 func (f *installFlags) add(cmd *cobra.Command) {
+	// The default user keeps the old project name: it owns the data folder of existing installs.
 	cmd.Flags().StringVar(&f.user, "user", "omnitun", `user the service runs as ("root" to run as root)`)
 	cmd.Flags().StringVar(&f.binDir, "bin-dir", "/usr/local/bin", "where the binary is installed")
 	cmd.Flags().StringVar(&f.firewall, "firewall", "auto", "firewall manager: auto, ufw, firewalld or none")
@@ -63,7 +64,7 @@ func (f *installFlags) run(plan install.Plan, runner install.Runner) error {
 		return fmt.Errorf("installing as a service is supported on Linux only (add --dry-run to see the steps)")
 	}
 	if os.Geteuid() != 0 {
-		return fmt.Errorf("run this as root (sudo omnitun-server ...), or add --dry-run to see the steps")
+		return fmt.Errorf("run this as root (sudo wardkeep-server ...), or add --dry-run to see the steps")
 	}
 	if err := install.Execute(plan, runner, os.Stdout); err != nil {
 		return err
@@ -86,9 +87,9 @@ func newInstallCmd(global *options) *cobra.Command {
   - writes a hardened systemd unit and starts it now and at every boot,
   - opens the ports of the enabled protocols in ufw or firewalld.
 
-Run "omnitun-server init" first. Add --dry-run to see every step without
+Run "wardkeep-server init" first. Add --dry-run to see every step without
 changing anything. If you change protocols or ports later, run
-"omnitun-server firewall" to open the new ones.`,
+"wardkeep-server firewall" to open the new ones.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts, err := flags.options(global, true)

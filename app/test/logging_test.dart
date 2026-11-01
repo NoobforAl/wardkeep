@@ -5,18 +5,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/daemon_engine.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/l10n/errors.dart';
-import 'package:omnitun/l10n/l10n.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/log_alerts.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
-import 'package:omnitun/ui/screens/logs_screen.dart';
-import 'package:omnitun/ui/screens/settings_screen.dart';
-import 'package:omnitun/ui/system_notifications.dart';
+import 'package:wardkeep/engine/daemon_engine.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/l10n/errors.dart';
+import 'package:wardkeep/l10n/l10n.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/log_alerts.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
+import 'package:wardkeep/ui/screens/logs_screen.dart';
+import 'package:wardkeep/ui/screens/settings_screen.dart';
+import 'package:wardkeep/ui/system_notifications.dart';
 
 /// The preview engine, with log records pushed by the test and the `logging.set` calls it got.
 class _LogEngine extends MockEngine {
@@ -276,7 +276,7 @@ void main() {
           engineProvider.overrideWithValue(engine),
           systemNotificationsProvider.overrideWithValue(notifications),
         ],
-        child: const OmnitunApp(),
+        child: const WardkeepApp(),
       ));
       await tester.pump();
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);

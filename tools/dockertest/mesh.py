@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Docker end-to-end test of the mesh (Tailscale/Headscale) client of the core.
 
-A Headscale control server, two of our cores (omnitun-svc built with the
+A Headscale control server, two of our cores (wardkeep-svc built with the
 with_tailscale tag, started with a tailscale:// link and driven through the
 control protocol like the app does) and one stock Tailscale client, all in
 containers on one Docker network. A fifth container, the "web", sits on a second
@@ -71,8 +71,8 @@ def build():
     os.makedirs(BUILD, exist_ok=True)
     env = dict(os.environ, GOOS="linux", GOARCH="amd64", CGO_ENABLED="0")
     print("building the Linux binaries (with the Tailscale tag)...")
-    for name in ("omnitun-svc", "meshctl"):
-        pkg = "./cmd/omnitun-svc" if name == "omnitun-svc" else "./tools/dockertest/meshctl"
+    for name in ("wardkeep-svc", "meshctl"):
+        pkg = "./cmd/wardkeep-svc" if name == "wardkeep-svc" else "./tools/dockertest/meshctl"
         subprocess.run(["go", "build", "-tags", TAGS, "-trimpath", "-ldflags", "-s -w -checklinkname=0",
                         "-o", os.path.join(BUILD, name), pkg], cwd=ROOT, env=env, check=True)
     shutil.copy(os.path.join(HERE, "web.py"), os.path.join(BUILD, "web.py"))
@@ -135,7 +135,7 @@ def start_core(name, key, hostname):
     """One of our cores: the daemon, then the same calls the app makes (import, start)."""
     sh("docker", "run", "-d", "--name", name, "--network", NET, CLIENT_IMAGE, "sleep", "infinity")
     sh("docker", "exec", "-d", name, "sh", "-c",
-       "omnitun-svc --control-file /data/control.json --data-dir /data --grace 24h > /var/log/svc.log 2>&1")
+       "wardkeep-svc --control-file /data/control.json --data-dir /data --grace 24h > /var/log/svc.log 2>&1")
     wait_for(name, "test -s /data/control.json", "the daemon", 20)
     r = dx(name, "meshctl -control /data/control.json connect '%s' %d" % (link(key, hostname), PROXY), check=False)
     if r.returncode != 0:

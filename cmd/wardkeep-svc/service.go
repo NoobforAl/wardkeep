@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	"github.com/NoobforAl/omnitun/core/winsvc"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/winsvc"
 )
 
 func isService() bool { return winsvc.IsService() }
@@ -57,7 +57,7 @@ func serve(logger *logrec.Logger, layout winsvc.Layout, stop <-chan struct{}) er
 		return err
 	}
 	if err := cfg.Validate(); err != nil {
-		return fmt.Errorf("the service is not set up (run \"omnitun-svc install\"): %w", err)
+		return fmt.Errorf("the service is not set up (run \"wardkeep-svc install\"): %w", err)
 	}
 	// Lock the directories before anything secret is written to them.
 	if err := winsvc.PrepareDirs(layout, cfg); err != nil {

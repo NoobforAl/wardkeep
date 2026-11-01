@@ -11,8 +11,8 @@ import (
 
 	"github.com/sagernet/sing-box/adapter"
 
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // With Tailscale compiled in, a mesh profile starts a real Tailscale node inside

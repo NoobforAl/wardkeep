@@ -18,7 +18,7 @@ import (
 	dc "github.com/ameshkov/dnscrypt/v2"
 	"github.com/miekg/dns"
 
-	"github.com/NoobforAl/omnitun/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/protocols"
 )
 
 // The optional DNSCrypt resolver of the server. It is a resolver for the VPN's
@@ -150,7 +150,7 @@ func startDNSCrypt(cfg Config) (Server, error) {
 	id := cfg.Env.DNSCrypt
 	listen, err := parseListen(id.Listen)
 	if err != nil {
-		return nil, fmt.Errorf("dnscrypt: %w (omnitun-server dnscrypt listen <ip>)", err)
+		return nil, fmt.Errorf("dnscrypt: %w (wardkeep-server dnscrypt listen <ip>)", err)
 	}
 	extra, err := parseRanges(id.Allow)
 	if err != nil {

@@ -7,8 +7,8 @@ import (
 
 	box "github.com/sagernet/sing-box"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // handshake reaches a server through the tunnel before reporting

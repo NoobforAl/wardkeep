@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // Without the with_tailscale tag a mesh profile cannot run, and says why.

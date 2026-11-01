@@ -16,16 +16,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/core/pprofsrv"
-	"github.com/NoobforAl/omnitun/server/api"
-	"github.com/NoobforAl/omnitun/server/install"
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/runtime"
-	"github.com/NoobforAl/omnitun/server/serverconf"
-	"github.com/NoobforAl/omnitun/server/store"
-	"github.com/NoobforAl/omnitun/server/tlsfiles"
-	"github.com/NoobforAl/omnitun/server/tui"
+	"github.com/NoobforAl/wardkeep/core/pprofsrv"
+	"github.com/NoobforAl/wardkeep/server/api"
+	"github.com/NoobforAl/wardkeep/server/install"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/runtime"
+	"github.com/NoobforAl/wardkeep/server/serverconf"
+	"github.com/NoobforAl/wardkeep/server/store"
+	"github.com/NoobforAl/wardkeep/server/tlsfiles"
+	"github.com/NoobforAl/wardkeep/server/tui"
 )
 
 func newRunCmd(global *options) *cobra.Command {
@@ -36,8 +36,8 @@ func newRunCmd(global *options) *cobra.Command {
 		Long: `Start the server. It reloads when users change and serves the web API if enabled.
 
 What it logs goes to server.log in the data directory and to stderr (the
-systemd journal), one JSON record per line; ` + "`omnitun-server logs`" + ` shows them.
-Failures nothing handles are also alerts: ` + "`omnitun-server alerts`" + `.`,
+systemd journal), one JSON record per line; ` + "`wardkeep-server logs`" + ` shows them.
+Failures nothing handles are also alerts: ` + "`wardkeep-server alerts`" + `.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			mgr := global.manager()

@@ -2,4 +2,4 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
         iproute2 iputils-ping iptables curl ca-certificates procps \
     && rm -rf /var/lib/apt/lists/*
-COPY omnitun-svc meshctl /usr/local/bin/
+COPY wardkeep-svc meshctl /usr/local/bin/

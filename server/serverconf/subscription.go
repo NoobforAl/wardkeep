@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/links"
-	"github.com/NoobforAl/omnitun/core/protocols"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	"github.com/NoobforAl/omnitun/core/subscription"
-	"github.com/NoobforAl/omnitun/server/stats"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/core/links"
+	"github.com/NoobforAl/wardkeep/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/subscription"
+	"github.com/NoobforAl/wardkeep/server/stats"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func wantsSingBox(r *http.Request) bool {
@@ -25,7 +25,7 @@ func wantsSingBox(r *http.Request) bool {
 		return false
 	}
 	ua := strings.ToLower(r.UserAgent())
-	return strings.Contains(ua, "wardkeep") || strings.Contains(ua, "omnitun") || strings.Contains(ua, "sing-box") || strings.Contains(ua, "sfa") || strings.Contains(ua, "sfi")
+	return strings.Contains(ua, "wardkeep") || strings.Contains(ua, "omnitun") /* apps from before the rename */ || strings.Contains(ua, "sing-box") || strings.Contains(ua, "sfa") || strings.Contains(ua, "sfi")
 }
 
 // SingBoxSubscription is the user's profiles as a sing-box config (outbounds

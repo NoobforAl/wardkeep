@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/stats"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/stats"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // tempDir is t.TempDir with a cleanup that retries: on Windows a virus
@@ -18,7 +18,7 @@ import (
 // fails t.TempDir's own cleanup.
 func tempDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "omnitun-test-")
+	dir, err := os.MkdirTemp("", "wardkeep-test-")
 	if err != nil {
 		t.Fatal(err)
 	}

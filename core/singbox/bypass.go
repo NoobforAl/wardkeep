@@ -6,7 +6,7 @@ import (
 
 	"go4.org/netipx"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // LocalPrefixes are the local-network ranges that bypass the VPN by default

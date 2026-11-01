@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func acmeState(t *testing.T) (*store.State, *store.Store) {

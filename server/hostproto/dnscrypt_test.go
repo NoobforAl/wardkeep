@@ -15,9 +15,9 @@ import (
 
 	"github.com/miekg/dns"
 
-	"github.com/NoobforAl/omnitun/core/dnscrypt"
-	"github.com/NoobforAl/omnitun/core/protocols"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/core/dnscrypt"
+	"github.com/NoobforAl/wardkeep/core/protocols"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // fakeUpstream answers every A query with 192.0.2.77 over UDP and TCP and counts them.

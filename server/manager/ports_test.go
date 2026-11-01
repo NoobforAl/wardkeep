@@ -3,7 +3,7 @@ package manager
 import (
 	"testing"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func ruleSet(rules []PortRule) map[string]string {

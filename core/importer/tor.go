@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 var torTransports = []string{"obfs4", "webtunnel", "snowflake", "meek_lite"}

@@ -12,12 +12,12 @@ import (
 	"github.com/amnezia-vpn/amneziawg-go/device"
 	"github.com/amnezia-vpn/amneziawg-go/tun"
 
-	"github.com/NoobforAl/omnitun/core/awg"
-	"github.com/NoobforAl/omnitun/core/protocols"
+	"github.com/NoobforAl/wardkeep/core/awg"
+	"github.com/NoobforAl/wardkeep/core/protocols"
 )
 
 const (
-	awgInterface = "omnitun-awg"
+	awgInterface = "omnitun-awg" // old project name, kept: existing setups and firewall rules name it
 	awgMTU       = 1380
 )
 

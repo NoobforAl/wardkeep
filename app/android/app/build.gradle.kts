@@ -24,6 +24,7 @@ android {
     }
 
     defaultConfig {
+        // The old project name, kept: a new id would be a different app to Android (no update, no saved data).
         applicationId = "dev.omnitun.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -78,5 +79,5 @@ flutter {
 
 dependencies {
     // Go core, built by scripts/build-android-core.sh (not committed).
-    implementation(files("libs/omnitun-core.aar"))
+    implementation(files("libs/wardkeep-core.aar"))
 }

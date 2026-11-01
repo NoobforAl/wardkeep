@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/leakcheck"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/leakcheck"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
-// cycles is how many times the leak tests start and stop; OMNITUN_LEAK_CYCLES
+// cycles is how many times the leak tests start and stop; WARDKEEP_LEAK_CYCLES
 // raises it for a longer soak.
 func cycles(def int) int {
-	if n, err := strconv.Atoi(os.Getenv("OMNITUN_LEAK_CYCLES")); err == nil && n > 0 {
+	if n, err := strconv.Atoi(os.Getenv("WARDKEEP_LEAK_CYCLES")); err == nil && n > 0 {
 		return n
 	}
 	if testing.Short() {
@@ -42,18 +42,18 @@ func leakProfiles(t *testing.T) []*profile.Profile {
 // Starting and stopping the engine over and over (what the app does every time
 // the user connects and disconnects) must not leave goroutines or heap behind.
 //
-// It takes about a minute, so it only runs with OMNITUN_LEAK=1. The tunnel gets
-// OMNITUN_LEAK_SETTLE (default 2s) between start and stop so the urltest and DNS
+// It takes about a minute, so it only runs with WARDKEEP_LEAK=1. The tunnel gets
+// WARDKEEP_LEAK_SETTLE (default 2s) between start and stop so the urltest and DNS
 // queries it begins with are over: stopping while they are in flight leaks one
 // goroutine and a socket per cycle inside sing-box v1.14.3 (its UDP DNS
-// transport is never closed with the box); OMNITUN_LEAK_SETTLE=0 shows it.
+// transport is never closed with the box); WARDKEEP_LEAK_SETTLE=0 shows it.
 func TestStartStopDoesNotLeak(t *testing.T) {
-	if os.Getenv("OMNITUN_LEAK") == "" {
-		t.Skip("set OMNITUN_LEAK=1 to run the start/stop leak soak")
+	if os.Getenv("WARDKEEP_LEAK") == "" {
+		t.Skip("set WARDKEEP_LEAK=1 to run the start/stop leak soak")
 	}
 	profiles := leakProfiles(t)
 	settle := 2 * time.Second
-	if v, err := time.ParseDuration(os.Getenv("OMNITUN_LEAK_SETTLE")); err == nil {
+	if v, err := time.ParseDuration(os.Getenv("WARDKEEP_LEAK_SETTLE")); err == nil {
 		settle = v
 	}
 	e := New(Config{DataDir: tempDir(t), SkipHandshake: true})

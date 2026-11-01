@@ -7,9 +7,9 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/NoobforAl/omnitun/core/dnscrypt"
-	"github.com/NoobforAl/omnitun/core/protocols"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/core/dnscrypt"
+	"github.com/NoobforAl/wardkeep/core/protocols"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func dnsCryptEnv(srv store.Server) protocols.DNSCrypt {

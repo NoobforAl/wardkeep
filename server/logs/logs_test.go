@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/buildinfo"
+	"github.com/NoobforAl/wardkeep/core/buildinfo"
 )
 
 func tempDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "omnitun-logs-")
+	dir, err := os.MkdirTemp("", "wardkeep-logs-")
 	if err != nil {
 		t.Fatal(err)
 	}

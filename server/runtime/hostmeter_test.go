@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/hostproto"
-	"github.com/NoobforAl/omnitun/server/stats"
+	"github.com/NoobforAl/wardkeep/server/hostproto"
+	"github.com/NoobforAl/wardkeep/server/stats"
 )
 
 type fakeMeter struct{ usage []hostproto.Usage }

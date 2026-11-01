@@ -44,9 +44,9 @@ installer tested by CI, but not yet tried by hand on a real desktop.
 | `core/control` | UI ↔ core protocol (loopback TCP, JSON lines, token auth); tunnel stops when no UI is connected |
 | `core/netcheck` | "Is there internet at all?" check, so we report *no internet* instead of failing over |
 | `core/mobile` | gomobile entry point for Android: runs the control server in-process and plugs `VpnService` into sing-box |
-| `cmd/omnitun-svc` | Core daemon the desktop app launches (exits when the app dies) |
-| `cmd/omnitun` | Developer CLI for the core |
-| `cmd/omnitun-server` + `server/` | VPN server: 13 protocols (VLESS+Reality, Shadowsocks 2022, Trojan, Hysteria2, TUIC, AnyTLS, ShadowTLS, NaiveProxy, WireGuard, OpenVPN over UDP and TCP, a DNS tunnel, and AmneziaWG on Linux), users, quotas and traffic accounting, one subscription link per user, ACME certificates, `init` wizard, `install` for systemd and firewall, cobra CLI (`omnitun-server --help`, `--json`), Bubble Tea TUI (`tui`), web API with OpenAPI docs (`api enable`, then `run`; docs at `/docs`) |
+| `cmd/wardkeep-svc` | Core daemon the desktop app launches (exits when the app dies) |
+| `cmd/wardkeep` | Developer CLI for the core |
+| `cmd/wardkeep-server` + `server/` | VPN server: 13 protocols (VLESS+Reality, Shadowsocks 2022, Trojan, Hysteria2, TUIC, AnyTLS, ShadowTLS, NaiveProxy, WireGuard, OpenVPN over UDP and TCP, a DNS tunnel, and AmneziaWG on Linux), users, quotas and traffic accounting, one subscription link per user, ACME certificates, `init` wizard, `install` for systemd and firewall, cobra CLI (`wardkeep-server --help`, `--json`), Bubble Tea TUI (`tui`), web API with OpenAPI docs (`api enable`, then `run`; docs at `/docs`) |
 | `server/hostproto` | The AmneziaWG server and its NAT (Linux, `CAP_NET_ADMIN`), and the DNSCrypt resolver |
 | `tools/devserver` | Local Shadowsocks server for manual tests (e.g. phone over `adb reverse tcp:8388 tcp:8388`) |
 | `tor/` | Rust Tor module (Arti) with a C ABI |
@@ -57,9 +57,9 @@ installer tested by CI, but not yet tried by hand on a real desktop.
 # Go core — always build with the sing-box feature tags:
 #   Windows: ./scripts/go.ps1 <cmd> ...     Linux/macOS: make test / make build
 ./scripts/go.ps1 test ./...
-./scripts/go.ps1 run ./cmd/omnitun import links.txt
-./scripts/go.ps1 run ./cmd/omnitun config links.txt
-./scripts/go.ps1 run ./cmd/omnitun run links.txt   # SOCKS5/HTTP proxy on 127.0.0.1:2080
+./scripts/go.ps1 run ./cmd/wardkeep import links.txt
+./scripts/go.ps1 run ./cmd/wardkeep config links.txt
+./scripts/go.ps1 run ./cmd/wardkeep run links.txt   # SOCKS5/HTTP proxy on 127.0.0.1:2080
 
 # Android core (.aar) — from Git Bash; needs Android SDK/NDK + JDK 17
 scripts/build-android-core.sh            # all ABIs; or: scripts/build-android-core.sh android/arm64
@@ -78,7 +78,7 @@ cd tor && cargo test
 cd app && flutter test && flutter run -d windows
 ```
 
-On desktop the app launches `bin/omnitun-svc(.exe)` (or `OMNITUN_SVC`, or the copy next to the app executable), so build it first:
+On desktop the app launches `bin/wardkeep-svc(.exe)` (or `WARDKEEP_SVC`, or the copy next to the app executable), so build it first:
 `./scripts/go.ps1 build -o bin/ ./cmd/...`. Without it — the app falls back to a preview engine and says so in Logs.
 
 ## License

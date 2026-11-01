@@ -83,7 +83,7 @@ else
 EXE :=
 SDK := $(or $(ANDROID_HOME),$(HOME)/Android/Sdk)
 endif
-SERVER := bin/omnitun-server$(EXE) --data $(DEV_DATA)
+SERVER := bin/wardkeep-server$(EXE) --data $(DEV_DATA)
 ADB := $(SDK)/platform-tools/adb$(EXE)
 # Flutter: the one on PATH, else ~/flutter/bin (resolved by the shell, so Windows paths survive).
 # flutter.bat / dart.bat on Windows: the extensionless flutter and dart are bash scripts (`env bash`), which can find WSL.
@@ -93,7 +93,7 @@ help:
 	@sed -n '/^# Development/,/^# -----/p' Makefile | sed 's/^# \{0,1\}//' | grep -v '^---'
 
 dev-build:
-	go build $(GOFLAGS_ALL) -o bin/omnitun-server$(EXE) ./cmd/omnitun-server
+	go build $(GOFLAGS_ALL) -o bin/wardkeep-server$(EXE) ./cmd/wardkeep-server
 
 # The first run creates the dev server: all protocols on 127.0.0.1, a user called "dev".
 $(DEV_DATA)/state.json:

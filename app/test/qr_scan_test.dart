@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/l10n/app_localizations.dart';
-import 'package:omnitun/ui/screens/qr_scan_screen.dart';
+import 'package:wardkeep/l10n/app_localizations.dart';
+import 'package:wardkeep/ui/screens/qr_scan_screen.dart';
 
 /// A camera the test drives by hand: it hands its callbacks out and shows nothing.
 class _FakeCamera {

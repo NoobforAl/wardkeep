@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // muxRequest connects a client engine to a Shadowsocks server on localhost (multiplexing allowed there or

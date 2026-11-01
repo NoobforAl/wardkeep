@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/engine/mock_engine.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/providers.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/engine/mock_engine.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/providers.dart';
 
 void main() {
   testWidgets('import a link, then connect and disconnect', (tester) async {
     await tester.pumpWidget(ProviderScope(
       overrides: [engineProvider.overrideWithValue(MockEngine(connectDelay: Duration.zero))],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ));
 
     // The first start opens with a short introduction.
@@ -37,7 +37,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'trojan://pw@example.com:443#Test%20Server');
     await tester.tap(find.widgetWithText(FilledButton, 'Import'));
     await tester.pumpAndSettle();
-    final container = ProviderScope.containerOf(tester.element(find.byType(OmnitunApp)));
+    final container = ProviderScope.containerOf(tester.element(find.byType(WardkeepApp)));
     final imported = container.read(profilesProvider).firstWhere((p) => p.name == 'Test Server');
     // Importing does not move the user off the default; choosing the server does.
     expect(container.read(selectedProfileProvider)?.protocol, 'tor');

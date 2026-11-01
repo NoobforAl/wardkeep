@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/leakcheck"
+	"github.com/NoobforAl/wardkeep/core/leakcheck"
 )
 
 // A UI that connects and disconnects over and over (the desktop app does on

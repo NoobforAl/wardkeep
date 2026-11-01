@@ -13,7 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///    argument to the open copy and ends.
 /// Everything arrives as text for the importer, which already knows every format.
 class IncomingShare {
-  static const _channel = MethodChannel('omnitun/incoming');
+  static const _channel = MethodChannel('wardkeep/incoming');
 
   /// A config file is small; anything bigger is something else.
   static const maxBytes = 2 * 1024 * 1024;

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/manager"
+	"github.com/NoobforAl/wardkeep/server/manager"
 )
 
 func printCert(cert *manager.CertInfo) func() {
@@ -95,7 +95,7 @@ provider token (--dns cloudflare|alidns) which needs no open port at all.`,
 			}
 			return global.print(cert, func() {
 				printCert(cert)()
-				fmt.Printf("\nThe server address is now %s. Existing users' links changed: show them with: omnitun-server link <name>\n", cert.Domain)
+				fmt.Printf("\nThe server address is now %s. Existing users' links changed: show them with: wardkeep-server link <name>\n", cert.Domain)
 			})
 		},
 	}

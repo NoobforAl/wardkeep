@@ -7,7 +7,7 @@ import 'engine.dart';
 
 export 'engine.dart' show EngineException;
 
-/// Talks to the omnitun-svc daemon over its loopback control protocol
+/// Talks to the wardkeep-svc daemon over its loopback control protocol
 /// (newline-delimited JSON, token-authenticated). See core/control.
 ///
 /// The daemon is started as a child process with --parent-pid, so it stops the
@@ -37,7 +37,7 @@ class DaemonEngine implements VpnEngine {
     });
     process.stderr.transform(utf8.decoder).listen((_) {});
     unawaited(process.exitCode.then((code) {
-      if (!ready.isCompleted) ready.completeError(StateError('omnitun-svc exited with code $code'));
+      if (!ready.isCompleted) ready.completeError(StateError('wardkeep-svc exited with code $code'));
     }));
     await ready.future.timeout(const Duration(seconds: 15));
     final file = controlFile ?? defaultControlFile();
@@ -52,7 +52,7 @@ class DaemonEngine implements VpnEngine {
     return _connect(control['addr'] as String, control['token'] as String, null);
   }
 
-  /// The control file of the Windows service (`omnitun-svc` running as SYSTEM,
+  /// The control file of the Windows service (`wardkeep-svc` running as SYSTEM,
   /// see core/winsvc): `%ProgramData%\omnitun\control\control.json`. The
   /// service makes its directory readable only by the accounts named at
   /// install time, so for any other user the file simply cannot be read.
@@ -61,6 +61,7 @@ class DaemonEngine implements VpnEngine {
     if (!Platform.isWindows && env == null) return null;
     final environment = env ?? Platform.environment;
     final programData = environment['ProgramData'] ?? r'C:\ProgramData';
+    // Old project name, kept: the folder of the installed service (core/winsvc).
     return '$programData\\omnitun\\control\\control.json';
   }
 
@@ -124,6 +125,7 @@ class DaemonEngine implements VpnEngine {
         : Platform.isMacOS
             ? '${Platform.environment['HOME']}/Library/Application Support'
             : Platform.environment['XDG_CONFIG_HOME'] ?? '${Platform.environment['HOME']}/.config';
+    // Old project name, kept: the daemon's folder (cmd/wardkeep-svc defaultDir).
     return '$base${Platform.pathSeparator}omnitun${Platform.pathSeparator}control.json';
   }
 
@@ -232,7 +234,7 @@ class DaemonEngine implements VpnEngine {
   }
 
   @override
-  String get name => 'omnitun core (sing-box)';
+  String get name => 'Wardkeep core (sing-box)';
 
   @override
   Stream<EngineState> get states => _states.stream;

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/engine"
-	"github.com/NoobforAl/omnitun/core/importer"
+	"github.com/NoobforAl/wardkeep/core/engine"
+	"github.com/NoobforAl/wardkeep/core/importer"
 )
 
 // A mesh profile started through the control protocol answers the mesh calls.

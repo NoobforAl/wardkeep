@@ -1,4 +1,4 @@
-// Command omnitun-server runs a multi-protocol VPN server and manages its
+// Command wardkeep-server runs a multi-protocol VPN server and manages its
 // users from the command line, a terminal UI (tui) or a web API (api).
 package main
 
@@ -12,8 +12,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // options are the flags every command shares.
@@ -23,9 +23,13 @@ type options struct {
 }
 
 func defaultDataDir() string {
-	if d := os.Getenv("OMNITUN_SERVER_DATA"); d != "" {
+	if d := os.Getenv("WARDKEEP_SERVER_DATA"); d != "" {
 		return d
 	}
+	if d := os.Getenv("OMNITUN_SERVER_DATA"); d != "" { // its name before the rename to Wardkeep
+		return d
+	}
+	// The default folders keep the old project name: existing installs keep their users and keys.
 	if goruntime.GOOS == "linux" && os.Geteuid() == 0 {
 		return "/var/lib/omnitun-server"
 	}
@@ -58,21 +62,21 @@ var version = "dev"
 func newRootCmd() *cobra.Command {
 	global := &options{}
 	root := &cobra.Command{
-		Use:     "omnitun-server",
+		Use:     "wardkeep-server",
 		Version: version,
 		Short:   "Multi-protocol VPN server with user management",
-		Long: `omnitun-server runs VLESS+Reality, Shadowsocks-2022, Trojan, Hysteria2, TUIC,
+		Long: `wardkeep-server runs VLESS+Reality, Shadowsocks-2022, Trojan, Hysteria2, TUIC,
 AnyTLS, ShadowTLS, NaiveProxy, WireGuard and OpenVPN from one process, plus
 AmneziaWG on Linux, with a user database, quotas and traffic accounting, one
 subscription link per user, a terminal UI and a web API.
 
 Quick start:
-  omnitun-server init --host YOUR_IP_OR_DOMAIN
-  omnitun-server user add alice
-  omnitun-server run
+  wardkeep-server init --host YOUR_IP_OR_DOMAIN
+  wardkeep-server user add alice
+  wardkeep-server run
 
 The data directory (keys, users) defaults to /var/lib/omnitun-server as root,
-otherwise ~/.omnitun-server; override with --data or OMNITUN_SERVER_DATA.`,
+otherwise ~/.omnitun-server; override with --data or WARDKEEP_SERVER_DATA.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

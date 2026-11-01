@@ -1461,7 +1461,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      '这是 Xray 服务器配置。请在服务器上导入（omnitun-server import xray），不要作为客户端配置导入';
+      '这是 Xray 服务器配置。请在服务器上导入（wardkeep-server import xray），不要作为客户端配置导入';
 
   @override
   String get subAuthFailed => '订阅拒绝了登录。请检查用户名、密码或令牌';

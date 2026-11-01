@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omnitun/engine/engine.dart';
-import 'package:omnitun/main.dart';
-import 'package:omnitun/state/providers.dart';
-import 'package:omnitun/state/store.dart';
+import 'package:wardkeep/engine/engine.dart';
+import 'package:wardkeep/main.dart';
+import 'package:wardkeep/state/providers.dart';
+import 'package:wardkeep/state/store.dart';
 
 /// Engine whose states are pushed by the test.
 class ScriptedEngine implements VpnEngine {
@@ -77,7 +77,7 @@ void main() {
     });
     await tester.pumpWidget(ProviderScope(
       overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(engine)],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ));
     await tester.pump();
 
@@ -96,7 +96,7 @@ void main() {
     expect(find.textContaining('Switched to PC-dev'), findsOneWidget);
     // The home screen follows the active profile, and so does the choice.
     expect(find.text('PC-dev'), findsNWidgets(2)); // the server shown, and the location row
-    final container = ProviderScope.containerOf(tester.element(find.byType(OmnitunApp)));
+    final container = ProviderScope.containerOf(tester.element(find.byType(WardkeepApp)));
     expect(container.read(selectedProfileIdProvider), 'live');
     await tester.pumpWidget(const SizedBox());
   });
@@ -106,7 +106,7 @@ void main() {
     final store = AppStore.memory({'profiles': [_p('live', 'PC-dev')]});
     await tester.pumpWidget(ProviderScope(
       overrides: [storeProvider.overrideWithValue(store), engineProvider.overrideWithValue(engine)],
-      child: const OmnitunApp(),
+      child: const WardkeepApp(),
     ));
     await tester.pump();
 

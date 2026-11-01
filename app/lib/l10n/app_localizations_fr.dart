@@ -1544,7 +1544,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'Il s’agit d’une config de serveur Xray. Importez-la sur le serveur (omnitun-server import xray), pas comme profil client';
+      'Il s’agit d’une config de serveur Xray. Importez-la sur le serveur (wardkeep-server import xray), pas comme profil client';
 
   @override
   String get subAuthFailed =>

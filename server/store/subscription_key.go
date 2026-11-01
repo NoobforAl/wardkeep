@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // NewSigningKey makes the key that signs the subscription (base64 of an Ed25519 private key). Its public half

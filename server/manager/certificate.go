@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/serverconf"
-	"github.com/NoobforAl/omnitun/server/store"
-	"github.com/NoobforAl/omnitun/server/tlsfiles"
+	"github.com/NoobforAl/wardkeep/server/serverconf"
+	"github.com/NoobforAl/wardkeep/server/store"
+	"github.com/NoobforAl/wardkeep/server/tlsfiles"
 )
 
 // CertInfo describes where the server's TLS certificate comes from. It never

@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/store"
-	"github.com/NoobforAl/omnitun/server/tlsfiles"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/store"
+	"github.com/NoobforAl/wardkeep/server/tlsfiles"
 )
 
 func freePort(t *testing.T) int {

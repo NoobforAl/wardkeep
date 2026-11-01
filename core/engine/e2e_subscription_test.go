@@ -15,9 +15,9 @@ import (
 	box "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/include"
 
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	"github.com/NoobforAl/omnitun/core/subscription"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/subscription"
 )
 
 // A provider that is blocked here can be reached through the VPN: the request

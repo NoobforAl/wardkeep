@@ -14,7 +14,7 @@ import (
 // fails t.TempDir's own cleanup.
 func tempDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "omnitun-store-")
+	dir, err := os.MkdirTemp("", "wardkeep-store-")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-// Command omnitun-svc is the core daemon the UI talks to. It owns the tunnel
+// Command wardkeep-svc is the core daemon the UI talks to. It owns the tunnel
 // and guarantees it never outlives the UI: the tunnel stops when no UI is
 // connected, and the daemon exits when its parent process dies.
 //
@@ -6,14 +6,14 @@
 // On Windows it can also run as a service with system rights, so the VPN mode
 // works from an app that is not elevated:
 //
-//	omnitun-svc install [--user NAME]...   register the service (elevated)
-//	omnitun-svc uninstall [--purge]        remove it (elevated)
-//	omnitun-svc start | stop               (elevated)
-//	omnitun-svc status                     works for any user
-//	omnitun-svc cleanup [--force]          remove leftovers of a crashed run (elevated)
-//	omnitun-svc killswitch-selftest --yes  try the kill switch for a few seconds (elevated)
+//	wardkeep-svc install [--user NAME]...   register the service (elevated)
+//	wardkeep-svc uninstall [--purge]        remove it (elevated)
+//	wardkeep-svc start | stop               (elevated)
+//	wardkeep-svc status                     works for any user
+//	wardkeep-svc cleanup [--force]          remove leftovers of a crashed run (elevated)
+//	wardkeep-svc killswitch-selftest --yes  try the kill switch for a few seconds (elevated)
 //
-// The service itself runs as "omnitun-svc service", started by Windows.
+// The service itself runs as "wardkeep-svc service", started by Windows.
 package main
 
 import (
@@ -25,8 +25,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/pprofsrv"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/pprofsrv"
 )
 
 func defaultDir() string {
@@ -34,6 +34,7 @@ func defaultDir() string {
 	if err != nil {
 		dir = os.TempDir()
 	}
+	// Old project name, kept: existing installs keep their settings and data.
 	return filepath.Join(dir, "omnitun")
 }
 
@@ -51,7 +52,7 @@ func main() {
 
 // runPerUser is the daemon the app launches (and the development default).
 func runPerUser(args []string) int {
-	fs := newFlagSet("omnitun-svc")
+	fs := newFlagSet("wardkeep-svc")
 	listen := fs.String("listen", "127.0.0.1:0", "control address (loopback only)")
 	controlFile := fs.String("control-file", filepath.Join(defaultDir(), "control.json"), "where to write the address and token")
 	dataDir := fs.String("data-dir", defaultDir(), "engine data directory")

@@ -3,7 +3,7 @@ package importer
 import (
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 const testECHPEM = "-----BEGIN ECH CONFIGS-----\nAEX+DQBB\n-----END ECH CONFIGS-----"

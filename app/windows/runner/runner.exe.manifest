@@ -6,7 +6,7 @@
     </windowsSettings>
   </application>
   <!-- Runs with the rights of the user who starts it: no elevation prompt. VPN mode gets its
-       rights from the omnitun-svc Windows service (it runs as SYSTEM), not from this window. -->
+       rights from the wardkeep-svc Windows service (it runs as SYSTEM), not from this window. -->
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>

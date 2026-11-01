@@ -58,13 +58,13 @@ unless asked for). Everything is per user: `%LOCALAPPDATA%\Programs\Wardkeep` an
 described in [app.md](app.md).
 
 Signing is optional: with the repository secrets `WINDOWS_CERT_PFX_BASE64` (the `.pfx` file, base64) and
-`WINDOWS_CERT_PASSWORD`, `omnitun.exe`, `omnitun-svc.exe`, the setup file and its uninstaller are signed
+`WINDOWS_CERT_PASSWORD`, `wardkeep.exe`, `wardkeep-svc.exe`, the setup file and its uninstaller are signed
 (`installer/sign.ps1`); without them the files are unsigned and Windows SmartScreen warns on the first start. The
 certificate is only in the `package-windows` job, which runs nothing from dependencies.
 
 ## The Linux installer
 
-`installer/linux/build-installer.sh <version> <bundle> <out>` packs Flutter's Linux bundle and `omnitun-svc` into one
+`installer/linux/build-installer.sh <version> <bundle> <out>` packs Flutter's Linux bundle and `wardkeep-svc` into one
 self-extracting `sh` script (`setup-header.sh` plus a `tar.xz`, with the payload's SHA-256 inside so that a damaged
 download is refused). It installs for the current user only and refuses to run as root: the program in
 `~/.local/share/wardkeep`, the command `wardkeep` in `~/.local/bin`, a menu entry and icon, and (unless `--no-links`)
@@ -73,7 +73,7 @@ Wardkeep as the program for share links. `<prefix>/uninstall.sh` removes it agai
 pipeline runs; it can also be run by hand on any Linux machine or in Docker:
 
 ```
-installer/linux/build-installer.sh dev app/build/linux/x64/release/bundle dist   # omnitun-svc must be in the bundle
+installer/linux/build-installer.sh dev app/build/linux/x64/release/bundle dist   # wardkeep-svc must be in the bundle
 installer/linux/test-installer.sh dist/wardkeep-dev-linux-x64-setup.sh
 ```
 
@@ -104,12 +104,12 @@ bash scripts/android-github-secrets.sh  # uploads them as repository secrets (ne
 * Android: `scripts/build-android-release.sh` (all steps, one APK) or, with the Tor client and the core already built,
   `cd app && flutter build apk --release --build-name=0.1.0 --build-number=100`; it signs with
   `app/android/key.properties`.
-* Windows: build `omnitun-svc.exe` (`./scripts/go.ps1 build -o dist/app/omnitun-svc.exe ./cmd/omnitun-svc`),
+* Windows: build `wardkeep-svc.exe` (`./scripts/go.ps1 build -o dist/app/wardkeep-svc.exe ./cmd/wardkeep-svc`),
   `flutter build windows --release`, copy the Release folder into `dist/app`, then `installer/build-installer.ps1`.
 * Linux: `flutter build linux --release` (needs `clang cmake ninja-build pkg-config libgtk-3-dev
   libayatana-appindicator3-dev libnotify-dev`; clang 16 or newer: the QR scanner's zxing-cpp does not compile with
-  Ubuntu 22.04's clang 14 or 15, so the release job takes clang 18 from apt.llvm.org), a static `omnitun-svc` (`CGO_ENABLED=0 go build -tags <TAGS> -o <bundle>/omnitun-svc
-  ./cmd/omnitun-svc`, the tags are in the `Makefile`), then `installer/linux/build-installer.sh`.
+  Ubuntu 22.04's clang 14 or 15, so the release job takes clang 18 from apt.llvm.org), a static `wardkeep-svc` (`CGO_ENABLED=0 go build -tags <TAGS> -o <bundle>/wardkeep-svc
+  ./cmd/wardkeep-svc`, the tags are in the `Makefile`), then `installer/linux/build-installer.sh`.
 
 ## Dependencies
 

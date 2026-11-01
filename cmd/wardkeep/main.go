@@ -1,4 +1,4 @@
-// Command omnitun is a developer CLI for the core engine: import configs,
+// Command wardkeep is a developer CLI for the core engine: import configs,
 // print the generated sing-box config, or run a tunnel.
 package main
 
@@ -11,13 +11,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/NoobforAl/omnitun/core/engine"
-	"github.com/NoobforAl/omnitun/core/importer"
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/engine"
+	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
-const usage = `usage: omnitun <command> [flags] <file|->
+const usage = `usage: wardkeep <command> [flags] <file|->
 
 commands:
   import   parse links / subscription / .conf and print profiles as JSON

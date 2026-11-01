@@ -1565,7 +1565,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'هذا إعداد خادم Xray‎. استورده على الخادم (‎omnitun-server import xray‎) لا كملف تعريف عميل';
+      'هذا إعداد خادم Xray‎. استورده على الخادم (‎wardkeep-server import xray‎) لا كملف تعريف عميل';
 
   @override
   String get subAuthFailed =>

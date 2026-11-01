@@ -3,7 +3,7 @@ package protocols
 import (
 	"errors"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // DNSCrypt is the server's DNSCrypt resolver identity: the provider name and

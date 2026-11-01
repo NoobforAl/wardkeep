@@ -417,7 +417,7 @@
   "formRealityKeyRequired": "Cần có khóa công khai Reality khi Bảo mật là Reality",
   "importUnsupported": "Đây không phải liên kết máy chủ, gói đăng ký hay cấu hình mà Wardkeep đọc được",
   "importUnsupportedScheme": "Không hỗ trợ liên kết bắt đầu bằng {scheme}://",
-  "importXrayServer": "Đây là cấu hình máy chủ Xray. Hãy nhập nó trên máy chủ (omnitun-server import xray), không phải làm hồ sơ máy khách",
+  "importXrayServer": "Đây là cấu hình máy chủ Xray. Hãy nhập nó trên máy chủ (wardkeep-server import xray), không phải làm hồ sơ máy khách",
   "subAuthFailed": "Gói đăng ký đã từ chối đăng nhập. Hãy kiểm tra tên người dùng, mật khẩu hoặc token",
   "subHttp": "Máy chủ gói đăng ký trả lời HTTP {status}",
   "subTooLarge": "Gói đăng ký lớn hơn 10 MB",

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/killswitch"
-	"github.com/NoobforAl/omnitun/core/singbox"
-	"github.com/NoobforAl/omnitun/core/winsvc"
+	"github.com/NoobforAl/wardkeep/core/killswitch"
+	"github.com/NoobforAl/wardkeep/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/winsvc"
 )
 
 // subcommands are the Windows service's management commands. Each returns
@@ -29,12 +29,12 @@ var subcommands = map[string]func(args []string) int{
 }
 
 func usage() {
-	fmt.Fprint(os.Stderr, `usage: omnitun-svc [flags]                    run the per-user daemon (what the app launches)
-       omnitun-svc install [--user NAME]... [--no-copy] [--unsafe-source]
-       omnitun-svc uninstall [--purge]
-       omnitun-svc start | stop | status
-       omnitun-svc cleanup [--force]
-       omnitun-svc killswitch-selftest --yes [--seconds N]
+	fmt.Fprint(os.Stderr, `usage: wardkeep-svc [flags]                    run the per-user daemon (what the app launches)
+       wardkeep-svc install [--user NAME]... [--no-copy] [--unsafe-source]
+       wardkeep-svc uninstall [--purge]
+       wardkeep-svc start | stop | status
+       wardkeep-svc cleanup [--force]
+       wardkeep-svc killswitch-selftest --yes [--seconds N]
 The service commands are for Windows; all but status need an elevated terminal.
 `)
 }
@@ -47,7 +47,7 @@ func (l *stringList) String() string     { return strings.Join(*l, ",") }
 func (l *stringList) Set(v string) error { *l = append(*l, v); return nil }
 
 func fail(err error) int {
-	fmt.Fprintln(os.Stderr, "omnitun-svc:", err)
+	fmt.Fprintln(os.Stderr, "wardkeep-svc:", err)
 	return 1
 }
 
@@ -65,7 +65,7 @@ func cmdInstall(args []string) int {
 	if err := winsvc.Install(winsvc.InstallOptions{Exe: *exe, Users: users, NoCopy: *noCopy, UnsafeSource: *unsafeSource}, say); err != nil {
 		return fail(err)
 	}
-	say("Installed. Start it with: omnitun-svc start")
+	say("Installed. Start it with: wardkeep-svc start")
 	return 0
 }
 
@@ -146,7 +146,7 @@ func cmdCleanup(args []string) int {
 		return fail(winsvc.ErrNeedsAdmin)
 	}
 	if st, _ := winsvc.QueryStatus(); st.State == "running" && !*force {
-		return fail(errors.New("the service is running and owns the tunnel adapter; stop it first (omnitun-svc stop) or use --force"))
+		return fail(errors.New("the service is running and owns the tunnel adapter; stop it first (wardkeep-svc stop) or use --force"))
 	}
 	rep := winsvc.RunCleanup(winsvc.CleanupSteps(singbox.WindowsTunName))
 	fmt.Print(rep.String())

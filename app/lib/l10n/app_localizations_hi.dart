@@ -1520,7 +1520,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get importXrayServer =>
-      'यह Xray सर्वर कॉन्फ़िग है। इसे सर्वर पर इम्पोर्ट करें (omnitun-server import xray), क्लाइंट प्रोफ़ाइल के रूप में नहीं';
+      'यह Xray सर्वर कॉन्फ़िग है। इसे सर्वर पर इम्पोर्ट करें (wardkeep-server import xray), क्लाइंट प्रोफ़ाइल के रूप में नहीं';
 
   @override
   String get subAuthFailed =>

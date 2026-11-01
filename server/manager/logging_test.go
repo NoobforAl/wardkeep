@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/logs"
+	"github.com/NoobforAl/wardkeep/server/logs"
 )
 
 func TestLogRecordsAndAlerts(t *testing.T) {

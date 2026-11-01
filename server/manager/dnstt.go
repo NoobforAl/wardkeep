@@ -4,7 +4,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // DNSTTInfo describes the server's optional DNS tunnel.

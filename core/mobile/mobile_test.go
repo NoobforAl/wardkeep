@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/engine"
+	"github.com/NoobforAl/wardkeep/core/engine"
 )
 
 func TestStartTunnelFromJSONNeedsTheCore(t *testing.T) {

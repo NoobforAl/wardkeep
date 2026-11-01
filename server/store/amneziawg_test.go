@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/awg"
+	"github.com/NoobforAl/wardkeep/core/awg"
 )
 
 func num(t *testing.T, a AmneziaWG, key string) int {

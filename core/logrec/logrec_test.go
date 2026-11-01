@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/buildinfo"
+	"github.com/NoobforAl/wardkeep/core/buildinfo"
 )
 
 // countingArg counts how often a message argument is formatted.

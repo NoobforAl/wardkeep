@@ -1,4 +1,4 @@
-// Package tor runs Tor for Wardkeep: the Arti client (the Rust `omnitun-tor`
+// Package tor runs Tor for Wardkeep: the Arti client (the Rust `wardkeep-tor`
 // binary from tor/) behind a local SOCKS5 port, plus bridge pluggable
 // transports run in-process in Go (obfs4, WebTunnel, Snowflake, meek).
 package tor
@@ -20,12 +20,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
 // Config starts Tor.
 type Config struct {
-	// Bin is the omnitun-tor executable; empty uses FindBinary.
+	// Bin is the wardkeep-tor executable; empty uses FindBinary.
 	Bin string
 	// DataDir keeps Arti's state and directory cache between runs (faster
 	// bootstraps).
@@ -39,10 +39,10 @@ type Config struct {
 	// OnPath receives the circuit the traffic rides whenever it changes: the relays in order, each with
 	// its role and (when known) country.
 	OnPath func(path []Hop)
-	// OnLog receives omnitun-tor's log records (its stdout "log" events, with their own level and extra keys) and,
+	// OnLog receives wardkeep-tor's log records (its stdout "log" events, with their own level and extra keys) and,
 	// as errors, anything it writes to stderr (which it does only when something unexpected happens).
 	OnLog func(logrec.Record)
-	// LogLevel is passed as --log-level (trace, debug, info, warn, error, fatal); empty leaves omnitun-tor's default
+	// LogLevel is passed as --log-level (trace, debug, info, warn, error, fatal); empty leaves wardkeep-tor's default
 	// (error).
 	LogLevel string
 }
@@ -83,13 +83,13 @@ type event struct {
 	} `json:"hops"`
 }
 
-// FindBinary locates omnitun-tor: $OMNITUN_TOR_BIN, then next to the running
+// FindBinary locates wardkeep-tor: $WARDKEEP_TOR_BIN, then next to the running
 // executable, then $PATH.
 func FindBinary() (string, error) {
-	if p := os.Getenv("OMNITUN_TOR_BIN"); p != "" {
+	if p := os.Getenv("WARDKEEP_TOR_BIN"); p != "" {
 		return p, nil
 	}
-	name := "omnitun-tor"
+	name := "wardkeep-tor"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
@@ -102,7 +102,7 @@ func FindBinary() (string, error) {
 	if p, err := exec.LookPath(name); err == nil {
 		return p, nil
 	}
-	return "", errors.New("the Tor client (omnitun-tor) is not installed")
+	return "", errors.New("the Tor client (wardkeep-tor) is not installed")
 }
 
 // Start launches the transports and Arti; it returns once Arti's SOCKS port
@@ -153,7 +153,7 @@ func Start(cfg Config) (*Process, error) {
 		proc.closeTransports()
 		return nil, err
 	}
-	// Closing stdin tells omnitun-tor to exit (also when this process dies).
+	// Closing stdin tells wardkeep-tor to exit (also when this process dies).
 	if proc.stdin, err = proc.cmd.StdinPipe(); err != nil {
 		proc.closeTransports()
 		return nil, err
@@ -259,7 +259,7 @@ func parseLogEvent(line []byte) (logrec.Record, bool) {
 	return rec, true
 }
 
-// stderrRecord is a line omnitun-tor wrote to stderr: only unexpected output goes there, so it is an error.
+// stderrRecord is a line wardkeep-tor wrote to stderr: only unexpected output goes there, so it is an error.
 func stderrRecord(line string) logrec.Record {
 	return logrec.Record{Time: time.Now(), Level: logrec.LevelError, Source: logrec.SourceTor, Msg: strings.TrimSpace(line)}
 }

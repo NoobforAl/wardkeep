@@ -417,7 +417,7 @@
   "formRealityKeyRequired": "La clave pública de Reality es obligatoria cuando Seguridad es Reality",
   "importUnsupported": "Esto no es un enlace de servidor, suscripción o configuración que Wardkeep pueda leer",
   "importUnsupportedScheme": "No se admiten los enlaces que empiezan por {scheme}://",
-  "importXrayServer": "Esta es una configuración de servidor Xray. Impórtala en el servidor (omnitun-server import xray), no como perfil de cliente",
+  "importXrayServer": "Esta es una configuración de servidor Xray. Impórtala en el servidor (wardkeep-server import xray), no como perfil de cliente",
   "subAuthFailed": "La suscripción rechazó el inicio de sesión. Revisa el usuario, la contraseña o el token",
   "subHttp": "El servidor de la suscripción respondió HTTP {status}",
   "subTooLarge": "La suscripción supera los 10 MB",

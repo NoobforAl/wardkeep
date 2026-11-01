@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/control"
-	"github.com/NoobforAl/omnitun/core/killswitch"
-	"github.com/NoobforAl/omnitun/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/control"
+	"github.com/NoobforAl/wardkeep/core/killswitch"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 )
 
 func newFlagSet(name string) *flag.FlagSet { return flag.NewFlagSet(name, flag.ContinueOnError) }

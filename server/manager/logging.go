@@ -3,8 +3,8 @@ package manager
 import (
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // MaxLogRecords is the most records one log query returns.

@@ -8,11 +8,11 @@ import (
 
 func TestPayloadAllowlistIsExactNames(t *testing.T) {
 	listing := []string{
-		"omnitun-svc.exe", "flutter_windows.dll", "evil.dll", "LIBCRONET.DLL", "libcronet.dll.bak",
-		"omnitun-tor.exe", "omnitun-tor-evil.exe", "omnitun-tor2.exe", "version.dll", "wintun.dll", "dbghelp.dll",
+		"wardkeep-svc.exe", "flutter_windows.dll", "evil.dll", "LIBCRONET.DLL", "libcronet.dll.bak",
+		"wardkeep-tor.exe", "wardkeep-tor-evil.exe", "wardkeep-tor2.exe", "version.dll", "wintun.dll", "dbghelp.dll",
 	}
 	got := payloadCandidates(listing)
-	want := []string{"LIBCRONET.DLL", "omnitun-tor.exe"}
+	want := []string{"LIBCRONET.DLL", "wardkeep-tor.exe"}
 	if !slices.Equal(got, want) {
 		t.Errorf("candidates = %v, want %v", got, want)
 	}

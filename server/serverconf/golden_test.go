@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // goldenState is a server with fixed keys and one user, so generated output

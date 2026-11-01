@@ -10,9 +10,9 @@ import (
 
 	sblog "github.com/sagernet/sing-box/log"
 
-	"github.com/NoobforAl/omnitun/server/logs"
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/logs"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func TestParseSingBox(t *testing.T) {

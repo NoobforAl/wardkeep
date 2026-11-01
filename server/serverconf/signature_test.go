@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NoobforAl/omnitun/core/subscription"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/core/subscription"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func signedSetup(t *testing.T) (s *store.Store, path, token string) {

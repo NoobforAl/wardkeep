@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NoobforAl/omnitun/core/awg"
-	"github.com/NoobforAl/omnitun/core/logrec"
-	"github.com/NoobforAl/omnitun/core/profile"
-	"github.com/NoobforAl/omnitun/core/singbox"
+	"github.com/NoobforAl/wardkeep/core/awg"
+	"github.com/NoobforAl/wardkeep/core/logrec"
+	"github.com/NoobforAl/wardkeep/core/profile"
+	"github.com/NoobforAl/wardkeep/core/singbox"
 )
 
 // awgHandshakeTimeout is how long a new AmneziaWG tunnel may take to complete

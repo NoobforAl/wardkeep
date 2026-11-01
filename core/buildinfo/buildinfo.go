@@ -1,6 +1,6 @@
 // Package buildinfo says how this binary was built. Release builds set Mode with
 //
-//	-ldflags "-X github.com/NoobforAl/omnitun/core/buildinfo.Mode=release"
+//	-ldflags "-X github.com/NoobforAl/wardkeep/core/buildinfo.Mode=release"
 //
 // (the release workflow does); every other build is a development build.
 package buildinfo

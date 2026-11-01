@@ -13,9 +13,9 @@ class InstalledApp {
   final bool system;
 }
 
-/// Android app list and icons, via the "omnitun/core" channel.
+/// Android app list and icons, via the "wardkeep/core" channel.
 class AndroidApps {
-  static const _channel = MethodChannel('omnitun/core');
+  static const _channel = MethodChannel('wardkeep/core');
   static final _icons = <String, Future<Uint8List?>>{};
 
   static Future<List<InstalledApp>> list() async {

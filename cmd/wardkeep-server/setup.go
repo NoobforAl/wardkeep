@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 func newStatusCmd(global *options) *cobra.Command {
@@ -29,7 +29,7 @@ func newStatusCmd(global *options) *cobra.Command {
 				if info.Running {
 					fmt.Printf("server: running, %d connection(s) now\n", info.Connections)
 				} else {
-					fmt.Println("server: not running (start it with: omnitun-server run)")
+					fmt.Println("server: not running (start it with: wardkeep-server run)")
 				}
 				if info.SubscriptionPort > 0 {
 					fmt.Printf("subscriptions on port %d\n", info.SubscriptionPort)

@@ -1,6 +1,6 @@
 # Logging and error notifications
 
-One log format for every part of Wardkeep (Go core, Rust `omnitun-tor`, `omnitun-server`, the app), so
+One log format for every part of Wardkeep (Go core, Rust `wardkeep-tor`, `wardkeep-server`, the app), so
 the process that reads a log can filter it, show it and tell the user when something failed that nothing
 handled.
 
@@ -43,9 +43,9 @@ existing scrubbing (`engine/errors.go`) before they are logged.
 
 | From → to | Form |
 |---|---|
-| `omnitun-tor` → core | stdout line `{"event":"log", <record keys>}` (the record flattened next to `event`); the other events (`listening`, `bootstrap`, `ready`, `path`, `error`) are unchanged. stderr carries only unexpected output: the core logs each stderr line as `level:error, source:tor`. |
+| `wardkeep-tor` → core | stdout line `{"event":"log", <record keys>}` (the record flattened next to `event`); the other events (`listening`, `bootstrap`, `ready`, `path`, `error`) are unchanged. stderr carries only unexpected output: the core logs each stderr line as `level:error, source:tor`. |
 | core → app (control protocol) | push `{"event":"log","data":<record>}`. Older apps read `message`; the app reads `msg` and falls back to `message`. |
-| `omnitun-server` → its log file | one record per line; `Tail` still reads old text lines. |
+| `wardkeep-server` → its log file | one record per line; `Tail` still reads old text lines. |
 | server → admin | `GET /api/v1/logs?level=&since=&limit=`, `GET /api/v1/alerts`, `POST /api/v1/alerts/ack`; the TUI shows unacknowledged alerts; the web panel (PLAN.md §4.2) will read the same endpoints. |
 
 ## 3. Levels and build modes
@@ -56,9 +56,9 @@ existing scrubbing (`engine/errors.go`) before they are logged.
 | `caller` | panics only | yes | yes |
 | sing-box level | `error` | same as chosen | `debug` |
 
-* Build mode: Go `github.com/NoobforAl/omnitun/core/buildinfo.Mode`, `"dev"` unless set with
-  `-ldflags "-X github.com/NoobforAl/omnitun/core/buildinfo.Mode=release"` (release workflow); Flutter
-  `kReleaseMode`. `omnitun-tor` does not decide: the core passes `--log-level LEVEL`.
+* Build mode: Go `github.com/NoobforAl/wardkeep/core/buildinfo.Mode`, `"dev"` unless set with
+  `-ldflags "-X github.com/NoobforAl/wardkeep/core/buildinfo.Mode=release"` (release workflow); Flutter
+  `kReleaseMode`. `wardkeep-tor` does not decide: the core passes `--log-level LEVEL`.
 * A level that is off costs nothing: every layer checks the level before it formats a message.
 * Control methods: `logging.get` → `{"level","default","mode","until"}`; `logging.set {"level","until"}`
   (`until` RFC 3339, optional; the core returns to the default level then). `level: ""` = default.

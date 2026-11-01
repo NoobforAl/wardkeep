@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/store"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/store"
 )
 
 // recordingRunner stands in for nft/iptables.

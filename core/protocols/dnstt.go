@@ -3,7 +3,7 @@ package protocols
 import (
 	"errors"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // DNSTT is the server's DNS tunnel identity: the zone delegated to it and the Noise key pair clients check it by.
@@ -19,7 +19,7 @@ type DNSTT struct {
 }
 
 // ErrNoDNSTTDomain is what Profile returns while no domain is set.
-var ErrNoDNSTTDomain = errors.New("the DNS tunnel needs its domain first (omnitun-server dnstt domain <name>)")
+var ErrNoDNSTTDomain = errors.New("the DNS tunnel needs its domain first (wardkeep-server dnstt domain <name>)")
 
 // dnsttServer is the DNS tunnel: the server answers DNS queries for a zone delegated to it and carries the
 // connections hidden in them, for users on networks where nothing but DNS gets out. The DNS side is a process

@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/NoobforAl/omnitun/server/manager"
-	"github.com/NoobforAl/omnitun/server/qrterm"
+	"github.com/NoobforAl/wardkeep/server/manager"
+	"github.com/NoobforAl/wardkeep/server/qrterm"
 )
 
 func expiry(u manager.UserInfo) string {
@@ -305,7 +305,7 @@ func printLinkSet(set *manager.LinkSet, qr, subOnly bool) {
 		if url := set.Files[key]; url != "" {
 			show(key+" (config file download):", url)
 		} else {
-			fmt.Printf("%s: omnitun-server link %s --file %s > %s\n\n", key, set.User, key, key)
+			fmt.Printf("%s: wardkeep-server link %s --file %s > %s\n\n", key, set.User, key, key)
 		}
 	}
 }

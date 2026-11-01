@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/NoobforAl/omnitun/core/profile"
+	"github.com/NoobforAl/wardkeep/core/profile"
 )
 
 // ErrNoLink means the protocol has no share-link format (OpenVPN travels as

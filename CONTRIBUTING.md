@@ -63,7 +63,7 @@ Much of this codebase is load-bearing in ways that are not local. The parts wher
   Treat every input as hostile and keep a test for the odd one.
 - **`core/winsvc` and `core/killswitch`**: they run as administrator on Windows. They have been unit-tested but
   never exercised with real elevation, so read the code twice and say what you could not run.
-- **`server/` and `cmd/omnitun-server`**: users, quotas, the web API and the firewall and NAT setup. Anything
+- **`server/` and `cmd/wardkeep-server`**: users, quotas, the web API and the firewall and NAT setup. Anything
   that touches credentials, tokens or what the API exposes needs its reasoning written down.
 - **`third_party/sing-openvpn` and `third_party/dnstt`**: patched copies of libraries. Changes go in their
   `PATCHES.md` too, so the patch can be carried to a newer upstream.

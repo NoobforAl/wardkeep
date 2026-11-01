@@ -38,7 +38,7 @@ Future<void> main(List<String> args) async {
   final startup = await IncomingShare.fromArguments(args);
   runApp(ProviderScope(
     overrides: [storeProvider.overrideWithValue(store), startupSharesProvider.overrideWithValue(startup)],
-    child: const OmnitunApp(),
+    child: const WardkeepApp(),
   ));
 }
 
@@ -131,14 +131,14 @@ class _WindowMemory with WindowListener {
   }
 }
 
-class OmnitunApp extends ConsumerStatefulWidget {
-  const OmnitunApp({super.key});
+class WardkeepApp extends ConsumerStatefulWidget {
+  const WardkeepApp({super.key});
 
   @override
-  ConsumerState<OmnitunApp> createState() => _OmnitunAppState();
+  ConsumerState<WardkeepApp> createState() => _WardkeepAppState();
 }
 
-class _OmnitunAppState extends ConsumerState<OmnitunApp> {
+class _WardkeepAppState extends ConsumerState<WardkeepApp> {
   final _navigator = GlobalKey<NavigatorState>();
 
   /// The app's own messenger: a failure is told on whichever page is open.
