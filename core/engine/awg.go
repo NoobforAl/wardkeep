@@ -123,6 +123,7 @@ func (e *Engine) startAWGLocked(prof *profile.Profile, profiles []*profile.Profi
 		return fail(StagePrepare, err)
 	}
 	e.logWith(logrec.LevelInfo, logFields{profile: prof.ID}, "starting AmneziaWG")
+	e.logBypassLocked(profiles, opts, false)
 	e.setState(State{Status: StatusStarting, Selected: prof.ID, Progress: progress(StageEngineStart, e.name(prof.ID))})
 	rctx, rcancel := context.WithTimeout(context.Background(), 10*time.Second)
 	endpoint, err := awg.ResolveEndpoint(rctx, prof)

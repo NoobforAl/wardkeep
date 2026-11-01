@@ -27,7 +27,9 @@ func (e *Engine) handshake(ctx context.Context, instance *box.Box, order []strin
 
 	var firstErr error
 	for i, tag := range candidates {
-		if !e.updateProgress(instance, progress(StageHandshake, e.nameLocked(tag))) {
+		step := progress(StageHandshake, e.nameLocked(tag))
+		step.retry, step.retries = i, len(candidates)-1
+		if !e.updateProgress(instance, step) {
 			return // stopped meanwhile
 		}
 		// The auto group probes through the selector, which follows the urltest group.
@@ -50,7 +52,6 @@ func (e *Engine) handshake(ctx context.Context, instance *box.Box, order []strin
 			s.Status, s.Since, s.Error, s.Progress = StatusRunning, time.Now(), "", progress(StageConnected, e.name(tag))
 			e.setState(s)
 			e.mu.Unlock()
-			e.logWith(logrec.LevelInfo, logFields{profile: tag}, "connected")
 			if opts.Failover {
 				go func() {
 					defer e.recoverLoop("connect")
@@ -80,6 +81,7 @@ func (e *Engine) handshake(ctx context.Context, instance *box.Box, order []strin
 		return
 	}
 	failed := progress(StageHandshake, e.name(selected))
+	e.finishStepsLocked(StatusError) // before the stop, which would read as the user's
 	_ = e.stopLocked()
 	e.setState(State{Status: StatusError, Error: msg, Progress: failed, NoNetwork: msg == msgNoInternet})
 }

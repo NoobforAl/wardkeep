@@ -2,6 +2,7 @@ package singbox
 
 import (
 	"net/netip"
+	"slices"
 	"strings"
 
 	"go4.org/netipx"
@@ -23,6 +24,12 @@ var LocalPrefixes = []netip.Prefix{
 	netip.MustParsePrefix("fc00::/7"),
 	netip.MustParsePrefix("fe80::/10"),
 	netip.MustParsePrefix("ff00::/8"),
+}
+
+// ProfilesRouteLocal reports whether a profile keeps part of the local ranges inside the VPN (a WireGuard
+// profile routing a private subnet), so less than LocalPrefixes goes around it.
+func ProfilesRouteLocal(profiles []*profile.Profile) bool {
+	return !slices.Equal(BypassPrefixes(profileKeep(profiles)), BypassPrefixes(ParsePrefixes(tunAddresses)))
 }
 
 // tunAddresses is the sing-box TUN's own subnet; its DNS server (.2) lives

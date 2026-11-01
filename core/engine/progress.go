@@ -44,6 +44,10 @@ type Progress struct {
 	DetailCode string `json:"detail_code,omitempty"`
 	DetailN    int    `json:"detail_n,omitempty"`
 	DetailM    int    `json:"detail_m,omitempty"`
+
+	// retry is which retry of its step this is (0: the first try) and retries how many the step allows, for
+	// the log (steps.go); the handshake's next profile is one. Tor's attempts come in DetailN/DetailM.
+	retry, retries int
 }
 
 // Codes of the finer-grained statuses.
@@ -65,6 +69,11 @@ func (e *Engine) ReportProgress(stage string) {
 	defer e.mu.Unlock()
 	if e.instance != nil {
 		return
+	}
+	if stage == StageNetworkCheck {
+		// The first step of a connect: the attempt (its conn id and its steps in the log) starts here.
+		e.beginAttemptLocked("")
+		e.steps.early = true
 	}
 	e.setState(State{Status: StatusStarting, Progress: progress(stage, "")})
 }

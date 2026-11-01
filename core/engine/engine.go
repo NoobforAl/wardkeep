@@ -163,6 +163,8 @@ type Engine struct {
 	// dropReported is set while a failure that already logged its notify record moves the state to error, so
 	// setState does not report it a second time. Guarded by mu.
 	dropReported bool
+	// steps follows the current connect attempt for the log (steps.go). Guarded by mu.
+	steps stepLog
 }
 
 // New returns an idle engine.
@@ -206,6 +208,7 @@ func (e *Engine) setState(state State) {
 	prev := e.state.Status
 	e.state = state
 	e.notifyDropLocked(prev, state)
+	e.logStepLocked(state)
 	if e.cfg.OnState != nil {
 		e.cfg.OnState(state)
 	}
@@ -396,6 +399,7 @@ func (e *Engine) startSingboxLocked(profiles []*profile.Profile, opts singbox.Op
 		skippedMsgs = append(skippedMsgs, s.Error())
 		e.logWith(logrec.LevelWarn, logFields{op: "connect", err: s}, "skipped a profile")
 	}
+	e.logBypassLocked(profiles, opts, true)
 	e.logf("info", "starting %d profile(s) in %s mode", len(profiles)-len(skipped), orMode(opts.Mode))
 
 	e.setState(State{Status: StatusStarting, Skipped: skippedMsgs, Selected: selected, Progress: progress(StageEngineStart, "")})

@@ -36,9 +36,16 @@ func newConnID() string {
 	return hex.EncodeToString(raw[:])
 }
 
-// beginAttemptLocked starts a new connect attempt for the profile id (or "auto"). e.mu must be held.
+// beginAttemptLocked starts a new connect attempt for the profile id (or "auto"). An attempt the network check
+// started (ReportProgress) is continued: same conn id, same steps. e.mu must be held.
 func (e *Engine) beginAttemptLocked(profileID string) {
+	if current := e.attempt.Load(); current != nil && e.steps.early && !e.steps.done {
+		e.steps.early = false
+		e.attempt.Store(&attempt{conn: current.conn, profile: profileID})
+		return
+	}
 	e.attempt.Store(&attempt{conn: newConnID(), profile: profileID})
+	e.steps.begin(time.Now())
 }
 
 // logFields are a record's optional context; the attempt's conn and profile are added on their own.
@@ -52,6 +59,8 @@ type logFields struct {
 	notify  bool
 	// detached keeps the record out of the current connect attempt (a latency test runs beside it).
 	detached bool
+	// extra are more keys of the record (step, steps, ...); never destinations or names (docs/logging.md §1).
+	extra map[string]any
 }
 
 // logf logs a core record at the named level. The message is formatted only when the level is on.
@@ -89,6 +98,9 @@ func (e *Engine) emit(level logrec.Level, fields logFields, skip int, format str
 	}
 	if fields.err != nil {
 		rec.Err = fields.err.Error()
+	}
+	if len(fields.extra) > 0 {
+		rec.Extra = fields.extra
 	}
 	if logrec.WantCaller() {
 		rec.Caller = logrec.Caller(skip + 1)
