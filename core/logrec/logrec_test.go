@@ -178,8 +178,11 @@ func TestScrub(t *testing.T) {
 		// Seen in a real sing-box line: two IPv6 addresses side by side, and the router's MAC addresses.
 		"gateway [192.0.2.1 fe80::1 fe80::e03a:2e61:6427:2a14], gateway_mac [30:a2:20:63:fc:32 30-A2-20-63-FC-33]": "gateway [[addr] [addr] [addr]], gateway_mac [[mac] [mac]]",
 		"peers 2001:db8::1 2001:db8::2 2001:db8::3":                                                                "peers [addr] [addr] [addr]",
-		"at ::1 and ::ffff:192.0.2.9":                                                                              "at [addr] and ::ffff:[addr]",
+		"at ::1 and ::ffff:192.0.2.9":                                                                              "at [addr] and [addr]:[addr]",
 		"via fe80::1. Done":                                                                                        "via [addr]. Done",
+		"lookup fe80::1: no such host":                                                                             "lookup [addr]: no such host",
+		"x:fe80::1 and peer:2001:db8::7:":                                                                          "x:[addr] and peer:[addr]:",
+		"read udp 2001:db8::5: timeout":                                                                            "read udp [addr]: timeout",
 		"took 12:30:45 and 1:2":                                                                                    "took 12:30:45 and 1:2",
 		"hash deadbeef:cafe is not an address":                                                                     "hash deadbeef:cafe is not an address",
 	} {

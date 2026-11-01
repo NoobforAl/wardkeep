@@ -72,6 +72,14 @@ func replaceWords(text string, pattern *regexp.Regexp, replace func(string) stri
 	last := 0
 	for _, loc := range pattern.FindAllStringIndex(text, -1) {
 		start, end := loc[0], loc[1]
+		// A single colon at either end separates the match from its neighbour ("lookup fe80::1: no such host",
+		// "x:fe80::1"); one of "::" belongs to an address.
+		if end-start > 2 && text[start] == ':' && text[start+1] != ':' {
+			start++
+		}
+		if end-start > 2 && text[end-1] == ':' && text[end-2] != ':' {
+			end--
+		}
 		if (start > 0 && isWordByte(text[start-1])) || (end < len(text) && isWordByte(text[end])) {
 			continue
 		}
