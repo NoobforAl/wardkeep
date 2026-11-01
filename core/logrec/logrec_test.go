@@ -175,6 +175,13 @@ func TestScrub(t *testing.T) {
 		"to 2001:db8:0:0:0:0:0:1 via fe80::1%eth0":                "to [addr] via [addr]%eth0",
 		"context.Canceled at 01:02:03 in engine.go":               "context.Canceled at 01:02:03 in engine.go",
 		"Tor attempt 2/3 failed":                                  "Tor attempt 2/3 failed",
+		// Seen in a real sing-box line: two IPv6 addresses side by side, and the router's MAC addresses.
+		"gateway [192.0.2.1 fe80::1 fe80::e03a:2e61:6427:2a14], gateway_mac [30:a2:20:63:fc:32 30-A2-20-63-FC-33]": "gateway [[addr] [addr] [addr]], gateway_mac [[mac] [mac]]",
+		"peers 2001:db8::1 2001:db8::2 2001:db8::3":                                                                "peers [addr] [addr] [addr]",
+		"at ::1 and ::ffff:192.0.2.9":                                                                              "at [addr] and ::ffff:[addr]",
+		"via fe80::1. Done":                                                                                        "via [addr]. Done",
+		"took 12:30:45 and 1:2":                                                                                    "took 12:30:45 and 1:2",
+		"hash deadbeef:cafe is not an address":                                                                     "hash deadbeef:cafe is not an address",
 	} {
 		if got := Scrub(in); got != want {
 			t.Errorf("Scrub(%q)\n got  %q\n want %q", in, got, want)

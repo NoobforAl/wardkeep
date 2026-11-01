@@ -1,6 +1,7 @@
 package logrec
 
 import (
+	"net/netip"
 	"regexp"
 	"strings"
 )
@@ -11,16 +12,22 @@ import (
 var scrubbers = []struct {
 	pattern     *regexp.Regexp
 	replacement string
+	// replace, when set, decides for each whole-word match; with neither, a match goes through scrubHost.
+	replace func(string) string
 }{
-	{regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9+.\-]*://[^\s"'<>]+`), "[url]"},
+	{pattern: regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9+.\-]*://[^\s"'<>]+`), replacement: "[url]"},
 	// Secrets written as key=value (a bridge line's cert=, a password in a query string).
-	{regexp.MustCompile(`(?i)\b(cert|password|passwd|pass|key|pubkey|token|secret|psk|auth|uuid|sni|url|front|fronts|ice)=[^\s,;"']+`), "${1}=[redacted]"},
-	{regexp.MustCompile(`(?i)\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b`), "[uuid]"},
-	{regexp.MustCompile(`\[[0-9a-fA-F:.%]*:[0-9a-fA-F:.%]*\](:\d{1,5})?`), "[addr]"},
-	{regexp.MustCompile(`\b\d{1,3}(\.\d{1,3}){3}(:\d{1,5})?\b`), "[addr]"},
-	// Full IPv6 addresses (eight groups) and compressed ones (with "::"); times like 01:02:03 are left alone.
-	{regexp.MustCompile(`(?i)(^|[^0-9a-z:_])(([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}|([0-9a-f]{1,4}(:[0-9a-f]{1,4})*)?::([0-9a-f]{1,4}(:[0-9a-f]{1,4})*)?)($|[^0-9a-z:_])`), "${1}[addr]${8}"},
-	{regexp.MustCompile(`(?i)\b[a-z0-9]([a-z0-9\-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]*[a-z0-9])?)*\.[a-z][a-z0-9\-]*[a-z0-9](:\d{1,5})?\b`), ""},
+	{pattern: regexp.MustCompile(`(?i)\b(cert|password|passwd|pass|key|pubkey|token|secret|psk|auth|uuid|sni|url|front|fronts|ice)=[^\s,;"']+`), replacement: "${1}=[redacted]"},
+	{pattern: regexp.MustCompile(`(?i)\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b`), replacement: "[uuid]"},
+	{pattern: regexp.MustCompile(`\[[0-9a-fA-F:.%]*:[0-9a-fA-F:.%]*\](:\d{1,5})?`), replacement: "[addr]"},
+	{pattern: regexp.MustCompile(`\b\d{1,3}(\.\d{1,3}){3}(:\d{1,5})?\b`), replacement: "[addr]"},
+	// MAC addresses (a router's, in sing-box's network messages): six pairs joined by ":" or "-".
+	{pattern: regexp.MustCompile(`(?i)[0-9a-f]{2}[:-][0-9a-f]{2}(?:[:-][0-9a-f]{2}){4}`), replace: func(string) string { return "[mac]" }},
+	// IPv6 addresses, full or compressed, with a zone or not. A run of hex digits and colons is one when it
+	// parses as one, so times like 01:02:03 stay; checking each run, not a boundary character around it, also
+	// catches two addresses side by side.
+	{pattern: regexp.MustCompile(`(?i)[0-9a-f:]*:[0-9a-f:]*[0-9a-f:](%[0-9a-z_.\-]+)?`), replace: scrubIPv6},
+	{pattern: regexp.MustCompile(`(?i)\b[a-z0-9]([a-z0-9\-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]*[a-z0-9])?)*\.[a-z][a-z0-9\-]*[a-z0-9](:\d{1,5})?\b`)},
 }
 
 // fileSuffixes are dotted words that are file names, not hosts.
@@ -32,11 +39,14 @@ func Scrub(text string) string {
 		return text
 	}
 	for _, scrubber := range scrubbers {
-		if scrubber.replacement != "" {
+		switch {
+		case scrubber.replace != nil:
+			text = replaceWords(text, scrubber.pattern, scrubber.replace)
+		case scrubber.replacement != "":
 			text = scrubber.pattern.ReplaceAllString(text, scrubber.replacement)
-			continue
+		default:
+			text = scrubber.pattern.ReplaceAllStringFunc(text, scrubHost)
 		}
-		text = scrubber.pattern.ReplaceAllStringFunc(text, scrubHost)
 	}
 	return text
 }
@@ -53,4 +63,39 @@ func scrubHost(word string) string {
 		return word
 	}
 	return "[host]"
+}
+
+// replaceWords replaces each match of pattern that is a whole word (no letter, digit or "_" right before or
+// after it) by replace(match).
+func replaceWords(text string, pattern *regexp.Regexp, replace func(string) string) string {
+	var out strings.Builder
+	last := 0
+	for _, loc := range pattern.FindAllStringIndex(text, -1) {
+		start, end := loc[0], loc[1]
+		if (start > 0 && isWordByte(text[start-1])) || (end < len(text) && isWordByte(text[end])) {
+			continue
+		}
+		out.WriteString(text[last:start])
+		out.WriteString(replace(text[start:end]))
+		last = end
+	}
+	out.WriteString(text[last:])
+	return out.String()
+}
+
+func isWordByte(c byte) bool {
+	return c == '_' || ('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+}
+
+// scrubIPv6 is "[addr]" for an IPv6 address, the run itself for anything else. A zone ("%eth0") is kept: it
+// names an interface, not a place.
+func scrubIPv6(run string) string {
+	addr, zone, hasZone := strings.Cut(run, "%")
+	if ip, err := netip.ParseAddr(addr); err != nil || !ip.Is6() {
+		return run
+	}
+	if hasZone {
+		return "[addr]%" + zone
+	}
+	return "[addr]"
 }
