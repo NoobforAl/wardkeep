@@ -212,6 +212,14 @@ func TestBypassRecordCountsOnly(t *testing.T) {
 	if want := "bypass: local networks use the VPN; your list is not used with this protocol"; got[1].Msg != want {
 		t.Errorf("AmneziaWG record = %q, want %q", got[1].Msg, want)
 	}
+
+	// Only the app itself excluded (it always is): no app count.
+	e.mu.Lock()
+	e.logBypassLocked(nil, singbox.Options{Mode: singbox.ModeTUN, ExcludePackages: []string{singbox.SelfPackage}}, true)
+	e.mu.Unlock()
+	if only := sink.take(); len(only) != 1 || strings.Contains(only[0].Msg, "app") || only[0].Extra["apps_excluded"] != nil {
+		t.Errorf("self-only record = %+v", only)
+	}
 }
 
 func fieldValues(r logrec.Record) []string {

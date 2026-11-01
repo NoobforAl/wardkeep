@@ -207,7 +207,8 @@ func (e *Engine) logBypassLocked(profiles []*profile.Profile, opts singbox.Optio
 		case len(opts.IncludePackages) > 0:
 			parts = append(parts, fmt.Sprintf("only %s use the VPN", plural(apps, "app", "apps")))
 			fields["apps_included"] = apps
-		case len(opts.ExcludePackages) > 0:
+		case withoutSelf(opts.ExcludePackages) > 0:
+			// The app itself is always excluded (SelfPackage); it is not one the user chose.
 			apps = withoutSelf(opts.ExcludePackages)
 			parts = append(parts, fmt.Sprintf("%s skip the VPN", plural(apps, "app", "apps")))
 			fields["apps_excluded"] = apps
