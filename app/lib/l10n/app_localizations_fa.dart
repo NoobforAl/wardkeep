@@ -889,11 +889,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get stopOnClose => 'قطع VPN هنگام بستن برنامه';
 
   @override
-  String aboutLine(String engine) {
-    return 'مجوز MIT · موتور: $engine';
-  }
-
-  @override
   String get splitTitle => 'تونل تفکیکی';
 
   @override
@@ -1455,26 +1450,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String connectedTo(String place) {
     return 'متصل به $place';
   }
-
-  @override
-  String get noticesTitle => 'مجوزهای متن‌باز';
-
-  @override
-  String get noticesIntro =>
-      'Wardkeep با مجوز MIT منتشر شده است. نرم‌افزارهای زیر هر کدام با مجوز خودشان در آن به کار رفته‌اند.';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count مورد دیگر';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count بسته';
-  }
-
-  @override
-  String get noticesLoadFailed => 'فهرست مجوزها خوانده نشد.';
 
   @override
   String formRequired(String label) {
@@ -2221,17 +2196,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get logLevelTrace => 'ردیابی (همه چیز)';
 
   @override
-  String get notifyPopup => 'خطاها را به من بگو';
+  String get notifyErrors => 'خطاها را به من بگو';
 
   @override
-  String get notifyPopupHint =>
-      'اعلان قرمز در برنامه وقتی چیزی خراب شود که برنامه نتوانست درستش کند';
-
-  @override
-  String get notifyOs => 'اعلان‌های سیستم برای خطاها';
-
-  @override
-  String get notifyOsHint => 'اعلان سیستم، حتی وقتی برنامه در پس‌زمینه است';
+  String get notifyErrorsHint =>
+      'وقتی چیزی خراب شود که برنامه نتوانست درستش کند: اعلان قرمز در برنامه، و اعلان سیستم وقتی برنامه در پس‌زمینه است';
 
   @override
   String get logsView => 'دیدن گزارش‌ها';
@@ -2280,4 +2249,107 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'Tor نتوانست از طریق شبکهٔ Tor به آن سایت وصل شود.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'نسخه $version';
+  }
+
+  @override
+  String get aboutLicense => 'مجوز MIT';
+
+  @override
+  String get privacyTitle => 'سیاست حریم خصوصی';
+
+  @override
+  String get privacyIntro =>
+      'Wardkeep حساب کاربری، تبلیغ، آمارگیری و گزارش خرابی ندارد. توسعه‌دهندگان آن هیچ سروری ندارند که برنامه به آن گزارش بدهد، پس داده‌های شما هرگز به ما نمی‌رسد.';
+
+  @override
+  String get privacyDeviceTitle => 'آنچه روی دستگاه شما می‌ماند';
+
+  @override
+  String get privacyDevice =>
+      'سرورهای شما (با رمزها و کلیدهایشان)، اشتراک‌ها، تنظیمات و شمارنده‌های ترافیک در فضای خصوصی برنامه روی همین دستگاه نگه داشته می‌شوند. فقط وقتی خودتان آن‌ها را خروجی بگیرید یا هم‌رسانی کنید از دستگاه خارج می‌شوند.';
+
+  @override
+  String get privacyLogsTitle => 'گزارش‌ها';
+
+  @override
+  String get privacyLogs =>
+      'گزارش‌ها فقط روی همین دستگاه نگه داشته می‌شوند. هرگز سایت‌هایی که باز می‌کنید، نشانی‌های IP، نام میزبان‌ها یا نام برنامه‌ها در آن‌ها نیست: این‌ها پیش از نوشتن هر رکورد حذف می‌شوند. کپی، ذخیره یا هم‌رسانی آن‌ها با خودتان است.';
+
+  @override
+  String get privacyAutoTitle => 'آنچه برنامه خودش با آن تماس می‌گیرد';
+
+  @override
+  String get privacyAutoCheck =>
+      'پیش از اتصال: بررسی کوتاهی که اینترنت کار می‌کند (سرورهای DNS عمومی Cloudflare، Google، Quad9 و OpenDNS، و جست‌وجوی نام microsoft.com و apple.com).';
+
+  @override
+  String get privacyAutoProbe =>
+      'پس از اتصال: یک درخواست آزمایشی به Google (gstatic.com) از راه VPN، برای اطمینان از کار کردن سرور.';
+
+  @override
+  String get privacyAutoExit =>
+      '«نمایش نشانی و کشور خروجی» (روشن است مگر خاموشش کنید): Cloudflare (1.1.1.1) یا api.country.is، که نشانی اتصال شما را می‌بینند: وقتی وصل نیستید نشانی خودتان، وقتی وصلید نشانی سرور.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: نام‌ها را سرور DNS انتخابی شما ترجمه می‌کند (به‌طور پیش‌فرض Cloudflare).';
+
+  @override
+  String get privacyAskTitle => 'فقط وقتی خودتان بخواهید';
+
+  @override
+  String get privacyAskSubs =>
+      'اشتراک‌هایی که اضافه می‌کنید، که از نشانی خودشان به‌روز می‌شوند (به‌طور پیش‌فرض روزی یک بار).';
+
+  @override
+  String get privacyAskIpdb =>
+      'پایگاه داده آفلاین کشورها (از jsDelivr یا unpkg) و فهرست نشانی‌های کشورهایی که از VPN عبور نمی‌دهید (از ipdeny.com یا jsDelivr).';
+
+  @override
+  String get privacyAskNord =>
+      'فهرست سرورهای NordVPN، اگر حساب NordVPN اضافه کنید.';
+
+  @override
+  String get privacyAskTor =>
+      'فهرست و رله‌های Tor، وقتی از Tor استفاده می‌کنید.';
+
+  @override
+  String get privacyServersTitle => 'سرورهای VPN شما';
+
+  @override
+  String get privacyServers =>
+      'ترافیک شما از سرورهایی که اضافه می‌کنید می‌گذرد و برنامه برای آزمودن و استفاده با آن‌ها تماس می‌گیرد. گردانندگان آن‌ها مانند هر ارائه‌دهنده VPN می‌توانند ترافیک شما را ببینند؛ سیاست حریم خصوصی خودشان برقرار است، نه این یکی.';
+
+  @override
+  String get privacyPermsTitle => 'مجوزها (اندروید)';
+
+  @override
+  String get privacyPermVpn => 'VPN: برای عبور دادن ترافیک شما.';
+
+  @override
+  String get privacyPermNotify => 'اعلان‌ها: برای نمایش اتصال و خطاها.';
+
+  @override
+  String get privacyPermCamera =>
+      'دوربین: فقط هنگام اسکن کد QR. تصویر هرگز از دستگاه خارج نمی‌شود و از هیچ سرویس Google استفاده نمی‌شود.';
+
+  @override
+  String get privacyPermApps =>
+      'فهرست برنامه‌های نصب‌شده: فقط برای انتخاب برنامه‌ها در تونل‌زنی جداگانه.';
+
+  @override
+  String get privacyChangesTitle => 'تغییرات و تماس';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep متن‌باز (MIT) است، پس همه این‌ها را می‌توان در کد آن بررسی کرد. اگر این سیاست تغییر کند، نسخه تازه با به‌روزرسانی برنامه می‌آید. پرسش‌ها: در github.com/NoobforAl/wardkeep یک issue باز کنید.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'آخرین به‌روزرسانی: $date';
+  }
 }

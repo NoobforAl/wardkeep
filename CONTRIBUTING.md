@@ -48,7 +48,7 @@ If a change touches the server, a protocol or the tunnel, also run the end-to-en
 make docker-e2e
 ```
 
-If you changed dependencies, run `make notices` and commit the regenerated license list.
+If you changed dependencies, run `make notices`: it fails when a new dependency's license cannot be identified.
 
 ## Be careful, and say what you changed
 

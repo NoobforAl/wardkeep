@@ -50,6 +50,7 @@ dependencies:
   screen_retriever: ^0.2.2
   tray_manager: ^0.5.3
   local_notifier: ^0.1.6
+  package_info_plus: 10.2.2
 
 dev_dependencies:
   flutter_test:
@@ -82,9 +83,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # The licenses of everything inside the app: make notices
+  # The fonts' licenses go with the fonts.
   assets:
-    - assets/third_party_notices.md
     - assets/fonts/OFL-inter.txt
     - assets/fonts/OFL-vazirmatn.txt
     - assets/tray.ico # the Windows tray icon (installer/make-tray-icon.py)

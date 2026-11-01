@@ -910,11 +910,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get stopOnClose => 'Отключать VPN при закрытии приложения';
 
   @override
-  String aboutLine(String engine) {
-    return 'Лицензия MIT · ядро: $engine';
-  }
-
-  @override
   String get splitTitle => 'Раздельное туннелирование';
 
   @override
@@ -1488,26 +1483,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String connectedTo(String place) {
     return 'Подключено: $place';
   }
-
-  @override
-  String get noticesTitle => 'Лицензии с открытым кодом';
-
-  @override
-  String get noticesIntro =>
-      'Wardkeep распространяется по лицензии MIT. В него входит ПО ниже, каждое под своей лицензией.';
-
-  @override
-  String noticesMore(int count) {
-    return 'ещё $count';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return 'Пакетов: $count';
-  }
-
-  @override
-  String get noticesLoadFailed => 'Не удалось прочитать список лицензий.';
 
   @override
   String formRequired(String label) {
@@ -2255,18 +2230,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get logLevelTrace => 'Трассировка (всё)';
 
   @override
-  String get notifyPopup => 'Сообщать об ошибках';
+  String get notifyErrors => 'Сообщать об ошибках';
 
   @override
-  String get notifyPopupHint =>
-      'Красное уведомление в приложении, когда что-то сломалось и приложение не смогло это исправить';
-
-  @override
-  String get notifyOs => 'Системные уведомления об ошибках';
-
-  @override
-  String get notifyOsHint =>
-      'Уведомление системы, даже когда приложение в фоне';
+  String get notifyErrorsHint =>
+      'Когда что-то сломалось и приложение не смогло это исправить: красное уведомление в приложении и уведомление системы, когда приложение в фоне';
 
   @override
   String get logsView => 'Открыть журнал';
@@ -2315,4 +2283,107 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'Tor не смог открыть соединение с этим сайтом через сеть Tor.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Версия $version';
+  }
+
+  @override
+  String get aboutLicense => 'Лицензия MIT';
+
+  @override
+  String get privacyTitle => 'Политика конфиденциальности';
+
+  @override
+  String get privacyIntro =>
+      'У Wardkeep нет аккаунтов, рекламы, аналитики и отчётов о сбоях. У разработчиков нет сервера, которому приложение что-либо отправляет, поэтому ваши данные к нам никогда не попадают.';
+
+  @override
+  String get privacyDeviceTitle => 'Что остаётся на устройстве';
+
+  @override
+  String get privacyDevice =>
+      'Ваши серверы (с паролями и ключами), подписки, настройки и счётчики трафика хранятся в закрытом хранилище приложения на этом устройстве. Они покидают его, только если вы сами их экспортируете или отправите.';
+
+  @override
+  String get privacyLogsTitle => 'Журналы';
+
+  @override
+  String get privacyLogs =>
+      'Журналы хранятся только на этом устройстве. В них никогда нет посещаемых сайтов, IP-адресов, имён хостов и названий приложений: всё это удаляется до записи. Копировать, сохранять или отправлять их — решаете вы.';
+
+  @override
+  String get privacyAutoTitle => 'С чем приложение связывается само';
+
+  @override
+  String get privacyAutoCheck =>
+      'Перед подключением: быстрая проверка, что интернет работает (публичные DNS-серверы Cloudflare, Google, Quad9 и OpenDNS и поиск имён microsoft.com и apple.com).';
+
+  @override
+  String get privacyAutoProbe =>
+      'После подключения: тестовый запрос к Google (gstatic.com) через VPN, чтобы проверить, что сервер работает.';
+
+  @override
+  String get privacyAutoExit =>
+      '«Показывать адрес и страну выхода» (включено, пока вы не выключите): Cloudflare (1.1.1.1) или api.country.is, которые видят адрес, с которого вы подключаетесь: ваш без подключения, адрес сервера при подключении.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: имена разрешает выбранный вами DNS-сервер (по умолчанию Cloudflare).';
+
+  @override
+  String get privacyAskTitle => 'Только по вашему запросу';
+
+  @override
+  String get privacyAskSubs =>
+      'Добавленные вами подписки, которые обновляются со своего адреса (по умолчанию раз в день).';
+
+  @override
+  String get privacyAskIpdb =>
+      'Офлайн-база стран (с jsDelivr или unpkg) и списки адресов стран, которые идут мимо VPN (с ipdeny.com или jsDelivr).';
+
+  @override
+  String get privacyAskNord =>
+      'Список серверов NordVPN, если вы добавили аккаунт NordVPN.';
+
+  @override
+  String get privacyAskTor => 'Каталог и узлы Tor, когда вы пользуетесь Tor.';
+
+  @override
+  String get privacyServersTitle => 'Ваши VPN-серверы';
+
+  @override
+  String get privacyServers =>
+      'Ваш трафик идёт через добавленные вами серверы, и приложение связывается с ними, чтобы проверять и использовать их. Их владельцы могут видеть ваш трафик, как любой VPN-провайдер; действует их собственная политика конфиденциальности, а не эта.';
+
+  @override
+  String get privacyPermsTitle => 'Разрешения (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN: чтобы направлять ваш трафик.';
+
+  @override
+  String get privacyPermNotify =>
+      'Уведомления: чтобы показывать подключение и ошибки.';
+
+  @override
+  String get privacyPermCamera =>
+      'Камера: только пока вы сканируете QR-код. Изображение не покидает устройство, сервисы Google не используются.';
+
+  @override
+  String get privacyPermApps =>
+      'Список установленных приложений: только чтобы выбрать приложения для раздельного туннелирования.';
+
+  @override
+  String get privacyChangesTitle => 'Изменения и связь';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep — открытый проект (MIT), поэтому всё это можно проверить в его коде. Если политика изменится, новая версия придёт с обновлением приложения. Вопросы: создайте issue на github.com/NoobforAl/wardkeep.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Последнее обновление: $date';
+  }
 }

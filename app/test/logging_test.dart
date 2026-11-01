@@ -262,8 +262,8 @@ void main() {
       ]);
       addTearDown(expired.dispose);
       expect(expired.read(settingsProvider).logLevel, '');
-      expect(expired.read(settingsProvider).notifyOs, isFalse);
-      expect(expired.read(settingsProvider).notifyPopup, isTrue);
+      // The old "system notifications" switch was off: the one switch that replaced both stays off.
+      expect(expired.read(settingsProvider).notifyErrors, isFalse);
       await Future<void>.delayed(Duration.zero);
       expect(expiredEngine.loggingCalls, isEmpty);
     });
@@ -404,18 +404,10 @@ void main() {
       expect(find.textContaining('other attempt', findRichText: true), findsOneWidget);
     });
 
-    testWidgets('without the in-app notice a system notification tells it', (tester) async {
-      final (engine, notifications, _) = await pumpApp(tester, settings: {'notify_popup': false});
-      final l = await AppLocalizations.delegate.load(const Locale('en'));
-      engine.records.add(_failure());
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text(l.logsView), findsNothing);
-      expect(notifications.shown.single, (l.appName, l.errTorTimeout, '7f3a'));
-    });
-
     testWidgets('a failure of the connection is marked as one (Android leaves it to "Connection lost")', (tester) async {
-      final (engine, notifications, _) = await pumpApp(tester, settings: {'notify_popup': false});
+      final (engine, notifications, _) = await pumpApp(tester);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      addTearDown(() => tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed));
       // A running connection that fell to the error state (op connect, from the attempt it belongs to).
       engine.records.add(LogRecord.fromJson({
         'level': 'error',
@@ -446,14 +438,30 @@ void main() {
       expect(SystemNotifications.isConnectionFailure(LogRecord.app('import failed', level: 'error')), isFalse);
     });
 
-    testWidgets('with both switched off nothing is told', (tester) async {
-      final (engine, notifications, _) = await pumpApp(tester, settings: {'notify_popup': false, 'notify_os': false});
+    testWidgets('with "Tell me about errors" off nothing is told, in front or in the background', (tester) async {
+      final (engine, notifications, _) = await pumpApp(tester, settings: {'notify_errors': false});
       final l = await AppLocalizations.delegate.load(const Locale('en'));
       engine.records.add(_failure());
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text(l.logsView), findsNothing);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      engine.records.add(_failure(conn: 'b2'));
+      await tester.pump();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump(const Duration(milliseconds: 500));
       expect(notifications.shown, isEmpty);
     });
+  });
+
+  test('"Stop VPN when app is closed" is off unless chosen; the old two error switches become one', () {
+    const defaults = SettingsState();
+    expect(defaults.stopOnClose, isFalse);
+    expect(defaults.notifyErrors, isTrue);
+    expect(SettingsState.fromJson({'stop_on_close': true}, defaults).stopOnClose, isTrue);
+    expect(SettingsState.fromJson({'notify_popup': true, 'notify_os': true}, defaults).notifyErrors, isTrue);
+    expect(SettingsState.fromJson({'notify_popup': false}, defaults).notifyErrors, isFalse);
+    expect(SettingsState.fromJson({'notify_errors': true, 'notify_popup': false}, defaults).notifyErrors, isTrue);
+    expect(defaults.toJson().containsKey('notify_popup'), isFalse);
   });
 }

@@ -450,14 +450,6 @@
   "language": "Language",
   "languageSystem": "System default",
   "stopOnClose": "Stop VPN when app is closed",
-  "aboutLine": "MIT License · engine: {engine}",
-  "@aboutLine": {
-    "placeholders": {
-      "engine": {
-        "type": "String"
-      }
-    }
-  },
   "splitTitle": "Split tunneling",
   "splitAll": "All apps",
   "splitOnlySelected": "Only selected",
@@ -763,25 +755,6 @@
     "placeholders": {
       "place": {
         "type": "String"
-      }
-    }
-  },
-  "noticesTitle": "Open-source licenses",
-  "noticesIntro": "Wardkeep is MIT licensed. It includes the software below, each under its own license.",
-  "noticesMore": "+{count} more",
-  "noticesPackages": "{count} packages",
-  "noticesLoadFailed": "The license list could not be read.",
-  "@noticesMore": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "@noticesPackages": {
-    "placeholders": {
-      "count": {
-        "type": "int"
       }
     }
   },
@@ -1552,21 +1525,13 @@
   "@logLevelTrace": {
     "description": "Logging settings, the log page and error notifications (docs/logging.md)"
   },
-  "notifyPopup": "Tell me about errors",
-  "@notifyPopup": {
+  "notifyErrors": "Tell me about errors",
+  "notifyErrorsHint": "When something fails that the app could not fix: a red notice in the app, and a system notification when the app is in the background",
+  "@notifyErrors": {
     "description": "Logging settings, the log page and error notifications (docs/logging.md)"
   },
-  "notifyPopupHint": "A red notice in the app when something fails that the app could not fix",
-  "@notifyPopupHint": {
-    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
-  },
-  "notifyOs": "System notifications for errors",
-  "@notifyOs": {
-    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
-  },
-  "notifyOsHint": "A notification of the system, also when the app is in the background",
-  "@notifyOsHint": {
-    "description": "Logging settings, the log page and error notifications (docs/logging.md)"
+  "@notifyErrorsHint": {
+    "description": "Under the switch that turns on the error notices and the system notifications for errors."
   },
   "logsView": "View logs",
   "@logsView": {
@@ -1632,5 +1597,51 @@
   "errTorStreamFailed": "Tor could not open a connection to that site through the Tor network.",
   "@errTorStreamFailed": {
     "description": "A failure the core logs with notify (docs/logging.md §5), by its code"
+  },
+  "aboutVersion": "Version {version}",
+  "aboutLicense": "MIT License",
+  "privacyTitle": "Privacy policy",
+  "privacyIntro": "Wardkeep has no account, no ads, no analytics and no crash reporting. Its developers run no server that the app reports to, so we never receive your data.",
+  "privacyDeviceTitle": "What stays on your device",
+  "privacyDevice": "Your servers (with their passwords and keys), subscriptions, settings and traffic counters are kept in the app's private storage on this device. They leave it only when you export or share them.",
+  "privacyLogsTitle": "Logs",
+  "privacyLogs": "Logs are kept on this device only. They never contain the sites you visit, IP addresses, host names or app names: those are removed before a record is written. You decide whether to copy, save or share them.",
+  "privacyAutoTitle": "What the app contacts on its own",
+  "privacyAutoCheck": "Before it connects: a quick check that the internet works (the public DNS servers of Cloudflare, Google, Quad9 and OpenDNS, and a name lookup of microsoft.com and apple.com).",
+  "privacyAutoProbe": "Once connected: a test request to Google (gstatic.com) through the VPN, to check that the server works.",
+  "privacyAutoExit": "\"Show exit address and country\" (on unless you turn it off): Cloudflare (1.1.1.1) or api.country.is, which see the address you connect from: your own when not connected, the server's when connected.",
+  "privacyAutoDns": "DNS: names are resolved by the DNS server you choose (Cloudflare by default).",
+  "privacyAskTitle": "Only when you ask",
+  "privacyAskSubs": "Subscriptions you add, refreshed from their address (by default once a day).",
+  "privacyAskIpdb": "The offline country database (from jsDelivr or unpkg) and the address lists of countries you bypass (from ipdeny.com or jsDelivr).",
+  "privacyAskNord": "NordVPN's server list, if you add a NordVPN account.",
+  "privacyAskTor": "Tor's directory and relays, when you use Tor.",
+  "privacyServersTitle": "Your VPN servers",
+  "privacyServers": "Your traffic goes through the servers you add, and the app contacts them to test and use them. Their operators can see your traffic as any VPN provider can; their own privacy policy applies, not this one.",
+  "privacyPermsTitle": "Permissions (Android)",
+  "privacyPermVpn": "VPN: to route your traffic.",
+  "privacyPermNotify": "Notifications: to show the connection and errors.",
+  "privacyPermCamera": "Camera: only while you scan a QR code. The image never leaves the device, and no Google service is used.",
+  "privacyPermApps": "The list of installed apps: only to choose apps for split tunneling.",
+  "privacyChangesTitle": "Changes and contact",
+  "privacyChanges": "Wardkeep is open source (MIT), so all of this can be checked in its code. If this policy changes, the new version comes with an app update. Questions: open an issue at github.com/NoobforAl/wardkeep.",
+  "privacyUpdated": "Last updated: {date}",
+  "@aboutVersion": {
+    "description": "Under the app's name at the end of Settings.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@privacyTitle": {
+    "description": "The privacy policy page (PRIVACY.md has the same text)."
+  },
+  "@privacyUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

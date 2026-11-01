@@ -200,14 +200,14 @@ class _WardkeepAppState extends ConsumerState<WardkeepApp> {
     final settings = ref.read(settingsProvider);
     final text = logRecordText(l, record);
     final messenger = _messenger.currentState;
-    final popup = settings.notifyPopup && messenger != null;
+    final popup = settings.notifyErrors && messenger != null;
     if (popup) {
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(noticeSnackBar(Theme.of(context), text, actionLabel: l.logsView, onAction: () => _openLogs(record.conn)));
     }
     final inFront = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
-    if (settings.notifyOs && !(popup && inFront)) {
+    if (settings.notifyErrors && !(popup && inFront)) {
       final notifications = ref.read(systemNotificationsProvider);
       unawaited(notifications.show(
         title: l.appName,

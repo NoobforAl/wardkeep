@@ -917,11 +917,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get stopOnClose => 'إيقاف VPN عند إغلاق التطبيق';
 
   @override
-  String aboutLine(String engine) {
-    return 'رخصة MIT · المحرك: $engine';
-  }
-
-  @override
   String get splitTitle => 'النفق المقسَّم';
 
   @override
@@ -1501,26 +1496,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String connectedTo(String place) {
     return 'متصل بـ $place';
   }
-
-  @override
-  String get noticesTitle => 'تراخيص المصدر المفتوح';
-
-  @override
-  String get noticesIntro =>
-      'يُوزَّع Wardkeep بترخيص MIT. ويتضمن البرامج التالية، كلٌّ بترخيصه الخاص.';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count أخرى';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count حزمة';
-  }
-
-  @override
-  String get noticesLoadFailed => 'تعذّرت قراءة قائمة التراخيص.';
 
   @override
   String formRequired(String label) {
@@ -2262,18 +2237,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logLevelTrace => 'تتبع (كل شيء)';
 
   @override
-  String get notifyPopup => 'أخبرني بالأخطاء';
+  String get notifyErrors => 'أخبرني بالأخطاء';
 
   @override
-  String get notifyPopupHint =>
-      'تنبيه أحمر في التطبيق عندما يفشل شيء لم يستطع التطبيق إصلاحه';
-
-  @override
-  String get notifyOs => 'إشعارات النظام للأخطاء';
-
-  @override
-  String get notifyOsHint =>
-      'إشعار من النظام، حتى عندما يكون التطبيق في الخلفية';
+  String get notifyErrorsHint =>
+      'عندما يفشل شيء لم يستطع التطبيق إصلاحه: تنبيه أحمر في التطبيق، وإشعار من النظام عندما يكون التطبيق في الخلفية';
 
   @override
   String get logsView => 'عرض السجلات';
@@ -2322,4 +2290,105 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'لم يتمكن Tor من فتح اتصال بهذا الموقع عبر شبكة Tor.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'الإصدار $version';
+  }
+
+  @override
+  String get aboutLicense => 'رخصة MIT';
+
+  @override
+  String get privacyTitle => 'سياسة الخصوصية';
+
+  @override
+  String get privacyIntro =>
+      'لا يحتوي Wardkeep على حساب ولا إعلانات ولا تحليلات ولا تقارير أعطال. لا يشغّل مطوروه أي خادم يرسل إليه التطبيق تقارير، لذلك لا تصلنا بياناتك أبدًا.';
+
+  @override
+  String get privacyDeviceTitle => 'ما يبقى على جهازك';
+
+  @override
+  String get privacyDevice =>
+      'تُحفظ خوادمك (مع كلمات مرورها ومفاتيحها) واشتراكاتك وإعداداتك وعدّادات حركة البيانات في التخزين الخاص بالتطبيق على هذا الجهاز. ولا تغادره إلا عندما تصدّرها أو تشاركها بنفسك.';
+
+  @override
+  String get privacyLogsTitle => 'السجلات';
+
+  @override
+  String get privacyLogs =>
+      'تُحفظ السجلات على هذا الجهاز فقط. ولا تحتوي أبدًا على المواقع التي تزورها أو عناوين IP أو أسماء المضيفين أو أسماء التطبيقات: تُحذف هذه قبل كتابة أي سجل. أنت من يقرر نسخها أو حفظها أو مشاركتها.';
+
+  @override
+  String get privacyAutoTitle => 'ما يتصل به التطبيق من تلقاء نفسه';
+
+  @override
+  String get privacyAutoCheck =>
+      'قبل الاتصال: فحص سريع لعمل الإنترنت (خوادم DNS العامة لدى Cloudflare وGoogle وQuad9 وOpenDNS، والبحث عن اسمي microsoft.com وapple.com).';
+
+  @override
+  String get privacyAutoProbe =>
+      'بعد الاتصال: طلب اختبار إلى Google (gstatic.com) عبر VPN، للتحقق من عمل الخادم.';
+
+  @override
+  String get privacyAutoExit =>
+      '«إظهار عنوان الخروج والدولة» (مفعّل ما لم توقفه): Cloudflare (1.1.1.1) أو api.country.is، ويريان العنوان الذي تتصل منه: عنوانك عندما لا تكون متصلًا، وعنوان الخادم عندما تكون متصلًا.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: تُحلّ الأسماء بواسطة خادم DNS الذي تختاره (Cloudflare افتراضيًا).';
+
+  @override
+  String get privacyAskTitle => 'فقط عندما تطلب ذلك';
+
+  @override
+  String get privacyAskSubs =>
+      'الاشتراكات التي تضيفها، وتُحدَّث من عنوانها (مرة يوميًا افتراضيًا).';
+
+  @override
+  String get privacyAskIpdb =>
+      'قاعدة بيانات الدول دون اتصال (من jsDelivr أو unpkg) وقوائم عناوين الدول التي تتجاوز VPN (من ipdeny.com أو jsDelivr).';
+
+  @override
+  String get privacyAskNord => 'قائمة خوادم NordVPN، إذا أضفت حساب NordVPN.';
+
+  @override
+  String get privacyAskTor => 'دليل Tor ومرحّلاته، عندما تستخدم Tor.';
+
+  @override
+  String get privacyServersTitle => 'خوادم VPN الخاصة بك';
+
+  @override
+  String get privacyServers =>
+      'تمر حركة بياناتك عبر الخوادم التي تضيفها، ويتصل بها التطبيق لاختبارها واستخدامها. يمكن لمشغّليها رؤية حركة بياناتك كأي مزوّد VPN؛ وتنطبق سياسة الخصوصية الخاصة بهم، لا هذه.';
+
+  @override
+  String get privacyPermsTitle => 'الأذونات (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN: لتوجيه حركة بياناتك.';
+
+  @override
+  String get privacyPermNotify => 'الإشعارات: لعرض الاتصال والأخطاء.';
+
+  @override
+  String get privacyPermCamera =>
+      'الكاميرا: فقط أثناء مسح رمز QR. لا تغادر الصورة الجهاز أبدًا، ولا تُستخدم أي خدمة من Google.';
+
+  @override
+  String get privacyPermApps =>
+      'قائمة التطبيقات المثبتة: فقط لاختيار التطبيقات في تقسيم النفق.';
+
+  @override
+  String get privacyChangesTitle => 'التغييرات والتواصل';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep مفتوح المصدر (MIT)، لذا يمكن التحقق من كل هذا في شيفرته. إذا تغيّرت هذه السياسة، تأتي النسخة الجديدة مع تحديث للتطبيق. للأسئلة: افتح issue في github.com/NoobforAl/wardkeep.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'آخر تحديث: $date';
+  }
 }

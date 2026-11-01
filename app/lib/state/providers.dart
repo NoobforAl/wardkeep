@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../engine/core_engine.dart';
 import '../engine/engine.dart';
@@ -15,6 +16,15 @@ import 'store.dart';
 
 /// Overridden in main() with the store loaded from disk.
 final storeProvider = Provider<AppStore>((ref) => AppStore.memory());
+
+/// The app's version (versionName on Android, the file version on Windows), '' when the platform cannot say.
+final appVersionProvider = FutureProvider<String>((ref) async {
+  try {
+    return (await PackageInfo.fromPlatform()).version;
+  } catch (_) {
+    return '';
+  }
+});
 
 final engineProvider = Provider<VpnEngine>((ref) {
   final engine = CoreEngine();
@@ -744,7 +754,7 @@ class SettingsState {
   const SettingsState({
     this.tunMode = false,
     this.systemProxy = true,
-    this.stopOnClose = true,
+    this.stopOnClose = false,
     this.autoFailover = true,
     this.bypassLan = true,
     this.bypassOnly = false,
@@ -761,8 +771,7 @@ class SettingsState {
     this.mtu = 0,
     this.logLevel = '',
     this.logUntil = '',
-    this.notifyPopup = true,
-    this.notifyOs = true,
+    this.notifyErrors = true,
   });
 
   /// The levels "Debug logging" offers; '' is off (the build's default).
@@ -827,11 +836,9 @@ class SettingsState {
   /// When [logLevel] turns itself off (RFC 3339); '' with no level.
   final String logUntil;
 
-  /// A failure nothing handled shows a red notice in the app.
-  final bool notifyPopup;
-
-  /// ... and a notification of the system's.
-  final bool notifyOs;
+  /// A failure nothing handled is told: a red notice in the app and, when the app is not in front, a
+  /// notification of the system's.
+  final bool notifyErrors;
 
   /// [logLevel] while it lasts, else ''.
   String activeLogLevel([DateTime? now]) {
@@ -860,8 +867,7 @@ class SettingsState {
     int? mtu,
     String? logLevel,
     String? logUntil,
-    bool? notifyPopup,
-    bool? notifyOs,
+    bool? notifyErrors,
   }) =>
       SettingsState(
         tunMode: tunMode ?? this.tunMode,
@@ -883,8 +889,7 @@ class SettingsState {
         mtu: mtu ?? this.mtu,
         logLevel: logLevel ?? this.logLevel,
         logUntil: logUntil ?? this.logUntil,
-        notifyPopup: notifyPopup ?? this.notifyPopup,
-        notifyOs: notifyOs ?? this.notifyOs,
+        notifyErrors: notifyErrors ?? this.notifyErrors,
       );
 
   Map<String, dynamic> toJson() => {
@@ -907,8 +912,7 @@ class SettingsState {
         'mtu': mtu,
         'log_level': logLevel,
         'log_until': logUntil,
-        'notify_popup': notifyPopup,
-        'notify_os': notifyOs,
+        'notify_errors': notifyErrors,
       };
 
   /// Missing keys keep the values from [defaults].
@@ -932,8 +936,9 @@ class SettingsState {
         mtu: j['mtu'] as int? ?? defaults.mtu,
         logLevel: j['log_level'] as String? ?? defaults.logLevel,
         logUntil: j['log_until'] as String? ?? defaults.logUntil,
-        notifyPopup: j['notify_popup'] as bool? ?? defaults.notifyPopup,
-        notifyOs: j['notify_os'] as bool? ?? defaults.notifyOs,
+        // Before one switch there were two (the notice, the system's notification): off if either was.
+        notifyErrors: j['notify_errors'] as bool? ??
+            (j['notify_popup'] == false || j['notify_os'] == false ? false : defaults.notifyErrors),
       );
 }
 

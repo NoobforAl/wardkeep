@@ -17,7 +17,7 @@ import 'dns_screen.dart';
 import 'ipdb_screen.dart';
 import 'logs_screen.dart';
 import 'network_tiles.dart';
-import 'notices_screen.dart';
+import 'privacy_screen.dart';
 import 'profiles_screen.dart';
 import 'split_tunnel_screen.dart';
 import '../layout.dart';
@@ -198,17 +198,6 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => open(const LogsScreen()),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.gavel_outlined),
-                  title: Text(l.noticesTitle),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => open(const NoticesScreen()),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.info_outline_rounded),
-                  title: Text(l.appName),
-                  subtitle: Text(l.aboutLine(ref.watch(engineProvider).name)),
-                ),
               ]),
               _Header(l.settingsLogging),
               _Group([
@@ -221,20 +210,15 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => _pickLogLevel(context, ref, settings.activeLogLevel()),
                 ),
                 SwitchListTile(
-                  secondary: const Icon(Icons.error_outline_rounded),
-                  title: Text(l.notifyPopup),
-                  subtitle: Text(l.notifyPopupHint),
-                  value: settings.notifyPopup,
-                  onChanged: (v) => ctrl.update((s) => s.copyWith(notifyPopup: v)),
-                ),
-                SwitchListTile(
+                  key: const Key('notify-errors'),
                   secondary: const Icon(Icons.notifications_active_outlined),
-                  title: Text(l.notifyOs),
-                  subtitle: Text(l.notifyOsHint),
-                  value: settings.notifyOs,
-                  onChanged: (v) => ctrl.update((s) => s.copyWith(notifyOs: v)),
+                  title: Text(l.notifyErrors),
+                  subtitle: Text(l.notifyErrorsHint),
+                  value: settings.notifyErrors,
+                  onChanged: (v) => ctrl.update((s) => s.copyWith(notifyErrors: v)),
                 ),
               ]),
+              _About(ref.watch(appVersionProvider).value ?? '', onPrivacy: () => open(const PrivacyScreen())),
             ],
           ),
         ),
@@ -344,6 +328,70 @@ class _Group extends StatelessWidget {
             for (var i = 0; i < children.length; i++) ...[if (i > 0) divider, children[i]],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The app's shield, name, version and license, centered at the end of the page (not a row in a card), with the
+/// privacy policy under them.
+class _About extends StatelessWidget {
+  const _About(this.version, {required this.onPrivacy});
+
+  /// '' while unknown: the version is left out.
+  final String version;
+  final VoidCallback onPrivacy;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Padding(
+      key: const Key('settings-about'),
+      padding: const EdgeInsets.fromLTRB(32, 40, 32, 8),
+      child: Column(
+        children: [
+          Semantics(excludeSemantics: true, child: Image.asset('assets/shield.png', width: 64, height: 64)),
+          const SizedBox(height: 12),
+          Text(
+            l.appName,
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              if (version.isNotEmpty)
+                DecoratedBox(
+                  key: const Key('settings-version'),
+                  decoration: BoxDecoration(
+                    color: colors.secondaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    child: Text(
+                      l.aboutVersion(version),
+                      style: theme.textTheme.labelMedium?.copyWith(color: colors.onSecondaryContainer),
+                    ),
+                  ),
+                ),
+              Text(l.aboutLicense, style: theme.textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            key: const Key('settings-privacy'),
+            onPressed: onPrivacy,
+            icon: const Icon(Icons.privacy_tip_outlined, size: 18),
+            label: Text(l.privacyTitle),
+          ),
+        ],
       ),
     );
   }

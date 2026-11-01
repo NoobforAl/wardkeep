@@ -1596,12 +1596,6 @@ abstract class AppLocalizations {
   /// **'Stop VPN when app is closed'**
   String get stopOnClose;
 
-  /// No description provided for @aboutLine.
-  ///
-  /// In en, this message translates to:
-  /// **'MIT License · engine: {engine}'**
-  String aboutLine(String engine);
-
   /// No description provided for @splitTitle.
   ///
   /// In en, this message translates to:
@@ -2537,36 +2531,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connected to {place}'**
   String connectedTo(String place);
-
-  /// No description provided for @noticesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Open-source licenses'**
-  String get noticesTitle;
-
-  /// No description provided for @noticesIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'Wardkeep is MIT licensed. It includes the software below, each under its own license.'**
-  String get noticesIntro;
-
-  /// No description provided for @noticesMore.
-  ///
-  /// In en, this message translates to:
-  /// **'+{count} more'**
-  String noticesMore(int count);
-
-  /// No description provided for @noticesPackages.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} packages'**
-  String noticesPackages(int count);
-
-  /// No description provided for @noticesLoadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The license list could not be read.'**
-  String get noticesLoadFailed;
 
   /// No description provided for @formRequired.
   ///
@@ -3808,25 +3772,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Tell me about errors'**
-  String get notifyPopup;
+  String get notifyErrors;
 
-  /// Logging settings, the log page and error notifications (docs/logging.md)
+  /// Under the switch that turns on the error notices and the system notifications for errors.
   ///
   /// In en, this message translates to:
-  /// **'A red notice in the app when something fails that the app could not fix'**
-  String get notifyPopupHint;
-
-  /// Logging settings, the log page and error notifications (docs/logging.md)
-  ///
-  /// In en, this message translates to:
-  /// **'System notifications for errors'**
-  String get notifyOs;
-
-  /// Logging settings, the log page and error notifications (docs/logging.md)
-  ///
-  /// In en, this message translates to:
-  /// **'A notification of the system, also when the app is in the background'**
-  String get notifyOsHint;
+  /// **'When something fails that the app could not fix: a red notice in the app, and a system notification when the app is in the background'**
+  String get notifyErrorsHint;
 
   /// Logging settings, the log page and error notifications (docs/logging.md)
   ///
@@ -3905,6 +3857,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tor could not open a connection to that site through the Tor network.'**
   String get errTorStreamFailed;
+
+  /// Under the app's name at the end of Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String aboutVersion(String version);
+
+  /// No description provided for @aboutLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'MIT License'**
+  String get aboutLicense;
+
+  /// The privacy policy page (PRIVACY.md has the same text).
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get privacyTitle;
+
+  /// No description provided for @privacyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardkeep has no account, no ads, no analytics and no crash reporting. Its developers run no server that the app reports to, so we never receive your data.'**
+  String get privacyIntro;
+
+  /// No description provided for @privacyDeviceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What stays on your device'**
+  String get privacyDeviceTitle;
+
+  /// No description provided for @privacyDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your servers (with their passwords and keys), subscriptions, settings and traffic counters are kept in the app\'s private storage on this device. They leave it only when you export or share them.'**
+  String get privacyDevice;
+
+  /// No description provided for @privacyLogsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get privacyLogsTitle;
+
+  /// No description provided for @privacyLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs are kept on this device only. They never contain the sites you visit, IP addresses, host names or app names: those are removed before a record is written. You decide whether to copy, save or share them.'**
+  String get privacyLogs;
+
+  /// No description provided for @privacyAutoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What the app contacts on its own'**
+  String get privacyAutoTitle;
+
+  /// No description provided for @privacyAutoCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Before it connects: a quick check that the internet works (the public DNS servers of Cloudflare, Google, Quad9 and OpenDNS, and a name lookup of microsoft.com and apple.com).'**
+  String get privacyAutoCheck;
+
+  /// No description provided for @privacyAutoProbe.
+  ///
+  /// In en, this message translates to:
+  /// **'Once connected: a test request to Google (gstatic.com) through the VPN, to check that the server works.'**
+  String get privacyAutoProbe;
+
+  /// No description provided for @privacyAutoExit.
+  ///
+  /// In en, this message translates to:
+  /// **'\"Show exit address and country\" (on unless you turn it off): Cloudflare (1.1.1.1) or api.country.is, which see the address you connect from: your own when not connected, the server\'s when connected.'**
+  String get privacyAutoExit;
+
+  /// No description provided for @privacyAutoDns.
+  ///
+  /// In en, this message translates to:
+  /// **'DNS: names are resolved by the DNS server you choose (Cloudflare by default).'**
+  String get privacyAutoDns;
+
+  /// No description provided for @privacyAskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only when you ask'**
+  String get privacyAskTitle;
+
+  /// No description provided for @privacyAskSubs.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions you add, refreshed from their address (by default once a day).'**
+  String get privacyAskSubs;
+
+  /// No description provided for @privacyAskIpdb.
+  ///
+  /// In en, this message translates to:
+  /// **'The offline country database (from jsDelivr or unpkg) and the address lists of countries you bypass (from ipdeny.com or jsDelivr).'**
+  String get privacyAskIpdb;
+
+  /// No description provided for @privacyAskNord.
+  ///
+  /// In en, this message translates to:
+  /// **'NordVPN\'s server list, if you add a NordVPN account.'**
+  String get privacyAskNord;
+
+  /// No description provided for @privacyAskTor.
+  ///
+  /// In en, this message translates to:
+  /// **'Tor\'s directory and relays, when you use Tor.'**
+  String get privacyAskTor;
+
+  /// No description provided for @privacyServersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your VPN servers'**
+  String get privacyServersTitle;
+
+  /// No description provided for @privacyServers.
+  ///
+  /// In en, this message translates to:
+  /// **'Your traffic goes through the servers you add, and the app contacts them to test and use them. Their operators can see your traffic as any VPN provider can; their own privacy policy applies, not this one.'**
+  String get privacyServers;
+
+  /// No description provided for @privacyPermsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions (Android)'**
+  String get privacyPermsTitle;
+
+  /// No description provided for @privacyPermVpn.
+  ///
+  /// In en, this message translates to:
+  /// **'VPN: to route your traffic.'**
+  String get privacyPermVpn;
+
+  /// No description provided for @privacyPermNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications: to show the connection and errors.'**
+  String get privacyPermNotify;
+
+  /// No description provided for @privacyPermCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera: only while you scan a QR code. The image never leaves the device, and no Google service is used.'**
+  String get privacyPermCamera;
+
+  /// No description provided for @privacyPermApps.
+  ///
+  /// In en, this message translates to:
+  /// **'The list of installed apps: only to choose apps for split tunneling.'**
+  String get privacyPermApps;
+
+  /// No description provided for @privacyChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes and contact'**
+  String get privacyChangesTitle;
+
+  /// No description provided for @privacyChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardkeep is open source (MIT), so all of this can be checked in its code. If this policy changes, the new version comes with an app update. Questions: open an issue at github.com/NoobforAl/wardkeep.'**
+  String get privacyChanges;
+
+  /// No description provided for @privacyUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: {date}'**
+  String privacyUpdated(String date);
 }
 
 class _AppLocalizationsDelegate

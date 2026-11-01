@@ -903,11 +903,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get stopOnClose => 'Detener la VPN al cerrar la app';
 
   @override
-  String aboutLine(String engine) {
-    return 'Licencia MIT · motor: $engine';
-  }
-
-  @override
   String get splitTitle => 'Túnel dividido';
 
   @override
@@ -1478,26 +1473,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String connectedTo(String place) {
     return 'Conectado a $place';
   }
-
-  @override
-  String get noticesTitle => 'Licencias de código abierto';
-
-  @override
-  String get noticesIntro =>
-      'Wardkeep tiene licencia MIT. Incluye el software de abajo, cada uno con su propia licencia.';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count más';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count paquetes';
-  }
-
-  @override
-  String get noticesLoadFailed => 'No se pudo leer la lista de licencias.';
 
   @override
   String formRequired(String label) {
@@ -2250,18 +2225,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logLevelTrace => 'Rastreo (todo)';
 
   @override
-  String get notifyPopup => 'Avisarme de los errores';
+  String get notifyErrors => 'Avisarme de los errores';
 
   @override
-  String get notifyPopupHint =>
-      'Un aviso rojo en la app cuando algo falla y la app no pudo arreglarlo';
-
-  @override
-  String get notifyOs => 'Notificaciones del sistema para errores';
-
-  @override
-  String get notifyOsHint =>
-      'Una notificación del sistema, también con la app en segundo plano';
+  String get notifyErrorsHint =>
+      'Cuando algo falla y la app no pudo arreglarlo: un aviso rojo en la app y una notificación del sistema con la app en segundo plano';
 
   @override
   String get logsView => 'Ver registros';
@@ -2310,4 +2278,108 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'Tor no pudo abrir una conexión con ese sitio a través de la red Tor.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Versión $version';
+  }
+
+  @override
+  String get aboutLicense => 'Licencia MIT';
+
+  @override
+  String get privacyTitle => 'Política de privacidad';
+
+  @override
+  String get privacyIntro =>
+      'Wardkeep no tiene cuenta, ni anuncios, ni analíticas, ni informes de fallos. Sus desarrolladores no tienen ningún servidor al que la app informe, así que nunca recibimos tus datos.';
+
+  @override
+  String get privacyDeviceTitle => 'Lo que se queda en tu dispositivo';
+
+  @override
+  String get privacyDevice =>
+      'Tus servidores (con sus contraseñas y claves), suscripciones, ajustes y contadores de tráfico se guardan en el almacenamiento privado de la app en este dispositivo. Solo salen de él cuando tú los exportas o compartes.';
+
+  @override
+  String get privacyLogsTitle => 'Registros';
+
+  @override
+  String get privacyLogs =>
+      'Los registros se guardan solo en este dispositivo. Nunca contienen los sitios que visitas, direcciones IP, nombres de host ni nombres de apps: se quitan antes de escribir cada registro. Tú decides si copiarlos, guardarlos o compartirlos.';
+
+  @override
+  String get privacyAutoTitle => 'A qué se conecta la app por su cuenta';
+
+  @override
+  String get privacyAutoCheck =>
+      'Antes de conectar: una comprobación rápida de que internet funciona (los DNS públicos de Cloudflare, Google, Quad9 y OpenDNS, y una consulta de los nombres microsoft.com y apple.com).';
+
+  @override
+  String get privacyAutoProbe =>
+      'Una vez conectada: una petición de prueba a Google (gstatic.com) a través de la VPN, para comprobar que el servidor funciona.';
+
+  @override
+  String get privacyAutoExit =>
+      '«Mostrar dirección y país de salida» (activado salvo que lo desactives): Cloudflare (1.1.1.1) o api.country.is, que ven la dirección desde la que te conectas: la tuya sin conexión, la del servidor con conexión.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: los nombres los resuelve el servidor DNS que elijas (Cloudflare por defecto).';
+
+  @override
+  String get privacyAskTitle => 'Solo cuando lo pides';
+
+  @override
+  String get privacyAskSubs =>
+      'Las suscripciones que añades, que se actualizan desde su dirección (por defecto una vez al día).';
+
+  @override
+  String get privacyAskIpdb =>
+      'La base de datos de países sin conexión (de jsDelivr o unpkg) y las listas de direcciones de los países que excluyes (de ipdeny.com o jsDelivr).';
+
+  @override
+  String get privacyAskNord =>
+      'La lista de servidores de NordVPN, si añades una cuenta de NordVPN.';
+
+  @override
+  String get privacyAskTor =>
+      'El directorio y los relés de Tor, cuando usas Tor.';
+
+  @override
+  String get privacyServersTitle => 'Tus servidores VPN';
+
+  @override
+  String get privacyServers =>
+      'Tu tráfico pasa por los servidores que añades, y la app se conecta a ellos para probarlos y usarlos. Sus operadores pueden ver tu tráfico como cualquier proveedor de VPN; se aplica su propia política de privacidad, no esta.';
+
+  @override
+  String get privacyPermsTitle => 'Permisos (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN: para dirigir tu tráfico.';
+
+  @override
+  String get privacyPermNotify =>
+      'Notificaciones: para mostrar la conexión y los errores.';
+
+  @override
+  String get privacyPermCamera =>
+      'Cámara: solo mientras escaneas un código QR. La imagen nunca sale del dispositivo y no se usa ningún servicio de Google.';
+
+  @override
+  String get privacyPermApps =>
+      'La lista de apps instaladas: solo para elegir apps en el túnel dividido.';
+
+  @override
+  String get privacyChangesTitle => 'Cambios y contacto';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep es de código abierto (MIT), así que todo esto se puede comprobar en su código. Si esta política cambia, la nueva versión llega con una actualización de la app. Preguntas: abre un issue en github.com/NoobforAl/wardkeep.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Última actualización: $date';
+  }
 }

@@ -7,7 +7,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../engine/engine.dart';
 
-/// Notifications of the system for failures nothing handled (docs/logging.md §5, setting `notifyOs`):
+/// Notifications of the system for failures nothing handled (docs/logging.md §5, setting `notifyErrors`):
 /// Android's notification shade (MainActivity's "wardkeep/notify" channel, on its "errors" channel), the
 /// desktop's notification centre (local_notifier). Tapping one opens the log page filtered by its connection.
 class SystemNotifications {

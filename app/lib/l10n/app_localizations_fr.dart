@@ -903,11 +903,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get stopOnClose => 'Arrêter le VPN à la fermeture de l’app';
 
   @override
-  String aboutLine(String engine) {
-    return 'Licence MIT · moteur : $engine';
-  }
-
-  @override
   String get splitTitle => 'Tunnel fractionné';
 
   @override
@@ -1480,26 +1475,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String connectedTo(String place) {
     return 'Connecté à $place';
   }
-
-  @override
-  String get noticesTitle => 'Licences open source';
-
-  @override
-  String get noticesIntro =>
-      'Wardkeep est sous licence MIT. Il inclut les logiciels ci-dessous, chacun sous sa propre licence.';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count de plus';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count paquets';
-  }
-
-  @override
-  String get noticesLoadFailed => 'La liste des licences n’a pas pu être lue.';
 
   @override
   String formRequired(String label) {
@@ -2254,18 +2229,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logLevelTrace => 'Trace (tout)';
 
   @override
-  String get notifyPopup => 'M\'avertir des erreurs';
+  String get notifyErrors => 'M\'avertir des erreurs';
 
   @override
-  String get notifyPopupHint =>
-      'Un avis rouge dans l\'app quand une panne n\'a pas pu être réparée par l\'app';
-
-  @override
-  String get notifyOs => 'Notifications système pour les erreurs';
-
-  @override
-  String get notifyOsHint =>
-      'Une notification du système, même quand l\'app est en arrière-plan';
+  String get notifyErrorsHint =>
+      'Quand une panne n\'a pas pu être réparée par l\'app : un avis rouge dans l\'app, et une notification du système quand l\'app est en arrière-plan';
 
   @override
   String get logsView => 'Voir les journaux';
@@ -2314,4 +2282,108 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'Tor n\'a pas pu ouvrir de connexion vers ce site via le réseau Tor.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get aboutLicense => 'Licence MIT';
+
+  @override
+  String get privacyTitle => 'Politique de confidentialité';
+
+  @override
+  String get privacyIntro =>
+      'Wardkeep n\'a ni compte, ni publicité, ni statistiques, ni rapports de plantage. Ses développeurs n\'ont aucun serveur auquel l\'app rend compte : nous ne recevons jamais vos données.';
+
+  @override
+  String get privacyDeviceTitle => 'Ce qui reste sur votre appareil';
+
+  @override
+  String get privacyDevice =>
+      'Vos serveurs (avec leurs mots de passe et clés), abonnements, réglages et compteurs de trafic sont gardés dans le stockage privé de l\'app sur cet appareil. Ils n\'en sortent que si vous les exportez ou les partagez.';
+
+  @override
+  String get privacyLogsTitle => 'Journaux';
+
+  @override
+  String get privacyLogs =>
+      'Les journaux restent sur cet appareil uniquement. Ils ne contiennent jamais les sites que vous visitez, d\'adresses IP, de noms d\'hôte ni de noms d\'apps : ils sont retirés avant l\'écriture de chaque entrée. C\'est vous qui décidez de les copier, enregistrer ou partager.';
+
+  @override
+  String get privacyAutoTitle => 'Ce que l\'app contacte d\'elle-même';
+
+  @override
+  String get privacyAutoCheck =>
+      'Avant de se connecter : une vérification rapide qu\'internet fonctionne (les DNS publics de Cloudflare, Google, Quad9 et OpenDNS, et une résolution des noms microsoft.com et apple.com).';
+
+  @override
+  String get privacyAutoProbe =>
+      'Une fois connectée : une requête de test vers Google (gstatic.com) à travers le VPN, pour vérifier que le serveur fonctionne.';
+
+  @override
+  String get privacyAutoExit =>
+      '« Afficher l\'adresse et le pays de sortie » (activé sauf si vous le coupez) : Cloudflare (1.1.1.1) ou api.country.is, qui voient l\'adresse d\'où vous vous connectez : la vôtre hors connexion, celle du serveur une fois connecté.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS : les noms sont résolus par le serveur DNS de votre choix (Cloudflare par défaut).';
+
+  @override
+  String get privacyAskTitle => 'Seulement quand vous le demandez';
+
+  @override
+  String get privacyAskSubs =>
+      'Les abonnements que vous ajoutez, actualisés depuis leur adresse (une fois par jour par défaut).';
+
+  @override
+  String get privacyAskIpdb =>
+      'La base de pays hors ligne (depuis jsDelivr ou unpkg) et les listes d\'adresses des pays que vous excluez (depuis ipdeny.com ou jsDelivr).';
+
+  @override
+  String get privacyAskNord =>
+      'La liste des serveurs NordVPN, si vous ajoutez un compte NordVPN.';
+
+  @override
+  String get privacyAskTor =>
+      'L\'annuaire et les relais de Tor, quand vous utilisez Tor.';
+
+  @override
+  String get privacyServersTitle => 'Vos serveurs VPN';
+
+  @override
+  String get privacyServers =>
+      'Votre trafic passe par les serveurs que vous ajoutez, et l\'app les contacte pour les tester et les utiliser. Leurs opérateurs peuvent voir votre trafic comme tout fournisseur de VPN ; c\'est leur propre politique de confidentialité qui s\'applique, pas celle-ci.';
+
+  @override
+  String get privacyPermsTitle => 'Autorisations (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN : pour faire passer votre trafic.';
+
+  @override
+  String get privacyPermNotify =>
+      'Notifications : pour afficher la connexion et les erreurs.';
+
+  @override
+  String get privacyPermCamera =>
+      'Caméra : seulement pendant que vous scannez un code QR. L\'image ne quitte jamais l\'appareil et aucun service Google n\'est utilisé.';
+
+  @override
+  String get privacyPermApps =>
+      'La liste des apps installées : seulement pour choisir les apps du tunnel partagé.';
+
+  @override
+  String get privacyChangesTitle => 'Changements et contact';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep est open source (MIT) : tout ceci peut être vérifié dans son code. Si cette politique change, la nouvelle version arrive avec une mise à jour de l\'app. Questions : ouvrez une issue sur github.com/NoobforAl/wardkeep.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Dernière mise à jour : $date';
+  }
 }

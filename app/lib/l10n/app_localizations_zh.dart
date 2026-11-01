@@ -852,11 +852,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stopOnClose => '关闭应用时停止 VPN';
 
   @override
-  String aboutLine(String engine) {
-    return 'MIT 许可证 · 引擎：$engine';
-  }
-
-  @override
   String get splitTitle => '分应用隧道';
 
   @override
@@ -1400,25 +1395,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String connectedTo(String place) {
     return '已连接到 $place';
   }
-
-  @override
-  String get noticesTitle => '开源许可';
-
-  @override
-  String get noticesIntro => 'Wardkeep 采用 MIT 许可。它包含下列软件，各自适用其自己的许可。';
-
-  @override
-  String noticesMore(int count) {
-    return '另外 $count 个';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count 个软件包';
-  }
-
-  @override
-  String get noticesLoadFailed => '无法读取许可列表。';
 
   @override
   String formRequired(String label) {
@@ -2114,16 +2090,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logLevelTrace => '跟踪（全部）';
 
   @override
-  String get notifyPopup => '出错时通知我';
+  String get notifyErrors => '出错时通知我';
 
   @override
-  String get notifyPopupHint => '当出现应用无法自行修复的故障时，在应用中显示红色提示';
-
-  @override
-  String get notifyOs => '错误的系统通知';
-
-  @override
-  String get notifyOsHint => '系统通知，应用在后台时也会显示';
+  String get notifyErrorsHint => '出现应用无法自行修复的故障时：在应用中显示红色提示，应用在后台时显示系统通知';
 
   @override
   String get logsView => '查看日志';
@@ -2167,4 +2137,101 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get errTorStreamFailed => 'Tor 无法通过 Tor 网络连接到该网站。';
+
+  @override
+  String aboutVersion(String version) {
+    return '版本 $version';
+  }
+
+  @override
+  String get aboutLicense => 'MIT 许可证';
+
+  @override
+  String get privacyTitle => '隐私政策';
+
+  @override
+  String get privacyIntro =>
+      'Wardkeep 没有账户、广告、统计分析或崩溃报告。开发者没有任何接收应用报告的服务器，因此我们永远不会收到你的数据。';
+
+  @override
+  String get privacyDeviceTitle => '留在你设备上的内容';
+
+  @override
+  String get privacyDevice =>
+      '你的服务器（包括密码和密钥）、订阅、设置和流量计数保存在本设备上应用的私有存储中。只有在你导出或分享时才会离开设备。';
+
+  @override
+  String get privacyLogsTitle => '日志';
+
+  @override
+  String get privacyLogs =>
+      '日志只保存在本设备上。日志中绝不包含你访问的网站、IP 地址、主机名或应用名称：这些在写入记录前就会被移除。是否复制、保存或分享由你决定。';
+
+  @override
+  String get privacyAutoTitle => '应用自动联系的对象';
+
+  @override
+  String get privacyAutoCheck =>
+      '连接前：快速检查网络是否可用（Cloudflare、Google、Quad9 和 OpenDNS 的公共 DNS 服务器，以及查询 microsoft.com 和 apple.com 的域名）。';
+
+  @override
+  String get privacyAutoProbe =>
+      '连接后：通过 VPN 向 Google（gstatic.com）发送一次测试请求，以确认服务器可用。';
+
+  @override
+  String get privacyAutoExit =>
+      '“显示出口地址和国家”（默认开启，可关闭）：Cloudflare（1.1.1.1）或 api.country.is，它们会看到你连接时的地址：未连接时是你自己的，连接后是服务器的。';
+
+  @override
+  String get privacyAutoDns => 'DNS：域名由你选择的 DNS 服务器解析（默认是 Cloudflare）。';
+
+  @override
+  String get privacyAskTitle => '仅在你要求时';
+
+  @override
+  String get privacyAskSubs => '你添加的订阅，从其地址刷新（默认每天一次）。';
+
+  @override
+  String get privacyAskIpdb =>
+      '离线国家数据库（来自 jsDelivr 或 unpkg）以及你设为绕过 VPN 的国家的地址列表（来自 ipdeny.com 或 jsDelivr）。';
+
+  @override
+  String get privacyAskNord => '如果你添加了 NordVPN 账户，则获取 NordVPN 的服务器列表。';
+
+  @override
+  String get privacyAskTor => '使用 Tor 时，Tor 的目录和中继。';
+
+  @override
+  String get privacyServersTitle => '你的 VPN 服务器';
+
+  @override
+  String get privacyServers =>
+      '你的流量经过你添加的服务器，应用也会联系它们以进行测试和使用。其运营者可以像任何 VPN 提供商一样看到你的流量；适用的是他们自己的隐私政策，而不是本政策。';
+
+  @override
+  String get privacyPermsTitle => '权限（Android）';
+
+  @override
+  String get privacyPermVpn => 'VPN：用于转发你的流量。';
+
+  @override
+  String get privacyPermNotify => '通知：用于显示连接状态和错误。';
+
+  @override
+  String get privacyPermCamera => '相机：仅在你扫描二维码时使用。图像绝不会离开设备，也不使用任何 Google 服务。';
+
+  @override
+  String get privacyPermApps => '已安装应用列表：仅用于为分应用代理选择应用。';
+
+  @override
+  String get privacyChangesTitle => '变更与联系';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep 是开源软件（MIT），以上所有内容都可以在代码中查证。如果本政策有变，新版本会随应用更新一起发布。如有疑问：请在 github.com/NoobforAl/wardkeep 提交 issue。';
+
+  @override
+  String privacyUpdated(String date) {
+    return '最后更新：$date';
+  }
 }

@@ -284,7 +284,7 @@ class MainActivity : FlutterActivity() {
                     runOnUiThread { result.success(png) }
                 }
                 "setStopOnClose" -> {
-                    WardkeepVpnService.setStopOnClose(this, call.arguments as? Boolean ?: true)
+                    WardkeepVpnService.setStopOnClose(this, call.arguments as? Boolean ?: false)
                     result.success(null)
                 }
                 "saveLastConnect" -> {

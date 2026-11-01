@@ -881,11 +881,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get stopOnClose => 'Hentikan VPN saat aplikasi ditutup';
 
   @override
-  String aboutLine(String engine) {
-    return 'Lisensi MIT · mesin: $engine';
-  }
-
-  @override
   String get splitTitle => 'Split tunneling';
 
   @override
@@ -1442,26 +1437,6 @@ class AppLocalizationsId extends AppLocalizations {
   String connectedTo(String place) {
     return 'Terhubung ke $place';
   }
-
-  @override
-  String get noticesTitle => 'Lisensi sumber terbuka';
-
-  @override
-  String get noticesIntro =>
-      'Wardkeep berlisensi MIT. Aplikasi ini menyertakan perangkat lunak di bawah, masing-masing dengan lisensinya sendiri.';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count lagi';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count paket';
-  }
-
-  @override
-  String get noticesLoadFailed => 'Daftar lisensi tidak dapat dibaca.';
 
   @override
   String formRequired(String label) {
@@ -2207,18 +2182,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get logLevelTrace => 'Trace (semuanya)';
 
   @override
-  String get notifyPopup => 'Beri tahu saya tentang galat';
+  String get notifyErrors => 'Beri tahu saya tentang galat';
 
   @override
-  String get notifyPopupHint =>
-      'Pemberitahuan merah di aplikasi saat ada kegagalan yang tidak bisa diperbaiki aplikasi';
-
-  @override
-  String get notifyOs => 'Notifikasi sistem untuk galat';
-
-  @override
-  String get notifyOsHint =>
-      'Notifikasi sistem, juga saat aplikasi di latar belakang';
+  String get notifyErrorsHint =>
+      'Saat ada kegagalan yang tidak bisa diperbaiki aplikasi: pemberitahuan merah di aplikasi, dan notifikasi sistem saat aplikasi di latar belakang';
 
   @override
   String get logsView => 'Lihat log';
@@ -2267,4 +2235,107 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'Tor tidak bisa membuka koneksi ke situs itu melalui jaringan Tor.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Versi $version';
+  }
+
+  @override
+  String get aboutLicense => 'Lisensi MIT';
+
+  @override
+  String get privacyTitle => 'Kebijakan privasi';
+
+  @override
+  String get privacyIntro =>
+      'Wardkeep tidak punya akun, iklan, analitik, atau laporan kerusakan. Pengembangnya tidak menjalankan server yang menerima laporan dari aplikasi, jadi kami tidak pernah menerima data Anda.';
+
+  @override
+  String get privacyDeviceTitle => 'Yang tetap ada di perangkat Anda';
+
+  @override
+  String get privacyDevice =>
+      'Server Anda (dengan kata sandi dan kuncinya), langganan, pengaturan, dan penghitung lalu lintas disimpan di penyimpanan pribadi aplikasi di perangkat ini. Semua itu hanya keluar saat Anda mengekspor atau membagikannya.';
+
+  @override
+  String get privacyLogsTitle => 'Log';
+
+  @override
+  String get privacyLogs =>
+      'Log hanya disimpan di perangkat ini. Log tidak pernah berisi situs yang Anda kunjungi, alamat IP, nama host, atau nama aplikasi: semua itu dihapus sebelum catatan ditulis. Anda yang memutuskan untuk menyalin, menyimpan, atau membagikannya.';
+
+  @override
+  String get privacyAutoTitle => 'Yang dihubungi aplikasi dengan sendirinya';
+
+  @override
+  String get privacyAutoCheck =>
+      'Sebelum terhubung: pemeriksaan singkat bahwa internet berfungsi (server DNS publik Cloudflare, Google, Quad9, dan OpenDNS, serta pencarian nama microsoft.com dan apple.com).';
+
+  @override
+  String get privacyAutoProbe =>
+      'Setelah terhubung: permintaan uji ke Google (gstatic.com) melalui VPN, untuk memeriksa bahwa server berfungsi.';
+
+  @override
+  String get privacyAutoExit =>
+      '\"Tampilkan alamat dan negara keluar\" (aktif kecuali Anda matikan): Cloudflare (1.1.1.1) atau api.country.is, yang melihat alamat asal koneksi Anda: alamat Anda sendiri saat tidak terhubung, alamat server saat terhubung.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: nama diterjemahkan oleh server DNS pilihan Anda (Cloudflare secara bawaan).';
+
+  @override
+  String get privacyAskTitle => 'Hanya saat Anda meminta';
+
+  @override
+  String get privacyAskSubs =>
+      'Langganan yang Anda tambahkan, diperbarui dari alamatnya (secara bawaan sekali sehari).';
+
+  @override
+  String get privacyAskIpdb =>
+      'Basis data negara offline (dari jsDelivr atau unpkg) dan daftar alamat negara yang Anda lewatkan dari VPN (dari ipdeny.com atau jsDelivr).';
+
+  @override
+  String get privacyAskNord =>
+      'Daftar server NordVPN, jika Anda menambahkan akun NordVPN.';
+
+  @override
+  String get privacyAskTor => 'Direktori dan relai Tor, saat Anda memakai Tor.';
+
+  @override
+  String get privacyServersTitle => 'Server VPN Anda';
+
+  @override
+  String get privacyServers =>
+      'Lalu lintas Anda melewati server yang Anda tambahkan, dan aplikasi menghubunginya untuk menguji dan memakainya. Operatornya dapat melihat lalu lintas Anda seperti penyedia VPN mana pun; kebijakan privasi mereka sendiri yang berlaku, bukan yang ini.';
+
+  @override
+  String get privacyPermsTitle => 'Izin (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN: untuk mengalirkan lalu lintas Anda.';
+
+  @override
+  String get privacyPermNotify =>
+      'Notifikasi: untuk menampilkan koneksi dan galat.';
+
+  @override
+  String get privacyPermCamera =>
+      'Kamera: hanya saat Anda memindai kode QR. Gambar tidak pernah keluar dari perangkat, dan tidak ada layanan Google yang digunakan.';
+
+  @override
+  String get privacyPermApps =>
+      'Daftar aplikasi terpasang: hanya untuk memilih aplikasi pada split tunneling.';
+
+  @override
+  String get privacyChangesTitle => 'Perubahan dan kontak';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep bersifat sumber terbuka (MIT), jadi semua ini dapat diperiksa di kodenya. Jika kebijakan ini berubah, versi barunya datang bersama pembaruan aplikasi. Pertanyaan: buka issue di github.com/NoobforAl/wardkeep.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Terakhir diperbarui: $date';
+  }
 }

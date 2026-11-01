@@ -47,10 +47,10 @@ app-test:
 server-release:
 	$(BASH) scripts/build-server-release.sh
 
-# Regenerates the license list the app shows (Settings > Open-source licenses).
-# Run it after changing dependencies; CI checks that every license is known.
+# Checks that every dependency that ships has a known license (CI also keeps the full list as an artifact).
+# Run it after changing dependencies.
 notices:
-	python scripts/gen-notices.py --out app/assets/third_party_notices.md
+	python scripts/gen-notices.py --check
 
 # Real clients (OpenVPN, WireGuard, AmneziaWG) against the Linux
 # server, in Docker: one user at a time, three users at once through three

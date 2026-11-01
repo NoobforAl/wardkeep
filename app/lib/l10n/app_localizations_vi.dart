@@ -881,11 +881,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get stopOnClose => 'Dừng VPN khi đóng ứng dụng';
 
   @override
-  String aboutLine(String engine) {
-    return 'Giấy phép MIT · lõi: $engine';
-  }
-
-  @override
   String get splitTitle => 'Chia tách đường hầm';
 
   @override
@@ -1440,26 +1435,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String connectedTo(String place) {
     return 'Đã kết nối tới $place';
   }
-
-  @override
-  String get noticesTitle => 'Giấy phép mã nguồn mở';
-
-  @override
-  String get noticesIntro =>
-      'Wardkeep dùng giấy phép MIT. Ứng dụng bao gồm các phần mềm dưới đây, mỗi phần theo giấy phép riêng.';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count nữa';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count gói';
-  }
-
-  @override
-  String get noticesLoadFailed => 'Không thể đọc danh sách giấy phép.';
 
   @override
   String formRequired(String label) {
@@ -2207,17 +2182,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logLevelTrace => 'Dò vết (mọi thứ)';
 
   @override
-  String get notifyPopup => 'Báo cho tôi khi có lỗi';
+  String get notifyErrors => 'Báo cho tôi khi có lỗi';
 
   @override
-  String get notifyPopupHint =>
-      'Thông báo đỏ trong ứng dụng khi có sự cố mà ứng dụng không tự sửa được';
-
-  @override
-  String get notifyOs => 'Thông báo hệ thống cho lỗi';
-
-  @override
-  String get notifyOsHint => 'Thông báo của hệ thống, cả khi ứng dụng chạy nền';
+  String get notifyErrorsHint =>
+      'Khi có sự cố mà ứng dụng không tự sửa được: thông báo đỏ trong ứng dụng, và thông báo của hệ thống khi ứng dụng chạy nền';
 
   @override
   String get logsView => 'Xem nhật ký';
@@ -2266,4 +2235,106 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'Tor không mở được kết nối tới trang đó qua mạng Tor.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Phiên bản $version';
+  }
+
+  @override
+  String get aboutLicense => 'Giấy phép MIT';
+
+  @override
+  String get privacyTitle => 'Chính sách quyền riêng tư';
+
+  @override
+  String get privacyIntro =>
+      'Wardkeep không có tài khoản, quảng cáo, phân tích hay báo cáo sự cố. Nhà phát triển không chạy máy chủ nào để ứng dụng gửi báo cáo, nên chúng tôi không bao giờ nhận dữ liệu của bạn.';
+
+  @override
+  String get privacyDeviceTitle => 'Những gì ở lại trên thiết bị';
+
+  @override
+  String get privacyDevice =>
+      'Máy chủ của bạn (cùng mật khẩu và khóa), gói đăng ký, cài đặt và bộ đếm lưu lượng được giữ trong bộ nhớ riêng của ứng dụng trên thiết bị này. Chúng chỉ rời thiết bị khi bạn xuất hoặc chia sẻ.';
+
+  @override
+  String get privacyLogsTitle => 'Nhật ký';
+
+  @override
+  String get privacyLogs =>
+      'Nhật ký chỉ được giữ trên thiết bị này. Chúng không bao giờ chứa trang web bạn truy cập, địa chỉ IP, tên máy chủ hay tên ứng dụng: những thứ đó bị xóa trước khi ghi. Bạn quyết định có sao chép, lưu hay chia sẻ chúng hay không.';
+
+  @override
+  String get privacyAutoTitle => 'Những gì ứng dụng tự liên hệ';
+
+  @override
+  String get privacyAutoCheck =>
+      'Trước khi kết nối: kiểm tra nhanh internet có hoạt động không (các máy chủ DNS công cộng của Cloudflare, Google, Quad9 và OpenDNS, và tra tên microsoft.com và apple.com).';
+
+  @override
+  String get privacyAutoProbe =>
+      'Sau khi kết nối: một yêu cầu thử tới Google (gstatic.com) qua VPN, để kiểm tra máy chủ hoạt động.';
+
+  @override
+  String get privacyAutoExit =>
+      '\"Hiện địa chỉ và quốc gia thoát\" (bật trừ khi bạn tắt): Cloudflare (1.1.1.1) hoặc api.country.is, thấy địa chỉ bạn kết nối từ đó: của bạn khi chưa kết nối, của máy chủ khi đã kết nối.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: tên miền được phân giải bởi máy chủ DNS bạn chọn (mặc định là Cloudflare).';
+
+  @override
+  String get privacyAskTitle => 'Chỉ khi bạn yêu cầu';
+
+  @override
+  String get privacyAskSubs =>
+      'Các gói đăng ký bạn thêm, được làm mới từ địa chỉ của chúng (mặc định mỗi ngày một lần).';
+
+  @override
+  String get privacyAskIpdb =>
+      'Cơ sở dữ liệu quốc gia ngoại tuyến (từ jsDelivr hoặc unpkg) và danh sách địa chỉ của các quốc gia bạn cho đi ngoài VPN (từ ipdeny.com hoặc jsDelivr).';
+
+  @override
+  String get privacyAskNord =>
+      'Danh sách máy chủ NordVPN, nếu bạn thêm tài khoản NordVPN.';
+
+  @override
+  String get privacyAskTor => 'Thư mục và các relay của Tor, khi bạn dùng Tor.';
+
+  @override
+  String get privacyServersTitle => 'Máy chủ VPN của bạn';
+
+  @override
+  String get privacyServers =>
+      'Lưu lượng của bạn đi qua các máy chủ bạn thêm, và ứng dụng liên hệ với chúng để thử và sử dụng. Người vận hành chúng có thể thấy lưu lượng của bạn như mọi nhà cung cấp VPN; chính sách quyền riêng tư của họ được áp dụng, không phải chính sách này.';
+
+  @override
+  String get privacyPermsTitle => 'Quyền (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN: để định tuyến lưu lượng của bạn.';
+
+  @override
+  String get privacyPermNotify => 'Thông báo: để hiện kết nối và lỗi.';
+
+  @override
+  String get privacyPermCamera =>
+      'Máy ảnh: chỉ khi bạn quét mã QR. Hình ảnh không bao giờ rời thiết bị, và không dùng dịch vụ nào của Google.';
+
+  @override
+  String get privacyPermApps =>
+      'Danh sách ứng dụng đã cài: chỉ để chọn ứng dụng cho chia tách đường hầm.';
+
+  @override
+  String get privacyChangesTitle => 'Thay đổi và liên hệ';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep là mã nguồn mở (MIT), nên mọi điều trên đều có thể kiểm tra trong mã. Nếu chính sách này thay đổi, phiên bản mới sẽ đến cùng bản cập nhật ứng dụng. Câu hỏi: mở một issue tại github.com/NoobforAl/wardkeep.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Cập nhật lần cuối: $date';
+  }
 }

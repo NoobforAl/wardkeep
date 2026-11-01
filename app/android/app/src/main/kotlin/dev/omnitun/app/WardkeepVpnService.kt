@@ -305,7 +305,7 @@ class WardkeepVpnService : VpnService() {
 
         /** "Stop VPN when app is closed", mirrored from the Flutter settings. */
         fun stopOnClose(context: Context): Boolean =
-            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_STOP_ON_CLOSE, true)
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_STOP_ON_CLOSE, false)
 
         fun setStopOnClose(context: Context, value: Boolean) {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_STOP_ON_CLOSE, value).apply()

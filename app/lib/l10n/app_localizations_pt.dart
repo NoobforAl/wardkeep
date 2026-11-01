@@ -901,11 +901,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get stopOnClose => 'Parar a VPN ao fechar o app';
 
   @override
-  String aboutLine(String engine) {
-    return 'Licença MIT · motor: $engine';
-  }
-
-  @override
   String get splitTitle => 'Tunelamento dividido';
 
   @override
@@ -1475,26 +1470,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String connectedTo(String place) {
     return 'Conectado a $place';
   }
-
-  @override
-  String get noticesTitle => 'Licenças de código aberto';
-
-  @override
-  String get noticesIntro =>
-      'O Wardkeep tem licença MIT. Inclui os softwares abaixo, cada um com sua própria licença.';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count mais';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count pacotes';
-  }
-
-  @override
-  String get noticesLoadFailed => 'Não foi possível ler a lista de licenças.';
 
   @override
   String formRequired(String label) {
@@ -2247,18 +2222,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get logLevelTrace => 'Rastreamento (tudo)';
 
   @override
-  String get notifyPopup => 'Avisar sobre erros';
+  String get notifyErrors => 'Avisar sobre erros';
 
   @override
-  String get notifyPopupHint =>
-      'Um aviso vermelho no app quando algo falha e o app não conseguiu resolver';
-
-  @override
-  String get notifyOs => 'Notificações do sistema para erros';
-
-  @override
-  String get notifyOsHint =>
-      'Uma notificação do sistema, também com o app em segundo plano';
+  String get notifyErrorsHint =>
+      'Quando algo falha e o app não conseguiu resolver: um aviso vermelho no app e uma notificação do sistema com o app em segundo plano';
 
   @override
   String get logsView => 'Ver registros';
@@ -2307,4 +2275,108 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'O Tor não conseguiu abrir uma conexão com esse site pela rede Tor.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Versão $version';
+  }
+
+  @override
+  String get aboutLicense => 'Licença MIT';
+
+  @override
+  String get privacyTitle => 'Política de privacidade';
+
+  @override
+  String get privacyIntro =>
+      'O Wardkeep não tem conta, anúncios, análises nem relatórios de falhas. Seus desenvolvedores não mantêm nenhum servidor para o qual o app envie relatórios, então nunca recebemos seus dados.';
+
+  @override
+  String get privacyDeviceTitle => 'O que fica no seu dispositivo';
+
+  @override
+  String get privacyDevice =>
+      'Seus servidores (com senhas e chaves), assinaturas, configurações e contadores de tráfego ficam no armazenamento privado do app neste dispositivo. Eles só saem dele quando você os exporta ou compartilha.';
+
+  @override
+  String get privacyLogsTitle => 'Registros';
+
+  @override
+  String get privacyLogs =>
+      'Os registros ficam apenas neste dispositivo. Eles nunca contêm os sites que você visita, endereços IP, nomes de host ou nomes de apps: isso é removido antes de cada registro ser gravado. Você decide se quer copiá-los, salvá-los ou compartilhá-los.';
+
+  @override
+  String get privacyAutoTitle => 'O que o app contata por conta própria';
+
+  @override
+  String get privacyAutoCheck =>
+      'Antes de conectar: uma verificação rápida de que a internet funciona (os DNS públicos da Cloudflare, Google, Quad9 e OpenDNS, e uma consulta dos nomes microsoft.com e apple.com).';
+
+  @override
+  String get privacyAutoProbe =>
+      'Depois de conectado: uma requisição de teste ao Google (gstatic.com) pela VPN, para verificar se o servidor funciona.';
+
+  @override
+  String get privacyAutoExit =>
+      '\"Mostrar endereço e país de saída\" (ligado, a menos que você desligue): Cloudflare (1.1.1.1) ou api.country.is, que veem o endereço de onde você se conecta: o seu sem conexão, o do servidor com conexão.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: os nomes são resolvidos pelo servidor DNS que você escolher (Cloudflare por padrão).';
+
+  @override
+  String get privacyAskTitle => 'Só quando você pede';
+
+  @override
+  String get privacyAskSubs =>
+      'As assinaturas que você adiciona, atualizadas a partir do endereço delas (por padrão uma vez por dia).';
+
+  @override
+  String get privacyAskIpdb =>
+      'O banco de dados de países offline (do jsDelivr ou unpkg) e as listas de endereços dos países que você exclui da VPN (do ipdeny.com ou jsDelivr).';
+
+  @override
+  String get privacyAskNord =>
+      'A lista de servidores da NordVPN, se você adicionar uma conta NordVPN.';
+
+  @override
+  String get privacyAskTor =>
+      'O diretório e os relays do Tor, quando você usa o Tor.';
+
+  @override
+  String get privacyServersTitle => 'Seus servidores VPN';
+
+  @override
+  String get privacyServers =>
+      'Seu tráfego passa pelos servidores que você adiciona, e o app os contata para testá-los e usá-los. Os operadores deles podem ver seu tráfego como qualquer provedor de VPN; vale a política de privacidade deles, não esta.';
+
+  @override
+  String get privacyPermsTitle => 'Permissões (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN: para encaminhar seu tráfego.';
+
+  @override
+  String get privacyPermNotify =>
+      'Notificações: para mostrar a conexão e os erros.';
+
+  @override
+  String get privacyPermCamera =>
+      'Câmera: só enquanto você lê um código QR. A imagem nunca sai do dispositivo e nenhum serviço do Google é usado.';
+
+  @override
+  String get privacyPermApps =>
+      'A lista de apps instalados: só para escolher apps no túnel dividido.';
+
+  @override
+  String get privacyChangesTitle => 'Mudanças e contato';
+
+  @override
+  String get privacyChanges =>
+      'O Wardkeep é de código aberto (MIT), então tudo isso pode ser verificado no código. Se esta política mudar, a nova versão chega com uma atualização do app. Dúvidas: abra uma issue em github.com/NoobforAl/wardkeep.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Última atualização: $date';
+  }
 }

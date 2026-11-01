@@ -890,11 +890,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get stopOnClose => 'ऐप बंद होने पर VPN रोकें';
 
   @override
-  String aboutLine(String engine) {
-    return 'MIT लाइसेंस · इंजन: $engine';
-  }
-
-  @override
   String get splitTitle => 'स्प्लिट टनलिंग';
 
   @override
@@ -1456,26 +1451,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String connectedTo(String place) {
     return '$place से कनेक्टेड';
   }
-
-  @override
-  String get noticesTitle => 'ओपन-सोर्स लाइसेंस';
-
-  @override
-  String get noticesIntro =>
-      'Wardkeep MIT लाइसेंस के तहत है। इसमें नीचे दिया गया सॉफ़्टवेयर शामिल है, हर एक अपने लाइसेंस के तहत।';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count और';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count पैकेज';
-  }
-
-  @override
-  String get noticesLoadFailed => 'लाइसेंस सूची पढ़ी नहीं जा सकी।';
 
   @override
   String formRequired(String label) {
@@ -2222,17 +2197,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get logLevelTrace => 'ट्रेस (सब कुछ)';
 
   @override
-  String get notifyPopup => 'त्रुटियों के बारे में बताएँ';
+  String get notifyErrors => 'त्रुटियों के बारे में बताएँ';
 
   @override
-  String get notifyPopupHint =>
-      'ऐप में लाल सूचना, जब कुछ ऐसा विफल हो जिसे ऐप ठीक नहीं कर सका';
-
-  @override
-  String get notifyOs => 'त्रुटियों के लिए सिस्टम सूचनाएँ';
-
-  @override
-  String get notifyOsHint => 'सिस्टम की सूचना, ऐप पृष्ठभूमि में हो तब भी';
+  String get notifyErrorsHint =>
+      'जब कुछ ऐसा विफल हो जिसे ऐप ठीक नहीं कर सका: ऐप में लाल सूचना, और ऐप पृष्ठभूमि में हो तो सिस्टम की सूचना';
 
   @override
   String get logsView => 'लॉग देखें';
@@ -2281,4 +2250,108 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'Tor नेटवर्क से उस साइट तक कनेक्शन नहीं खुल सका।';
+
+  @override
+  String aboutVersion(String version) {
+    return 'संस्करण $version';
+  }
+
+  @override
+  String get aboutLicense => 'MIT लाइसेंस';
+
+  @override
+  String get privacyTitle => 'गोपनीयता नीति';
+
+  @override
+  String get privacyIntro =>
+      'Wardkeep में न खाता है, न विज्ञापन, न एनालिटिक्स और न क्रैश रिपोर्टिंग। इसके डेवलपर ऐसा कोई सर्वर नहीं चलाते जिसे ऐप रिपोर्ट करे, इसलिए आपका डेटा हम तक कभी नहीं पहुँचता।';
+
+  @override
+  String get privacyDeviceTitle => 'आपके डिवाइस पर क्या रहता है';
+
+  @override
+  String get privacyDevice =>
+      'आपके सर्वर (उनके पासवर्ड और कुंजियों सहित), सदस्यताएँ, सेटिंग्स और ट्रैफ़िक काउंटर इस डिवाइस पर ऐप के निजी स्टोरेज में रखे जाते हैं। वे तभी बाहर जाते हैं जब आप उन्हें निर्यात या साझा करते हैं।';
+
+  @override
+  String get privacyLogsTitle => 'लॉग';
+
+  @override
+  String get privacyLogs =>
+      'लॉग केवल इसी डिवाइस पर रहते हैं। उनमें कभी भी आपकी देखी गई साइटें, IP पते, होस्ट नाम या ऐप के नाम नहीं होते: ये हर रिकॉर्ड लिखने से पहले हटा दिए जाते हैं। उन्हें कॉपी, सहेजना या साझा करना आपका निर्णय है।';
+
+  @override
+  String get privacyAutoTitle => 'ऐप अपने आप किनसे संपर्क करता है';
+
+  @override
+  String get privacyAutoCheck =>
+      'कनेक्ट करने से पहले: इंटरनेट काम कर रहा है, इसकी एक छोटी जाँच (Cloudflare, Google, Quad9 और OpenDNS के सार्वजनिक DNS सर्वर, और microsoft.com व apple.com के नाम की खोज)।';
+
+  @override
+  String get privacyAutoProbe =>
+      'कनेक्ट होने के बाद: सर्वर काम कर रहा है यह जाँचने के लिए VPN के ज़रिए Google (gstatic.com) को एक परीक्षण अनुरोध।';
+
+  @override
+  String get privacyAutoExit =>
+      '\"निकास पता और देश दिखाएँ\" (जब तक आप बंद न करें, चालू): Cloudflare (1.1.1.1) या api.country.is, जो वह पता देखते हैं जिससे आप जुड़ते हैं: कनेक्ट न होने पर आपका अपना, कनेक्ट होने पर सर्वर का।';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: नाम आपके चुने हुए DNS सर्वर से हल होते हैं (डिफ़ॉल्ट रूप से Cloudflare)।';
+
+  @override
+  String get privacyAskTitle => 'केवल जब आप कहें';
+
+  @override
+  String get privacyAskSubs =>
+      'आपकी जोड़ी गई सदस्यताएँ, जो अपने पते से रीफ़्रेश होती हैं (डिफ़ॉल्ट रूप से दिन में एक बार)।';
+
+  @override
+  String get privacyAskIpdb =>
+      'ऑफ़लाइन देश डेटाबेस (jsDelivr या unpkg से) और जिन देशों को आप VPN से बाहर रखते हैं उनकी पता सूचियाँ (ipdeny.com या jsDelivr से)।';
+
+  @override
+  String get privacyAskNord =>
+      'NordVPN की सर्वर सूची, यदि आप NordVPN खाता जोड़ते हैं।';
+
+  @override
+  String get privacyAskTor =>
+      'Tor की निर्देशिका और रिले, जब आप Tor का उपयोग करते हैं।';
+
+  @override
+  String get privacyServersTitle => 'आपके VPN सर्वर';
+
+  @override
+  String get privacyServers =>
+      'आपका ट्रैफ़िक आपके जोड़े गए सर्वरों से होकर जाता है, और ऐप उन्हें जाँचने और उपयोग करने के लिए उनसे संपर्क करता है। उनके संचालक किसी भी VPN प्रदाता की तरह आपका ट्रैफ़िक देख सकते हैं; उनकी अपनी गोपनीयता नीति लागू होती है, यह नहीं।';
+
+  @override
+  String get privacyPermsTitle => 'अनुमतियाँ (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN: आपका ट्रैफ़िक भेजने के लिए।';
+
+  @override
+  String get privacyPermNotify =>
+      'सूचनाएँ: कनेक्शन और त्रुटियाँ दिखाने के लिए।';
+
+  @override
+  String get privacyPermCamera =>
+      'कैमरा: केवल QR कोड स्कैन करते समय। छवि कभी डिवाइस से बाहर नहीं जाती, और कोई Google सेवा उपयोग नहीं होती।';
+
+  @override
+  String get privacyPermApps =>
+      'इंस्टॉल किए गए ऐप्स की सूची: केवल स्प्लिट टनलिंग के लिए ऐप चुनने हेतु।';
+
+  @override
+  String get privacyChangesTitle => 'बदलाव और संपर्क';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep ओपन सोर्स (MIT) है, इसलिए यह सब उसके कोड में जाँचा जा सकता है। यदि यह नीति बदलती है, तो नया संस्करण ऐप अपडेट के साथ आता है। प्रश्न: github.com/NoobforAl/wardkeep पर एक issue खोलें।';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'अंतिम अपडेट: $date';
+  }
 }

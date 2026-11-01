@@ -894,11 +894,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get stopOnClose => 'Uygulama kapanınca VPN\'i durdur';
 
   @override
-  String aboutLine(String engine) {
-    return 'MIT Lisansı · motor: $engine';
-  }
-
-  @override
   String get splitTitle => 'Bölünmüş tünelleme';
 
   @override
@@ -1460,26 +1455,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String connectedTo(String place) {
     return '$place konumuna bağlandı';
   }
-
-  @override
-  String get noticesTitle => 'Açık kaynak lisansları';
-
-  @override
-  String get noticesIntro =>
-      'Wardkeep MIT lisanslıdır. Aşağıdaki yazılımları da içerir, her biri kendi lisansı altındadır.';
-
-  @override
-  String noticesMore(int count) {
-    return '+$count tane daha';
-  }
-
-  @override
-  String noticesPackages(int count) {
-    return '$count paket';
-  }
-
-  @override
-  String get noticesLoadFailed => 'Lisans listesi okunamadı.';
 
   @override
   String formRequired(String label) {
@@ -2227,17 +2202,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logLevelTrace => 'İz (her şey)';
 
   @override
-  String get notifyPopup => 'Hataları bana bildir';
+  String get notifyErrors => 'Hataları bana bildir';
 
   @override
-  String get notifyPopupHint =>
-      'Uygulamanın düzeltemediği bir sorun olduğunda uygulamada kırmızı uyarı';
-
-  @override
-  String get notifyOs => 'Hatalar için sistem bildirimleri';
-
-  @override
-  String get notifyOsHint => 'Uygulama arka plandayken de bir sistem bildirimi';
+  String get notifyErrorsHint =>
+      'Uygulamanın düzeltemediği bir sorun olduğunda: uygulamada kırmızı uyarı, uygulama arka plandayken bir sistem bildirimi';
 
   @override
   String get logsView => 'Günlükleri gör';
@@ -2286,4 +2255,107 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get errTorStreamFailed =>
       'Tor, Tor ağı üzerinden o siteye bağlantı açamadı.';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Sürüm $version';
+  }
+
+  @override
+  String get aboutLicense => 'MIT Lisansı';
+
+  @override
+  String get privacyTitle => 'Gizlilik politikası';
+
+  @override
+  String get privacyIntro =>
+      'Wardkeep\'te hesap, reklam, analiz ve çökme raporu yoktur. Geliştiricilerinin, uygulamanın rapor gönderdiği bir sunucusu yoktur; bu yüzden verileriniz bize hiç ulaşmaz.';
+
+  @override
+  String get privacyDeviceTitle => 'Cihazınızda kalanlar';
+
+  @override
+  String get privacyDevice =>
+      'Sunucularınız (parolaları ve anahtarlarıyla), abonelikleriniz, ayarlarınız ve trafik sayaçlarınız bu cihazda uygulamanın özel depolamasında tutulur. Yalnızca siz dışa aktardığınızda veya paylaştığınızda cihazdan çıkarlar.';
+
+  @override
+  String get privacyLogsTitle => 'Günlükler';
+
+  @override
+  String get privacyLogs =>
+      'Günlükler yalnızca bu cihazda tutulur. Ziyaret ettiğiniz siteleri, IP adreslerini, ana makine adlarını veya uygulama adlarını asla içermez: bunlar her kayıt yazılmadan önce çıkarılır. Kopyalamak, kaydetmek ya da paylaşmak sizin kararınızdır.';
+
+  @override
+  String get privacyAutoTitle => 'Uygulamanın kendiliğinden bağlandıkları';
+
+  @override
+  String get privacyAutoCheck =>
+      'Bağlanmadan önce: internetin çalıştığına dair kısa bir kontrol (Cloudflare, Google, Quad9 ve OpenDNS\'in genel DNS sunucuları ile microsoft.com ve apple.com ad sorgusu).';
+
+  @override
+  String get privacyAutoProbe =>
+      'Bağlandıktan sonra: sunucunun çalıştığını denetlemek için VPN üzerinden Google\'a (gstatic.com) bir test isteği.';
+
+  @override
+  String get privacyAutoExit =>
+      '\"Çıkış adresini ve ülkesini göster\" (siz kapatmadıkça açık): Cloudflare (1.1.1.1) veya api.country.is; bağlandığınız adresi görürler: bağlı değilken sizinkini, bağlıyken sunucununkini.';
+
+  @override
+  String get privacyAutoDns =>
+      'DNS: adları seçtiğiniz DNS sunucusu çözer (varsayılan olarak Cloudflare).';
+
+  @override
+  String get privacyAskTitle => 'Yalnızca siz istediğinizde';
+
+  @override
+  String get privacyAskSubs =>
+      'Eklediğiniz abonelikler; kendi adreslerinden yenilenir (varsayılan olarak günde bir kez).';
+
+  @override
+  String get privacyAskIpdb =>
+      'Çevrimdışı ülke veritabanı (jsDelivr veya unpkg\'den) ve VPN dışında tuttuğunuz ülkelerin adres listeleri (ipdeny.com veya jsDelivr\'den).';
+
+  @override
+  String get privacyAskNord =>
+      'Bir NordVPN hesabı eklerseniz NordVPN\'in sunucu listesi.';
+
+  @override
+  String get privacyAskTor => 'Tor kullandığınızda Tor\'un dizini ve röleleri.';
+
+  @override
+  String get privacyServersTitle => 'VPN sunucularınız';
+
+  @override
+  String get privacyServers =>
+      'Trafiğiniz eklediğiniz sunuculardan geçer ve uygulama onları denemek ve kullanmak için onlara bağlanır. İşletenleri, her VPN sağlayıcısı gibi trafiğinizi görebilir; bu politika değil, onların kendi gizlilik politikası geçerlidir.';
+
+  @override
+  String get privacyPermsTitle => 'İzinler (Android)';
+
+  @override
+  String get privacyPermVpn => 'VPN: trafiğinizi yönlendirmek için.';
+
+  @override
+  String get privacyPermNotify =>
+      'Bildirimler: bağlantıyı ve hataları göstermek için.';
+
+  @override
+  String get privacyPermCamera =>
+      'Kamera: yalnızca bir QR kod tararken. Görüntü cihazdan asla çıkmaz ve hiçbir Google hizmeti kullanılmaz.';
+
+  @override
+  String get privacyPermApps =>
+      'Yüklü uygulamaların listesi: yalnızca bölünmüş tünel için uygulama seçmek amacıyla.';
+
+  @override
+  String get privacyChangesTitle => 'Değişiklikler ve iletişim';
+
+  @override
+  String get privacyChanges =>
+      'Wardkeep açık kaynaklıdır (MIT); tüm bunlar kodunda denetlenebilir. Bu politika değişirse yeni sürüm bir uygulama güncellemesiyle gelir. Sorular: github.com/NoobforAl/wardkeep adresinde bir issue açın.';
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Son güncelleme: $date';
+  }
 }
