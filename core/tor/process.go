@@ -1,6 +1,6 @@
 // Package tor runs Tor for Wardkeep: the Arti client (the Rust `wardkeep-tor`
 // binary from tor/) behind a local SOCKS5 port, plus bridge pluggable
-// transports run in-process in Go (obfs4, WebTunnel, Snowflake, meek).
+// transports run in-process in Go (obfs4, WebTunnel, Snowflake).
 package tor
 
 import (
@@ -126,8 +126,11 @@ func Start(cfg Config) (*Process, error) {
 	for _, b := range cfg.Bridges {
 		if b = NormalizeBridge(b); b != "" {
 			bridges = append(bridges, b)
-			args = append(args, "--bridge", b)
 		}
+	}
+	// The bridge lines go to the process on its stdin: on the command line every local user could read them.
+	if len(bridges) > 0 {
+		args = append(args, "--bridges-stdin")
 	}
 	proc := &Process{ready: make(chan error, 1), done: make(chan struct{})}
 	if names := TransportsFor(bridges); len(names) > 0 {
@@ -162,6 +165,15 @@ func Start(cfg Config) (*Process, error) {
 	if err := proc.cmd.Start(); err != nil {
 		proc.closeTransports()
 		return nil, fmt.Errorf("start Tor: %w", err)
+	}
+	if len(bridges) > 0 {
+		// One line each, then an empty line; the pipe takes them at once (a few KB), and stdin stays open.
+		if _, err := io.WriteString(proc.stdin, strings.Join(bridges, "\n")+"\n\n"); err != nil {
+			_ = proc.cmd.Process.Kill()
+			_ = proc.cmd.Wait()
+			proc.closeTransports()
+			return nil, fmt.Errorf("start Tor: sending the bridge lines: %w", err)
+		}
 	}
 
 	listening := make(chan string, 1)
@@ -290,14 +302,23 @@ func (p *Process) Err() error {
 // Stop ends Tor and its transports.
 func (p *Process) Stop() {
 	p.once.Do(func() {
+		// Closing stdin asks Tor to exit; it does in tens of milliseconds and lets Arti finish its state files.
+		// One that does not is killed after stopGrace.
 		p.stdin.Close()
-		if p.cmd.Process != nil {
-			_ = p.cmd.Process.Kill()
+		select {
+		case <-p.done:
+		case <-time.After(stopGrace):
+			if p.cmd.Process != nil {
+				_ = p.cmd.Process.Kill()
+			}
+			<-p.done
 		}
-		<-p.done
 		p.closeTransports()
 	})
 }
+
+// stopGrace is how long Stop waits for Tor to exit after its stdin closes before it kills it.
+const stopGrace = 2 * time.Second
 
 func (p *Process) closeTransports() {
 	if p.pts != nil {

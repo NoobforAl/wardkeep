@@ -62,7 +62,7 @@ type report struct {
 }
 
 func main() {
-	kind := flag.String("kind", "direct", "direct, or a built-in bridge kind: obfs4, snowflake, meek")
+	kind := flag.String("kind", "direct", "direct, or a built-in bridge kind: obfs4, snowflake")
 	bin := flag.String("bin", "", "wardkeep-tor executable")
 	level := flag.String("level", "trace", "wardkeep-tor --log-level")
 	out := flag.String("out", "bench", "output folder")

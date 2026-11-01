@@ -44,13 +44,16 @@ func TestBridgeLines(t *testing.T) {
 }
 
 func TestStartTransports(t *testing.T) {
-	pts, err := StartTransports(t.TempDir(), []string{"obfs4", "snowflake", "webtunnel", "meek_lite"}, nil)
+	pts, err := StartTransports(t.TempDir(), []string{"obfs4", "snowflake", "webtunnel"}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer pts.Close()
-	if len(pts.Addrs) != 4 {
+	if len(pts.Addrs) != 3 {
 		t.Fatalf("addrs: %v", pts.Addrs)
+	}
+	if _, err := StartTransports(t.TempDir(), []string{"meek_lite"}, nil); err == nil {
+		t.Fatal("meek_lite accepted (meek is not supported)")
 	}
 	if _, err := StartTransports(t.TempDir(), []string{"nope"}, nil); err == nil {
 		t.Fatal("unknown transport accepted")
@@ -58,12 +61,12 @@ func TestStartTransports(t *testing.T) {
 }
 
 // TestLiveTor bootstraps through real built-in bridges when
-// WARDKEEP_LIVE_TOR is set to a kind (obfs4, snowflake, meek, or "direct")
+// WARDKEEP_LIVE_TOR is set to a kind (obfs4, snowflake, or "direct")
 // and WARDKEEP_TOR_BIN points at the wardkeep-tor binary.
 func TestLiveTor(t *testing.T) {
 	kind := os.Getenv("WARDKEEP_LIVE_TOR")
 	if kind == "" {
-		t.Skip("set WARDKEEP_LIVE_TOR=obfs4|snowflake|meek|direct and WARDKEEP_TOR_BIN")
+		t.Skip("set WARDKEEP_LIVE_TOR=obfs4|snowflake|direct and WARDKEEP_TOR_BIN")
 	}
 	var bridges []string
 	if kind != "direct" {

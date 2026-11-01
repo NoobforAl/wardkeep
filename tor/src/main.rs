@@ -316,7 +316,7 @@ async fn main() {
 
     let _ = rustls::crypto::ring::default_provider().install_default();
 
-    let args = match args::parse(std::env::args().skip(1)) {
+    let mut args = match args::parse(std::env::args().skip(1)) {
         Ok(args) => args,
         Err(err) => {
             emit(json!({"event": "error", "message": err}));
@@ -328,6 +328,14 @@ async fn main() {
             finish(2);
         }
     };
+
+    // The bridge lines, when the core sends them on stdin (before stdin is watched for the core going away).
+    if args.bridges_on_stdin
+        && let Err(err) = args::read_bridges(&mut args, std::io::stdin().lock())
+    {
+        emit(json!({"event": "error", "message": format!("reading the bridge lines: {err}")}));
+        finish(2);
+    }
 
     // Arti's logs and ours, as records on stdout (RUST_LOG replaces the level's filter).
     logging::init(args.log_level);

@@ -22,9 +22,36 @@ pub struct Args {
 
     /// The least severe log records written (`error` unless the core asks for more).
     pub log_level: Level,
+
+    /// The bridge lines come on stdin ([`read_bridges`]) rather than as `--bridge`: on the command line every
+    /// local user could read them.
+    pub bridges_on_stdin: bool,
 }
 
-/// Parses `--data DIR --socks-port N [--bridge LINE]... [--transport NAME=ADDR]... [--log-level LEVEL]`.
+/// Adds one bridge line, accepting the torrc style "Bridge obfs4 ..." too; an empty line adds nothing.
+fn push_bridge(args: &mut Args, line: &str) {
+    let line = line.trim();
+    let line = line.strip_prefix("Bridge ").unwrap_or(line).trim();
+    if !line.is_empty() {
+        args.bridges.push(line.to_string());
+    }
+}
+
+/// Reads bridge lines, one per line, up to an empty line or the end of `input` (`--bridges-stdin`).
+pub fn read_bridges(args: &mut Args, input: impl std::io::BufRead) -> std::io::Result<()> {
+    for line in input.lines() {
+        let line = line?;
+        if line.trim().is_empty() {
+            break;
+        }
+        push_bridge(args, &line);
+    }
+
+    Ok(())
+}
+
+/// Parses `--data DIR --socks-port N [--bridge LINE]... [--bridges-stdin] [--transport NAME=ADDR]...
+/// [--log-level LEVEL]`.
 pub fn parse(mut argv: impl Iterator<Item = String>) -> Result<Args, String> {
     let mut args = Args::default();
     let mut have_data = false;
@@ -45,18 +72,10 @@ pub fn parse(mut argv: impl Iterator<Item = String>) -> Result<Args, String> {
 
             "--bridge" => {
                 let line = value()?;
-
-                // Accept torrc style "Bridge obfs4 ..." too.
-                let line = line
-                    .strip_prefix("Bridge ")
-                    .unwrap_or(&line)
-                    .trim()
-                    .to_string();
-
-                if !line.is_empty() {
-                    args.bridges.push(line);
-                }
+                push_bridge(&mut args, &line);
             }
+
+            "--bridges-stdin" => args.bridges_on_stdin = true,
 
             "--transport" => {
                 let spec = value()?;
@@ -121,6 +140,29 @@ mod tests {
             parsed.transports,
             vec![("obfs4".into(), "127.0.0.1:4000".parse().unwrap())]
         );
+    }
+
+    /// With `--bridges-stdin` the lines come on stdin, up to an empty line; what follows is not read as bridges.
+    #[test]
+    fn bridges_on_stdin() {
+        let mut parsed = args(&["--data", "d", "--bridges-stdin"]).unwrap();
+        assert!(parsed.bridges_on_stdin);
+        assert!(parsed.bridges.is_empty());
+
+        let input = "Bridge obfs4 192.0.2.1:443 AAAA cert=x\r\n  snowflake 192.0.2.3:80 BBBB  \n\nnot a bridge\n";
+        read_bridges(&mut parsed, input.as_bytes()).unwrap();
+        assert_eq!(
+            parsed.bridges,
+            vec![
+                "obfs4 192.0.2.1:443 AAAA cert=x",
+                "snowflake 192.0.2.3:80 BBBB"
+            ]
+        );
+
+        // Without the empty line the end of the input ends the list.
+        let mut parsed = Args::default();
+        read_bridges(&mut parsed, "obfs4 192.0.2.1:443 AAAA".as_bytes()).unwrap();
+        assert_eq!(parsed.bridges, vec!["obfs4 192.0.2.1:443 AAAA"]);
     }
 
     #[test]
