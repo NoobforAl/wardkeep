@@ -87,3 +87,23 @@ logged without it.
 | Server | alert in the TUI, the API and the web panel | `alerts` in the server config (on) |
 
 The same `conn` + `code` notifies once.
+
+## 6. Connect steps
+
+Every connect attempt logs its progress at `info` (`op: connect`, the attempt's `conn`), from the same six
+stages the app's progress ring shows: 1 network check, 2 preparing the configuration, 3 starting the engine,
+4 opening the tunnel, 5 contacting the server, 6 connected.
+
+| Record | When | Extra keys |
+|---|---|---|
+| `step 3/6: Starting engine` | the attempt reaches a stage | `step`, `steps`, `stage`, `elapsed_ms` (since the attempt began) |
+| `step 5/6: Contacting server, retry 1/2` | a stage is tried again: the next profile of a failover, Tor's next attempt | also `retry`, `retries` (the most that stage tries) |
+| `step 3/6: Starting engine: Tor 45%` | a finer status within a stage (Tor's bootstrap), at `debug` | `step`, `steps`, `stage` |
+| `connected in 2.8s: 5 steps, 1 retry` | the attempt connects (with the connected `profile`) | `step`, `steps`, `taken`, `retries`, `elapsed_ms`, `slowest` (stage), `slowest_ms` |
+| `connect failed at step 5/6 (Contacting server) after 9.1s, 1 retry` | it fails (the error record with `code` comes before it); `stopped` when the user stops it | the same as `connected` |
+
+Once per attempt, a `bypass:` record says what goes around the VPN. It names the local ranges (they are the
+same for everyone; in `local_ranges`, since the scrubber hides addresses in a message) but only counts the
+user's own bypass list (`bypass_domains`, `bypass_ranges`, `bypass_only`) and split-tunnel apps
+(`apps_included`, `apps_excluded`): their entries are destinations and app names, which never go in a log. Which
+local ranges a profile keeps inside the VPN is not named either (it would tell the profile's private subnets).
