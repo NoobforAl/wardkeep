@@ -2254,6 +2254,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get logsNoMatch => 'फ़िल्टर से मेल खाती कोई लॉग प्रविष्टि नहीं।';
 
   @override
+  String logsDropped(int count, int max) {
+    return '$count पुरानी प्रविष्टियाँ नहीं दिखाई जा रहीं: यह पेज sing-box और Tor की केवल आख़िरी $max प्रविष्टियाँ रखता है। कनेक्शन के चरण, चेतावनियाँ और त्रुटियाँ ज़्यादा समय तक रखी जाती हैं।';
+  }
+
+  @override
   String get errTorExited =>
       'Tor अचानक रुक गया। फिर से कनेक्ट करें; बार-बार हो तो लॉग देखें।';
 

@@ -2256,6 +2256,11 @@ class AppLocalizationsUr extends AppLocalizations {
   String get logsNoMatch => 'فلٹر سے ملتا کوئی لاگ اندراج نہیں۔';
 
   @override
+  String logsDropped(int count, int max) {
+    return '$count پرانے اندراجات نہیں دکھائے جا رہے: یہ صفحہ sing-box اور Tor کے صرف آخری $max اندراجات رکھتا ہے۔ کنکشن کے مراحل، انتباہات اور خرابیاں زیادہ دیر رکھی جاتی ہیں۔';
+  }
+
+  @override
   String get errTorExited =>
       'Tor اچانک رک گیا۔ دوبارہ جڑیں؛ اگر بار بار ہو تو لاگز دیکھیں۔';
 

@@ -2295,6 +2295,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logsNoMatch => 'لا توجد سجلات تطابق عامل التصفية.';
 
   @override
+  String logsDropped(int count, int max) {
+    return 'لا تُعرض $count من الإدخالات الأقدم: تحتفظ الصفحة بآخر $max من سجلات sing-box وTor. خطوات الاتصال والتحذيرات والأخطاء تُحفظ مدة أطول.';
+  }
+
+  @override
   String get errTorExited =>
       'توقف Tor بشكل غير متوقع. اتصل مرة أخرى؛ وإذا تكرر ذلك فراجع السجلات.';
 

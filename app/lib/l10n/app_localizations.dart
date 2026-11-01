@@ -3864,6 +3864,12 @@ abstract class AppLocalizations {
   /// **'No log entries match the filter.'**
   String get logsNoMatch;
 
+  /// Above the log page when the oldest records were dropped to stay within the limits
+  ///
+  /// In en, this message translates to:
+  /// **'{count} older entries are not shown: the page keeps the latest {max} of the sing-box and Tor flow. Connection steps, warnings and errors are kept longer.'**
+  String logsDropped(int count, int max);
+
   /// A failure the core logs with notify (docs/logging.md §5), by its code
   ///
   /// In en, this message translates to:

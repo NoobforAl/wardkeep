@@ -624,6 +624,7 @@
   "logsLevelAll": "Todos los niveles",
   "logsConnection": "Conexión {conn}",
   "logsNoMatch": "Ninguna entrada coincide con el filtro.",
+  "logsDropped": "No se muestran {count} entradas más antiguas: la página guarda las últimas {max} del flujo de sing-box y Tor. Los pasos de conexión, avisos y errores se guardan más tiempo.",
   "errTorExited": "Tor se detuvo inesperadamente. Vuelve a conectar; si se repite, mira los registros.",
   "errDnsttExited": "El túnel DNS se detuvo inesperadamente. Vuelve a conectar; si se repite, mira los registros.",
   "errEngineFatal": "El motor de conexión se detuvo con un error. Vuelve a conectar; si se repite, mira los registros.",

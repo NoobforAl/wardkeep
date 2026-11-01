@@ -2146,6 +2146,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logsNoMatch => '没有符合筛选条件的日志。';
 
   @override
+  String logsDropped(int count, int max) {
+    return '未显示 $count 条较早的记录：此页只保留 sing-box 和 Tor 的最新 $max 条。连接步骤、警告和错误会保留更久。';
+  }
+
+  @override
   String get errTorExited => 'Tor 意外停止。请重新连接；如果反复出现，请查看日志。';
 
   @override

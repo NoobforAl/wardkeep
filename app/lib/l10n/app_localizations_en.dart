@@ -2252,6 +2252,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logsNoMatch => 'No log entries match the filter.';
 
   @override
+  String logsDropped(int count, int max) {
+    return '$count older entries are not shown: the page keeps the latest $max of the sing-box and Tor flow. Connection steps, warnings and errors are kept longer.';
+  }
+
+  @override
   String get errTorExited =>
       'Tor stopped unexpectedly. Connect again; if it keeps happening, look at the logs.';
 

@@ -624,6 +624,7 @@
   "logsLevelAll": "Semua level",
   "logsConnection": "Koneksi {conn}",
   "logsNoMatch": "Tidak ada entri log yang cocok dengan filter.",
+  "logsDropped": "{count} entri lama tidak ditampilkan: halaman ini menyimpan {max} entri terakhir dari sing-box dan Tor. Langkah koneksi, peringatan, dan galat disimpan lebih lama.",
   "errTorExited": "Tor berhenti tiba-tiba. Hubungkan lagi; jika terus terjadi, lihat log.",
   "errDnsttExited": "Terowongan DNS berhenti tiba-tiba. Hubungkan lagi; jika terus terjadi, lihat log.",
   "errEngineFatal": "Mesin koneksi berhenti karena galat. Hubungkan lagi; jika terus terjadi, lihat log.",

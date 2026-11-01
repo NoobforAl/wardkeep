@@ -2239,6 +2239,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logsNoMatch => 'Không có mục nhật ký nào khớp bộ lọc.';
 
   @override
+  String logsDropped(int count, int max) {
+    return '$count mục cũ hơn không được hiển thị: trang chỉ giữ $max mục mới nhất của sing-box và Tor. Các bước kết nối, cảnh báo và lỗi được giữ lâu hơn.';
+  }
+
+  @override
   String get errTorExited =>
       'Tor dừng đột ngột. Hãy kết nối lại; nếu vẫn lặp lại, xem nhật ký.';
 

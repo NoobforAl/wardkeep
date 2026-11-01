@@ -127,13 +127,16 @@ void main() {
     });
   });
 
-  test('the log keeps the latest 500 records', () async {
+  LogRecord flow(String msg, {String level = 'info'}) =>
+      LogRecord(time: DateTime.now(), level: level, source: 'sing-box', msg: msg);
+
+  test('the log keeps the latest 500 records of the flow', () async {
     final engine = _LogEngine();
     final container = ProviderContainer(overrides: [engineProvider.overrideWithValue(engine)]);
     addTearDown(container.dispose);
     container.listen(logsProvider, (_, _) {});
     for (var i = 0; i < LogsController.maxRecords + 20; i++) {
-      engine.records.add(LogRecord.app('line $i'));
+      engine.records.add(flow('line $i'));
     }
     await Future<void>.delayed(Duration.zero);
     expect(container.read(logsProvider), isEmpty, reason: 'records reach the screen in batches');
@@ -142,6 +145,77 @@ void main() {
     expect(logs, hasLength(LogsController.maxRecords));
     expect(logs.first.msg, 'line 20');
     expect(logs.last.msg, 'line ${LogsController.maxRecords + 19}');
+    expect(container.read(logsProvider.notifier).dropped, 20);
+  });
+
+  test('connect steps, warnings and errors outlive a flood of debug lines, in arrival order', () async {
+    final engine = _LogEngine();
+    final container = ProviderContainer(overrides: [engineProvider.overrideWithValue(engine)]);
+    addTearDown(container.dispose);
+    container.listen(logsProvider, (_, _) {});
+    engine.records
+      ..add(LogRecord(time: DateTime.now(), level: 'info', source: 'core', msg: 'step 2/6: Preparing configuration'))
+      ..add(flow('before'))
+      ..add(flow('bridge timed out', level: 'warn'))
+      ..add(LogRecord(time: DateTime.now(), level: 'info', source: 'core', msg: 'connected in 2.8s: 5 steps, 0 retries'));
+    for (var i = 0; i < LogsController.maxRecords * 3; i++) {
+      engine.records.add(flow('chatter $i', level: i.isEven ? 'debug' : 'info'));
+    }
+    await Future<void>.delayed(LogsController.publishEvery * 2);
+    final logs = container.read(logsProvider);
+    expect(logs.take(3).map((r) => r.msg), [
+      'step 2/6: Preparing configuration',
+      'bridge timed out',
+      'connected in 2.8s: 5 steps, 0 retries',
+    ]);
+    expect(logs, hasLength(3 + LogsController.maxRecords));
+    expect(logs.last.msg, 'chatter ${LogsController.maxRecords * 3 - 1}');
+    expect(container.read(logsProvider.notifier).dropped, LogsController.maxRecords * 2 + 1);
+
+    container.read(logsProvider.notifier).clear();
+    expect(container.read(logsProvider), isEmpty);
+    expect(container.read(logsProvider.notifier).dropped, 0);
+  });
+
+  testWidgets('the log page says how many records were dropped', (tester) async {
+    final engine = _LogEngine();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [engineProvider.overrideWithValue(engine)],
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: LogsScreen(),
+      ),
+    ));
+    final l = await AppLocalizations.delegate.load(const Locale('en'));
+    engine.records.add(flow('first'));
+    await tester.pump(LogsController.publishEvery * 2);
+    expect(find.byKey(const Key('logs-dropped')), findsNothing);
+
+    for (var i = 0; i < LogsController.maxRecords + 7; i++) {
+      engine.records.add(flow('chatter $i'));
+    }
+    await tester.pump(LogsController.publishEvery * 2);
+    expect(find.text(l.logsDropped(8, LogsController.maxRecords)), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.delete_sweep_outlined));
+    await tester.pump(LogsController.publishEvery * 2);
+    expect(find.byKey(const Key('logs-dropped')), findsNothing);
+  });
+
+  test('the kept records have a limit of their own', () async {
+    final engine = _LogEngine();
+    final container = ProviderContainer(overrides: [engineProvider.overrideWithValue(engine)]);
+    addTearDown(container.dispose);
+    container.listen(logsProvider, (_, _) {});
+    for (var i = 0; i < LogsController.maxKept + 5; i++) {
+      engine.records.add(LogRecord.app('app $i'));
+    }
+    await Future<void>.delayed(LogsController.publishEvery * 2);
+    final logs = container.read(logsProvider);
+    expect(logs, hasLength(LogsController.maxKept));
+    expect(logs.first.msg, 'app 5');
+    expect(container.read(logsProvider.notifier).dropped, 5);
   });
 
   group('debug logging setting', () {

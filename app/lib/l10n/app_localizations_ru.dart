@@ -2288,6 +2288,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get logsNoMatch => 'Нет записей, подходящих под фильтр.';
 
   @override
+  String logsDropped(int count, int max) {
+    return 'Более старые записи не показаны ($count): страница хранит последние $max записей sing-box и Tor. Шаги подключения, предупреждения и ошибки хранятся дольше.';
+  }
+
+  @override
   String get errTorExited =>
       'Tor неожиданно остановился. Подключитесь снова; если это повторяется, посмотрите журнал.';
 

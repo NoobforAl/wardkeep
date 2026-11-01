@@ -631,6 +631,7 @@
   "logsLevelAll": "所有级别",
   "logsConnection": "连接 {conn}",
   "logsNoMatch": "没有符合筛选条件的日志。",
+  "logsDropped": "未显示 {count} 条较早的记录：此页只保留 sing-box 和 Tor 的最新 {max} 条。连接步骤、警告和错误会保留更久。",
   "errTorExited": "Tor 意外停止。请重新连接；如果反复出现，请查看日志。",
   "errDnsttExited": "DNS 隧道意外停止。请重新连接；如果反复出现，请查看日志。",
   "errEngineFatal": "连接引擎因错误停止。请重新连接；如果反复出现，请查看日志。",

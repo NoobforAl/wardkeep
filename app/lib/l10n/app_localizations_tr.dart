@@ -2259,6 +2259,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logsNoMatch => 'Filtreye uyan günlük kaydı yok.';
 
   @override
+  String logsDropped(int count, int max) {
+    return 'Daha eski $count kayıt gösterilmiyor: sayfa sing-box ve Tor akışının son $max kaydını tutar. Bağlantı adımları, uyarılar ve hatalar daha uzun tutulur.';
+  }
+
+  @override
   String get errTorExited =>
       'Tor beklenmedik şekilde durdu. Yeniden bağlanın; tekrarlarsa günlüklere bakın.';
 

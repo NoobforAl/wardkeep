@@ -559,16 +559,38 @@ class HomeLocation extends Notifier<ExitInfo?> {
 final homeProvider = NotifierProvider<HomeLocation, ExitInfo?>(HomeLocation.new);
 
 /// The latest log records of the core and the app, the oldest first.
+///
+/// At debug level sing-box and Tor send hundreds of lines a second, which would push the few records that
+/// matter (the connect steps, the bypass summary, warnings and errors) off the page within seconds. So the
+/// two kinds have their own limits: [maxRecords] for that flow, [maxKept] for the records worth keeping
+/// ([keptLonger]). The page shows both, in the order they arrived, and says how many were dropped.
 class LogsController extends Notifier<List<LogRecord>> {
-  /// The most records kept; the oldest go first.
+  /// The most flow records (sing-box's and Tor's info, debug and trace) kept; the oldest go first.
   static const maxRecords = 500;
+
+  /// The most records kept apart from the flow ([keptLonger]).
+  static const maxKept = 200;
 
   /// How often new records reach the screen. At debug level the core can send hundreds of lines a second;
   /// publishing each one copied the whole list and marked the log page for a rebuild every time.
   static const publishEvery = Duration(milliseconds: 100);
 
-  final _records = ListQueue<LogRecord>(maxRecords);
+  /// Whether a record is kept apart from the flow: the core's and the app's own records (the connect steps,
+  /// the bypass summary, the connected or failed summary) and every warning and error.
+  static bool keptLonger(LogRecord record) =>
+      record.source == 'core' ||
+      record.source == 'app' ||
+      LogRecord.levels.indexOf(record.level) >= LogRecord.levels.indexOf('warn');
+
+  // Each record with its arrival number, so the two queues show in the order they came.
+  final _records = ListQueue<(int, LogRecord)>(maxRecords);
+  final _kept = ListQueue<(int, LogRecord)>(maxKept);
+  var _next = 0;
+  var _dropped = 0;
   Timer? _publish;
+
+  /// How many records were dropped to stay within the limits since the log was last cleared.
+  int get dropped => _dropped;
 
   @override
   List<LogRecord> build() {
@@ -578,12 +600,18 @@ class LogsController extends Notifier<List<LogRecord>> {
       _publish?.cancel();
     });
     _records.clear();
+    _kept.clear();
+    _dropped = 0;
     return const [];
   }
 
   void add(LogRecord record) {
-    if (_records.length >= maxRecords) _records.removeFirst();
-    _records.addLast(record);
+    final (queue, limit) = keptLonger(record) ? (_kept, maxKept) : (_records, maxRecords);
+    if (queue.length >= limit) {
+      queue.removeFirst();
+      _dropped++;
+    }
+    queue.addLast((_next++, record));
     _publish ??= Timer(publishEvery, flush);
   }
 
@@ -591,11 +619,30 @@ class LogsController extends Notifier<List<LogRecord>> {
   void flush() {
     _publish?.cancel();
     _publish = null;
-    state = List.unmodifiable(_records);
+    state = List.unmodifiable(_merged());
+  }
+
+  /// Both queues in arrival order.
+  List<LogRecord> _merged() {
+    final out = <LogRecord>[];
+    final flow = _records.iterator, kept = _kept.iterator;
+    var hasFlow = flow.moveNext(), hasKept = kept.moveNext();
+    while (hasFlow || hasKept) {
+      if (hasFlow && (!hasKept || flow.current.$1 < kept.current.$1)) {
+        out.add(flow.current.$2);
+        hasFlow = flow.moveNext();
+      } else {
+        out.add(kept.current.$2);
+        hasKept = kept.moveNext();
+      }
+    }
+    return out;
   }
 
   void clear() {
     _records.clear();
+    _kept.clear();
+    _dropped = 0;
     flush();
   }
 }

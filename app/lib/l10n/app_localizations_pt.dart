@@ -2280,6 +2280,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get logsNoMatch => 'Nenhuma entrada corresponde ao filtro.';
 
   @override
+  String logsDropped(int count, int max) {
+    return '$count entradas mais antigas não são mostradas: a página guarda as últimas $max do fluxo do sing-box e do Tor. Os passos da conexão, avisos e erros ficam guardados por mais tempo.';
+  }
+
+  @override
   String get errTorExited =>
       'O Tor parou inesperadamente. Conecte de novo; se continuar, veja os registros.';
 

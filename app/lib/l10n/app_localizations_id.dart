@@ -2240,6 +2240,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get logsNoMatch => 'Tidak ada entri log yang cocok dengan filter.';
 
   @override
+  String logsDropped(int count, int max) {
+    return '$count entri lama tidak ditampilkan: halaman ini menyimpan $max entri terakhir dari sing-box dan Tor. Langkah koneksi, peringatan, dan galat disimpan lebih lama.';
+  }
+
+  @override
   String get errTorExited =>
       'Tor berhenti tiba-tiba. Hubungkan lagi; jika terus terjadi, lihat log.';
 

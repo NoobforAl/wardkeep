@@ -58,6 +58,8 @@ class _LogsScreenState extends ConsumerState<LogsScreen> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final logs = _visible(ref.watch(logsProvider));
+    // Read with the records it belongs to: both change only when records are added or cleared.
+    final dropped = ref.read(logsProvider.notifier).dropped;
     final filtered = _minimumLevel != LogRecord.levels.first || _conn.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
@@ -109,6 +111,15 @@ class _LogsScreenState extends ConsumerState<LogsScreen> {
                   label: Text(l.logsConnection(_conn)),
                   onDeleted: () => setState(() => _conn = ''),
                 ),
+              ),
+            ),
+          if (dropped > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Text(
+                l.logsDropped(dropped, LogsController.maxRecords),
+                key: const Key('logs-dropped'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ),
           Expanded(

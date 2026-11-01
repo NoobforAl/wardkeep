@@ -2253,6 +2253,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get logsNoMatch => 'هیچ گزارشی با این فیلتر جور نیست.';
 
   @override
+  String logsDropped(int count, int max) {
+    return '$count گزارش قدیمی‌تر نشان داده نمی‌شود: این صفحه فقط $max گزارش آخر sing-box و Tor را نگه می‌دارد. مراحل اتصال، هشدارها و خطاها بیشتر نگه داشته می‌شوند.';
+  }
+
+  @override
   String get errTorExited =>
       'Tor به‌طور غیرمنتظره متوقف شد. دوباره وصل شوید؛ اگر تکرار شد، گزارش‌ها را ببینید.';
 

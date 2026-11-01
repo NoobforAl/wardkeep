@@ -1597,6 +1597,18 @@
   "@logsNoMatch": {
     "description": "Logging settings, the log page and error notifications (docs/logging.md)"
   },
+  "logsDropped": "{count} older entries are not shown: the page keeps the latest {max} of the sing-box and Tor flow. Connection steps, warnings and errors are kept longer.",
+  "@logsDropped": {
+    "description": "Above the log page when the oldest records were dropped to stay within the limits",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "errTorExited": "Tor stopped unexpectedly. Connect again; if it keeps happening, look at the logs.",
   "@errTorExited": {
     "description": "A failure the core logs with notify (docs/logging.md §5), by its code"

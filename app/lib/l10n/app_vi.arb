@@ -624,6 +624,7 @@
   "logsLevelAll": "Mọi mức",
   "logsConnection": "Kết nối {conn}",
   "logsNoMatch": "Không có mục nhật ký nào khớp bộ lọc.",
+  "logsDropped": "{count} mục cũ hơn không được hiển thị: trang chỉ giữ {max} mục mới nhất của sing-box và Tor. Các bước kết nối, cảnh báo và lỗi được giữ lâu hơn.",
   "errTorExited": "Tor dừng đột ngột. Hãy kết nối lại; nếu vẫn lặp lại, xem nhật ký.",
   "errDnsttExited": "Đường hầm DNS dừng đột ngột. Hãy kết nối lại; nếu vẫn lặp lại, xem nhật ký.",
   "errEngineFatal": "Bộ máy kết nối dừng vì lỗi. Hãy kết nối lại; nếu vẫn lặp lại, xem nhật ký.",

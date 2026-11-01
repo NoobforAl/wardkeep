@@ -624,6 +624,7 @@
   "logsLevelAll": "Tüm düzeyler",
   "logsConnection": "Bağlantı {conn}",
   "logsNoMatch": "Filtreye uyan günlük kaydı yok.",
+  "logsDropped": "Daha eski {count} kayıt gösterilmiyor: sayfa sing-box ve Tor akışının son {max} kaydını tutar. Bağlantı adımları, uyarılar ve hatalar daha uzun tutulur.",
   "errTorExited": "Tor beklenmedik şekilde durdu. Yeniden bağlanın; tekrarlarsa günlüklere bakın.",
   "errDnsttExited": "DNS tüneli beklenmedik şekilde durdu. Yeniden bağlanın; tekrarlarsa günlüklere bakın.",
   "errEngineFatal": "Bağlantı motoru bir hatayla durdu. Yeniden bağlanın; tekrarlarsa günlüklere bakın.",
