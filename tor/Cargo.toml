@@ -25,7 +25,9 @@ tor-proto = { version = "0.47", default-features = false, features = ["stream-ct
 tor-linkspec = "0.47"
 tor-geoip = { version = "0.47", features = ["embedded-db"] }
 anyhow = "1"
-serde_json = "1"
+# preserve_order: keys stay in the order they are written (event first, then time, level, ...).
+serde_json = { version = "1", features = ["preserve_order"] }
+humantime = "2"
 # Logs (Arti's and ours) go to stdout as JSON records next to the events (docs/logging.md).
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["std", "registry", "env-filter"] }

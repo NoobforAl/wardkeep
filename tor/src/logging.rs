@@ -7,9 +7,9 @@
 
 use std::fmt::{Debug, Write as _};
 use std::io::Write as _;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 use tracing::field::{Field, Visit};
 use tracing::{Event, Subscriber};
@@ -144,49 +144,44 @@ impl Record {
         self
     }
 
-    /// The stdout line for this record (without the newline), stamped with `time`.
+    /// The stdout line for this record (without the newline), stamped with `time`. `serde_json` escapes
+    /// every string, so a newline in a message stays on this line.
     pub fn to_line(&self, time: SystemTime) -> String {
-        let mut line = String::with_capacity(128 + self.msg.len());
-
-        line.push_str(r#"{"event":"log""#);
-        push_key(&mut line, "time", &Value::String(rfc3339_millis(time)));
-        push_key(&mut line, "level", &Value::from(self.level.name()));
-        push_key(&mut line, "source", &Value::from(SOURCE));
-
+        let mut object = Map::new();
+        object.insert("event".into(), "log".into());
+        object.insert("time".into(), rfc3339_millis(time).into());
+        object.insert("level".into(), self.level.name().into());
+        object.insert("source".into(), SOURCE.into());
         if let Some(target) = &self.target {
-            push_key(&mut line, "target", &Value::from(target.as_str()));
+            object.insert("target".into(), target.as_str().into());
         }
 
-        push_key(&mut line, "msg", &Value::from(self.msg.as_str()));
+        object.insert("msg".into(), self.msg.as_str().into());
         for (key, value) in &self.fields {
-            if RESERVED_KEYS.contains(&key.as_str()) {
-                push_key(&mut line, &format!("{key}_"), value);
+            let key = if RESERVED_KEYS.contains(&key.as_str()) {
+                format!("{key}_")
             } else {
-                push_key(&mut line, key, value);
-            }
+                key.clone()
+            };
+
+            object.insert(key, value.clone());
         }
 
         if let Some(caller) = &self.caller {
-            push_key(&mut line, "caller", &Value::from(caller.as_str()));
+            object.insert("caller".into(), caller.as_str().into());
         }
 
         if let Some(stack) = &self.stack {
-            push_key(&mut line, "stack", &Value::from(stack.as_str()));
+            object.insert("stack".into(), stack.as_str().into());
         }
 
-        line.push('}');
-        line
+        Value::Object(object).to_string()
     }
 
     /// Writes the record to stdout, now.
     pub fn write(&self) {
         write_line(&self.to_line(SystemTime::now()));
     }
-}
-
-/// Appends `,"key":value` (both JSON-escaped, so a newline in a message stays on this line).
-fn push_key(line: &mut String, key: &str, value: &Value) {
-    let _ = write!(line, ",{}:{value}", Value::from(key));
 }
 
 /// Writes one line to stdout and flushes it. The stdout lock is held for the whole line, so lines from
@@ -200,40 +195,7 @@ pub fn write_line(line: &str) {
 
 /// `time` as RFC 3339 in UTC with milliseconds, e.g. `2026-10-29T01:02:03.456Z`.
 pub fn rfc3339_millis(time: SystemTime) -> String {
-    let since_epoch = time.duration_since(UNIX_EPOCH).unwrap_or_default();
-    let seconds = since_epoch.as_secs();
-    let millis = since_epoch.subsec_millis();
-    // Days since 1970 fit an i64 for any clock this runs on; saturate rather than wrap if one ever does not.
-    let (year, month, day) = civil_from_days(i64::try_from(seconds / 86_400).unwrap_or(i64::MAX));
-    let second_of_day = seconds % 86_400;
-
-    format!(
-        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}.{millis:03}Z",
-        second_of_day / 3600,
-        second_of_day % 3600 / 60,
-        second_of_day % 60,
-    )
-}
-
-/// The (year, month, day) of a day counted from 1970-01-01 (Howard Hinnant's `civil_from_days`).
-fn civil_from_days(days: i64) -> (i64, i64, i64) {
-    let shifted = days + 719_468;
-    let era = shifted.div_euclid(146_097);
-    let day_of_era = shifted.rem_euclid(146_097);
-    let year_of_era =
-        (day_of_era - day_of_era / 1460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
-    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
-    let month_index = (5 * day_of_year + 2) / 153;
-    let day = day_of_year - (153 * month_index + 2) / 5 + 1;
-
-    let month = if month_index < 10 {
-        month_index + 3
-    } else {
-        month_index - 9
-    };
-
-    let year = year_of_era + era * 400 + i64::from(month <= 2);
-    (year, month, day)
+    humantime::format_rfc3339_millis(time).to_string()
 }
 
 /// `file:line`, with a dependency's path cut to its crate folder (`tor-proto-0.47.0/src/...`): the
@@ -404,7 +366,7 @@ pub fn install_panic_hook(exit: fn()) {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use std::time::{Duration, UNIX_EPOCH};
 
     use super::*;
 
