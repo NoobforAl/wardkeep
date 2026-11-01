@@ -78,3 +78,7 @@ cast_possible_truncation = "warn"
 cast_sign_loss = "warn"
 cast_possible_wrap = "warn"
 large_futures = "warn"
+
+# Arti's saturating-time loops forever on Windows while parsing a consensus (see third_party/saturating-time/PATCHES.md).
+[patch.crates-io]
+saturating-time = { path = "../third_party/saturating-time" }
