@@ -14,20 +14,30 @@ var scrubbers = []struct {
 	replacement string
 	// replace, when set, decides for each whole-word match; with neither, a match goes through scrubHost.
 	replace func(string) string
+	// The pass runs only when the text contains has and one of anyOf (when set) and is at least minLen long:
+	// cheap checks that skip the regular expressions that cannot match, which is most of them for most lines.
+	has    string
+	anyOf  string
+	minLen int
 }{
-	{pattern: regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9+.\-]*://[^\s"'<>]+`), replacement: "[url]"},
+	{pattern: regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9+.\-]*://[^\s"'<>]+`), replacement: "[url]", has: "://"},
 	// Secrets written as key=value (a bridge line's cert=, a password in a query string).
-	{pattern: regexp.MustCompile(`(?i)\b(cert|password|passwd|pass|key|pubkey|token|secret|psk|auth|uuid|sni|url|front|fronts|ice)=[^\s,;"']+`), replacement: "${1}=[redacted]"},
-	{pattern: regexp.MustCompile(`(?i)\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b`), replacement: "[uuid]"},
-	{pattern: regexp.MustCompile(`\[[0-9a-fA-F:.%]*:[0-9a-fA-F:.%]*\](:\d{1,5})?`), replacement: "[addr]"},
-	{pattern: regexp.MustCompile(`\b\d{1,3}(\.\d{1,3}){3}(:\d{1,5})?\b`), replacement: "[addr]"},
+	{pattern: regexp.MustCompile(`(?i)\b(cert|password|passwd|pass|key|pubkey|token|secret|psk|auth|uuid|sni|url|front|fronts|ice|fingerprint)=[^\s,;"']+`), replacement: "${1}=[redacted]", has: "="},
+	{pattern: regexp.MustCompile(`(?i)\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b`), replacement: "[uuid]", has: "-", minLen: 36},
+	// A relay's RSA fingerprint (40 hex digits, "$" in front in Arti's logs): with a bridge line it names the
+	// bridge, which a private bridge's user would not want in a shared log.
+	{pattern: regexp.MustCompile(`\$?\b[0-9a-fA-F]{40}\b`), replacement: "[fingerprint]", minLen: 40},
+	// A relay's ed25519 identity, as Arti writes it in full.
+	{pattern: regexp.MustCompile(`ed25519:[A-Za-z0-9+/]{40,}={0,2}`), replacement: "ed25519:[redacted]", has: "ed25519:"},
+	{pattern: regexp.MustCompile(`\[[0-9a-fA-F:.%]*:[0-9a-fA-F:.%]*\](:\d{1,5})?`), replacement: "[addr]", has: "["},
+	{pattern: regexp.MustCompile(`\b\d{1,3}(\.\d{1,3}){3}(:\d{1,5})?\b`), replacement: "[addr]", has: "."},
 	// MAC addresses (a router's, in sing-box's network messages): six pairs joined by ":" or "-".
-	{pattern: regexp.MustCompile(`(?i)[0-9a-f]{2}[:-][0-9a-f]{2}(?:[:-][0-9a-f]{2}){4}`), replace: func(string) string { return "[mac]" }},
+	{pattern: regexp.MustCompile(`(?i)[0-9a-f]{2}[:-][0-9a-f]{2}(?:[:-][0-9a-f]{2}){4}`), replace: func(string) string { return "[mac]" }, anyOf: ":-", minLen: 17},
 	// IPv6 addresses, full or compressed, with a zone or not. A run of hex digits and colons is one when it
 	// parses as one, so times like 01:02:03 stay; checking each run, not a boundary character around it, also
 	// catches two addresses side by side.
-	{pattern: regexp.MustCompile(`(?i)[0-9a-f:]*:[0-9a-f:]*[0-9a-f:](%[0-9a-z_.\-]+)?`), replace: scrubIPv6},
-	{pattern: regexp.MustCompile(`(?i)\b[a-z0-9]([a-z0-9\-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]*[a-z0-9])?)*\.[a-z][a-z0-9\-]*[a-z0-9](:\d{1,5})?\b`)},
+	{pattern: regexp.MustCompile(`(?i)[0-9a-f:]*:[0-9a-f:]*[0-9a-f:](%[0-9a-z_.\-]+)?`), replace: scrubIPv6, has: ":"},
+	{pattern: regexp.MustCompile(`(?i)\b[a-z0-9]([a-z0-9\-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]*[a-z0-9])?)*\.[a-z][a-z0-9\-]*[a-z0-9](:\d{1,5})?\b`), has: "."},
 }
 
 // fileSuffixes are dotted words that are file names, not hosts.
@@ -39,6 +49,10 @@ func Scrub(text string) string {
 		return text
 	}
 	for _, scrubber := range scrubbers {
+		if len(text) < scrubber.minLen || !strings.Contains(text, scrubber.has) ||
+			(scrubber.anyOf != "" && !strings.ContainsAny(text, scrubber.anyOf)) {
+			continue
+		}
 		switch {
 		case scrubber.replace != nil:
 			text = replaceWords(text, scrubber.pattern, scrubber.replace)

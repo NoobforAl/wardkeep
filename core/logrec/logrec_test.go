@@ -185,6 +185,11 @@ func TestScrub(t *testing.T) {
 		"read udp 2001:db8::5: timeout":                                                                            "read udp [addr]: timeout",
 		"took 12:30:45 and 1:2":                                                                                    "took 12:30:45 and 1:2",
 		"hash deadbeef:cafe is not an address":                                                                     "hash deadbeef:cafe is not an address",
+		// Bridge identities, as Arti's debug log prints whole bridge lines.
+		`download for "snowflake 192.0.2.4:80 $8838024498816a039fcbbab14e6f40a0843051fa fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://x.example/"`: `download for "snowflake [addr] [fingerprint] fingerprint=[redacted] url=[redacted]"`,
+		"obfs4 198.51.100.7:443 4A5F0C3B7D9E1F2A3B4C5D6E7F8091A2B3C4D5E6 cert=AbC iat-mode=0":                                                                         "obfs4 [addr] [fingerprint] cert=[redacted] iat-mode=0",
+		"guard ed25519:ZWxsbyB3b3JsZCBoZWxsbyB3b3JsZCBoZWxsbyB3b3JsZA up":                                                                                             "guard ed25519:[redacted] up",
+		"a 39-digit 0123456789abcdef0123456789abcdef0123456 stays":                                                                                                    "a 39-digit 0123456789abcdef0123456789abcdef0123456 stays",
 	} {
 		if got := Scrub(in); got != want {
 			t.Errorf("Scrub(%q)\n got  %q\n want %q", in, got, want)
