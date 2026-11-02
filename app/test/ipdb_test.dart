@@ -122,7 +122,7 @@ void main() {
           final cut = dieAfter;
           dieAfter = -1; // only once
           // Send the headers and part of the body, then drop the connection.
-          final socket = await req.response.detachSocket(writeHeaders: true);
+          final socket = await req.response.detachSocket();
           socket.add(body.sublist(0, cut));
           await socket.flush();
           socket.destroy();

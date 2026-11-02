@@ -79,7 +79,7 @@ void main() {
 
     test('Automatic and the servers, with the choice marked', () {
       final profiles = [_profile('a', latency: 90), _profile('b', latency: 20), _profile('c')];
-      var sub = _servers(_menu(profiles: profiles, choice: null)).children!;
+      var sub = _servers(_menu(profiles: profiles)).children!;
       expect(sub.first.key, trayAutomaticKey);
       expect(sub.first.checked, isTrue);
       // fastest first, then the ones never tested
@@ -139,7 +139,7 @@ void main() {
       });
       messenger.setMockMethodCallHandler(const MethodChannel('window_manager'), (call) async {
         window.add(call);
-        return call.method == 'isMinimized' ? false : true;
+        return call.method != 'isMinimized';
       });
       engine = MockEngine(connectDelay: Duration.zero);
       container = ProviderContainer(overrides: [
@@ -176,7 +176,7 @@ void main() {
       return const {};
     }
 
-    List<String> labels() => [for (final i in items()) if (i['type'] != 'separator') i['label'] as String];
+    List<String> labels() => [for (final i in items()) if (i['type'] != 'separator') i['label']! as String];
 
     Future<void> click(String key) async {
       final id = find(key)['id'];
@@ -200,7 +200,7 @@ void main() {
       await start();
       expect(controller.isUp, isTrue);
       final icon = tray.firstWhere((c) => c.method == 'setIcon');
-      expect((icon.arg('iconPath') as String).replaceAll('\\', '/'), endsWith('data/flutter_assets/assets/tray.ico'));
+      expect((icon.arg('iconPath')! as String).replaceAll('\\', '/'), endsWith('data/flutter_assets/assets/tray.ico'));
       expect(tray.firstWhere((c) => c.method == 'setToolTip').arg('toolTip'), contains('Wardkeep'));
       expect(labels(), ['Not connected', 'Connect', 'Switch server', 'Open Wardkeep', 'Quit']);
     });

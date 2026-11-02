@@ -68,7 +68,7 @@ void main() {
       }
 
       testWidgets('import sheet on a $name at text scale $scale: Import stays above the keyboard', (tester) async {
-        await open(tester, (context, ref) => showImportSheet(context, ref));
+        await open(tester, showImportSheet);
         await typeIn(tester, find.byType(TextField).last);
         expectAboveKeyboard(tester, find.widgetWithText(FilledButton, 'Import'), 'import sheet');
         // The form scrolls above the pinned button: at least the first line of the field is in view.

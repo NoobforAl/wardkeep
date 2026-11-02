@@ -1059,8 +1059,6 @@ class _MainButton extends StatelessWidget {
                     brandIndigo.withValues(alpha: go),
                     brandViolet.withValues(alpha: go),
                   ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
                 ),
         ),
         child: Stack(

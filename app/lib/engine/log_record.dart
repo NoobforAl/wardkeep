@@ -143,7 +143,7 @@ class LogRecord {
     if (notify) ('notify', 'true'),
     if (caller.isNotEmpty) ('caller', caller),
     for (final entry in extra.entries)
-      (entry.key, entry.value is String ? entry.value as String : jsonEncode(entry.value)),
+      (entry.key, entry.value is String ? entry.value! as String : jsonEncode(entry.value)),
   ];
 
   /// One line of plain text (what "copy all" copies), with the stack below it when there is one.

@@ -361,7 +361,7 @@ void main() {
       final (engine, notifications, _) = await pumpApp(tester);
       final l = await AppLocalizations.delegate.load(const Locale('en'));
 
-      engine.records.add(LogRecord.app('unrelated', level: 'info'));
+      engine.records.add(LogRecord.app('unrelated'));
       engine.records.add(LogRecord.fromJson({'level': 'info', 'source': 'core', 'msg': 'other attempt', 'conn': 'zz'}));
       engine.records.add(_failure());
       await tester.pump();

@@ -57,7 +57,6 @@ ThemeData buildTheme(Brightness brightness) {
       // Cold stone by day.
       : const ColorScheme.light(
           primary: Color(0xFF2D5287),
-          onPrimary: Colors.white,
           primaryContainer: Color(0xFFD3E0F2),
           onPrimaryContainer: Color(0xFF0E2340),
           secondary: Color(0xFF267A86),
@@ -66,7 +65,6 @@ ThemeData buildTheme(Brightness brightness) {
           onSecondaryContainer: Color(0xFF16233A),
           tertiary: Color(0xFF9A7B33),
           error: Color(0xFFB03A52),
-          onError: Colors.white,
           surface: Color(0xFFE6EAF0),
           onSurface: Color(0xFF141B28),
           onSurfaceVariant: Color(0xFF55637C),

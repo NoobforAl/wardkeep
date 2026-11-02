@@ -938,7 +938,7 @@ class SettingsState {
         logUntil: j['log_until'] as String? ?? defaults.logUntil,
         // Before one switch there were two (the notice, the system's notification): off if either was.
         notifyErrors: j['notify_errors'] as bool? ??
-            (j['notify_popup'] == false || j['notify_os'] == false ? false : defaults.notifyErrors),
+            (!(j['notify_popup'] == false || j['notify_os'] == false) && defaults.notifyErrors),
       );
 }
 

@@ -102,7 +102,7 @@ void main() {
     final c = ProviderContainer(overrides: [
       storeProvider.overrideWithValue(AppStore.memory({'settings': {'show_exit': false, ...settings}})),
       engineProvider.overrideWithValue(MockEngine(connectDelay: Duration.zero)),
-      ipDbProvider.overrideWith(() => _NoDb()),
+      ipDbProvider.overrideWith(_NoDb.new),
       countryZonesDirProvider.overrideWithValue(() async => Directory('${tmp.path}/zones')),
       countryZonesDownloaderProvider.overrideWithValue(CountryZonesDownloader(urls: src.urls, timeout: const Duration(seconds: 5))),
     ]);
@@ -160,7 +160,7 @@ void main() {
           ...store,
         })),
         engineProvider.overrideWithValue(MockEngine(connectDelay: Duration.zero)),
-        ipDbProvider.overrideWith(() => _NoDb()),
+        ipDbProvider.overrideWith(_NoDb.new),
         countryZonesDirProvider.overrideWithValue(() async => Directory('${tmp.path}/zones')),
         countryZonesDownloaderProvider.overrideWithValue(fake),
       ]);

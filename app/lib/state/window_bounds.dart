@@ -21,8 +21,8 @@ Rect openingBounds({required List<Rect> displays, Rect? saved}) {
       if (display.contains(saved.center)) {
         // Never bigger than the monitor it is on, and fully on it.
         final w = math.min(saved.width, display.width), h = math.min(saved.height, display.height);
-        final x = saved.left.clamp(display.left, display.right - w).toDouble();
-        final y = saved.top.clamp(display.top, display.bottom - h).toDouble();
+        final x = saved.left.clamp(display.left, display.right - w);
+        final y = saved.top.clamp(display.top, display.bottom - h);
         return Rect.fromLTWH(x, y, w, h);
       }
     }

@@ -70,3 +70,41 @@ linter:
     depend_on_referenced_packages: true
     # A catch-all `catch (e)` stays allowed: the app talks to the platform and the core, where any
     # error must end up in the UI, so avoid_catches_without_on_clauses would mostly be noise.
+    # `x.toString()` on a String, `x.round()` on an int: a no-op that usually hides a wrong type.
+    noop_primitive_operations: true
+    # `x as T` from T?: a null crashes with a cast error far from its cause; `!` says what is meant.
+    cast_nullable_to_non_nullable: true
+    # Runtime type names are minified in release builds.
+    no_runtimeType_toString: true
+    # Catching an Error (a bug: RangeError, StateError) hides it; errors are for crashing.
+    avoid_catching_errors: true
+    # A constructor parameter that is never used: a forgotten field assignment.
+    avoid_unused_constructor_parameters: true
+    # Two adjacent string literals that join without a space ('foo' 'bar' -> 'foobar').
+    missing_whitespace_between_adjacent_strings: true
+    # `== true` on a non-nullable bool, `c ? true : x` and similar tangles.
+    no_literal_bool_comparisons: true
+    avoid_bool_literals_in_conditional_expressions: true
+    # Duration.zero and the like instead of rebuilding the same constant.
+    use_named_constants: true
+    # Locals that never change are final, so an accidental reassignment is an error.
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    # Code no entry point reaches.
+    unreachable_from_main: true
+    # A `!` on something already known to be non-null hides the real type.
+    unnecessary_null_checks: true
+    # Arguments that repeat the default, closures that could be a tear-off, a library directive with nothing on it.
+    avoid_redundant_argument_values: true
+    unnecessary_lambdas: true
+    unnecessary_library_directive: true
+    unnecessary_breaks: true
+    # Pass-through constructor parameters, ColoredBox/DecoratedBox/SizedBox.shrink over heavier widgets.
+    use_super_parameters: true
+    use_colored_box: true
+    use_decorated_box: true
+    sized_box_shrink_expand: true
+    # @Deprecated that disagrees with itself; a `case` that is not a valid pattern in Dart 3.
+    deprecated_consistency: true
+    invalid_case_patterns: true
+    prefer_void_to_null: true

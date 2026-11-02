@@ -10,7 +10,7 @@ class PrivacyScreen extends StatelessWidget {
   const PrivacyScreen({super.key});
 
   /// When the policy last changed.
-  static final updated = DateTime(2026, 11, 1);
+  static final updated = DateTime(2026, 11);
 
   @override
   Widget build(BuildContext context) {

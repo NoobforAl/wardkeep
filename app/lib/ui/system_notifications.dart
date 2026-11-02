@@ -50,7 +50,7 @@ class SystemNotifications {
       } else if (_desktop) {
         if (!_desktopReady) {
           // Windows needs a Start menu shortcut with the app's id for a notification; this makes one if missing.
-          await localNotifier.setup(appName: 'Wardkeep', shortcutPolicy: ShortcutPolicy.requireCreate);
+          await localNotifier.setup(appName: 'Wardkeep');
           _desktopReady = true;
         }
         final notification = LocalNotification(title: title, body: body);
