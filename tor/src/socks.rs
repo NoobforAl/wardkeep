@@ -53,12 +53,7 @@ pub async fn handshake_within<S: AsyncRead + AsyncWrite + Unpin>(
 ) -> std::io::Result<Target> {
     tokio::time::timeout(limit, handshake(stream))
         .await
-        .unwrap_or_else(|_| {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::TimedOut,
-                "SOCKS handshake timed out",
-            ))
-        })
+        .unwrap_or_else(|_| Err(bad("timed out waiting for SOCKS handshake")))
 }
 
 /// Reads the greeting and the CONNECT request. On an unsupported request it

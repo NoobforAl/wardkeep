@@ -90,6 +90,7 @@ impl Level {
             Level::Info => ("info", Some("warn")),
             Level::Warn => ("warn", None),
             Level::Error => ("error", None),
+
             // Panics are written by the panic hook, not through `tracing`.
             Level::Fatal => ("off", None),
         };

@@ -13,6 +13,7 @@
 //!   {"event":"log","time":"...","level":"warn","source":"tor","target":"tor_guardmgr","msg":"...",...}
 //!     (a log record, docs/logging.md: Arti's logs and ours at --log-level and above, and panics)
 //! stderr carries nothing on purpose. The process exits when stdin closes, so it never outlives the core.
+//!
 
 use std::sync::{Arc, Mutex, PoisonError};
 
@@ -24,6 +25,7 @@ use arti_client::{HasKind, TorClient, TorClientConfig};
 
 use futures::StreamExt;
 use serde_json::json;
+
 use wardkeep_tor::logging::{self, Level, Record};
 use wardkeep_tor::{args, path, socks};
 
@@ -58,6 +60,7 @@ fn finish(code: i32) -> ! {
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .take(),
     );
+
     std::process::exit(code)
 }
 
