@@ -1,5 +1,8 @@
 # Wardkeep
 
+[![CI](https://github.com/NoobforAl/wardkeep/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/NoobforAl/wardkeep/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/NoobforAl/wardkeep/graph/badge.svg)](https://app.codecov.io/gh/NoobforAl/wardkeep)
+
 Cross-platform VPN client (Flutter) with a Go/Rust core, plus a server for running your own VPN with many protocols.
 Android is the first-class client; the Windows app runs in proxy mode. The app is a Mullvad-style single screen
 (status, country, one button), translated into 13 languages (English, Persian, Russian, Chinese, Arabic, Spanish, Hindi, French, Portuguese, Urdu, Indonesian, Turkish, Vietnamese).
