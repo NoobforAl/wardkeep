@@ -72,7 +72,7 @@ fn exit_after_panic() {
 
 /// Writes an event for the core. One JSON object per line: each line is flushed as it is written, under
 /// the same stdout lock as the log records, and the core reads it line by line.
-fn emit(event: serde_json::Value) {
+fn emit(event: &serde_json::Value) {
     logging::write_line(&event.to_string());
 }
 
@@ -203,7 +203,7 @@ fn report_path(shared: &Shared, stream: &arti_client::DataStream) {
             .iter()
             .map(|code| code.as_ref().map(CountryCode::get))
             .collect();
-        emit(path::event(&names, shared.bridged));
+        emit(&path::event(&names, shared.bridged));
 
         *last = countries;
     }
@@ -211,9 +211,8 @@ fn report_path(shared: &Shared, stream: &arti_client::DataStream) {
 
 async fn serve(shared: Arc<Shared>, mut conn: TcpStream) {
     let client = &shared.client;
-    let target = match socks::handshake_within(&mut conn, socks::HANDSHAKE_TIMEOUT).await {
-        Ok(target) => target,
-        Err(_) => return,
+    let Ok(target) = socks::handshake_within(&mut conn, socks::HANDSHAKE_TIMEOUT).await else {
+        return;
     };
 
     match client.connect((target.host.as_str(), target.port)).await {
@@ -254,7 +253,7 @@ async fn run(args: args::Args) -> anyhow::Result<()> {
         .await
         .context("listen")?;
 
-    emit(json!({"event": "listening", "socks": listener.local_addr()?.to_string()}));
+    emit(&json!({"event": "listening", "socks": listener.local_addr()?.to_string()}));
 
     let client = TorClient::builder()
         .config(config(&args)?)
@@ -278,13 +277,13 @@ async fn run(args: args::Args) -> anyhow::Result<()> {
                     event["blocked"] = json!(blocked.to_string());
                 }
 
-                emit(event);
+                emit(&event);
             }
         }
     });
 
     client.bootstrap().await.context("bootstrap")?;
-    emit(json!({"event": "ready"}));
+    emit(&json!({"event": "ready"}));
 
     let shared = Arc::new(Shared {
         client,
@@ -322,7 +321,7 @@ async fn main() {
     let mut args = match args::parse(std::env::args().skip(1)) {
         Ok(args) => args,
         Err(err) => {
-            emit(json!({"event": "error", "message": err}));
+            emit(&json!({"event": "error", "message": err}));
             Record::new(Level::Error, "Tor did not start: bad command line")
                 .with("op", "start")
                 .with("err", err)
@@ -336,7 +335,7 @@ async fn main() {
     if args.bridges_on_stdin
         && let Err(err) = args::read_bridges(&mut args, std::io::stdin().lock())
     {
-        emit(json!({"event": "error", "message": format!("reading the bridge lines: {err}")}));
+        emit(&json!({"event": "error", "message": format!("reading the bridge lines: {err}")}));
         finish(2);
     }
 
@@ -357,7 +356,7 @@ async fn main() {
 
     if let Err(err) = run(args).await {
         let message = format!("{err:#}");
-        emit(json!({"event": "error", "message": message}));
+        emit(&json!({"event": "error", "message": message}));
 
         // Nothing in this process handles it: Tor stops, so the user is told.
         tracing::error!(

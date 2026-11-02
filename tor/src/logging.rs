@@ -371,7 +371,7 @@ mod tests {
 
     use super::*;
 
-    fn parse_line(line: &str) -> serde_json::Map<String, Value> {
+    fn parse_line(line: &str) -> Map<String, Value> {
         assert!(!line.contains('\n'), "not one line: {line}");
         match serde_json::from_str(line).unwrap() {
             Value::Object(object) => object,

@@ -64,6 +64,8 @@ opt-level = 2
 # hidden panics in normal code (a panic ends every connection), and no silent number truncation.
 [lints.rust]
 unsafe_code = "forbid"
+rust_2018_idioms = { level = "warn", priority = -1 }
+unused_qualifications = "warn"
 
 [lints.clippy]
 all = { level = "warn", priority = -1 }
@@ -78,6 +80,36 @@ cast_possible_truncation = "warn"
 cast_sign_loss = "warn"
 cast_possible_wrap = "warn"
 large_futures = "warn"
+# More bug finders: a blocking or oversized value where it hurts, numbers compared or converted lossily,
+# results matched with a catch-all, async functions that never await, and wasted clones.
+large_stack_arrays = "warn"
+float_cmp = "warn"
+lossy_float_literal = "warn"
+cast_lossless = "warn"
+checked_conversions = "warn"
+fn_to_numeric_cast_any = "warn"
+match_wild_err_arm = "warn"
+get_unwrap = "warn"
+unused_async = "warn"
+mutex_atomic = "warn"
+rc_buffer = "warn"
+verbose_file_reads = "warn"
+redundant_clone = "warn"
+implicit_clone = "warn"
+inefficient_to_string = "warn"
+needless_pass_by_value = "warn"
+trivially_copy_pass_by_ref = "warn"
+ref_option = "warn"
+unused_self = "warn"
+# Readability that clippy can check: let-else over match-and-return, no wildcard imports.
+manual_let_else = "warn"
+unnested_or_patterns = "warn"
+wildcard_imports = "warn"
+redundant_else = "warn"
+semicolon_if_nothing_returned = "warn"
+explicit_iter_loop = "warn"
+map_unwrap_or = "warn"
+items_after_statements = "warn"
 
 # Arti's saturating-time loops forever on Windows while parsing a consensus (see third_party/saturating-time/PATCHES.md).
 [patch.crates-io]
