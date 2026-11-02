@@ -10,6 +10,7 @@ import (
 )
 
 func acmeState(t *testing.T) (*store.State, *store.Store) {
+	t.Helper()
 	st, s := goldenState(t)
 	st.Server.PublicHost = "vpn.example.com"
 	st.Server.ACME = store.ACME{Enabled: true, Domain: "vpn.example.com", Email: "me@example.com"}

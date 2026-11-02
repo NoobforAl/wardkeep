@@ -199,6 +199,7 @@ func TestScrub(t *testing.T) {
 
 // setMode changes the build mode for one test.
 func setMode(t *testing.T, mode string) {
+	t.Helper()
 	old := buildinfo.Mode
 	buildinfo.Mode = mode
 	t.Cleanup(func() {

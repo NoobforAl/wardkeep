@@ -80,6 +80,7 @@ func newTestPKI(t *testing.T) testPKI {
 
 // staticKey returns a 2048-bit OpenVPN static key file (tls-auth / tls-crypt).
 func staticKey(t *testing.T) string {
+	t.Helper()
 	raw := make([]byte, 256)
 	if _, err := rand.Read(raw); err != nil {
 		t.Fatal(err)
@@ -118,6 +119,7 @@ func startServerEndpoint(t *testing.T, endpoint map[string]any) {
 
 // lanIPv4 returns a non-loopback IPv4 address of this machine.
 func lanIPv4(t *testing.T) string {
+	t.Helper()
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		t.Fatal(err)
@@ -132,6 +134,7 @@ func lanIPv4(t *testing.T) string {
 }
 
 func freeUDPPort(t *testing.T) int {
+	t.Helper()
 	c, err := net.ListenPacket("udp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)

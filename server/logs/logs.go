@@ -362,7 +362,7 @@ var ansi = regexp.MustCompile(`\x1b\[[0-9;]*[A-Za-z]`)
 // doubled spaces: what clean would return unchanged (the common case).
 func plain(s string) bool {
 	previousSpace := true
-	for i := 0; i < len(s); i++ {
+	for i := range len(s) {
 		c := s[i]
 		if c < 0x20 || c >= 0x7f {
 			return false

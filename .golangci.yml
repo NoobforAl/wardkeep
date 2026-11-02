@@ -39,6 +39,25 @@ linters:
     - noctx
     - copyloopvar
     - durationcheck
+    # Bug finders with few false positives.
+    - asasalint # a []any passed as one value to a ...any parameter
+    - bidichk # invisible bidirectional Unicode (trojan-source)
+    - exptostd # golang.org/x/exp functions the standard library now has
+    - fatcontext # a context that grows in a loop
+    - gocheckcompilerdirectives # mistyped //go: directives
+    - makezero # append to a slice made with a non-zero length
+    - nakedret # bare returns in long functions
+    - nilnesserr # returns nil where the checked error was meant
+    - nosprintfhostport # "%s:%d" instead of net.JoinHostPort (breaks on IPv6)
+    - reassign # assigning to another package's variables (io.EOF = ...)
+    - wastedassign # assignments that are never read
+    # Tidiness that also keeps tests honest.
+    - intrange # for i := 0; i < n; i++ -> for i := range n
+    - mirror # []byte(s) allocations where a string function exists
+    - thelper # helpers call t.Helper() so failures point at the caller
+    - unconvert # conversions to the type a value already has
+    - usestdlibvars # http.MethodGet, http.StatusOK instead of literals
+    - usetesting # t.Setenv, t.Context, t.Chdir in tests
 
   settings:
     gocritic:
@@ -86,6 +105,14 @@ linters:
         - (net.Conn).SetWriteDeadline
         - (net.PacketConn).SetReadDeadline
         - (net.PacketConn).SetWriteDeadline
+    usetesting:
+      # The tests' tempDir helpers use os.MkdirTemp on purpose: their cleanup retries
+      # while Windows (sing-box's cache file, a virus scanner) still holds a file open.
+      os-mkdir-temp: false
+    thelper:
+      # testing.TB parameters may keep the name t.
+      tb:
+        name: false
     gosec:
       excludes:
         # G104 duplicates errcheck.

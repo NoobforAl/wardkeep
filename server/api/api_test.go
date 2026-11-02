@@ -238,7 +238,7 @@ func TestTokenIsReadPerRequest(t *testing.T) {
 	srv := httptest.NewServer(New(Options{Manager: m, Token: func() string { return current }}))
 	defer srv.Close()
 	get := func(tok string) int {
-		req, _ := http.NewRequest("GET", srv.URL+"/api/v1/server", nil)
+		req, _ := http.NewRequest(http.MethodGet, srv.URL+"/api/v1/server", nil)
 		req.Header.Set("Authorization", "Bearer "+tok)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {

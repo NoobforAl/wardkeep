@@ -33,7 +33,7 @@ func aclEntries(h windows.Handle) (owner string, entries []aceEntry, err error) 
 		// No list at all means everyone has full access.
 		return owner, []aceEntry{{SID: "Everyone (no access list)", Mask: genericAll}}, nil
 	}
-	for i := uint32(0); i < uint32(dacl.AceCount); i++ {
+	for i := range uint32(dacl.AceCount) {
 		var ace *windows.ACCESS_ALLOWED_ACE
 		if err := windows.GetAce(dacl, i, &ace); err != nil {
 			return "", nil, err

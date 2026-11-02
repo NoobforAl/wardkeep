@@ -139,7 +139,7 @@ func TestStateReportsErrorCode(t *testing.T) {
 // ends before the "opening tunnel" stage that follows.
 func TestTorRingPercentOnlyMovesForward(t *testing.T) {
 	last := -1
-	for p := 0; p <= 100; p++ {
+	for p := range 101 {
 		got := torRingPercent(p)
 		if got < last {
 			t.Fatalf("the ring went back from %d to %d at Tor %d%%", last, got, p)

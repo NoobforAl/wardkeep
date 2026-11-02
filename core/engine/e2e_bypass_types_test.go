@@ -25,6 +25,7 @@ import (
 // deadLinks are one link of each kind of server, all pointing at a port where nothing listens: a request only
 // works if the rules send it around the VPN.
 func deadLinks(t *testing.T) []string {
+	t.Helper()
 	tcp, udp := freePort(t), freeUDPPort(t)
 	uuid := "b831381d-6324-4d53-ad4f-8cda48b30811"
 	ss := "chacha20-ietf-poly1305:pass"

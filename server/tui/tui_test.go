@@ -44,6 +44,7 @@ func send(m *model, ks ...string) tea.Cmd {
 // tempDir is t.TempDir with a cleanup that retries: on Windows a virus
 // scanner can briefly hold a just-written file, failing t.TempDir's cleanup.
 func tempDir(t *testing.T) string {
+	t.Helper()
 	dir, err := os.MkdirTemp("", "wardkeep-tui-")
 	if err != nil {
 		t.Fatal(err)

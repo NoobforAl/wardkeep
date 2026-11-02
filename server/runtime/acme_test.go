@@ -94,7 +94,7 @@ func TestSubscriptionOverHTTPSWithACME(t *testing.T) {
 		t.Fatalf("status %d, TLS %v (a disabled account answers 403 over TLS)", resp.StatusCode, resp.TLS != nil)
 	}
 	// Plain HTTP no longer works on that port.
-	if r, err := (&http.Client{Timeout: 3 * time.Second}).Get("http://127.0.0.1:" + port + "/"); err == nil && r.StatusCode == 200 {
+	if r, err := (&http.Client{Timeout: 3 * time.Second}).Get("http://127.0.0.1:" + port + "/"); err == nil && r.StatusCode == http.StatusOK {
 		t.Fatal("the endpoint still answers plain HTTP")
 	}
 }

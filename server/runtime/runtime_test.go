@@ -113,6 +113,7 @@ func setup(t *testing.T) (*store.Store, *Server) {
 // lanIPv4 returns a non-loopback IPv4 address: packets inside an OpenVPN
 // tunnel can't go to loopback (the server's netstack drops them).
 func lanIPv4(t *testing.T) string {
+	t.Helper()
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		t.Fatal(err)
@@ -203,7 +204,7 @@ func TestSubscriptionEndpoint(t *testing.T) {
 	}
 	body, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("status %d", resp.StatusCode)
 	}
 	decoded, err := base64.StdEncoding.DecodeString(string(body))

@@ -1,6 +1,7 @@
 package serverconf
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 )
@@ -17,13 +18,13 @@ func TestWantsSingBoxRecognisesTheAppUnderBothNames(t *testing.T) {
 		"v2rayN/7.0":              false,
 		"Mozilla/5.0":             false,
 	} {
-		r := httptest.NewRequest("GET", "/sub", nil)
+		r := httptest.NewRequest(http.MethodGet, "/sub", nil)
 		r.Header.Set("User-Agent", ua)
 		if got := wantsSingBox(r); got != want {
 			t.Errorf("User-Agent %q: got %v, want %v", ua, got, want)
 		}
 	}
-	r := httptest.NewRequest("GET", "/sub?format=links", nil)
+	r := httptest.NewRequest(http.MethodGet, "/sub?format=links", nil)
 	r.Header.Set("User-Agent", "Wardkeep/0.1")
 	if wantsSingBox(r) {
 		t.Error("an explicit format=links must win over the User-Agent")

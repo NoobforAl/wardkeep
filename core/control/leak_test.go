@@ -49,7 +49,7 @@ func TestRequestBurstDoesNotLeak(t *testing.T) {
 		var wg sync.WaitGroup
 		for range workers {
 			wg.Go(func() {
-				for i := 0; i < n/workers; i++ {
+				for range n / workers {
 					if err := c.Call(t.Context(), "state", nil, nil); err != nil {
 						t.Error(err)
 						return

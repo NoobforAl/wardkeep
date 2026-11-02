@@ -32,7 +32,7 @@ func TestServesProfiles(t *testing.T) {
 	}
 	body, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
-	if resp.StatusCode != 200 || len(body) == 0 {
+	if resp.StatusCode != http.StatusOK || len(body) == 0 {
 		t.Fatalf("goroutine profile: status %d, %d bytes", resp.StatusCode, len(body))
 	}
 

@@ -290,7 +290,7 @@ func parseShadowsocks(link string) (*profile.Profile, error) {
 	if err != nil || host == "" {
 		return nil, fmt.Errorf("ss: invalid server address")
 	}
-	method, password := "", ""
+	var method, password string
 	if pw, ok := uri.User.Password(); ok {
 		method, password = uri.User.Username(), pw
 	} else if decoded, ok := decodeBase64(uri.User.Username()); ok {

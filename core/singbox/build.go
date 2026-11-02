@@ -359,7 +359,7 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		byAddress, byName := bypass.addressRules(), bypass.domainRules()
 		for _, r := range byAddress {
 			r["outbound"] = listed
-			rules = append(rules, obj(r))
+			rules = append(rules, r)
 		}
 		if len(byName) > 0 {
 			// A connection arrives as an address; its name comes from the first
@@ -370,7 +370,7 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 			)
 			for _, r := range byName {
 				r["outbound"] = listed
-				rules = append(rules, obj(r))
+				rules = append(rules, r)
 			}
 			// Names are looked up the same way as they are reached.
 			for _, r := range byName {

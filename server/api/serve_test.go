@@ -55,7 +55,7 @@ func TestServeOverTLS(t *testing.T) {
 		t.Fatalf("HTTPS request: %v", err)
 	}
 	resp.Body.Close()
-	if resp.StatusCode != 200 || resp.TLS == nil {
+	if resp.StatusCode != http.StatusOK || resp.TLS == nil {
 		t.Fatalf("status %d tls %v", resp.StatusCode, resp.TLS != nil)
 	}
 	cancel()

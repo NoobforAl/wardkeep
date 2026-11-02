@@ -3,6 +3,7 @@ package dnscrypt
 import (
 	"bytes"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/ameshkov/dnsstamps"
@@ -182,13 +183,13 @@ func TestBadStampsGiveClearErrors(t *testing.T) {
 		if _, ok := errors.AsType[*StampError](err); !ok {
 			t.Errorf("%q: error %T is not a StampError", in, err)
 		}
-		if want != "" && !bytes.Contains([]byte(err.Error()), []byte(want)) {
+		if want != "" && !strings.Contains(err.Error(), want) {
 			t.Errorf("%q: error %q does not mention %q", in, err, want)
 		}
 	}
 	// A DNSCrypt stamp with a key of the wrong length.
 	bad := Stamp{Kind: KindDNSCrypt, Addr: "192.0.2.1", PublicKey: []byte{1, 2, 3}, ProviderName: "2.dnscrypt-cert.x"}.String()
-	if _, err := ParseStamp(bad); err == nil || !bytes.Contains([]byte(err.Error()), []byte("32 bytes")) {
+	if _, err := ParseStamp(bad); err == nil || !strings.Contains(err.Error(), "32 bytes") {
 		t.Errorf("short key: %v", err)
 	}
 }
