@@ -1,0 +1,159 @@
+# CodeRabbit settings (https://docs.coderabbit.ai/reference/configuration).
+# This file wins over the settings in the CodeRabbit web app for this repository.
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+early_access: false
+
+reviews:
+  profile: assertive
+  # Report problems; do not approve or block. The maintainer decides what merges.
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  path_filters:
+    # Generated or vendored: nothing to review by hand.
+    - "!**/go.sum"
+    - "!**/Cargo.lock"
+    - "!app/pubspec.lock"
+    - "!THIRD_PARTY_NOTICES.md"
+    - "!app/lib/l10n/app_localizations*.dart"
+    - "!app/lib/state/country_names.dart"
+    - "!build/**"
+    - "!.dev/**"
+
+  path_instructions:
+    - path: "core/singbox/**"
+      instructions: >-
+        Security-sensitive. A mistake here builds a connection that goes around the VPN. Flag any change that
+        can send a packet or a DNS query outside the tunnel (DNS leak, IPv6 leak, a bypass rule, a direct
+        outbound, a resolver that is not routed through the tunnel).
+    - path: "core/engine/**"
+      instructions: >-
+        Security-sensitive. Flag any change that can let traffic, DNS or IPv6 leave outside the tunnel, or that
+        weakens how the engine starts, stops or recovers the tunnel.
+    - path: "core/control/**"
+      instructions: >-
+        Security boundary: the UI talks to the core over loopback with a token. Flag anything that widens who
+        can reach it, skips or weakens the token check, compares the token in non-constant time, or exposes
+        more than before.
+    - path: "core/importer/**"
+      instructions: >-
+        Every input here comes from a stranger (share links, subscriptions, config files). Flag missing size,
+        depth or length limits, unchecked indexes, panics on odd input, SSRF or redirects to local addresses,
+        and path traversal. A change should come with a test for the odd input.
+    - path: "core/links/**"
+      instructions: >-
+        Every input here comes from a stranger (share links). Flag missing validation, panics on odd input and
+        anything that trusts a field before it is checked.
+    - path: "core/winsvc/**"
+      instructions: >-
+        Runs as administrator on Windows and has never been exercised with real elevation. Flag privilege
+        escalation, unsafe file or pipe permissions, command injection and path hijacking.
+    - path: "core/killswitch/**"
+      instructions: >-
+        Runs as administrator on Windows (firewall rules). Flag anything that can leave the firewall open, lock
+        the user out after a crash, or that builds a command from untrusted input.
+    - path: "server/**"
+      instructions: >-
+        Users, quotas, the web API, the firewall and NAT setup. Flag anything that touches credentials or
+        tokens, weakens authentication or authorization, exposes more through the API, builds shell or firewall
+        commands from input, or logs a secret.
+    - path: "cmd/wardkeep-server/**"
+      instructions: >-
+        Server executable. Flag insecure defaults (listen address, permissions of state files, credentials in
+        flags or logs).
+    - path: "third_party/**"
+      instructions: >-
+        Patched copies of libraries. Every change must also be described in that folder's PATCHES.md so it can
+        be carried to a newer upstream.
+    - path: "tor/**"
+      instructions: >-
+        Rust, Arti behind a local SOCKS5 port. Flag anything that exposes the port beyond loopback, leaks DNS
+        around Tor, or ignores an error from the Tor client.
+    - path: "app/lib/**"
+      instructions: >-
+        Flutter UI. Flag secrets, subscription URLs, server addresses or profile names in logs, plaintext
+        storage of credentials (they belong in the OS keystore), and strings that are not localized.
+    - path: ".github/workflows/**"
+      instructions: >-
+        Flag unpinned actions (they are pinned by SHA), broad `permissions`, secrets exposed to pull requests
+        from forks, `pull_request_target` with a checkout of untrusted code, and script injection through
+        `${{ github.event.* }}` in `run:` steps.
+    - path: "**/*"
+      instructions: >-
+        Never log destinations, server addresses, keys, passwords, tokens, subscription URLs or profile names
+        (see docs/logging.md). Never commit a keystore, `.env`, `key.properties`, a password or a token.
+
+  # Security scanners. Each one runs only when the languages it handles are in the pull request.
+  tools:
+    # Secrets
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+    # Static analysis for vulnerabilities
+    semgrep:
+      enabled: true
+    opengrep:
+      enabled: true
+    # Known-vulnerable dependencies (go.mod, Cargo.lock, pubspec.lock)
+    osvScanner:
+      enabled: true
+    # Infrastructure as code: Dockerfiles, GitHub Actions workflows
+    checkov:
+      enabled: true
+    hadolint:
+      enabled: true
+    actionlint:
+      enabled: true
+    # Language linters that carry security rules
+    golangci-lint:
+      enabled: true
+      config_file: .golangci.yml
+    clippy:
+      enabled: true
+    shellcheck:
+      enabled: true
+    # Environment files must not hold real secrets
+    dotenvLint:
+      enabled: true
+    # Hygiene
+    yamllint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "CLAUDE.md"
+      - "**/CLAUDE.md"
+      - "CONTRIBUTING.md"
+      - "docs/logging.md"
