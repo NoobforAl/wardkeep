@@ -73,13 +73,28 @@ class SettingsScreen extends ConsumerWidget {
                   value: settings.autoFailover,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(autoFailover: v)),
                 ),
-                SwitchListTile(
-                  secondary: const Icon(Icons.travel_explore_rounded),
-                  title: Text(l.exitTitle),
-                  subtitle: Text(l.exitHint),
-                  value: settings.showExit,
-                  onChanged: (v) => ctrl.update((s) => s.copyWith(showExit: v)),
+                if (Platform.isAndroid)
+                  ListTile(
+                    leading: const Icon(Icons.verified_user_outlined),
+                    title: Text(l.alwaysOnTitle),
+                    subtitle: Text(l.alwaysOnHint),
+                    trailing: const Icon(Icons.open_in_new_rounded),
+                    onTap: () => _openVpnSettings(context),
+                  ),
+              ]),
+              _Header(l.settingsNetwork),
+              _Group([
+                ...networkTiles(context, ref, settings),
+                ListTile(
+                  leading: const Icon(Icons.hub_outlined),
+                  title: Text(l.remoteDns),
+                  subtitle: Text(dnsSummary(l, settings), textDirection: TextDirection.ltr),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => open(const DnsScreen()),
                 ),
+              ]),
+              _Header(l.settingsRouting),
+              _Group([
                 SwitchListTile(
                   secondary: const Icon(Icons.devices_other_rounded),
                   title: Text(l.bypassLan),
@@ -87,20 +102,12 @@ class SettingsScreen extends ConsumerWidget {
                   value: settings.bypassLan,
                   onChanged: (v) => ctrl.update((s) => s.copyWith(bypassLan: v)),
                 ),
-                ...networkTiles(context, ref, settings),
                 ListTile(
                   leading: const Icon(Icons.alt_route_rounded),
                   title: Text(l.bypassTitle),
                   subtitle: Text(bypassEntries == 0 ? l.bypassListsHint : l.bypassListsInUse(bypassEntries)),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => open(const BypassScreen()),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.storage_rounded),
-                  title: Text(l.ipdbTitle),
-                  subtitle: Text(ipDbSubtitle(l, ref.watch(ipDbProvider))),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => open(const IpDbScreen()),
                 ),
                 if (Platform.isAndroid)
                   ListTile(
@@ -115,20 +122,22 @@ class SettingsScreen extends ConsumerWidget {
                     enabled: settings.tunMode,
                     onTap: () => open(const SplitTunnelScreen()),
                   ),
-                if (Platform.isAndroid)
-                  ListTile(
-                    leading: const Icon(Icons.verified_user_outlined),
-                    title: Text(l.alwaysOnTitle),
-                    subtitle: Text(l.alwaysOnHint),
-                    trailing: const Icon(Icons.open_in_new_rounded),
-                    onTap: () => _openVpnSettings(context),
-                  ),
+              ]),
+              _Header(l.settingsPrivacy),
+              _Group([
+                SwitchListTile(
+                  secondary: const Icon(Icons.travel_explore_rounded),
+                  title: Text(l.exitTitle),
+                  subtitle: Text(l.exitHint),
+                  value: settings.showExit,
+                  onChanged: (v) => ctrl.update((s) => s.copyWith(showExit: v)),
+                ),
                 ListTile(
-                  leading: const Icon(Icons.hub_outlined),
-                  title: Text(l.remoteDns),
-                  subtitle: Text(dnsSummary(l, settings), textDirection: TextDirection.ltr),
+                  leading: const Icon(Icons.storage_rounded),
+                  title: Text(l.ipdbTitle),
+                  subtitle: Text(ipDbSubtitle(l, ref.watch(ipDbProvider))),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => open(const DnsScreen()),
+                  onTap: () => open(const IpDbScreen()),
                 ),
               ]),
               _Header(l.settingsApp),
@@ -151,30 +160,46 @@ class SettingsScreen extends ConsumerWidget {
                   // The choice sits under the title, so the title never has to wrap.
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 8, bottom: 6),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<String>(
-                        showSelectedIcon: false,
-                        segments: [
-                          ButtonSegment(
-                            value: 'dark',
-                            icon: const Icon(Icons.dark_mode_outlined),
-                            tooltip: l.themeDark,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: SegmentedButton<String>(
+                            showSelectedIcon: false,
+                            segments: [
+                              ButtonSegment(
+                                value: 'dark',
+                                icon: const Icon(Icons.dark_mode_outlined),
+                                tooltip: l.themeDark,
+                              ),
+                              ButtonSegment(
+                                value: 'system',
+                                icon: const Icon(Icons.brightness_auto_outlined),
+                                tooltip: l.themeSystem,
+                              ),
+                              ButtonSegment(
+                                value: 'light',
+                                icon: const Icon(Icons.light_mode_outlined),
+                                tooltip: l.themeLight,
+                              ),
+                            ],
+                            selected: {settings.theme},
+                            onSelectionChanged: (v) => ctrl.update((s) => s.copyWith(theme: v.first)),
                           ),
-                          ButtonSegment(
-                            value: 'system',
-                            icon: const Icon(Icons.brightness_auto_outlined),
-                            tooltip: l.themeSystem,
+                        ),
+                        // The icons alone do not say what "A" or the sun mean; tooltips need a long press.
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(top: 6, start: 4),
+                          child: Text(
+                            switch (settings.theme) {
+                              'light' => l.themeLight,
+                              'system' => l.themeSystem,
+                              _ => l.themeDark,
+                            },
                           ),
-                          ButtonSegment(
-                            value: 'light',
-                            icon: const Icon(Icons.light_mode_outlined),
-                            tooltip: l.themeLight,
-                          ),
-                        ],
-                        selected: {settings.theme},
-                        onSelectionChanged: (v) => ctrl.update((s) => s.copyWith(theme: v.first)),
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -192,15 +217,15 @@ class SettingsScreen extends ConsumerWidget {
                     value: settings.keepInTray,
                     onChanged: (v) => ctrl.update((s) => s.copyWith(keepInTray: v)),
                   ),
+              ]),
+              _Header(l.settingsLogging),
+              _Group([
                 ListTile(
                   leading: const Icon(Icons.receipt_long_outlined),
                   title: Text(l.tooltipLogs),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => open(const LogsScreen()),
                 ),
-              ]),
-              _Header(l.settingsLogging),
-              _Group([
                 ListTile(
                   key: const Key('debug-logging'),
                   leading: const Icon(Icons.bug_report_outlined),
