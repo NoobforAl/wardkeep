@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"errors"
+	"net/url"
 	"strings"
 )
 
@@ -136,6 +137,11 @@ func ClassifyError(err error) string {
 	}
 	if errors.Is(err, context.DeadlineExceeded) {
 		return ErrTimeout
+	}
+	// What failed is what the request ran into, not the request: its URL (a subscription link) can hold words
+	// errorCode looks for, such as a query of "protocol=REALITY" next to a plain "connection refused".
+	if ue, ok := errors.AsType[*url.Error](err); ok && ue.Err != nil {
+		return errorCode(ue.Err.Error())
 	}
 	return errorCode(err.Error())
 }

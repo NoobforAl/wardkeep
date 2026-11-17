@@ -3,6 +3,7 @@ package control
 import (
 	"errors"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -101,11 +102,21 @@ func subscriptionError(err error) *Error {
 	return rpcErr
 }
 
+// quoted matches a double-quoted piece of an error text, the way Go quotes what it echoes back (%q).
+var quoted = regexp.MustCompile(`"(?:[^"\\]|\\.)*"`)
+
 // withoutLink is err's text with the address of a failed request left out: a subscription link carries the
-// user's token in its path or query, and it must not reach a message, a log or the screen.
+// user's token in its path or query, and it must not reach a message, a log or the screen. The request's own
+// URL goes first; then every quoted piece goes too, because Go echoes other addresses in quotes as well, such
+// as a redirect's Location header it could not parse ("/sub/<token>/%zz"), and those are as secret as the link.
 func withoutLink(err error) string {
-	if ue, ok := errors.AsType[*url.Error](err); ok && ue.URL != "" {
-		return strings.ReplaceAll(err.Error(), ue.URL, "<link>")
+	text := err.Error()
+	ue, ok := errors.AsType[*url.Error](err)
+	if !ok {
+		return text
 	}
-	return err.Error()
+	if ue.URL != "" {
+		text = strings.ReplaceAll(text, ue.URL, "<link>")
+	}
+	return quoted.ReplaceAllString(text, `"<link>"`)
 }
