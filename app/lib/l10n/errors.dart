@@ -27,6 +27,8 @@ String? translateCode(AppLocalizations l, String code, Map<String, String> args)
     'IMPORT_TOO_LARGE' => l.importTooLarge(_int(args['limit'], 8)),
     'AUTH_FAILED' => l.subAuthFailed,
     'SUB_HTTP' => l.subHttp(args['status'] ?? ''),
+    // The download failed; the core says how (refused, timed out, no such host, ...) in `reason`.
+    'SUBSCRIPTION_FAILED' => errorCodeText(l, args['reason'] ?? ''),
     'SUB_TOO_LARGE' => l.subTooLarge,
     'SUB_BAD_URL' => l.subBadUrl,
     'SUB_UNSIGNED' => l.subUnsigned,
