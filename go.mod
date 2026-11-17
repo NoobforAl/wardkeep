@@ -1,6 +1,6 @@
 module github.com/NoobforAl/wardkeep
 
-go 1.27
+go 1.27.3
 
 require (
 	github.com/ameshkov/dnscrypt/v2 v2.4.0

@@ -168,7 +168,8 @@ jobs:
 
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version-file: go.mod
+          go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
+          check-latest: true
 
       - name: Android NDK
         run: |
@@ -271,7 +272,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version-file: go.mod
+          go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
+          check-latest: true
       - name: Core (wardkeep-svc.exe)
         shell: pwsh
         env:
@@ -406,7 +408,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version-file: go.mod
+          go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
+          check-latest: true
       - name: Core (wardkeep-svc)
         run: |
           TAGS="with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_acme,badlinkname,tfogo_checklinkname0"

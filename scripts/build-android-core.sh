@@ -13,7 +13,7 @@ if [[ "${WARDKEEP_BUILD_MODE:-}" == "release" ]]; then
   LDFLAGS="$LDFLAGS -X github.com/NoobforAl/wardkeep/core/buildinfo.Mode=release"
 fi
 # NaiveProxy's cronet-go asks the linker for `-l:libcronet.a`. Go 1.27.4 and later refuse such a flag in #cgo LDFLAGS
-# unless it is allowed ("invalid flag in #cgo LDFLAGS"), and CI builds with the newest Go 1.27 (go.mod says `go 1.27`),
+# unless it is allowed ("invalid flag in #cgo LDFLAGS"), and CI builds with the newest Go 1.27 (the workflows ask for `1.27`),
 # so exactly that flag is allowed here (cmd/go anchors the pattern).
 export CGO_LDFLAGS_ALLOW="${CGO_LDFLAGS_ALLOW:--l:libcronet\.a}"
 TAGS="${TAGS:-with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openvpn,with_openconnect,with_naive_outbound,badlinkname,tfogo_checklinkname0}"
