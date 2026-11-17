@@ -34,7 +34,8 @@ jobs:
 
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version-file: go.mod
+          go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
+          check-latest: true
 
       # The clients run in containers but use this machine's kernel: the WireGuard, AmneziaWG and OpenVPN clients
       # need a TUN device. A module that is built in or missing is not an error here; the test says which tunnel

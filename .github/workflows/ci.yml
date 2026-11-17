@@ -42,7 +42,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version-file: go.mod
+          go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
+          check-latest: true
       - run: ./scripts/go.ps1 vet ./...
         shell: pwsh
       # Flag and value as two words: PowerShell splits `-coverprofile=coverage.out` at the dot when calling a script.
@@ -103,7 +104,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version-file: go.mod
+          go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
+          check-latest: true
       - name: Lint
         run: |
           go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
@@ -152,7 +154,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
-          go-version-file: go.mod
+          go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
+          check-latest: true
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-10-17)
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
