@@ -242,6 +242,17 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     final manual = profiles.where((p) => p.group == ProfileInfo.defaultGroup).toList();
     final picked = _selecting ? _picked : null;
 
+    // A server that goes while picking (its subscription deleted, say) is no longer picked; with none left the mode ends.
+    ref.listen(profilesProvider, (_, next) {
+      if (!_selecting) return;
+      final present = {for (final p in next) p.id};
+      if (_picked.every(present.contains)) return;
+      setState(() {
+        _picked.removeWhere((id) => !present.contains(id));
+        if (_picked.isEmpty) _selecting = false;
+      });
+    });
+
     _GroupList list(String group, List<ProfileInfo> members) => _GroupList(
           group: group,
           profiles: members,
@@ -660,7 +671,7 @@ class _UserGroupHeader extends ConsumerWidget {
       onTap: () => _actions(context, ref),
       onLongPress: () => _actions(context, ref),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 4, 0),
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 4, 0),
         child: Row(
           children: [
             Icon(Icons.folder_outlined, size: 18, color: theme.colorScheme.primary),
@@ -746,7 +757,7 @@ class _SubscriptionHeader extends ConsumerWidget {
     return InkWell(
       onLongPress: () => _actions(context, ref),
       child: Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 4, 4),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 4, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
