@@ -121,6 +121,11 @@ func withoutLink(err error) string {
 	}
 	if ue.URL != "" {
 		text = strings.ReplaceAll(text, ue.URL, "<link>")
+		// The host also comes back in the lookup's own words ("lookup provider.so"), and logrec.Scrub leaves a
+		// host whose last label looks like a file suffix (.so, .rs, .sh) alone.
+		if u, err := url.Parse(ue.URL); err == nil && strings.Contains(u.Hostname(), ".") {
+			text = strings.ReplaceAll(text, u.Hostname(), "<host>")
+		}
 	}
 	return quoted.ReplaceAllString(text, `"<link>"`)
 }
