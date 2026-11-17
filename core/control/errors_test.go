@@ -124,6 +124,10 @@ func TestSubscriptionDownloadFailureHasReasonAndNoLink(t *testing.T) {
 		{&url.Error{Op: "Get", URL: link, Err: context.DeadlineExceeded}, engine.ErrTimeout},
 		{&url.Error{Op: "Get", URL: link, Err: errors.New("dial tcp: lookup provider.example: no such host")}, engine.ErrDNS},
 		{&url.Error{Op: "Get", URL: link, Err: errors.New("something nobody has seen")}, ""},
+		// A word of the link must not decide the kind of failure: "REALITY" in the query is not a handshake error.
+		{&url.Error{Op: "Get", URL: "https://provider.example/sub/SECRET-TOKEN?protocol=REALITY", Err: errors.New("dial tcp 203.0.113.1:443: connect: connection refused")}, engine.ErrRefused},
+		// A redirect whose Location cannot be parsed echoes that path, which is as secret as the link.
+		{&url.Error{Op: "Get", URL: link, Err: errors.New(`failed to parse Location header "/sub/SECRET-TOKEN/%zz": parse "/sub/SECRET-TOKEN/%zz": invalid URL escape "%zz"`)}, ""},
 	} {
 		e := subscriptionError(fmt.Errorf("download subscription: %w", c.err))
 		if e.Code != CodeSubscriptionFailed || e.Args["reason"] != c.reason {
