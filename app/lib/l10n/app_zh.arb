@@ -657,5 +657,17 @@
   "privacyPermApps": "已安装应用列表：仅用于为分应用代理选择应用。",
   "privacyChangesTitle": "变更与联系",
   "privacyChanges": "Wardkeep 是开源软件（MIT），以上所有内容都可以在代码中查证。如果本政策有变，新版本会随应用更新一起发布。如有疑问：请在 github.com/NoobforAl/wardkeep 提交 issue。",
-  "privacyUpdated": "最后更新：{date}"
+  "privacyUpdated": "最后更新：{date}",
+  "settingsNetwork": "网络",
+  "settingsRouting": "路由",
+  "settingsPrivacy": "隐私",
+  "menuSelect": "选择",
+  "selectedCount": "已选择 {count} 项",
+  "selectAll": "全选",
+  "bulkDeleteTitle": "删除所选服务器？",
+  "bulkDeleteBody": "将从此设备删除 {servers}。订阅中的服务器会在订阅下次刷新时恢复。",
+  "bulkDeletedToast": "已删除 {servers}",
+  "bulkMovedToast": "已将 {servers} 移到 {group}",
+  "profilesHintActions": "点按选择服务器，长按打开菜单，拖动手柄调整顺序。故障切换按此顺序进行。",
+  "reorderHandle": "拖动以调整顺序"
 }

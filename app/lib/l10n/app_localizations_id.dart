@@ -2338,4 +2338,49 @@ class AppLocalizationsId extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'Terakhir diperbarui: $date';
   }
+
+  @override
+  String get settingsNetwork => 'Jaringan';
+
+  @override
+  String get settingsRouting => 'Perutean';
+
+  @override
+  String get settingsPrivacy => 'Privasi';
+
+  @override
+  String get menuSelect => 'Pilih';
+
+  @override
+  String selectedCount(int count) {
+    return '$count dipilih';
+  }
+
+  @override
+  String get selectAll => 'Pilih semua';
+
+  @override
+  String get bulkDeleteTitle => 'Hapus server yang dipilih?';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '$servers akan dihapus dari perangkat ini. Server dari langganan akan kembali saat langganan diperbarui lagi.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return '$servers dihapus';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '$servers dipindahkan ke $group';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'Ketuk untuk memilih server, tahan untuk menunya, seret gagang untuk mengurutkan. Peralihan saat gagal mengikuti urutan ini.';
+
+  @override
+  String get reorderHandle => 'Seret untuk mengurutkan';
 }

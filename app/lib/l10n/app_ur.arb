@@ -650,5 +650,17 @@
   "privacyPermApps": "انسٹال شدہ ایپس کی فہرست: صرف اسپلٹ ٹنلنگ کے لیے ایپس چننے کو۔",
   "privacyChangesTitle": "تبدیلیاں اور رابطہ",
   "privacyChanges": "Wardkeep اوپن سورس (MIT) ہے، اس لیے یہ سب اس کے کوڈ میں جانچا جا سکتا ہے۔ اگر یہ پالیسی بدلے تو نیا ورژن ایپ اپ ڈیٹ کے ساتھ آتا ہے۔ سوالات: github.com/NoobforAl/wardkeep پر ایک issue کھولیں۔",
-  "privacyUpdated": "آخری اپ ڈیٹ: {date}"
+  "privacyUpdated": "آخری اپ ڈیٹ: {date}",
+  "settingsNetwork": "نیٹ ورک",
+  "settingsRouting": "روٹنگ",
+  "settingsPrivacy": "رازداری",
+  "menuSelect": "منتخب کریں",
+  "selectedCount": "{count} منتخب",
+  "selectAll": "سب منتخب کریں",
+  "bulkDeleteTitle": "منتخب سرور حذف کریں؟",
+  "bulkDeleteBody": "{servers} اس ڈیوائس سے ہٹا دیے جائیں گے۔ سبسکرپشن کا سرور سبسکرپشن کے اگلے ریفریش پر واپس آ جاتا ہے۔",
+  "bulkDeletedToast": "{servers} حذف ہو گئے",
+  "bulkMovedToast": "{servers} کو {group} میں منتقل کر دیا گیا",
+  "profilesHintActions": "سرور چننے کے لیے ٹیپ کریں، اس کا مینو دیکھنے کے لیے دبائے رکھیں، ترتیب بدلنے کے لیے ہینڈل کھینچیں۔ فیل اوور اسی ترتیب سے ہوتا ہے۔",
+  "reorderHandle": "ترتیب بدلنے کے لیے کھینچیں"
 }

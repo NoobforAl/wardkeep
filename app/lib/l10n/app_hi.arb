@@ -650,5 +650,17 @@
   "privacyPermApps": "इंस्टॉल किए गए ऐप्स की सूची: केवल स्प्लिट टनलिंग के लिए ऐप चुनने हेतु।",
   "privacyChangesTitle": "बदलाव और संपर्क",
   "privacyChanges": "Wardkeep ओपन सोर्स (MIT) है, इसलिए यह सब उसके कोड में जाँचा जा सकता है। यदि यह नीति बदलती है, तो नया संस्करण ऐप अपडेट के साथ आता है। प्रश्न: github.com/NoobforAl/wardkeep पर एक issue खोलें।",
-  "privacyUpdated": "अंतिम अपडेट: {date}"
+  "privacyUpdated": "अंतिम अपडेट: {date}",
+  "settingsNetwork": "नेटवर्क",
+  "settingsRouting": "रूटिंग",
+  "settingsPrivacy": "गोपनीयता",
+  "menuSelect": "चुनें",
+  "selectedCount": "{count} चुने गए",
+  "selectAll": "सभी चुनें",
+  "bulkDeleteTitle": "चुने हुए सर्वर हटाएँ?",
+  "bulkDeleteBody": "{servers} इस डिवाइस से हटा दिए जाएँगे। सब्सक्रिप्शन का सर्वर सब्सक्रिप्शन के अगले रिफ्रेश पर वापस आ जाता है।",
+  "bulkDeletedToast": "{servers} हटाए गए",
+  "bulkMovedToast": "{servers} को {group} में ले जाया गया",
+  "profilesHintActions": "सर्वर चुनने के लिए टैप करें, उसका मेनू देखने के लिए दबाए रखें, क्रम बदलने के लिए हैंडल खींचें। फ़ेलओवर इसी क्रम में चलता है।",
+  "reorderHandle": "क्रम बदलने के लिए खींचें"
 }

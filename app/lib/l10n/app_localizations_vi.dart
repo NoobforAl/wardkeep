@@ -2337,4 +2337,49 @@ class AppLocalizationsVi extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'Cập nhật lần cuối: $date';
   }
+
+  @override
+  String get settingsNetwork => 'Mạng';
+
+  @override
+  String get settingsRouting => 'Định tuyến';
+
+  @override
+  String get settingsPrivacy => 'Quyền riêng tư';
+
+  @override
+  String get menuSelect => 'Chọn';
+
+  @override
+  String selectedCount(int count) {
+    return 'Đã chọn $count';
+  }
+
+  @override
+  String get selectAll => 'Chọn tất cả';
+
+  @override
+  String get bulkDeleteTitle => 'Xóa các máy chủ đã chọn?';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '$servers sẽ bị xóa khỏi thiết bị này. Máy chủ từ gói đăng ký sẽ quay lại ở lần làm mới tiếp theo.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return 'Đã xóa $servers';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return 'Đã chuyển $servers vào $group';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'Chạm để chọn máy chủ, giữ để mở menu, kéo tay cầm để sắp xếp lại. Chuyển dự phòng theo thứ tự này.';
+
+  @override
+  String get reorderHandle => 'Kéo để sắp xếp lại';
 }

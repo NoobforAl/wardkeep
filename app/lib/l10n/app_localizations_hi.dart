@@ -2354,4 +2354,49 @@ class AppLocalizationsHi extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'अंतिम अपडेट: $date';
   }
+
+  @override
+  String get settingsNetwork => 'नेटवर्क';
+
+  @override
+  String get settingsRouting => 'रूटिंग';
+
+  @override
+  String get settingsPrivacy => 'गोपनीयता';
+
+  @override
+  String get menuSelect => 'चुनें';
+
+  @override
+  String selectedCount(int count) {
+    return '$count चुने गए';
+  }
+
+  @override
+  String get selectAll => 'सभी चुनें';
+
+  @override
+  String get bulkDeleteTitle => 'चुने हुए सर्वर हटाएँ?';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '$servers इस डिवाइस से हटा दिए जाएँगे। सब्सक्रिप्शन का सर्वर सब्सक्रिप्शन के अगले रिफ्रेश पर वापस आ जाता है।';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return '$servers हटाए गए';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '$servers को $group में ले जाया गया';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'सर्वर चुनने के लिए टैप करें, उसका मेनू देखने के लिए दबाए रखें, क्रम बदलने के लिए हैंडल खींचें। फ़ेलओवर इसी क्रम में चलता है।';
+
+  @override
+  String get reorderHandle => 'क्रम बदलने के लिए खींचें';
 }

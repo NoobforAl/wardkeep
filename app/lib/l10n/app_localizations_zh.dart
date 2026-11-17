@@ -2234,4 +2234,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String privacyUpdated(String date) {
     return '最后更新：$date';
   }
+
+  @override
+  String get settingsNetwork => '网络';
+
+  @override
+  String get settingsRouting => '路由';
+
+  @override
+  String get settingsPrivacy => '隐私';
+
+  @override
+  String get menuSelect => '选择';
+
+  @override
+  String selectedCount(int count) {
+    return '已选择 $count 项';
+  }
+
+  @override
+  String get selectAll => '全选';
+
+  @override
+  String get bulkDeleteTitle => '删除所选服务器？';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '将从此设备删除 $servers。订阅中的服务器会在订阅下次刷新时恢复。';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return '已删除 $servers';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '已将 $servers 移到 $group';
+  }
+
+  @override
+  String get profilesHintActions => '点按选择服务器，长按打开菜单，拖动手柄调整顺序。故障切换按此顺序进行。';
+
+  @override
+  String get reorderHandle => '拖动以调整顺序';
 }

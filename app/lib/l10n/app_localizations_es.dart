@@ -2382,4 +2382,49 @@ class AppLocalizationsEs extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'Última actualización: $date';
   }
+
+  @override
+  String get settingsNetwork => 'Red';
+
+  @override
+  String get settingsRouting => 'Enrutamiento';
+
+  @override
+  String get settingsPrivacy => 'Privacidad';
+
+  @override
+  String get menuSelect => 'Seleccionar';
+
+  @override
+  String selectedCount(int count) {
+    return '$count seleccionados';
+  }
+
+  @override
+  String get selectAll => 'Seleccionar todo';
+
+  @override
+  String get bulkDeleteTitle => '¿Eliminar los servidores seleccionados?';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return 'Se eliminarán $servers de este dispositivo. Un servidor de una suscripción vuelve la próxima vez que se actualice la suscripción.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return 'Eliminados: $servers';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '$servers movidos a $group';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'Toca para elegir un servidor, mantén pulsado para ver su menú y arrastra el asa para reordenar. El cambio por fallo sigue este orden.';
+
+  @override
+  String get reorderHandle => 'Arrastra para reordenar';
 }

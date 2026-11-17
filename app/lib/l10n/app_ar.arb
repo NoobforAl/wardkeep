@@ -657,5 +657,17 @@
   "privacyPermApps": "قائمة التطبيقات المثبتة: فقط لاختيار التطبيقات في تقسيم النفق.",
   "privacyChangesTitle": "التغييرات والتواصل",
   "privacyChanges": "Wardkeep مفتوح المصدر (MIT)، لذا يمكن التحقق من كل هذا في شيفرته. إذا تغيّرت هذه السياسة، تأتي النسخة الجديدة مع تحديث للتطبيق. للأسئلة: افتح issue في github.com/NoobforAl/wardkeep.",
-  "privacyUpdated": "آخر تحديث: {date}"
+  "privacyUpdated": "آخر تحديث: {date}",
+  "settingsNetwork": "الشبكة",
+  "settingsRouting": "التوجيه",
+  "settingsPrivacy": "الخصوصية",
+  "menuSelect": "تحديد",
+  "selectedCount": "تم تحديد {count}",
+  "selectAll": "تحديد الكل",
+  "bulkDeleteTitle": "حذف الخوادم المحددة؟",
+  "bulkDeleteBody": "سيتم حذف {servers} من هذا الجهاز. يعود الخادم القادم من اشتراك عند تحديث الاشتراك في المرة التالية.",
+  "bulkDeletedToast": "تم حذف {servers}",
+  "bulkMovedToast": "تم نقل {servers} إلى {group}",
+  "profilesHintActions": "اضغط لاختيار خادم، واضغط مطولًا لفتح قائمته، واسحب المقبض لتغيير الترتيب. يتبع التبديل عند الفشل هذا الترتيب.",
+  "reorderHandle": "اسحب لإعادة الترتيب"
 }

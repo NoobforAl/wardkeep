@@ -2386,4 +2386,49 @@ class AppLocalizationsFr extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'Dernière mise à jour : $date';
   }
+
+  @override
+  String get settingsNetwork => 'Réseau';
+
+  @override
+  String get settingsRouting => 'Routage';
+
+  @override
+  String get settingsPrivacy => 'Confidentialité';
+
+  @override
+  String get menuSelect => 'Sélectionner';
+
+  @override
+  String selectedCount(int count) {
+    return '$count sélectionnés';
+  }
+
+  @override
+  String get selectAll => 'Tout sélectionner';
+
+  @override
+  String get bulkDeleteTitle => 'Supprimer les serveurs sélectionnés ?';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '$servers seront supprimés de cet appareil. Un serveur issu d\'un abonnement revient à la prochaine mise à jour de l\'abonnement.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return '$servers supprimés';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '$servers déplacés vers $group';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'Touchez pour choisir un serveur, maintenez pour son menu, faites glisser la poignée pour réordonner. Le basculement suit cet ordre.';
+
+  @override
+  String get reorderHandle => 'Glisser pour réordonner';
 }

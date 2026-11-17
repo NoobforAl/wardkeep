@@ -1643,5 +1643,76 @@
         "type": "String"
       }
     }
+  },
+  "settingsNetwork": "Network",
+  "@settingsNetwork": {
+    "description": "Settings section: IPv6, MTU and DNS"
+  },
+  "settingsRouting": "Routing",
+  "@settingsRouting": {
+    "description": "Settings section: what bypasses the VPN (local network, bypass lists, split tunneling)"
+  },
+  "settingsPrivacy": "Privacy",
+  "@settingsPrivacy": {
+    "description": "Settings section: address lookups and the offline IP database"
+  },
+  "menuSelect": "Select",
+  "@menuSelect": {
+    "description": "Starts picking several servers at once"
+  },
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "description": "Title while servers are picked",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectAll": "Select all",
+  "@selectAll": {
+    "description": "Picks every server in the list"
+  },
+  "bulkDeleteTitle": "Delete the selected servers?",
+  "@bulkDeleteTitle": {
+    "description": "Title of the confirmation for deleting several servers"
+  },
+  "bulkDeleteBody": "{servers} will be removed from this device. A server that came from a subscription returns the next time the subscription refreshes.",
+  "@bulkDeleteBody": {
+    "description": "Body of the confirmation for deleting several servers; servers is like '3 servers'",
+    "placeholders": {
+      "servers": {
+        "type": "String"
+      }
+    }
+  },
+  "bulkDeletedToast": "Deleted {servers}",
+  "@bulkDeletedToast": {
+    "description": "Toast after deleting several servers; servers is like '3 servers'",
+    "placeholders": {
+      "servers": {
+        "type": "String"
+      }
+    }
+  },
+  "bulkMovedToast": "{servers} moved to {group}",
+  "@bulkMovedToast": {
+    "description": "Toast after moving several servers into a group; servers is like '3 servers'",
+    "placeholders": {
+      "servers": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "profilesHintActions": "Tap to choose a server, hold it for its menu, drag the handle to reorder. Failover follows this order.",
+  "@profilesHintActions": {
+    "description": "Hint at the top of the server list"
+  },
+  "reorderHandle": "Drag to reorder",
+  "@reorderHandle": {
+    "description": "Tooltip of the drag handle of a server row"
   }
 }

@@ -657,5 +657,17 @@
   "privacyPermApps": "فهرست برنامه‌های نصب‌شده: فقط برای انتخاب برنامه‌ها در تونل‌زنی جداگانه.",
   "privacyChangesTitle": "تغییرات و تماس",
   "privacyChanges": "Wardkeep متن‌باز (MIT) است، پس همه این‌ها را می‌توان در کد آن بررسی کرد. اگر این سیاست تغییر کند، نسخه تازه با به‌روزرسانی برنامه می‌آید. پرسش‌ها: در github.com/NoobforAl/wardkeep یک issue باز کنید.",
-  "privacyUpdated": "آخرین به‌روزرسانی: {date}"
+  "privacyUpdated": "آخرین به‌روزرسانی: {date}",
+  "settingsNetwork": "شبکه",
+  "settingsRouting": "مسیریابی",
+  "settingsPrivacy": "حریم خصوصی",
+  "menuSelect": "انتخاب",
+  "selectedCount": "{count} مورد انتخاب شد",
+  "selectAll": "انتخاب همه",
+  "bulkDeleteTitle": "سرورهای انتخاب‌شده حذف شوند؟",
+  "bulkDeleteBody": "{servers} از این دستگاه حذف می‌شود. سروری که از اشتراک آمده باشد، دفعهٔ بعد که اشتراک به‌روز شود دوباره برمی‌گردد.",
+  "bulkDeletedToast": "{servers} حذف شد",
+  "bulkMovedToast": "{servers} به {group} منتقل شد",
+  "profilesHintActions": "برای انتخاب سرور بزنید، برای منوی آن نگه دارید و برای تغییر ترتیب دستگیره را بکشید. جابه‌جایی خودکار طبق همین ترتیب است.",
+  "reorderHandle": "برای تغییر ترتیب بکشید"
 }

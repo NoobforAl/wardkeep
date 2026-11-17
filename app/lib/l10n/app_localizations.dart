@@ -4025,6 +4025,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last updated: {date}'**
   String privacyUpdated(String date);
+
+  /// Settings section: IPv6, MTU and DNS
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get settingsNetwork;
+
+  /// Settings section: what bypasses the VPN (local network, bypass lists, split tunneling)
+  ///
+  /// In en, this message translates to:
+  /// **'Routing'**
+  String get settingsRouting;
+
+  /// Settings section: address lookups and the offline IP database
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get settingsPrivacy;
+
+  /// Starts picking several servers at once
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get menuSelect;
+
+  /// Title while servers are picked
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// Picks every server in the list
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get selectAll;
+
+  /// Title of the confirmation for deleting several servers
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the selected servers?'**
+  String get bulkDeleteTitle;
+
+  /// Body of the confirmation for deleting several servers; servers is like '3 servers'
+  ///
+  /// In en, this message translates to:
+  /// **'{servers} will be removed from this device. A server that came from a subscription returns the next time the subscription refreshes.'**
+  String bulkDeleteBody(String servers);
+
+  /// Toast after deleting several servers; servers is like '3 servers'
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {servers}'**
+  String bulkDeletedToast(String servers);
+
+  /// Toast after moving several servers into a group; servers is like '3 servers'
+  ///
+  /// In en, this message translates to:
+  /// **'{servers} moved to {group}'**
+  String bulkMovedToast(String servers, String group);
+
+  /// Hint at the top of the server list
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to choose a server, hold it for its menu, drag the handle to reorder. Failover follows this order.'**
+  String get profilesHintActions;
+
+  /// Tooltip of the drag handle of a server row
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get reorderHandle;
 }
 
 class _AppLocalizationsDelegate

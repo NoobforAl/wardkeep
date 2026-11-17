@@ -650,5 +650,17 @@
   "privacyPermApps": "A lista de apps instalados: só para escolher apps no túnel dividido.",
   "privacyChangesTitle": "Mudanças e contato",
   "privacyChanges": "O Wardkeep é de código aberto (MIT), então tudo isso pode ser verificado no código. Se esta política mudar, a nova versão chega com uma atualização do app. Dúvidas: abra uma issue em github.com/NoobforAl/wardkeep.",
-  "privacyUpdated": "Última atualização: {date}"
+  "privacyUpdated": "Última atualização: {date}",
+  "settingsNetwork": "Rede",
+  "settingsRouting": "Roteamento",
+  "settingsPrivacy": "Privacidade",
+  "menuSelect": "Selecionar",
+  "selectedCount": "{count} selecionados",
+  "selectAll": "Selecionar tudo",
+  "bulkDeleteTitle": "Excluir os servidores selecionados?",
+  "bulkDeleteBody": "{servers} serão removidos deste dispositivo. Um servidor de uma assinatura volta na próxima atualização da assinatura.",
+  "bulkDeletedToast": "{servers} excluídos",
+  "bulkMovedToast": "{servers} movidos para {group}",
+  "profilesHintActions": "Toque para escolher um servidor, mantenha pressionado para o menu e arraste a alça para reordenar. A troca em caso de falha segue esta ordem.",
+  "reorderHandle": "Arraste para reordenar"
 }
