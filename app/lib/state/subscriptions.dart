@@ -111,7 +111,10 @@ class Subscription {
 
   /// [lastError] in the language of the app.
   String lastErrorText(AppLocalizations l) =>
-      (lastErrorCode == null ? null : translateCode(l, lastErrorCode!, lastErrorArgs)) ?? '$lastError';
+      (lastErrorCode == null ? null : translateCode(l, lastErrorCode!, lastErrorArgs)) ??
+      // A code the app has no sentence for: the core's own message, without the code in front
+      // (older records kept "SUBSCRIPTION_FAILED: " in the text).
+      '$lastError'.replaceFirst(RegExp(r'^[A-Z][A-Z_]+: '), '');
 
   /// How it is downloaded: 'direct', 'auto' (through the VPN when direct fails and the VPN is up)
   /// or 'tunnel' (always through the VPN, for providers that are blocked).
@@ -333,6 +336,7 @@ class SubscriptionsController extends Notifier<List<Subscription>> {
   }
 
   static String _message(Object e) {
+    if (e is EngineException) return e.message;
     final text = e.toString();
     return text.startsWith('Bad state: ') ? text.substring(11) : text;
   }

@@ -72,6 +72,25 @@ void main() {
     expect(describeError(l, StateError('plain')), 'plain');
   });
 
+  test('a failed subscription download is worded by its reason, in every language', () async {
+    final english = await _load('en');
+    expect(
+      translateCode(english, 'SUBSCRIPTION_FAILED', {'reason': 'REFUSED'}),
+      'the server refused the connection',
+    );
+    for (final lang in _languages.skip(1)) {
+      final l = await _load(lang);
+      for (final reason in ['REFUSED', 'TIMEOUT', 'DNS_FAILED', 'TLS_ERROR']) {
+        final text = translateCode(l, 'SUBSCRIPTION_FAILED', {'reason': reason});
+        expect(text, isNotNull, reason: '$lang $reason');
+        expect(text, isNot(errorCodeText(english, reason)), reason: '$lang $reason is still English');
+      }
+    }
+    // No reason (an unusual failure): the core's own message is shown.
+    expect(translateCode(english, 'SUBSCRIPTION_FAILED', {}), isNull);
+    expect(translateCode(english, 'SUBSCRIPTION_FAILED', {'reason': 'NOT_A_REASON'}), isNull);
+  });
+
   test('bypass list problems and Tor steps are translated', () async {
     for (final lang in _languages.skip(1)) {
       final l = await _load(lang);
