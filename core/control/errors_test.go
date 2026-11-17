@@ -1,11 +1,14 @@
 package control
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/NoobforAl/wardkeep/core/engine"
 	"github.com/NoobforAl/wardkeep/core/importer"
 	"github.com/NoobforAl/wardkeep/core/profile"
 	"github.com/NoobforAl/wardkeep/core/subscription"
@@ -106,6 +109,29 @@ func TestUnsupportedLinkNamesItsScheme(t *testing.T) {
 	_, err := importer.ParseLink("nope://example.com")
 	if e := importError(err); e.Code != CodeImportUnsupported || e.Args["scheme"] != "nope" {
 		t.Fatalf("%+v (%v)", e, err)
+	}
+}
+
+// A failed download names its kind (so the app can translate it) and never carries the link, whose path or
+// query holds the user's token.
+func TestSubscriptionDownloadFailureHasReasonAndNoLink(t *testing.T) {
+	const link = "https://provider.example/sub/SECRET-TOKEN?x=1"
+	for _, c := range []struct {
+		err    error
+		reason string
+	}{
+		{&url.Error{Op: "Get", URL: link, Err: errors.New("dial tcp 203.0.113.1:443: connect: connection refused")}, engine.ErrRefused},
+		{&url.Error{Op: "Get", URL: link, Err: context.DeadlineExceeded}, engine.ErrTimeout},
+		{&url.Error{Op: "Get", URL: link, Err: errors.New("dial tcp: lookup provider.example: no such host")}, engine.ErrDNS},
+		{&url.Error{Op: "Get", URL: link, Err: errors.New("something nobody has seen")}, ""},
+	} {
+		e := subscriptionError(fmt.Errorf("download subscription: %w", c.err))
+		if e.Code != CodeSubscriptionFailed || e.Args["reason"] != c.reason {
+			t.Errorf("%v: %+v, want reason %q", c.err, e, c.reason)
+		}
+		if strings.Contains(e.Message, "SECRET-TOKEN") || strings.Contains(e.Message, "provider.example/sub") {
+			t.Errorf("the link is in the message: %q", e.Message)
+		}
 	}
 }
 

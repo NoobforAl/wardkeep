@@ -127,6 +127,19 @@ func torErrorText(err error, bridges bool) string {
 	return plainError(err)
 }
 
+// ClassifyError names the kind of network or TLS failure err is (one of the Err* codes), or "" when it is
+// something unusual. Callers outside a connection (a subscription download) use it so the app can word the
+// failure in its own language.
+func ClassifyError(err error) string {
+	if err == nil {
+		return ""
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return ErrTimeout
+	}
+	return errorCode(err.Error())
+}
+
 // errorCode names the kind of failure a state's English message describes,
 // or "" when it is something unusual (the app then shows the message as it is).
 func errorCode(message string) string {

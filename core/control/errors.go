@@ -2,9 +2,11 @@ package control
 
 import (
 	"errors"
+	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/NoobforAl/wardkeep/core/engine"
 	"github.com/NoobforAl/wardkeep/core/importer"
 	"github.com/NoobforAl/wardkeep/core/profile"
 	"github.com/NoobforAl/wardkeep/core/subscription"
@@ -69,7 +71,7 @@ func importError(err error) *Error {
 
 // subscriptionError is the error reply for a subscription that could not be fetched.
 func subscriptionError(err error) *Error {
-	rpcErr := &Error{Code: CodeSubscriptionFailed, Message: err.Error()}
+	rpcErr := &Error{Code: CodeSubscriptionFailed, Message: withoutLink(err)}
 	var he *subscription.HTTPError
 	switch {
 	case errors.Is(err, subscription.ErrAuth):
@@ -89,6 +91,21 @@ func subscriptionError(err error) *Error {
 		rpcErr.Code = CodeSubStale
 	case errors.Is(err, subscription.ErrBadKey):
 		rpcErr.Code = CodeSubBadKey
+	default:
+		// The download itself failed (no route, refused, timed out, bad certificate): the kind of failure
+		// goes along so the app can say it in its language instead of showing the Go error.
+		if reason := engine.ClassifyError(err); reason != "" {
+			rpcErr.Args = map[string]string{"reason": reason}
+		}
 	}
 	return rpcErr
+}
+
+// withoutLink is err's text with the address of a failed request left out: a subscription link carries the
+// user's token in its path or query, and it must not reach a message, a log or the screen.
+func withoutLink(err error) string {
+	if ue, ok := errors.AsType[*url.Error](err); ok && ue.URL != "" {
+		return strings.ReplaceAll(err.Error(), ue.URL, "<link>")
+	}
+	return err.Error()
 }
