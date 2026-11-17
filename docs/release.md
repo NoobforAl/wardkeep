@@ -25,8 +25,11 @@ git push origin 0.1.0
 
 While the app is beta, every release is published as a pre-release, whatever the tag looks like, and its notes start
 with the text of `.github/release-notes.md` (beta, partly AI-written, no warranty). The app's version name is the tag;
-Android's version code (and Windows' build number) is derived from it (`0.1.0` → 100, `1.2.3` → 10203), so a later tag
-always counts as an update.
+Windows' and Linux's build number is derived from it (`0.1.0` → 100, `1.2.3` → 10203; a Windows build number must stay
+below 65536). Android's version code is that number times 100 plus a slot for the pre-release: `-betaN` is N, `-rcN` is
+50+N, a final release is 99 (`0.3.0-beta18` → 30018, `0.3.0` → 30099). A later tag therefore always counts as an update,
+betas included. Before 0.3.0-beta18 every beta had the code 300, and a local `--split-per-abi` test build has 2001 and
+more, which an older code cannot replace (`INSTALL_FAILED_VERSION_DOWNGRADE`).
 
 ## How the pipeline is ordered
 
@@ -102,7 +105,7 @@ bash scripts/android-github-secrets.sh  # uploads them as repository secrets (ne
 ## Local builds
 
 * Android: `scripts/build-android-release.sh` (all steps, one APK) or, with the Tor client and the core already built,
-  `cd app && flutter build apk --release --build-name=0.1.0 --build-number=100`; it signs with
+  `cd app && flutter build apk --release --build-name=0.1.0 --build-number=10099`; it signs with
   `app/android/key.properties`.
 * Windows: build `wardkeep-svc.exe` (`./scripts/go.ps1 build -o dist/app/wardkeep-svc.exe ./cmd/wardkeep-svc`),
   `flutter build windows --release`, copy the Release folder into `dist/app`, then `installer/build-installer.ps1`.

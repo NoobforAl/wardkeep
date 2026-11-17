@@ -77,6 +77,7 @@ jobs:
       name: ${{ steps.version.outputs.name }}
       core: ${{ steps.version.outputs.core }}
       number: ${{ steps.version.outputs.number }}
+      code: ${{ steps.version.outputs.code }}
     steps:
       - name: Version
         id: version
@@ -94,8 +95,19 @@ jobs:
           else
             CORE="0.0.0"; NUM=1
           fi
-          { echo "name=$VER"; echo "core=$CORE"; echo "number=$NUM"; } >> "$GITHUB_OUTPUT"
-          echo "release $VER (name $CORE, build number $NUM)"
+          # Android's version code also counts the pre-release, so beta18 is an update of beta17 (they share $NUM):
+          # code = NUM * 100 + slot; -betaN is slot N (1-49), -rcN is 50+N (51-98), a final release is 99.
+          # Windows and Linux keep $NUM: a Windows build number must stay below 65536.
+          SLOT=99
+          if [[ "$VER" == *-* ]]; then
+            PRE="${VER#*-}"; SLOT=0
+            if [[ "$PRE" =~ ^beta\.?([0-9]+)$ ]]; then SLOT=$(( 10#${BASH_REMATCH[1]} > 49 ? 49 : 10#${BASH_REMATCH[1]} ))
+            elif [[ "$PRE" =~ ^rc\.?([0-9]+)$ ]]; then SLOT=$(( 50 + (10#${BASH_REMATCH[1]} > 48 ? 48 : 10#${BASH_REMATCH[1]}) ))
+            fi
+          fi
+          CODE=$((NUM * 100 + SLOT))
+          { echo "name=$VER"; echo "core=$CORE"; echo "number=$NUM"; echo "code=$CODE"; } >> "$GITHUB_OUTPUT"
+          echo "release $VER (name $CORE, build number $NUM, Android version code $CODE)"
 
       - name: Android signing secrets are present
         if: startsWith(github.ref, 'refs/tags/')
@@ -238,7 +250,7 @@ jobs:
           flutter pub get --enforce-lockfile
           flutter build apk --release \
             --build-name="${{ needs.prepare.outputs.core }}" \
-            --build-number="${{ needs.prepare.outputs.number }}"
+            --build-number="${{ needs.prepare.outputs.code }}"
 
       - name: Name the file, check the signature, checksum
         working-directory: app/build/app/outputs/flutter-apk
