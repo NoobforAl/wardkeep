@@ -84,6 +84,8 @@ func subscriptionError(err error) *Error {
 		rpcErr.Code = CodeSubTooLarge
 	case errors.Is(err, subscription.ErrBadURL):
 		rpcErr.Code = CodeSubBadURL
+		// FetchVia echoes the address it rejected, which is the link with its token: the sentence alone is kept.
+		rpcErr.Message = subscription.ErrBadURL.Error()
 	case errors.Is(err, subscription.ErrUnsigned):
 		rpcErr.Code = CodeSubUnsigned
 	case errors.Is(err, subscription.ErrBadSignature):
