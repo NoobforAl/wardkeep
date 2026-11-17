@@ -175,7 +175,7 @@ void main() {
       expect(find.textContaining('Move to group'), findsOneWidget); // the hint of the empty group
 
       // The group's menu: copy its links.
-      await tester.tap(find.descendant(of: find.ancestor(of: find.text('Friends'), matching: find.byType(Row)).first, matching: find.byType(PopupMenuButton<String>)));
+      await tester.tap(find.text('Friends')); // the header opens its sheet
       await tester.pumpAndSettle();
       await tester.tap(find.text('Copy links'));
       await tester.pumpAndSettle();
@@ -195,7 +195,7 @@ void main() {
         ],
         'profiles': [_trojan('a', 'Alpha')],
       });
-      await tester.tap(find.descendant(of: find.widgetWithText(ListTile, 'Alpha'), matching: find.byType(PopupMenuButton<String>)));
+      await tester.tap(find.descendant(of: find.widgetWithText(ListTile, 'Alpha'), matching: find.byIcon(Icons.more_vert)));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Move to group'));
       await tester.pumpAndSettle();
@@ -204,7 +204,7 @@ void main() {
       expect(c.read(profilesProvider).single.group, 'g1');
 
       // Into a new group.
-      await tester.tap(find.descendant(of: find.widgetWithText(ListTile, 'Alpha'), matching: find.byType(PopupMenuButton<String>)));
+      await tester.tap(find.descendant(of: find.widgetWithText(ListTile, 'Alpha'), matching: find.byIcon(Icons.more_vert)));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Move to group'));
       await tester.pumpAndSettle();
@@ -215,6 +215,86 @@ void main() {
       await tester.pumpAndSettle();
       final created = c.read(groupsProvider).firstWhere((g) => g.name == 'Brand new');
       expect(c.read(profilesProvider).single.group, created.id);
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('picking several servers', () {
+    final profiles = [_trojan('a', 'Alpha'), _trojan('b', 'Bravo'), _trojan('c', 'Charlie')];
+
+    testWidgets('holding a row opens its menu', (tester) async {
+      await _open(tester, {'onboarded': true, 'profiles': profiles});
+      await tester.longPress(find.widgetWithText(ListTile, 'Bravo'));
+      await tester.pumpAndSettle();
+      expect(find.text('Make default'), findsOneWidget);
+      expect(find.text('Move to group'), findsOneWidget);
+      expect(find.text('Select'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('Select from the menu starts picking; the picked ones are deleted together', (tester) async {
+      final c = await _open(tester, {'onboarded': true, 'profiles': profiles});
+      await tester.longPress(find.widgetWithText(ListTile, 'Alpha'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Select'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 selected'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ListTile, 'Charlie')); // a tap ticks while picking
+      await tester.pumpAndSettle();
+      expect(find.text('2 selected'), findsOneWidget);
+      expect(c.read(selectedProfileIdProvider), isNot('c')); // and chooses nothing
+
+      await tester.tap(find.byTooltip('Delete'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+      expect([for (final p in c.read(profilesProvider)) p.name], ['Bravo']);
+      expect(find.text('2 selected'), findsNothing); // the mode is over
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('picked servers are grouped in one step, into a new group', (tester) async {
+      final c = await _open(tester, {'onboarded': true, 'profiles': profiles});
+      await tester.longPress(find.widgetWithText(ListTile, 'Alpha'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Select'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Bravo'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Move to group'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('New group').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Pair');
+      await tester.tap(find.text('Create'));
+      await tester.pumpAndSettle();
+
+      final pair = c.read(groupsProvider).firstWhere((g) => g.name == 'Pair');
+      final byName = {for (final p in c.read(profilesProvider)) p.name: p.group};
+      expect(byName['Alpha'], pair.id);
+      expect(byName['Bravo'], pair.id);
+      expect(byName['Charlie'], isNot(pair.id));
+      expect(find.textContaining('selected'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('Select all, and Back leaves the mode without leaving the screen', (tester) async {
+      await _open(tester, {'onboarded': true, 'profiles': profiles});
+      await tester.tap(find.byTooltip('More').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Select'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Select all'));
+      await tester.pumpAndSettle();
+      expect(find.text('3 selected'), findsOneWidget);
+
+      await tester.binding.handlePopRoute(); // Back
+      await tester.pumpAndSettle();
+      expect(find.textContaining('selected'), findsNothing);
+      expect(find.widgetWithText(ListTile, 'Alpha'), findsOneWidget); // still on the screen
       await tester.pumpWidget(const SizedBox());
     });
   });

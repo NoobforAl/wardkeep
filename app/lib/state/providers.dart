@@ -80,6 +80,13 @@ class ProfilesController extends Notifier<List<ProfileInfo>> {
     _fixSelection();
   }
 
+  /// Deletes several servers at once (one save, one check of the selection).
+  void removeMany(Set<String> ids) {
+    if (ids.isEmpty) return;
+    _save(state.where((p) => !ids.contains(p.id)).toList());
+    _fixSelection();
+  }
+
   /// Deletes every server (all subscriptions' too) except the built-in Tor ones, which are the
   /// app's own default and never come from the user's files.
   void clearAll() {
@@ -150,6 +157,12 @@ class ProfilesController extends Notifier<List<ProfileInfo>> {
     final next = [...state];
     next[at] = state[at].inGroup(group);
     _save(next);
+  }
+
+  /// Puts several servers in [group] at once; each keeps its place in the list (see [moveTo]).
+  void moveMany(Set<String> ids, String group) {
+    if (!state.any((p) => ids.contains(p.id) && p.group != group)) return;
+    _save([for (final p in state) ids.contains(p.id) && p.group != group ? p.inGroup(group) : p]);
   }
 
   /// Sends the servers of a group of the user's back to the default group (the group is being removed).
