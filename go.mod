@@ -1,6 +1,6 @@
 module github.com/NoobforAl/wardkeep
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/ameshkov/dnscrypt/v2 v2.4.0
@@ -13,7 +13,7 @@ require (
 	github.com/danielgtaylor/huma/v2 v2.40.0
 	github.com/flynn/noise v1.1.0
 	github.com/go-chi/chi/v5 v5.5.0
-	github.com/gofrs/flock v0.13.1
+	github.com/gofrs/flock v0.13.2
 	github.com/gofrs/uuid/v5 v5.5.1
 	github.com/miekg/dns v1.1.73
 	github.com/refraction-networking/utls v1.8.2
@@ -24,15 +24,15 @@ require (
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/cobra v1.10.2
 	github.com/tailscale/wf v0.0.0-20240214030419-6fbb0a674ee6
-	github.com/xtaci/kcp-go/v5 v5.7.1
-	github.com/xtaci/smux v1.5.58
-	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird v0.0.0-20261008205628-362a60bb4e3f
-	go.yaml.in/yaml/v3 v3.0.5
+	github.com/xtaci/kcp-go/v5 v5.7.6
+	github.com/xtaci/smux v1.5.60
+	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird v0.0.0-20261104192811-59ac7e400c38
+	go.yaml.in/yaml/v3 v3.0.6
 	go4.org/netipx v0.0.0-20260823151212-3075585bcbeb
-	golang.org/x/crypto v0.58.0
+	golang.org/x/crypto v0.59.0
 	golang.org/x/net v0.62.0
-	golang.org/x/sys v0.49.0
-	golang.org/x/term v0.47.0
+	golang.org/x/sys v0.50.0
+	golang.org/x/term v0.48.0
 	golang.zx2c4.com/wireguard/windows v1.1.1
 )
 
@@ -123,6 +123,7 @@ require (
 	github.com/invopop/jsonschema v0.14.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.1.0 // indirect
 	github.com/jsimonetti/rtnetlink v1.4.2 // indirect
+	github.com/juju/ratelimit v1.0.2 // indirect
 	github.com/kamstrup/intmap v0.5.2 // indirect
 	github.com/keybase/go-keychain v0.0.1 // indirect
 	github.com/klauspost/compress v1.20.3 // indirect
@@ -169,6 +170,7 @@ require (
 	github.com/pion/srtp/v3 v3.0.13 // indirect
 	github.com/pion/stun/v3 v3.1.6 // indirect
 	github.com/pion/transport/v4 v4.1.0 // indirect
+	github.com/pion/transport/v5 v5.1.4 // indirect
 	github.com/pion/turn/v5 v5.0.12 // indirect
 	github.com/pion/webrtc/v4 v4.2.18 // indirect
 	github.com/pires/go-proxyproto v0.16.0 // indirect
@@ -276,8 +278,8 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20261014143641-f0251eb4aa3e // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
-	golang.org/x/sync v0.24.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	golang.org/x/tools v0.52.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
