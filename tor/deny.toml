@@ -13,6 +13,13 @@ ignore = [
     # verifies relays' legacy RSA identity signatures with their public keys; a Tor client does no RSA
     # private-key operation an attacker could time.
     { id = "RUSTSEC-2023-0071", reason = "only RSA public-key verification is used; Marvin needs private-key operations" },
+    # libsqlite3-sys < 0.39 (bundled SQLite): needs a crafted database file. The only database is Arti's own state
+    # in the app's private Tor directory, which no remote party can write to. The fix needs rusqlite 0.41, which
+    # Arti does not use yet. Remove this entry when an Arti release moves to it (`cargo update -p libsqlite3-sys`).
+    # humantime: marked unmaintained because chrono is. Not a vulnerability; Arti's own dependency (arti-client,
+    # humantime-serde), so only an Arti release can drop it. Remove this entry when one does.
+    { id = "RUSTSEC-2026-0542", reason = "unmaintained notice only (no vulnerability); Arti's own dependency, no safe upgrade exists" },
+    { id = "RUSTSEC-2026-0459", reason = "crafted database file needed; the only database is Arti's own state in the app's private directory" },
 ]
 # `cargo audit` reads Cargo.lock alone and also reports crypto-bigint 0.5 (RUSTSEC-2026-0387), bincode and paste
 # (unmaintained): they are locked as optional dependencies but not built (cargo-deny, which follows the real
