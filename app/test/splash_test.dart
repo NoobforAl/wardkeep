@@ -53,4 +53,20 @@ void main() {
     expect(find.byType(Image), findsNothing);
     expect(find.text('home'), findsOneWidget);
   });
+
+  testWidgets('a tap skips the rest: the cover is gone within half a second', (tester) async {
+    await tester.runAsync(() async {
+      await tester.pumpWidget(app());
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
+    await tester.pump();
+    await tester.pump(SplashCover.duration * 0.3);
+    expect(find.byType(Image), findsOneWidget);
+
+    await tester.tap(find.byType(Image), warnIfMissed: false);
+    await tester.pump(); // the skip starts on this frame
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(Image), findsNothing);
+    expect(find.text('home'), findsOneWidget);
+  });
 }
