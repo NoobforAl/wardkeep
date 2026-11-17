@@ -14,16 +14,16 @@ path = "src/main.rs"
 
 [dependencies]
 # rustls instead of native-tls: no OpenSSL to cross-compile for Android.
-arti-client = { version = "0.47", default-features = false, features = [
+arti-client = { version = "0.48", default-features = false, features = [
     "tokio", "rustls", "compression", "static-sqlite", "bridge-client", "pt-client",
 ] }
-tor-rtcompat = { version = "0.47", default-features = false, features = ["tokio", "rustls"] }
+tor-rtcompat = { version = "0.48", default-features = false, features = ["tokio", "rustls"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "io-std", "time", "sync"] }
 futures = "0.3"
 # The circuit a stream rides (relay by relay) and the country of each relay, for the globe.
-tor-proto = { version = "0.47", default-features = false, features = ["stream-ctrl"] }
-tor-linkspec = "0.47"
-tor-geoip = { version = "0.47", features = ["embedded-db"] }
+tor-proto = { version = "0.48", default-features = false, features = ["stream-ctrl"] }
+tor-linkspec = "0.48"
+tor-geoip = { version = "0.48", features = ["embedded-db"] }
 anyhow = "1"
 # preserve_order: keys stay in the order they are written (event first, then time, level, ...).
 serde_json = { version = "1", features = ["preserve_order"] }
@@ -110,7 +110,3 @@ semicolon_if_nothing_returned = "warn"
 explicit_iter_loop = "warn"
 map_unwrap_or = "warn"
 items_after_statements = "warn"
-
-# Arti's saturating-time loops forever on Windows while parsing a consensus (see third_party/saturating-time/PATCHES.md).
-[patch.crates-io]
-saturating-time = { path = "../third_party/saturating-time" }

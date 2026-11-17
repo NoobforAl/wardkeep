@@ -106,7 +106,7 @@ Always finish with the real `make test`. Flutter and Rust are fine to run direct
 ```
 app/        Flutter client                       cmd/        wardkeep (dev CLI), wardkeep-svc (core daemon), wardkeep-server
 core/       Go core (see core/CLAUDE.md)         server/     VPN server packages (api, manager, runtime, tui, store, ...)
-tor/        Rust Tor client (see tor/CLAUDE.md)  third_party/ patched dnstt, sing-openvpn, saturating-time
+tor/        Rust Tor client (see tor/CLAUDE.md)  third_party/ patched dnstt, sing-openvpn
 scripts/    build + generator scripts            tools/      devserver, dockertest (e2e), awgdev, torbench
 installer/  Windows (Inno Setup) and Linux installers      docs/   guides listed above
 ```

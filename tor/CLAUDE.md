@@ -59,11 +59,12 @@ SOCKS framing, path roles and log formatting, not a live Tor network.
   `docs/performance.md`. `tools/torbench` is the Go-side benchmark.
 - **TLS**: rustls with the `ring` provider, no OpenSSL, so it cross-compiles to Android. Arti needs a process-wide
   crypto provider installed at start. Do not add `native-tls` or `openssl`.
-- **Dependencies**: Arti crates are all on the same version (`0.47`); upgrade them together. `cargo deny check`
+- **Dependencies**: Arti crates are all on the same version (`0.48`); upgrade them together. `cargo deny check`
   (`deny.toml`) fails on a new vulnerability, an unlisted license or a non-crates.io source; a new license or an
   advisory ignore needs a written reason. `cargo audit` is not used on purpose (explained in `deny.toml`).
-- **`[patch.crates-io] saturating-time`** points to `../third_party/saturating-time`: the upstream crate loops forever on
-  Windows while parsing a consensus. Keep the patch until upstream is fixed and record changes in its `PATCHES.md`.
+- **No `[patch.crates-io]` any more.** `saturating-time` 0.5.0 looped forever on Windows while parsing a consensus and was
+  patched in `third_party/`; 0.6.0 (used since Arti 0.48) has the same fix upstream, so the copy was dropped. If a Tor
+  bootstrap on Windows stops at "fetching a consensus" with one core busy, look there first.
 - **Tests** live in `mod tests` at the bottom of `args.rs`, `logging.rs`, `path.rs`, `socks.rs`. CI runs them with
   `cargo llvm-cov` and sends coverage to Codecov (flag `rust`). Real Tor network behaviour (bootstrap, bridges, circuits)
   is not tested in CI; say so when you change `main.rs`.

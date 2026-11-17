@@ -34,6 +34,8 @@ TITLES = [
 ]
 # Permissive licenses, recognised by their wording.
 SIGNATURES = [
+    # LGPL-3.0 with a static-linking exception, the license text comes after a preamble (github.com/juju/ratelimit).
+    ("LGPL-3.0", r"special exception to the gnu lesser general public license version 3"),
     ("GPL-3.0", r"free software: you can redistribute it and/or modify it under the terms of the gnu general public license as published by the free software foundation, either version 3"),
     ("ISC", r"permission to use, copy, modify,? (and/or|and) distribute this software for any purpose with or without fee"),
     ("MIT", r"permission is hereby granted, free of charge, to any person obtaining a copy"),
