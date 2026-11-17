@@ -281,6 +281,27 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets('a server that goes while picking is no longer counted, and the mode ends with the last one', (tester) async {
+      final c = await _open(tester, {'onboarded': true, 'profiles': profiles});
+      await tester.longPress(find.widgetWithText(ListTile, 'Alpha'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Select'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Bravo'));
+      await tester.pumpAndSettle();
+      expect(find.text('2 selected'), findsOneWidget);
+
+      c.read(profilesProvider.notifier).remove('b'); // its subscription was deleted, say
+      await tester.pumpAndSettle();
+      expect(find.text('1 selected'), findsOneWidget);
+
+      c.read(profilesProvider.notifier).remove('a');
+      await tester.pumpAndSettle();
+      expect(find.textContaining('selected'), findsNothing);
+      expect(find.widgetWithText(ListTile, 'Charlie'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('Select all, and Back leaves the mode without leaving the screen', (tester) async {
       await _open(tester, {'onboarded': true, 'profiles': profiles});
       await tester.tap(find.byTooltip('More').first);
