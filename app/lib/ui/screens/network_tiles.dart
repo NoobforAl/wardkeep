@@ -10,7 +10,7 @@ import '../../state/providers.dart';
 const minMtu = 576;
 const maxMtu = 65535;
 
-/// The two network options of the Connection group in Settings: IPv6 on or off, and the tunnel's MTU.
+/// The two tunnel options of the Network group in Settings: IPv6 on or off, and the tunnel's MTU.
 List<Widget> networkTiles(BuildContext context, WidgetRef ref, SettingsState settings) {
   final l = context.l10n;
   final ctrl = ref.read(settingsProvider.notifier);

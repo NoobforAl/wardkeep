@@ -67,10 +67,18 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: SegmentedButton<String>(
+              // The tick would take a third of a narrow segment; the filled segment already says which is chosen.
+              showSelectedIcon: false,
               segments: [
-                ButtonSegment(value: 'off', label: Text(context.l10n.splitAll)),
-                ButtonSegment(value: 'include', label: Text(context.l10n.splitOnlySelected)),
-                ButtonSegment(value: 'exclude', label: Text(context.l10n.splitBypassSelected)),
+                for (final (value, label) in [
+                  ('off', context.l10n.splitAll),
+                  ('include', context.l10n.splitOnlySelected),
+                  ('exclude', context.l10n.splitBypassSelected),
+                ])
+                  ButtonSegment(
+                    value: value,
+                    label: Text(label, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ),
               ],
               selected: {settings.splitMode},
               onSelectionChanged: (v) => _setMode(v.first),
