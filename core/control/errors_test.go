@@ -139,6 +139,18 @@ func TestSubscriptionDownloadFailureHasReasonAndNoLink(t *testing.T) {
 	}
 }
 
+// The address FetchVia rejects is the user's link, token and all: the code stays, the address does not.
+func TestBadSubscriptionURLKeepsItsCodeButNotTheAddress(t *testing.T) {
+	err := fmt.Errorf("%w %q", subscription.ErrBadURL, "ftp://provider.example/sub/SECRET-TOKEN")
+	e := subscriptionError(err)
+	if e.Code != CodeSubBadURL {
+		t.Fatalf("code %q", e.Code)
+	}
+	if strings.Contains(e.Message, "SECRET-TOKEN") || strings.Contains(e.Message, "provider.example") {
+		t.Errorf("the address is in the message: %q", e.Message)
+	}
+}
+
 func TestSubscriptionFailuresHaveCodes(t *testing.T) {
 	for _, c := range []struct {
 		err    error
