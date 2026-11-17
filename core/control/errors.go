@@ -9,6 +9,7 @@ import (
 
 	"github.com/NoobforAl/wardkeep/core/engine"
 	"github.com/NoobforAl/wardkeep/core/importer"
+	"github.com/NoobforAl/wardkeep/core/logrec"
 	"github.com/NoobforAl/wardkeep/core/profile"
 	"github.com/NoobforAl/wardkeep/core/subscription"
 )
@@ -72,7 +73,8 @@ func importError(err error) *Error {
 
 // subscriptionError is the error reply for a subscription that could not be fetched.
 func subscriptionError(err error) *Error {
-	rpcErr := &Error{Code: CodeSubscriptionFailed, Message: withoutLink(err)}
+	// The link goes first, then the addresses and host names the library put in the rest (the server's IP, a lookup's host).
+	rpcErr := &Error{Code: CodeSubscriptionFailed, Message: logrec.Scrub(withoutLink(err))}
 	var he *subscription.HTTPError
 	switch {
 	case errors.Is(err, subscription.ErrAuth):
