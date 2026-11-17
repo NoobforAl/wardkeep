@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,6 +12,8 @@ import '../../state/location.dart';
 import '../../state/providers.dart';
 import '../../state/usage.dart';
 import '../widgets/profile_subtitle.dart';
+import '../widgets/action_sheet.dart';
+import '../widgets/menu_item.dart';
 import '../widgets/country_flag.dart';
 import '../widgets/credentials_dialog.dart';
 import '../widgets/protocol_badge.dart';
@@ -120,6 +123,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
                 ),
           PopupMenuButton<String>(
             tooltip: context.l10n.addServersTooltip,
+            position: PopupMenuPosition.under,
             icon: const Icon(Icons.add),
             onSelected: (choice) {
               switch (choice) {
@@ -134,10 +138,10 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
               }
             },
             itemBuilder: (_) => [
-              PopupMenuItem(value: 'import', child: Text(context.l10n.menuImport)),
-              PopupMenuItem(value: 'new', child: Text(context.l10n.menuNewServer)),
-              PopupMenuItem(value: 'subscription', child: Text(context.l10n.menuSubscription)),
-              PopupMenuItem(value: 'manage', child: Text(context.l10n.menuManage)),
+              iconMenuItem('import', Icons.file_download_outlined, context.l10n.menuImport),
+              iconMenuItem('new', Icons.add_circle_outline_rounded, context.l10n.menuNewServer),
+              iconMenuItem('subscription', Icons.add_link, context.l10n.menuSubscription),
+              iconMenuItem('manage', Icons.tune_rounded, context.l10n.menuManage),
             ],
           ),
         ],
@@ -253,14 +257,30 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
 
   /// The user's own devices (Tailscale / Headscale profiles): they run only when picked.
   Iterable<Widget> _meshRows(List<ProfileInfo> mesh, String? choice) => [
-    Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 4), child: Text(context.l10n.devicesTitle)),
+    _GroupLabel(context.l10n.devicesTitle),
     for (final p in mesh) _ServerRow(profile: p, selected: choice == p.id, onTap: () => _choose(p.id), mesh: true),
   ];
 
   Iterable<Widget> _torRows(List<ProfileInfo> tor, String? choice) => [
-    Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 4), child: Text(context.l10n.torGroup)),
+    _GroupLabel(context.l10n.torGroup),
     for (final p in tor) _ServerRow(profile: p, selected: choice == p.id, onTap: () => _choose(p.id), tor: true),
   ];
+}
+
+/// The title of a group of rows (Tor, own devices), in the style of the section titles of Settings.
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 16, 4),
+      child: Text(text, style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
+    );
+  }
 }
 
 /// A country or special row of the list.
@@ -315,6 +335,46 @@ class _ServerRow extends ConsumerWidget {
   final bool tor;
   final bool mesh;
 
+  Future<void> _actions(BuildContext context, WidgetRef ref, {required bool editable}) async {
+    final l = context.l10n;
+    final defaultId = ref.read(defaultProfileProvider)?.id;
+    final choice = await showActionSheet(
+      context,
+      header: ListTile(
+        title: Text(profile.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+        subtitle: ProfileSubtitle(profile),
+        trailing: ProtocolBadge(profile.protocol),
+      ),
+      actions: [
+        if (editable) ActionItem('edit', Icons.edit_outlined, tor ? l.menuBridgeSettings : l.menuEditServer),
+        ActionItem('share', Icons.qr_code_2_rounded, l.menuShare),
+        if (profile.id != defaultId) ActionItem('default', Icons.star_outline_rounded, l.menuSetDefault),
+        if (!tor && !mesh) ActionItem('country', Icons.public_rounded, l.menuSetCountry),
+        if (profile.needsCredentials) ActionItem('credentials', Icons.key_outlined, l.menuCredentials),
+        if (ref.read(usageOfProvider(profile.id)) > 0) ActionItem('usage', Icons.restart_alt_rounded, l.menuResetUsage),
+        ActionItem('delete', Icons.delete_outline_rounded, l.actionDelete, danger: true),
+      ],
+    );
+    if (choice == null || !context.mounted) return;
+    switch (choice) {
+      case 'edit':
+        unawaited(Navigator.of(context).push(AppRoute<void>(builder: (_) => ProfileEditorScreen(profile: profile))));
+      case 'share':
+        unawaited(Navigator.of(context).push(AppRoute<void>(builder: (_) => ShareScreen(profile: profile))));
+      case 'country':
+        final code = await pickCountry(context, ref.read(profileCountryProvider)(profile));
+        if (code != null) ref.read(countryOverridesProvider.notifier).set(profile.id, code == '' ? null : code);
+      case 'credentials':
+        await askCredentials(context, ref, profile);
+      case 'usage':
+        ref.read(profileUsageProvider.notifier).reset(profile.id);
+      case 'delete':
+        ref.read(profilesProvider.notifier).remove(profile.id);
+      case 'default':
+        ref.read(defaultProfileIdProvider.notifier).set(profile.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
@@ -327,48 +387,22 @@ class _ServerRow extends ConsumerWidget {
       selected: selected,
       selectedTileColor: scheme.primary.withValues(alpha: 0.12),
       onTap: onTap,
+      // Holding the row opens the same menu as the three dots.
+      onLongPress: () {
+        unawaited(HapticFeedback.selectionClick());
+        unawaited(_actions(context, ref, editable: editable));
+      },
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (selected) Icon(Icons.check, color: scheme.primary),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: LatencyDot(profile.latencyMs)),
           ProtocolBadge(profile.protocol),
-          PopupMenuButton<String>(
+          IconButton(
             tooltip: context.l10n.tooltipMore,
-            onSelected: (choice) async {
-              switch (choice) {
-                case 'edit':
-                  Navigator.of(context).push(AppRoute<void>(builder: (_) => ProfileEditorScreen(profile: profile)));
-                case 'share':
-                  Navigator.of(context).push(AppRoute<void>(builder: (_) => ShareScreen(profile: profile)));
-                case 'country':
-                  final code = await pickCountry(context, ref.read(profileCountryProvider)(profile));
-                  if (code != null) ref.read(countryOverridesProvider.notifier).set(profile.id, code == '' ? null : code);
-                case 'credentials':
-                  await askCredentials(context, ref, profile);
-                case 'usage':
-                  ref.read(profileUsageProvider.notifier).reset(profile.id);
-                case 'delete':
-                  ref.read(profilesProvider.notifier).remove(profile.id);
-                case 'default':
-                  ref.read(defaultProfileIdProvider.notifier).set(profile.id);
-              }
-            },
-            itemBuilder: (_) => [
-              if (editable)
-                PopupMenuItem(
-                  value: 'edit',
-                  child: Text(tor ? context.l10n.menuBridgeSettings : context.l10n.menuEditServer),
-                ),
-              PopupMenuItem(value: 'share', child: Text(context.l10n.menuShare)),
-              if (profile.id != ref.read(defaultProfileProvider)?.id)
-                PopupMenuItem(value: 'default', child: Text(context.l10n.menuSetDefault)),
-              if (!tor && !mesh) PopupMenuItem(value: 'country', child: Text(context.l10n.menuSetCountry)),
-              if (profile.needsCredentials) PopupMenuItem(value: 'credentials', child: Text(context.l10n.menuCredentials)),
-              if (ref.read(usageOfProvider(profile.id)) > 0)
-                PopupMenuItem(value: 'usage', child: Text(context.l10n.menuResetUsage)),
-              PopupMenuItem(value: 'delete', child: Text(context.l10n.actionDelete)),
-            ],
+            visualDensity: VisualDensity.compact,
+            onPressed: () => _actions(context, ref, editable: editable),
+            icon: const Icon(Icons.more_vert),
           ),
         ],
       ),
