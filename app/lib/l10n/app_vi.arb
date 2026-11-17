@@ -650,5 +650,17 @@
   "privacyPermApps": "Danh sách ứng dụng đã cài: chỉ để chọn ứng dụng cho chia tách đường hầm.",
   "privacyChangesTitle": "Thay đổi và liên hệ",
   "privacyChanges": "Wardkeep là mã nguồn mở (MIT), nên mọi điều trên đều có thể kiểm tra trong mã. Nếu chính sách này thay đổi, phiên bản mới sẽ đến cùng bản cập nhật ứng dụng. Câu hỏi: mở một issue tại github.com/NoobforAl/wardkeep.",
-  "privacyUpdated": "Cập nhật lần cuối: {date}"
+  "privacyUpdated": "Cập nhật lần cuối: {date}",
+  "settingsNetwork": "Mạng",
+  "settingsRouting": "Định tuyến",
+  "settingsPrivacy": "Quyền riêng tư",
+  "menuSelect": "Chọn",
+  "selectedCount": "Đã chọn {count}",
+  "selectAll": "Chọn tất cả",
+  "bulkDeleteTitle": "Xóa các máy chủ đã chọn?",
+  "bulkDeleteBody": "{servers} sẽ bị xóa khỏi thiết bị này. Máy chủ từ gói đăng ký sẽ quay lại ở lần làm mới tiếp theo.",
+  "bulkDeletedToast": "Đã xóa {servers}",
+  "bulkMovedToast": "Đã chuyển {servers} vào {group}",
+  "profilesHintActions": "Chạm để chọn máy chủ, giữ để mở menu, kéo tay cầm để sắp xếp lại. Chuyển dự phòng theo thứ tự này.",
+  "reorderHandle": "Kéo để sắp xếp lại"
 }

@@ -2386,4 +2386,49 @@ class AppLocalizationsRu extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'Последнее обновление: $date';
   }
+
+  @override
+  String get settingsNetwork => 'Сеть';
+
+  @override
+  String get settingsRouting => 'Маршрутизация';
+
+  @override
+  String get settingsPrivacy => 'Конфиденциальность';
+
+  @override
+  String get menuSelect => 'Выбрать';
+
+  @override
+  String selectedCount(int count) {
+    return 'Выбрано: $count';
+  }
+
+  @override
+  String get selectAll => 'Выбрать все';
+
+  @override
+  String get bulkDeleteTitle => 'Удалить выбранные серверы?';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return 'Будет удалено с этого устройства: $servers. Сервер из подписки вернётся при следующем обновлении подписки.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return 'Удалено: $servers';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return 'Перемещено: $servers → $group';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'Нажмите, чтобы выбрать сервер, удерживайте — меню, перетащите значок справа, чтобы изменить порядок. Переключение при сбое идёт в этом порядке.';
+
+  @override
+  String get reorderHandle => 'Перетащите, чтобы изменить порядок';
 }

@@ -650,5 +650,17 @@
   "privacyPermApps": "Yüklü uygulamaların listesi: yalnızca bölünmüş tünel için uygulama seçmek amacıyla.",
   "privacyChangesTitle": "Değişiklikler ve iletişim",
   "privacyChanges": "Wardkeep açık kaynaklıdır (MIT); tüm bunlar kodunda denetlenebilir. Bu politika değişirse yeni sürüm bir uygulama güncellemesiyle gelir. Sorular: github.com/NoobforAl/wardkeep adresinde bir issue açın.",
-  "privacyUpdated": "Son güncelleme: {date}"
+  "privacyUpdated": "Son güncelleme: {date}",
+  "settingsNetwork": "Ağ",
+  "settingsRouting": "Yönlendirme",
+  "settingsPrivacy": "Gizlilik",
+  "menuSelect": "Seç",
+  "selectedCount": "{count} seçildi",
+  "selectAll": "Tümünü seç",
+  "bulkDeleteTitle": "Seçilen sunucular silinsin mi?",
+  "bulkDeleteBody": "{servers} bu cihazdan silinecek. Bir abonelikten gelen sunucu, abonelik bir sonraki yenilenişinde geri gelir.",
+  "bulkDeletedToast": "{servers} silindi",
+  "bulkMovedToast": "{servers} {group} grubuna taşındı",
+  "profilesHintActions": "Sunucuyu seçmek için dokunun, menüsü için basılı tutun, sırayı değiştirmek için tutamacı sürükleyin. Yedeğe geçiş bu sırayı izler.",
+  "reorderHandle": "Sırayı değiştirmek için sürükleyin"
 }

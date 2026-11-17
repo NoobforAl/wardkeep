@@ -2358,4 +2358,49 @@ class AppLocalizationsTr extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'Son güncelleme: $date';
   }
+
+  @override
+  String get settingsNetwork => 'Ağ';
+
+  @override
+  String get settingsRouting => 'Yönlendirme';
+
+  @override
+  String get settingsPrivacy => 'Gizlilik';
+
+  @override
+  String get menuSelect => 'Seç';
+
+  @override
+  String selectedCount(int count) {
+    return '$count seçildi';
+  }
+
+  @override
+  String get selectAll => 'Tümünü seç';
+
+  @override
+  String get bulkDeleteTitle => 'Seçilen sunucular silinsin mi?';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '$servers bu cihazdan silinecek. Bir abonelikten gelen sunucu, abonelik bir sonraki yenilenişinde geri gelir.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return '$servers silindi';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '$servers $group grubuna taşındı';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'Sunucuyu seçmek için dokunun, menüsü için basılı tutun, sırayı değiştirmek için tutamacı sürükleyin. Yedeğe geçiş bu sırayı izler.';
+
+  @override
+  String get reorderHandle => 'Sırayı değiştirmek için sürükleyin';
 }

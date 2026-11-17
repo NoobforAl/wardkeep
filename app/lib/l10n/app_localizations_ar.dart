@@ -2391,4 +2391,49 @@ class AppLocalizationsAr extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'آخر تحديث: $date';
   }
+
+  @override
+  String get settingsNetwork => 'الشبكة';
+
+  @override
+  String get settingsRouting => 'التوجيه';
+
+  @override
+  String get settingsPrivacy => 'الخصوصية';
+
+  @override
+  String get menuSelect => 'تحديد';
+
+  @override
+  String selectedCount(int count) {
+    return 'تم تحديد $count';
+  }
+
+  @override
+  String get selectAll => 'تحديد الكل';
+
+  @override
+  String get bulkDeleteTitle => 'حذف الخوادم المحددة؟';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return 'سيتم حذف $servers من هذا الجهاز. يعود الخادم القادم من اشتراك عند تحديث الاشتراك في المرة التالية.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return 'تم حذف $servers';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return 'تم نقل $servers إلى $group';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'اضغط لاختيار خادم، واضغط مطولًا لفتح قائمته، واسحب المقبض لتغيير الترتيب. يتبع التبديل عند الفشل هذا الترتيب.';
+
+  @override
+  String get reorderHandle => 'اسحب لإعادة الترتيب';
 }

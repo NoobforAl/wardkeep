@@ -2350,4 +2350,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'Last updated: $date';
   }
+
+  @override
+  String get settingsNetwork => 'Network';
+
+  @override
+  String get settingsRouting => 'Routing';
+
+  @override
+  String get settingsPrivacy => 'Privacy';
+
+  @override
+  String get menuSelect => 'Select';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get selectAll => 'Select all';
+
+  @override
+  String get bulkDeleteTitle => 'Delete the selected servers?';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '$servers will be removed from this device. A server that came from a subscription returns the next time the subscription refreshes.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return 'Deleted $servers';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '$servers moved to $group';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'Tap to choose a server, hold it for its menu, drag the handle to reorder. Failover follows this order.';
+
+  @override
+  String get reorderHandle => 'Drag to reorder';
 }

@@ -2355,4 +2355,49 @@ class AppLocalizationsUr extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'آخری اپ ڈیٹ: $date';
   }
+
+  @override
+  String get settingsNetwork => 'نیٹ ورک';
+
+  @override
+  String get settingsRouting => 'روٹنگ';
+
+  @override
+  String get settingsPrivacy => 'رازداری';
+
+  @override
+  String get menuSelect => 'منتخب کریں';
+
+  @override
+  String selectedCount(int count) {
+    return '$count منتخب';
+  }
+
+  @override
+  String get selectAll => 'سب منتخب کریں';
+
+  @override
+  String get bulkDeleteTitle => 'منتخب سرور حذف کریں؟';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '$servers اس ڈیوائس سے ہٹا دیے جائیں گے۔ سبسکرپشن کا سرور سبسکرپشن کے اگلے ریفریش پر واپس آ جاتا ہے۔';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return '$servers حذف ہو گئے';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '$servers کو $group میں منتقل کر دیا گیا';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'سرور چننے کے لیے ٹیپ کریں، اس کا مینو دیکھنے کے لیے دبائے رکھیں، ترتیب بدلنے کے لیے ہینڈل کھینچیں۔ فیل اوور اسی ترتیب سے ہوتا ہے۔';
+
+  @override
+  String get reorderHandle => 'ترتیب بدلنے کے لیے کھینچیں';
 }

@@ -650,5 +650,17 @@
   "privacyPermApps": "Daftar aplikasi terpasang: hanya untuk memilih aplikasi pada split tunneling.",
   "privacyChangesTitle": "Perubahan dan kontak",
   "privacyChanges": "Wardkeep bersifat sumber terbuka (MIT), jadi semua ini dapat diperiksa di kodenya. Jika kebijakan ini berubah, versi barunya datang bersama pembaruan aplikasi. Pertanyaan: buka issue di github.com/NoobforAl/wardkeep.",
-  "privacyUpdated": "Terakhir diperbarui: {date}"
+  "privacyUpdated": "Terakhir diperbarui: {date}",
+  "settingsNetwork": "Jaringan",
+  "settingsRouting": "Perutean",
+  "settingsPrivacy": "Privasi",
+  "menuSelect": "Pilih",
+  "selectedCount": "{count} dipilih",
+  "selectAll": "Pilih semua",
+  "bulkDeleteTitle": "Hapus server yang dipilih?",
+  "bulkDeleteBody": "{servers} akan dihapus dari perangkat ini. Server dari langganan akan kembali saat langganan diperbarui lagi.",
+  "bulkDeletedToast": "{servers} dihapus",
+  "bulkMovedToast": "{servers} dipindahkan ke {group}",
+  "profilesHintActions": "Ketuk untuk memilih server, tahan untuk menunya, seret gagang untuk mengurutkan. Peralihan saat gagal mengikuti urutan ini.",
+  "reorderHandle": "Seret untuk mengurutkan"
 }

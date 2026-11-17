@@ -2352,4 +2352,49 @@ class AppLocalizationsFa extends AppLocalizations {
   String privacyUpdated(String date) {
     return 'آخرین به‌روزرسانی: $date';
   }
+
+  @override
+  String get settingsNetwork => 'شبکه';
+
+  @override
+  String get settingsRouting => 'مسیریابی';
+
+  @override
+  String get settingsPrivacy => 'حریم خصوصی';
+
+  @override
+  String get menuSelect => 'انتخاب';
+
+  @override
+  String selectedCount(int count) {
+    return '$count مورد انتخاب شد';
+  }
+
+  @override
+  String get selectAll => 'انتخاب همه';
+
+  @override
+  String get bulkDeleteTitle => 'سرورهای انتخاب‌شده حذف شوند؟';
+
+  @override
+  String bulkDeleteBody(String servers) {
+    return '$servers از این دستگاه حذف می‌شود. سروری که از اشتراک آمده باشد، دفعهٔ بعد که اشتراک به‌روز شود دوباره برمی‌گردد.';
+  }
+
+  @override
+  String bulkDeletedToast(String servers) {
+    return '$servers حذف شد';
+  }
+
+  @override
+  String bulkMovedToast(String servers, String group) {
+    return '$servers به $group منتقل شد';
+  }
+
+  @override
+  String get profilesHintActions =>
+      'برای انتخاب سرور بزنید، برای منوی آن نگه دارید و برای تغییر ترتیب دستگیره را بکشید. جابه‌جایی خودکار طبق همین ترتیب است.';
+
+  @override
+  String get reorderHandle => 'برای تغییر ترتیب بکشید';
 }
