@@ -32,10 +32,13 @@ TITLES = [
     ("GPL-3.0", r"^(.{0,40})?gnu general public license.{0,60}version 3"),
     ("GPL-2.0", r"^(.{0,40})?gnu general public license.{0,60}version 2"),
 ]
+# An exception to a license changes what the license means, so it is looked for before the title: a text that opens
+# with the LGPL-3.0 title and grants the linking exception further down is not plain LGPL-3.0 (github.com/juju/ratelimit).
+EXCEPTIONS = [
+    ("LGPL-3.0-with-linking-exception", r"special exception to the gnu lesser general public license version 3"),
+]
 # Permissive licenses, recognised by their wording.
 SIGNATURES = [
-    # LGPL-3.0 with a static-linking exception, the license text comes after a preamble (github.com/juju/ratelimit).
-    ("LGPL-3.0-with-linking-exception", r"special exception to the gnu lesser general public license version 3"),
     ("GPL-3.0", r"free software: you can redistribute it and/or modify it under the terms of the gnu general public license as published by the free software foundation, either version 3"),
     ("ISC", r"permission to use, copy, modify,? (and/or|and) distribute this software for any purpose with or without fee"),
     ("MIT", r"permission is hereby granted, free of charge, to any person obtaining a copy"),
@@ -59,6 +62,9 @@ def norm(text):
 def guess(text):
     t = norm(text)
     head = t[:500]
+    for spdx, rx in EXCEPTIONS:
+        if re.search(rx, t):
+            return spdx
     for spdx, rx in TITLES:
         if re.search(rx, head):
             return spdx
