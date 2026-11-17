@@ -9,7 +9,8 @@ import 'package:flutter/material.dart';
 /// (res/drawable/launch_background.xml), and the picture is decoded while the app starts ([prepare]), so Flutter's
 /// first frame has it: the shield is there from the first moment and never jumps or blinks. Then a soft glow and the
 /// name come up, a light runs over the shield once, the shield and name fade, and last the ground fades into the
-/// app, so the shield never lies over the home screen. With no animations asked for, the app shows at once.
+/// app, so the shield never lies over the home screen. A tap on it skips the rest (the same fade, in a third of
+/// a second), for someone who opens the app only to connect. With no animations asked for, the app shows at once.
 class SplashCover extends StatefulWidget {
   const SplashCover({super.key, required this.child});
 
@@ -67,6 +68,14 @@ class _SplashCoverState extends State<SplashCover> with SingleTickerProviderStat
   late final _fadeShield = _part(0.66, 0.8, Curves.easeIn);
   late final _fadeGround = _part(0.8, 1, Curves.easeInOut);
 
+  /// A tap: the rest of the screen plays out quickly, in the same order, so nothing jumps.
+  void _skip() {
+    if (!_controller.isAnimating) return;
+    final left = 1 - _controller.value;
+    final ms = (350 * left).round().clamp(120, 350);
+    unawaited(_controller.animateTo(1, duration: Duration(milliseconds: ms)));
+  }
+
   CurvedAnimation _part(double begin, double end, Curve curve) =>
       CurvedAnimation(parent: _controller, curve: Interval(begin, end, curve: curve));
 
@@ -114,7 +123,10 @@ class _SplashCoverState extends State<SplashCover> with SingleTickerProviderStat
             final shown = 1 - _fadeShield.value;
             return IgnorePointer(
               ignoring: _controller.value > 0.8, // the app can be used while the ground fades away
-              child: Opacity(
+              child: GestureDetector(
+               behavior: HitTestBehavior.opaque,
+               onTap: _skip,
+               child: Opacity(
                 opacity: 1 - _fadeGround.value,
                 child: ColoredBox(
                   color: ground,
@@ -182,6 +194,7 @@ class _SplashCoverState extends State<SplashCover> with SingleTickerProviderStat
                     ],
                   ),
                 ),
+              ),
               ),
             );
           },
