@@ -136,6 +136,10 @@ func TestSubscriptionDownloadFailureHasReasonAndNoLink(t *testing.T) {
 		if strings.Contains(e.Message, "SECRET-TOKEN") || strings.Contains(e.Message, "provider.example/sub") {
 			t.Errorf("the link is in the message: %q", e.Message)
 		}
+		// Nor the server's address or the host a lookup failed for, which the library puts in its own words.
+		if strings.Contains(e.Message, "203.0.113.1") || strings.Contains(e.Message, "provider.example") {
+			t.Errorf("an address is in the message: %q", e.Message)
+		}
 	}
 }
 
