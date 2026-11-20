@@ -46,7 +46,8 @@ prepare ┴─▶ android-tor + android-core ─▶ android ──────�
 * **Nothing is published if any build fails.** `publish` needs the Android APK and both installers, and the installers
   have been installed, checked and uninstalled on the runner before they get that far. A failed run leaves no
   half-made release.
-* **Independent work runs side by side:** the Tor client (Rust) and the Go core of the Android app, the Go core and
+* **Independent work runs side by side:** the Rust helpers (the Tor and rVPN clients, one job) and the Go core of the
+  Android app, the Go core and
   the Flutter app of each desktop system, and the three systems themselves.
 * **Caches:** Go modules and build cache (`setup-go`), Flutter SDK and pub cache (`flutter-action`), Cargo
   (`rust-cache`), Gradle (`setup-java`). A new push to a pull request cancels the older run of that pull request; a
