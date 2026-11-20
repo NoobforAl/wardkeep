@@ -18,6 +18,7 @@ import '../widgets/country_flag.dart';
 import '../widgets/credentials_dialog.dart';
 import '../widgets/protocol_badge.dart';
 import 'profile_editor_screen.dart';
+import 'import_screen.dart';
 import 'profiles_screen.dart';
 import 'share_screen.dart';
 import 'subscription_screen.dart';
@@ -128,7 +129,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
             onSelected: (choice) {
               switch (choice) {
                 case 'import':
-                  unawaited(showImportSheet(context, ref));
+                  unawaited(showImport(context));
                 case 'new':
                   Navigator.of(context).push(AppRoute<void>(builder: (_) => const NewServerScreen()));
                 case 'subscription':
@@ -191,7 +192,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
                             Text(context.l10n.importHintShort, textAlign: TextAlign.center),
                             const SizedBox(height: 16),
                             FilledButton.icon(
-                              onPressed: () => showImportSheet(context, ref),
+                              onPressed: () => showImport(context),
                               icon: const Icon(Icons.add),
                               label: Text(context.l10n.importConfig),
                             ),

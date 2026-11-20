@@ -2403,4 +2403,102 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reorderHandle => 'Sırayı değiştirmek için sürükleyin';
+
+  @override
+  String get importScanQrTitle => 'QR kodu tara';
+
+  @override
+  String get importScanQrHint => 'Kamerayı bir QR koduna tutun';
+
+  @override
+  String get importPasteTitle => 'Panodan yapıştır';
+
+  @override
+  String get importPasteHint =>
+      'Kopyaladığınız bağlantıyı veya yapılandırmayı içe aktarır';
+
+  @override
+  String get importOpenFileHint =>
+      'Bir .conf, .ovpn, .json, .yaml veya .txt dosyası';
+
+  @override
+  String get importSubscriptionTitle => 'Abonelik ekle';
+
+  @override
+  String get importSubscriptionHint =>
+      'Sunucu listesini güncel tutan bir adres';
+
+  @override
+  String get importTorHint => 'Tor ağı, doğrudan ya da bir köprü üzerinden';
+
+  @override
+  String get importTextLabel => 'Bir yapılandırma yapıştırın veya yazın';
+
+  @override
+  String get importClipboardEmpty => 'Panoda metin yok.';
+
+  @override
+  String get importFormatsTitle => 'Desteklenen biçimler';
+
+  @override
+  String get importFormatsLinks => 'Paylaşım bağlantıları';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'Abonelik adresleri (bağlantı listesi, düz veya base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'Xray, sing-box, Clash ve SIP008 yapılandırmaları (JSON veya YAML)';
+
+  @override
+  String get importFormatsWireGuard => 'WireGuard ve AmneziaWG .conf dosyaları';
+
+  @override
+  String get importFormatsOpenVpn => 'OpenVPN .ovpn dosyaları';
+
+  @override
+  String get importFormatsTorBridges => 'Tor köprü satırları';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'Bu, sunucu adresi olmayan bir rVPN sunucu anahtarı (prekey-bundle.json). Bunun yerine rVPN QR kodunu tarayın veya rvpn.txt içindeki rvpn:// bağlantısını yapıştırın.';
+
+  @override
+  String get errRvpnMissing => 'rVPN istemcisi (wardkeep-rvpn) kurulu değil';
+
+  @override
+  String get errRvpnHandshake =>
+      'rVPN sunucusu el sıkışmayı reddetti: QR kodu eski olabilir (sunucu yenilendi); yenisini isteyin';
+
+  @override
+  String get errRvpnUpgrade =>
+      'rVPN sunucusu tüneli açmadı: adresin yolu yanlış ya da arada bir proxy var';
+
+  @override
+  String get errRvpnExited => 'rVPN istemcisi beklenmedik şekilde durdu';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'Yalnızca TCP: UDP gerektiren uygulamalar (aramalar, bazı oyunlar) bunun üzerinden çalışmaz. Bu bağlantıya sahip herkes sunucuyu kullanabilir.';
+
+  @override
+  String get flRvpnBundle => 'Sunucu anahtarı (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'Yedek sunucular';
+
+  @override
+  String get hpRvpnPath => 'Sunucunun gizli WebSocket yolu, örneğin /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'Sunucunun prekey-bundle.json dosyasının içeriği';
+
+  @override
+  String get hpRvpnAlt =>
+      'Aynı sunucunun diğer adları; ilki yanıt vermezse sırayla denenir';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'rVPN bilgisayarda proxy modunda çalışır (Android\'de ise VPN modunda)';
 }

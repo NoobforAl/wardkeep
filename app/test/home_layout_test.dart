@@ -6,6 +6,7 @@ import 'package:wardkeep/l10n/l10n.dart';
 import 'package:wardkeep/main.dart';
 import 'package:wardkeep/state/providers.dart';
 import 'package:wardkeep/state/store.dart';
+import 'package:wardkeep/ui/screens/import_screen.dart';
 import 'package:wardkeep/ui/screens/location_screen.dart';
 import 'package:wardkeep/ui/screens/profiles_screen.dart';
 import 'package:wardkeep/ui/screens/settings_screen.dart';
@@ -102,7 +103,7 @@ void main() {
       });
     }
 
-    testWidgets('import sheet on a $name: nothing overflows, the button can be reached', (tester) async {
+    testWidgets('import screen on a $name: nothing overflows, the button can be reached', (tester) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
       tester.platformDispatcher.textScaleFactorTestValue = scale;
@@ -115,15 +116,16 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           home: Consumer(
-            builder: (context, ref, _) => TextButton(onPressed: () => showImportSheet(context, ref), child: const Text('open')),
+            builder: (context, _, _) => TextButton(onPressed: () => showImport(context), child: const Text('open')),
           ),
         ),
       ));
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      // Scrolls inside the sheet instead of overflowing.
-      await tester.scrollUntilVisible(find.widgetWithText(FilledButton, 'Import'), 100, scrollable: find.byType(Scrollable).last);
+      // The page scrolls instead of overflowing, and the Import button is pinned under it.
+      await tester.scrollUntilVisible(find.byKey(const Key('importFormats')), 100, scrollable: find.byType(Scrollable).first);
+      expect(tester.getRect(find.widgetWithText(FilledButton, 'Import')).bottom <= size.height, isTrue);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });

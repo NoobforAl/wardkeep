@@ -98,6 +98,13 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\awg\shell\open\command]
 @="\"C:\\Program Files\\Wardkeep\\wardkeep.exe\" \"%1\""
 
+[HKEY_CURRENT_USER\Software\Classes\rvpn]
+@="URL:rvpn link"
+"URL Protocol"=""
+
+[HKEY_CURRENT_USER\Software\Classes\rvpn\shell\open\command]
+@="\"C:\\Program Files\\Wardkeep\\wardkeep.exe\" \"%1\""
+
 [HKEY_CURRENT_USER\Software\Classes\anytls]
 @="URL:anytls link"
 "URL Protocol"=""

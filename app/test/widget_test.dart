@@ -35,6 +35,7 @@ void main() {
     await tester.tap(find.text('Import a config, link or QR'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'trojan://pw@example.com:443#Test%20Server');
+    await tester.pump();
     await tester.tap(find.widgetWithText(FilledButton, 'Import'));
     await tester.pumpAndSettle();
     final container = ProviderScope.containerOf(tester.element(find.byType(WardkeepApp)));

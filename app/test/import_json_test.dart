@@ -14,7 +14,7 @@ import 'package:wardkeep/state/providers.dart';
 import 'package:wardkeep/state/store.dart';
 import 'package:wardkeep/ui/import_file.dart';
 import 'package:wardkeep/ui/incoming_import.dart';
-import 'package:wardkeep/ui/screens/profiles_screen.dart';
+import 'package:wardkeep/ui/screens/import_screen.dart';
 import 'package:wardkeep/ui/widgets/notice.dart';
 import 'package:wardkeep/ui/theme.dart';
 
@@ -119,7 +119,7 @@ void main() {
     }
   });
 
-  group('the import sheet', () {
+  group('the import screen', () {
     Future<void> open(WidgetTester tester, Future<ImportResult> Function(String) answer) async {
       tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1;
@@ -132,8 +132,8 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Consumer(
-            builder: (context, ref, _) => Scaffold(
-              body: Center(child: TextButton(onPressed: () => showImportSheet(context, ref), child: const Text('open'))),
+            builder: (context, _, _) => Scaffold(
+              body: Center(child: TextButton(onPressed: () => showImport(context), child: const Text('open'))),
             ),
           ),
         ),
@@ -145,6 +145,7 @@ void main() {
 
     Future<void> importText(WidgetTester tester, String text) async {
       await tester.enterText(find.byType(TextField).last, text);
+      await tester.pump();
       await tester.tap(find.widgetWithText(FilledButton, 'Import'));
       await tester.pumpAndSettle();
     }
@@ -160,9 +161,12 @@ void main() {
 
     testWidgets('says that JSON works, as text or as a file', (tester) async {
       await open(tester, (_) async => const ImportResult([], []));
-      expect(find.textContaining('JSON config'), findsOneWidget);
       expect(find.text('Open file'), findsOneWidget);
-      expect(find.text('Paste'), findsOneWidget);
+      expect(find.text('Paste from clipboard'), findsOneWidget);
+      await tester.ensureVisible(find.text('Supported formats'));
+      await tester.tap(find.text('Supported formats'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Xray, sing-box, Clash and SIP008'), findsOneWidget);
     });
 
     testWidgets('a JSON syntax error is shown with its line and column, in the user\'s words', (tester) async {
@@ -179,7 +183,7 @@ void main() {
       expect(box(tester).color, theme(tester).noticeBackground(NoticeTone.error));
       expect(HSLColor.fromColor(box(tester).color!).hue, closeTo(HSLColor.fromColor(red).hue, 20), reason: 'the fill leans red');
       expect(tester.widget<Icon>(find.byIcon(Icons.error_outline_rounded)).color, red);
-      expect(find.text('Import'), findsOneWidget, reason: 'the sheet stays open so the text can be fixed');
+      expect(find.text('Import'), findsOneWidget, reason: 'the page stays open so the text can be fixed');
     });
 
     testWidgets('a server that is wrong keeps its reason under the message', (tester) async {
@@ -204,7 +208,7 @@ void main() {
       expect((box(tester).border! as Border).top.color, connectingAmber.withValues(alpha: 0.65), reason: 'partly worked: amber, not red');
     });
 
-    testWidgets('when the core cannot be asked at all, the sheet says so instead of waiting for ever', (tester) async {
+    testWidgets('when the core cannot be asked at all, the page says so instead of waiting for ever', (tester) async {
       await open(tester, (_) async => throw StateError('lost connection to the core'));
       await importText(tester, '{}');
       expect(message(tester), allOf(startsWith('Nothing imported'), contains('lost connection to the core')));

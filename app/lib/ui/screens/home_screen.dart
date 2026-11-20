@@ -22,6 +22,7 @@ import '../widgets/star_field.dart';
 import 'dns_screen.dart';
 import 'devices_screen.dart';
 import 'location_screen.dart';
+import 'import_screen.dart';
 import 'profiles_screen.dart';
 import 'settings_screen.dart';
 
@@ -906,7 +907,7 @@ class _BottomPanel extends ConsumerWidget {
                   ),
           ),
           if (plan == null)
-            _EmptyHint(onImport: () => showImportSheet(context, ref))
+            _EmptyHint(onImport: () => showImport(context))
           else ...[
             Material(
               color: scheme.surfaceContainerHigh,

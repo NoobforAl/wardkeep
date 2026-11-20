@@ -2278,4 +2278,94 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reorderHandle => '拖动以调整顺序';
+
+  @override
+  String get importScanQrTitle => '扫描二维码';
+
+  @override
+  String get importScanQrHint => '将相机对准二维码';
+
+  @override
+  String get importPasteTitle => '从剪贴板粘贴';
+
+  @override
+  String get importPasteHint => '导入你复制的链接或配置';
+
+  @override
+  String get importOpenFileHint => '.conf、.ovpn、.json、.yaml 或 .txt 文件';
+
+  @override
+  String get importSubscriptionTitle => '添加订阅';
+
+  @override
+  String get importSubscriptionHint => '一个让服务器列表保持更新的网址';
+
+  @override
+  String get importTorHint => 'Tor 网络，直连或通过网桥';
+
+  @override
+  String get importTextLabel => '粘贴或输入配置';
+
+  @override
+  String get importClipboardEmpty => '剪贴板中没有文本。';
+
+  @override
+  String get importFormatsTitle => '支持的格式';
+
+  @override
+  String get importFormatsLinks => '分享链接';
+
+  @override
+  String get importFormatsSubscriptions => '订阅网址（链接列表，明文或 base64）';
+
+  @override
+  String get importFormatsConfigs =>
+      'Xray、sing-box、Clash 和 SIP008 配置（JSON 或 YAML）';
+
+  @override
+  String get importFormatsWireGuard => 'WireGuard 和 AmneziaWG 的 .conf 文件';
+
+  @override
+  String get importFormatsOpenVpn => 'OpenVPN .ovpn 文件';
+
+  @override
+  String get importFormatsTorBridges => 'Tor 网桥行';
+
+  @override
+  String get importRvpnNeedsServer =>
+      '这是不含服务器地址的 rVPN 服务器密钥（prekey-bundle.json）。请改为扫描 rVPN 二维码，或粘贴 rvpn.txt 中的 rvpn:// 链接。';
+
+  @override
+  String get errRvpnMissing => '未安装 rVPN 客户端（wardkeep-rvpn）';
+
+  @override
+  String get errRvpnHandshake => 'rVPN 服务器拒绝了握手：二维码可能已过期（服务器已轮换），请索取新的二维码';
+
+  @override
+  String get errRvpnUpgrade => 'rVPN 服务器没有打开隧道：地址路径错误，或中间有代理阻挡';
+
+  @override
+  String get errRvpnExited => 'rVPN 客户端意外停止';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      '仅 TCP：需要 UDP 的应用（通话、部分游戏）无法通过它使用。任何拥有此链接的人都能使用该服务器。';
+
+  @override
+  String get flRvpnBundle => '服务器密钥（prekey-bundle.json）';
+
+  @override
+  String get flFallbackServers => '备用服务器';
+
+  @override
+  String get hpRvpnPath => '服务器的秘密 WebSocket 路径，例如 /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => '服务器 prekey-bundle.json 的内容';
+
+  @override
+  String get hpRvpnAlt => '同一服务器的其他名称，第一个无响应时按顺序尝试';
+
+  @override
+  String get errRvpnDesktopTun => 'rVPN 在电脑上以代理模式运行（在 Android 上以 VPN 模式运行）';
 }

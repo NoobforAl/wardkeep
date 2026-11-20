@@ -264,6 +264,7 @@ String protocolBadge(String protocol) {
     'openvpn' => 'OVPN',
     'tor' => 'TOR',
     'dnstt' => 'DNS',
+    'rvpn' => 'rVPN',
     _ => protocol.toUpperCase(),
   };
 }

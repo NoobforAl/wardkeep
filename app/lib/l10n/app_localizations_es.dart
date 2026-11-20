@@ -2427,4 +2427,105 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get reorderHandle => 'Arrastra para reordenar';
+
+  @override
+  String get importScanQrTitle => 'Escanear código QR';
+
+  @override
+  String get importScanQrHint => 'Apunta la cámara a un código QR';
+
+  @override
+  String get importPasteTitle => 'Pegar del portapapeles';
+
+  @override
+  String get importPasteHint =>
+      'Importa el enlace o la configuración que copiaste';
+
+  @override
+  String get importOpenFileHint =>
+      'Un archivo .conf, .ovpn, .json, .yaml o .txt';
+
+  @override
+  String get importSubscriptionTitle => 'Añadir suscripción';
+
+  @override
+  String get importSubscriptionHint =>
+      'Una URL que mantiene al día una lista de servidores';
+
+  @override
+  String get importTorHint => 'La red Tor, directa o a través de un puente';
+
+  @override
+  String get importTextLabel => 'Pega o escribe una configuración';
+
+  @override
+  String get importClipboardEmpty => 'El portapapeles no tiene texto.';
+
+  @override
+  String get importFormatsTitle => 'Formatos compatibles';
+
+  @override
+  String get importFormatsLinks => 'Enlaces para compartir';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'URL de suscripción (una lista de enlaces, en texto o base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'Configuraciones de Xray, sing-box, Clash y SIP008 (JSON o YAML)';
+
+  @override
+  String get importFormatsWireGuard =>
+      'Archivos .conf de WireGuard y AmneziaWG';
+
+  @override
+  String get importFormatsOpenVpn => 'Archivos .ovpn de OpenVPN';
+
+  @override
+  String get importFormatsTorBridges => 'Líneas de puentes Tor';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'Esta es una clave de servidor rVPN (prekey-bundle.json) sin la dirección del servidor. Escanea el código QR de rVPN o pega el enlace rvpn:// de rvpn.txt.';
+
+  @override
+  String get errRvpnMissing =>
+      'El cliente rVPN (wardkeep-rvpn) no está instalado';
+
+  @override
+  String get errRvpnHandshake =>
+      'El servidor rVPN rechazó el saludo: puede que el código QR sea antiguo (el servidor se renovó); pide uno nuevo';
+
+  @override
+  String get errRvpnUpgrade =>
+      'El servidor rVPN no abrió el túnel: la ruta de la dirección es incorrecta o hay un proxy en medio';
+
+  @override
+  String get errRvpnExited => 'El cliente rVPN se detuvo inesperadamente';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'Solo TCP: las apps que necesitan UDP (llamadas, algunos juegos) no funcionan a través de él. Cualquiera con este enlace puede usar el servidor.';
+
+  @override
+  String get flRvpnBundle => 'Clave del servidor (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'Servidores de respaldo';
+
+  @override
+  String get hpRvpnPath =>
+      'La ruta WebSocket secreta del servidor, como /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'El contenido del prekey-bundle.json del servidor';
+
+  @override
+  String get hpRvpnAlt =>
+      'Otros nombres del mismo servidor, que se prueban en orden cuando el primero no responde';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'rVPN funciona en modo proxy en un ordenador (y en modo VPN en Android)';
 }

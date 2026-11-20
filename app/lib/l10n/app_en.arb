@@ -1714,5 +1714,121 @@
   "reorderHandle": "Drag to reorder",
   "@reorderHandle": {
     "description": "Tooltip of the drag handle of a server row"
+  },
+  "importScanQrTitle": "Scan QR code",
+  "@importScanQrTitle": {
+    "description": "Import screen: title of the card that opens the QR scanner"
+  },
+  "importScanQrHint": "Point the camera at a QR code",
+  "@importScanQrHint": {
+    "description": "Import screen: one-line hint under Scan QR code"
+  },
+  "importPasteTitle": "Paste from clipboard",
+  "@importPasteTitle": {
+    "description": "Import screen: title of the card that pastes and imports the clipboard"
+  },
+  "importPasteHint": "Imports the link or config you copied",
+  "@importPasteHint": {
+    "description": "Import screen: one-line hint under Paste from clipboard"
+  },
+  "importOpenFileHint": "A .conf, .ovpn, .json, .yaml or .txt file",
+  "@importOpenFileHint": {
+    "description": "Import screen: one-line hint under Open file; keep the file extensions"
+  },
+  "importSubscriptionTitle": "Add subscription",
+  "@importSubscriptionTitle": {
+    "description": "Import screen: title of the card that opens the subscription form"
+  },
+  "importSubscriptionHint": "A URL that keeps a list of servers up to date",
+  "@importSubscriptionHint": {
+    "description": "Import screen: one-line hint under Add subscription"
+  },
+  "importTorHint": "The Tor network, directly or through a bridge",
+  "@importTorHint": {
+    "description": "Import screen: one-line hint under Tor"
+  },
+  "importTextLabel": "Paste or type a config",
+  "@importTextLabel": {
+    "description": "Import screen: label of the text field"
+  },
+  "importClipboardEmpty": "The clipboard has no text in it.",
+  "@importClipboardEmpty": {
+    "description": "Import screen: Paste from clipboard found nothing to paste"
+  },
+  "importFormatsTitle": "Supported formats",
+  "@importFormatsTitle": {
+    "description": "Import screen: title of the collapsible list of what can be imported"
+  },
+  "importFormatsLinks": "Share links",
+  "@importFormatsLinks": {
+    "description": "Import screen, supported formats: heading above the list of link schemes (vless://, ...)"
+  },
+  "importFormatsSubscriptions": "Subscription URLs (a list of links, plain or base64)",
+  "@importFormatsSubscriptions": {
+    "description": "Import screen, supported formats"
+  },
+  "importFormatsConfigs": "Xray, sing-box, Clash and SIP008 configs (JSON or YAML)",
+  "@importFormatsConfigs": {
+    "description": "Import screen, supported formats; keep the product names"
+  },
+  "importFormatsWireGuard": "WireGuard and AmneziaWG .conf files",
+  "@importFormatsWireGuard": {
+    "description": "Import screen, supported formats"
+  },
+  "importFormatsOpenVpn": "OpenVPN .ovpn files",
+  "@importFormatsOpenVpn": {
+    "description": "Import screen, supported formats"
+  },
+  "importFormatsTorBridges": "Tor bridge lines",
+  "@importFormatsTorBridges": {
+    "description": "Import screen, supported formats"
+  },
+  "importRvpnNeedsServer": "This is an rVPN server key (prekey-bundle.json) without the server address. Scan the rVPN QR code or paste the rvpn:// link from rvpn.txt instead.",
+  "@importRvpnNeedsServer": {
+    "description": "Core import error IMPORT_RVPN_NEEDS_SERVER; keep rVPN and the file names"
+  },
+  "errRvpnMissing": "The rVPN client (wardkeep-rvpn) is not installed",
+  "@errRvpnMissing": {
+    "description": "Engine error RVPN_MISSING"
+  },
+  "errRvpnHandshake": "The rVPN server rejected the handshake: the QR code may be old (the server was rotated); ask for a new one",
+  "@errRvpnHandshake": {
+    "description": "Engine error RVPN_HANDSHAKE"
+  },
+  "errRvpnUpgrade": "The rVPN server did not open the tunnel: the address path is wrong or a proxy is in the way",
+  "@errRvpnUpgrade": {
+    "description": "Engine error RVPN_UPGRADE"
+  },
+  "errRvpnExited": "The rVPN client stopped unexpectedly",
+  "@errRvpnExited": {
+    "description": "Engine error RVPN_EXITED"
+  },
+  "wnRvpnTcpOnly": "TCP only: apps that need UDP (calls, some games) do not work through it. Anyone with this link can use the server.",
+  "@wnRvpnTcpOnly": {
+    "description": "Core profile warning RVPN_TCP_ONLY"
+  },
+  "flRvpnBundle": "Server key (prekey-bundle.json)",
+  "@flRvpnBundle": {
+    "description": "rVPN editor field label; keep the file name"
+  },
+  "flFallbackServers": "Fallback servers",
+  "@flFallbackServers": {
+    "description": "rVPN editor field label"
+  },
+  "hpRvpnPath": "The server's secret WebSocket path, such as /api/v1/ws",
+  "@hpRvpnPath": {
+    "description": "rVPN editor help of the Path field"
+  },
+  "hpRvpnBundle": "The contents of the server's prekey-bundle.json",
+  "@hpRvpnBundle": {
+    "description": "rVPN editor help of the server key field"
+  },
+  "hpRvpnAlt": "Other names of the same server, tried in order when the first does not answer",
+  "@hpRvpnAlt": {
+    "description": "rVPN editor help of the Fallback servers field"
+  },
+  "errRvpnDesktopTun": "rVPN works in proxy mode on a computer (and in VPN mode on Android)",
+  "@errRvpnDesktopTun": {
+    "description": "Engine error RVPN_DESKTOP_TUN: rVPN was started in VPN (TUN) mode on a desktop"
   }
 }

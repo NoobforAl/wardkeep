@@ -54,7 +54,7 @@ class Notice extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 1, right: 10),
+              padding: const EdgeInsetsDirectional.only(top: 1, end: 10),
               child: Icon(tone == NoticeTone.error ? Icons.error_outline_rounded : Icons.warning_amber_rounded, color: color, size: 22),
             ),
             Expanded(

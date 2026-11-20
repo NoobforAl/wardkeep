@@ -2399,4 +2399,100 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get reorderHandle => 'क्रम बदलने के लिए खींचें';
+
+  @override
+  String get importScanQrTitle => 'QR कोड स्कैन करें';
+
+  @override
+  String get importScanQrHint => 'कैमरा किसी QR कोड पर रखें';
+
+  @override
+  String get importPasteTitle => 'क्लिपबोर्ड से चिपकाएँ';
+
+  @override
+  String get importPasteHint => 'आपका कॉपी किया लिंक या कॉन्फ़िग आयात करता है';
+
+  @override
+  String get importOpenFileHint => '.conf, .ovpn, .json, .yaml या .txt फ़ाइल';
+
+  @override
+  String get importSubscriptionTitle => 'सदस्यता जोड़ें';
+
+  @override
+  String get importSubscriptionHint =>
+      'एक URL जो सर्वरों की सूची अपडेट रखता है';
+
+  @override
+  String get importTorHint => 'Tor नेटवर्क, सीधे या किसी ब्रिज से';
+
+  @override
+  String get importTextLabel => 'कॉन्फ़िग चिपकाएँ या लिखें';
+
+  @override
+  String get importClipboardEmpty => 'क्लिपबोर्ड में कोई टेक्स्ट नहीं है।';
+
+  @override
+  String get importFormatsTitle => 'समर्थित फ़ॉर्मैट';
+
+  @override
+  String get importFormatsLinks => 'शेयर लिंक';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'सदस्यता URL (लिंक की सूची, सादा या base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'Xray, sing-box, Clash और SIP008 कॉन्फ़िग (JSON या YAML)';
+
+  @override
+  String get importFormatsWireGuard => 'WireGuard और AmneziaWG .conf फ़ाइलें';
+
+  @override
+  String get importFormatsOpenVpn => 'OpenVPN .ovpn फ़ाइलें';
+
+  @override
+  String get importFormatsTorBridges => 'Tor ब्रिज पंक्तियाँ';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'यह सर्वर पते के बिना rVPN सर्वर कुंजी (prekey-bundle.json) है। इसके बजाय rVPN QR कोड स्कैन करें या rvpn.txt से rvpn:// लिंक चिपकाएँ।';
+
+  @override
+  String get errRvpnMissing => 'rVPN क्लाइंट (wardkeep-rvpn) इंस्टॉल नहीं है';
+
+  @override
+  String get errRvpnHandshake =>
+      'rVPN सर्वर ने हैंडशेक अस्वीकार किया: QR कोड पुराना हो सकता है (सर्वर बदला गया); नया माँगें';
+
+  @override
+  String get errRvpnUpgrade =>
+      'rVPN सर्वर ने टनल नहीं खोली: पते का पाथ गलत है या बीच में कोई प्रॉक्सी है';
+
+  @override
+  String get errRvpnExited => 'rVPN क्लाइंट अचानक बंद हो गया';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'केवल TCP: जिन ऐप्स को UDP चाहिए (कॉल, कुछ गेम) वे इससे काम नहीं करते। जिसके पास भी यह लिंक है वह सर्वर इस्तेमाल कर सकता है।';
+
+  @override
+  String get flRvpnBundle => 'सर्वर कुंजी (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'बैकअप सर्वर';
+
+  @override
+  String get hpRvpnPath => 'सर्वर का गुप्त WebSocket पाथ, जैसे /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'सर्वर की prekey-bundle.json की सामग्री';
+
+  @override
+  String get hpRvpnAlt =>
+      'उसी सर्वर के अन्य नाम, जब पहला जवाब न दे तो क्रम से आज़माए जाते हैं';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'rVPN कंप्यूटर पर प्रॉक्सी मोड में काम करता है (और Android पर VPN मोड में)';
 }

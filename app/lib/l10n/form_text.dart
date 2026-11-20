@@ -10,6 +10,8 @@ String formLabel(AppLocalizations l, String english) {
     'Name' => l.flName,
     'Tunnel domain' => l.flTunnelDomain,
     'Server key' => l.flServerKey,
+    'Server key (prekey-bundle.json)' => l.flRvpnBundle,
+    'Fallback servers' => l.flFallbackServers,
     'Resolvers' => l.flResolvers,
     'Through a proxy (share link)' => l.flWgVia,
     'Fragment the TLS handshake' => l.flTlsFragment,
@@ -120,6 +122,9 @@ String formHelp(AppLocalizations l, String english) {
     'The name this device has in the network; empty uses the device\'s own' => l.hpDeviceName,
     'Name or address of a device whose internet connection to use; empty reaches only your devices' => l.hpExitDevice,
     'Removed from the network when it goes offline' => l.hpTempDevice,
+    "The server's secret WebSocket path, such as /api/v1/ws" => l.hpRvpnPath,
+    "The contents of the server's prekey-bundle.json" => l.hpRvpnBundle,
+    'Other names of the same server, tried in order when the first does not answer' => l.hpRvpnAlt,
     _ => english,
   };
 }
@@ -137,6 +142,7 @@ String warningText(AppLocalizations l, WarningSpec w) {
     'SSH_VISIBLE' => l.wnSshVisible,
     'DNSTT_SLOW' => l.wnDnsttSlow,
     'DNSTT_OPEN' => l.wnDnsttOpen,
+    'RVPN_TCP_ONLY' => l.wnRvpnTcpOnly,
     'MUX_LOSSY' => l.wnMuxLossy,
     'FRAGMENT_SIDE' => l.wnFragmentSide,
     'ECH_SERVER' => l.wnEchServer,

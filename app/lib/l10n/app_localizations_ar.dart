@@ -2436,4 +2436,100 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reorderHandle => 'اسحب لإعادة الترتيب';
+
+  @override
+  String get importScanQrTitle => 'مسح رمز QR';
+
+  @override
+  String get importScanQrHint => 'وجّه الكاميرا نحو رمز QR';
+
+  @override
+  String get importPasteTitle => 'لصق من الحافظة';
+
+  @override
+  String get importPasteHint => 'يستورد الرابط أو الإعداد الذي نسخته';
+
+  @override
+  String get importOpenFileHint =>
+      'ملف .conf أو .ovpn أو .json أو .yaml أو .txt';
+
+  @override
+  String get importSubscriptionTitle => 'إضافة اشتراك';
+
+  @override
+  String get importSubscriptionHint => 'رابط يُبقي قائمة الخوادم محدّثة';
+
+  @override
+  String get importTorHint => 'شبكة Tor، مباشرة أو عبر جسر';
+
+  @override
+  String get importTextLabel => 'الصق إعدادًا أو اكتبه';
+
+  @override
+  String get importClipboardEmpty => 'لا يوجد نص في الحافظة.';
+
+  @override
+  String get importFormatsTitle => 'الصيغ المدعومة';
+
+  @override
+  String get importFormatsLinks => 'روابط المشاركة';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'روابط الاشتراك (قائمة روابط، نصية أو base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'إعدادات Xray وsing-box وClash وSIP008 (JSON أو YAML)';
+
+  @override
+  String get importFormatsWireGuard => 'ملفات .conf لـ WireGuard وAmneziaWG';
+
+  @override
+  String get importFormatsOpenVpn => 'ملفات OpenVPN ‏.ovpn';
+
+  @override
+  String get importFormatsTorBridges => 'أسطر جسور Tor';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'هذا مفتاح خادم rVPN ‏(prekey-bundle.json) بدون عنوان الخادم. امسح رمز QR الخاص بـ rVPN أو الصق رابط rvpn:// من rvpn.txt بدلًا منه.';
+
+  @override
+  String get errRvpnMissing => 'عميل rVPN ‏(wardkeep-rvpn) غير مثبت';
+
+  @override
+  String get errRvpnHandshake =>
+      'رفض خادم rVPN المصافحة: قد يكون رمز QR قديمًا (تم تدوير الخادم)؛ اطلب رمزًا جديدًا';
+
+  @override
+  String get errRvpnUpgrade =>
+      'لم يفتح خادم rVPN النفق: مسار العنوان خاطئ أو يوجد وكيل في الطريق';
+
+  @override
+  String get errRvpnExited => 'توقف عميل rVPN بشكل غير متوقع';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'TCP فقط: التطبيقات التي تحتاج إلى UDP (المكالمات وبعض الألعاب) لا تعمل من خلاله. يمكن لأي شخص لديه هذا الرابط استخدام الخادم.';
+
+  @override
+  String get flRvpnBundle => 'مفتاح الخادم (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'خوادم احتياطية';
+
+  @override
+  String get hpRvpnPath => 'مسار WebSocket السري للخادم، مثل /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'محتوى ملف prekey-bundle.json الخاص بالخادم';
+
+  @override
+  String get hpRvpnAlt =>
+      'أسماء أخرى للخادم نفسه، تُجرَّب بالترتيب عندما لا يستجيب الأول';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'يعمل rVPN في وضع الوكيل على الكمبيوتر (وفي وضع VPN على Android)';
 }

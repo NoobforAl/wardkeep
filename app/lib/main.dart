@@ -20,7 +20,7 @@ import 'ui/incoming_import.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/logs_screen.dart';
 import 'ui/screens/onboarding_screen.dart';
-import 'ui/screens/profiles_screen.dart';
+import 'ui/screens/import_screen.dart';
 import 'ui/theme.dart';
 import 'ui/system_notifications.dart';
 import 'ui/tray.dart';
@@ -187,7 +187,7 @@ class _WardkeepAppState extends ConsumerState<WardkeepApp> {
       AppRoute(fullscreenDialog: true, builder: (_) => const OnboardingScreen()),
     );
     final overlay = _navigator.currentState?.overlay;
-    if (addServer == true && overlay != null && overlay.mounted) unawaited(showImportSheet(overlay.context, ref));
+    if (addServer == true && overlay != null && overlay.mounted) unawaited(showImport(overlay.context));
   }
 
   /// The log page, narrowed to one connect attempt when [conn] is given.

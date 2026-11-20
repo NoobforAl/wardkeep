@@ -2395,4 +2395,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reorderHandle => 'Drag to reorder';
+
+  @override
+  String get importScanQrTitle => 'Scan QR code';
+
+  @override
+  String get importScanQrHint => 'Point the camera at a QR code';
+
+  @override
+  String get importPasteTitle => 'Paste from clipboard';
+
+  @override
+  String get importPasteHint => 'Imports the link or config you copied';
+
+  @override
+  String get importOpenFileHint => 'A .conf, .ovpn, .json, .yaml or .txt file';
+
+  @override
+  String get importSubscriptionTitle => 'Add subscription';
+
+  @override
+  String get importSubscriptionHint =>
+      'A URL that keeps a list of servers up to date';
+
+  @override
+  String get importTorHint => 'The Tor network, directly or through a bridge';
+
+  @override
+  String get importTextLabel => 'Paste or type a config';
+
+  @override
+  String get importClipboardEmpty => 'The clipboard has no text in it.';
+
+  @override
+  String get importFormatsTitle => 'Supported formats';
+
+  @override
+  String get importFormatsLinks => 'Share links';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'Subscription URLs (a list of links, plain or base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'Xray, sing-box, Clash and SIP008 configs (JSON or YAML)';
+
+  @override
+  String get importFormatsWireGuard => 'WireGuard and AmneziaWG .conf files';
+
+  @override
+  String get importFormatsOpenVpn => 'OpenVPN .ovpn files';
+
+  @override
+  String get importFormatsTorBridges => 'Tor bridge lines';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'This is an rVPN server key (prekey-bundle.json) without the server address. Scan the rVPN QR code or paste the rvpn:// link from rvpn.txt instead.';
+
+  @override
+  String get errRvpnMissing =>
+      'The rVPN client (wardkeep-rvpn) is not installed';
+
+  @override
+  String get errRvpnHandshake =>
+      'The rVPN server rejected the handshake: the QR code may be old (the server was rotated); ask for a new one';
+
+  @override
+  String get errRvpnUpgrade =>
+      'The rVPN server did not open the tunnel: the address path is wrong or a proxy is in the way';
+
+  @override
+  String get errRvpnExited => 'The rVPN client stopped unexpectedly';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'TCP only: apps that need UDP (calls, some games) do not work through it. Anyone with this link can use the server.';
+
+  @override
+  String get flRvpnBundle => 'Server key (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'Fallback servers';
+
+  @override
+  String get hpRvpnPath =>
+      'The server\'s secret WebSocket path, such as /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'The contents of the server\'s prekey-bundle.json';
+
+  @override
+  String get hpRvpnAlt =>
+      'Other names of the same server, tried in order when the first does not answer';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'rVPN works in proxy mode on a computer (and in VPN mode on Android)';
 }

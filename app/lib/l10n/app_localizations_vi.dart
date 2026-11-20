@@ -2382,4 +2382,101 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get reorderHandle => 'Kéo để sắp xếp lại';
+
+  @override
+  String get importScanQrTitle => 'Quét mã QR';
+
+  @override
+  String get importScanQrHint => 'Hướng camera vào mã QR';
+
+  @override
+  String get importPasteTitle => 'Dán từ bộ nhớ tạm';
+
+  @override
+  String get importPasteHint => 'Nhập liên kết hoặc cấu hình bạn đã sao chép';
+
+  @override
+  String get importOpenFileHint => 'Tệp .conf, .ovpn, .json, .yaml hoặc .txt';
+
+  @override
+  String get importSubscriptionTitle => 'Thêm gói đăng ký';
+
+  @override
+  String get importSubscriptionHint =>
+      'Một URL giữ danh sách máy chủ luôn cập nhật';
+
+  @override
+  String get importTorHint => 'Mạng Tor, trực tiếp hoặc qua cầu nối';
+
+  @override
+  String get importTextLabel => 'Dán hoặc nhập cấu hình';
+
+  @override
+  String get importClipboardEmpty => 'Bộ nhớ tạm không có văn bản.';
+
+  @override
+  String get importFormatsTitle => 'Định dạng được hỗ trợ';
+
+  @override
+  String get importFormatsLinks => 'Liên kết chia sẻ';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'URL đăng ký (danh sách liên kết, dạng thường hoặc base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'Cấu hình Xray, sing-box, Clash và SIP008 (JSON hoặc YAML)';
+
+  @override
+  String get importFormatsWireGuard => 'Tệp .conf của WireGuard và AmneziaWG';
+
+  @override
+  String get importFormatsOpenVpn => 'Tệp OpenVPN .ovpn';
+
+  @override
+  String get importFormatsTorBridges => 'Dòng cầu nối Tor';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'Đây là khóa máy chủ rVPN (prekey-bundle.json) không có địa chỉ máy chủ. Hãy quét mã QR rVPN hoặc dán liên kết rvpn:// từ rvpn.txt.';
+
+  @override
+  String get errRvpnMissing => 'Chưa cài trình khách rVPN (wardkeep-rvpn)';
+
+  @override
+  String get errRvpnHandshake =>
+      'Máy chủ rVPN từ chối bắt tay: mã QR có thể đã cũ (máy chủ đã được thay khóa); hãy xin mã mới';
+
+  @override
+  String get errRvpnUpgrade =>
+      'Máy chủ rVPN không mở đường hầm: đường dẫn trong địa chỉ sai hoặc có proxy chặn giữa';
+
+  @override
+  String get errRvpnExited => 'Trình khách rVPN dừng đột ngột';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'Chỉ TCP: ứng dụng cần UDP (cuộc gọi, một số trò chơi) không hoạt động qua nó. Bất kỳ ai có liên kết này đều dùng được máy chủ.';
+
+  @override
+  String get flRvpnBundle => 'Khóa máy chủ (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'Máy chủ dự phòng';
+
+  @override
+  String get hpRvpnPath =>
+      'Đường dẫn WebSocket bí mật của máy chủ, ví dụ /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'Nội dung tệp prekey-bundle.json của máy chủ';
+
+  @override
+  String get hpRvpnAlt =>
+      'Các tên khác của cùng máy chủ, được thử lần lượt khi tên đầu tiên không trả lời';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'rVPN chạy ở chế độ proxy trên máy tính (và ở chế độ VPN trên Android)';
 }

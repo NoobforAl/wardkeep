@@ -2431,4 +2431,102 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get reorderHandle => 'Перетащите, чтобы изменить порядок';
+
+  @override
+  String get importScanQrTitle => 'Сканировать QR-код';
+
+  @override
+  String get importScanQrHint => 'Наведите камеру на QR-код';
+
+  @override
+  String get importPasteTitle => 'Вставить из буфера обмена';
+
+  @override
+  String get importPasteHint =>
+      'Импортирует скопированную ссылку или конфигурацию';
+
+  @override
+  String get importOpenFileHint => 'Файл .conf, .ovpn, .json, .yaml или .txt';
+
+  @override
+  String get importSubscriptionTitle => 'Добавить подписку';
+
+  @override
+  String get importSubscriptionHint =>
+      'Адрес, по которому список серверов обновляется сам';
+
+  @override
+  String get importTorHint => 'Сеть Tor, напрямую или через мост';
+
+  @override
+  String get importTextLabel => 'Вставьте или введите конфигурацию';
+
+  @override
+  String get importClipboardEmpty => 'В буфере обмена нет текста.';
+
+  @override
+  String get importFormatsTitle => 'Поддерживаемые форматы';
+
+  @override
+  String get importFormatsLinks => 'Ссылки для обмена';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'Адреса подписок (список ссылок, обычный или base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'Конфигурации Xray, sing-box, Clash и SIP008 (JSON или YAML)';
+
+  @override
+  String get importFormatsWireGuard => 'Файлы .conf WireGuard и AmneziaWG';
+
+  @override
+  String get importFormatsOpenVpn => 'Файлы OpenVPN .ovpn';
+
+  @override
+  String get importFormatsTorBridges => 'Строки мостов Tor';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'Это ключ сервера rVPN (prekey-bundle.json) без адреса сервера. Вместо него отсканируйте QR-код rVPN или вставьте ссылку rvpn:// из rvpn.txt.';
+
+  @override
+  String get errRvpnMissing => 'Клиент rVPN (wardkeep-rvpn) не установлен';
+
+  @override
+  String get errRvpnHandshake =>
+      'Сервер rVPN отклонил рукопожатие: возможно, QR-код устарел (ключи сервера сменились); попросите новый';
+
+  @override
+  String get errRvpnUpgrade =>
+      'Сервер rVPN не открыл туннель: путь в адресе неверен или мешает прокси';
+
+  @override
+  String get errRvpnExited => 'Клиент rVPN неожиданно остановился';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'Только TCP: приложения, которым нужен UDP (звонки, некоторые игры), через него не работают. Любой, у кого есть эта ссылка, может пользоваться сервером.';
+
+  @override
+  String get flRvpnBundle => 'Ключ сервера (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'Запасные серверы';
+
+  @override
+  String get hpRvpnPath =>
+      'Секретный путь WebSocket сервера, например /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'Содержимое файла prekey-bundle.json сервера';
+
+  @override
+  String get hpRvpnAlt =>
+      'Другие имена того же сервера; пробуются по порядку, если первое не отвечает';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'На компьютере rVPN работает в режиме прокси (а на Android — в режиме VPN)';
 }

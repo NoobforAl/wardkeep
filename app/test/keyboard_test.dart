@@ -5,7 +5,7 @@ import 'package:wardkeep/engine/mock_engine.dart';
 import 'package:wardkeep/l10n/app_localizations.dart';
 import 'package:wardkeep/state/providers.dart';
 import 'package:wardkeep/state/store.dart';
-import 'package:wardkeep/ui/screens/profiles_screen.dart';
+import 'package:wardkeep/ui/screens/import_screen.dart';
 import 'package:wardkeep/ui/screens/subscription_screen.dart';
 import 'package:wardkeep/ui/theme.dart';
 
@@ -47,6 +47,8 @@ void main() {
 
       /// The user taps a field, then the keyboard and the system bar come up.
       Future<void> typeIn(WidgetTester tester, Finder field) async {
+        await tester.ensureVisible(field);
+        await tester.pumpAndSettle();
         await tester.tap(field);
         await tester.pump();
         tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
@@ -67,10 +69,10 @@ void main() {
         expect(rect.top >= 0, isTrue, reason: '$what: the button is above the screen ($rect)');
       }
 
-      testWidgets('import sheet on a $name at text scale $scale: Import stays above the keyboard', (tester) async {
-        await open(tester, showImportSheet);
+      testWidgets('import screen on a $name at text scale $scale: Import stays above the keyboard', (tester) async {
+        await open(tester, (context, _) => showImport(context));
         await typeIn(tester, find.byType(TextField).last);
-        expectAboveKeyboard(tester, find.widgetWithText(FilledButton, 'Import'), 'import sheet');
+        expectAboveKeyboard(tester, find.widgetWithText(FilledButton, 'Import'), 'import screen');
         // The form scrolls above the pinned button: at least the first line of the field is in view.
         final field = tester.getRect(find.byType(TextField).last);
         final button = tester.getRect(find.widgetWithText(FilledButton, 'Import'));

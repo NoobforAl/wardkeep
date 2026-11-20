@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../engine/engine.dart';
-import '../../l10n/errors.dart';
 import '../../l10n/l10n.dart';
 import '../../state/groups.dart';
 import '../../state/providers.dart';
@@ -17,12 +16,11 @@ import '../../state/usage.dart';
 import '../import_file.dart';
 import '../widgets/action_sheet.dart';
 import '../widgets/menu_item.dart';
-import '../widgets/notice.dart';
 import '../widgets/profile_subtitle.dart';
 import '../widgets/protocol_badge.dart';
+import 'import_screen.dart';
 import 'location_screen.dart';
 import 'profile_editor_screen.dart';
-import 'qr_scan_screen.dart';
 import 'share_screen.dart';
 import 'subscription_screen.dart';
 import '../widgets/credentials_dialog.dart';
@@ -272,7 +270,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         floatingActionButton: _selecting
             ? null
             : FloatingActionButton.extended(
-                onPressed: () => showImportSheet(context, ref),
+                onPressed: () => showImport(context),
                 icon: const Icon(Icons.add),
                 label: Text(context.l10n.actionImport),
               ),
@@ -817,241 +815,5 @@ class _SubscriptionHeader extends ConsumerWidget {
     if (age.inHours < 1) return l.agoMinutes(age.inMinutes);
     if (age.inDays < 1) return l.agoHours(age.inHours);
     return l.agoDays(age.inDays);
-  }
-}
-
-Future<void> showImportSheet(BuildContext context, WidgetRef ref) {
-  return showModalBottomSheet<void>(
-    context: context,
-    sheetAnimationStyle: softAnimation,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (context) => const _ImportSheet(),
-  );
-}
-
-class _ImportSheet extends ConsumerStatefulWidget {
-  const _ImportSheet();
-
-  @override
-  ConsumerState<_ImportSheet> createState() => _ImportSheetState();
-}
-
-class _ImportSheetState extends ConsumerState<_ImportSheet> {
-  final _controller = TextEditingController();
-  String? _message;
-
-  /// Why entries failed, one line each (shown under the message), as the core words them.
-  List<String> _details = const [];
-
-  /// Whether the message is about an import that worked in part (amber) and not one that failed (red).
-  bool _partial = false;
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _paste() async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (data?.text != null) _controller.text = data!.text!;
-  }
-
-  Future<void> _openFile() async {
-    try {
-      final file = await FilePicker.pickFile(dialogTitle: context.l10n.openTextFile);
-      if (file == null) return;
-      _controller.text = await readImportFile(file);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _partial = false;
-        _message = describeFileProblem(context.l10n, e);
-        _details = const [];
-      });
-      return;
-    }
-    await _import();
-  }
-
-  Future<void> _scanQr() async {
-    final text = await Navigator.of(context).push<String>(
-      AppRoute(builder: (_) => const QrScanScreen()),
-    );
-    if (text == null || !mounted) return;
-    _controller.text = text;
-    await _import();
-  }
-
-  /// Opens the subscription form (replacing this sheet), optionally prefilled.
-  void _openSubscription([String url = '']) {
-    final navigator = Navigator.of(context);
-    navigator.pop();
-    navigator.push(AppRoute<void>(builder: (_) => SubscriptionScreen(initialUrl: url)));
-  }
-
-  Future<void> _import() async {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    // A single http(s) or nordvpn:// URL is a subscription link, not a config.
-    if (!text.contains('\n') && RegExp(r'^(https?|nordvpn)://\S+$').hasMatch(text)) {
-      _openSubscription(text);
-      return;
-    }
-    setState(() {
-      _busy = true;
-      _partial = false;
-      _message = null;
-      _details = const [];
-    });
-    final ImportResult result;
-    try {
-      result = await ref.read(engineProvider).importText(_controller.text);
-    } catch (e) {
-      // The core could not be asked at all (it is not running, the connection to it broke): say so.
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _message = context.l10n.importNothing(describeError(context.l10n, e));
-      });
-      return;
-    }
-    final added = ref.read(profilesProvider.notifier).addAll(ref.read(groupsProvider.notifier).place(_controller.text, result.profiles));
-    if (!mounted) return;
-    if (result.profiles.isNotEmpty && result.errors.isEmpty) {
-      Navigator.of(context).pop();
-      final dupes = result.profiles.length - added;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(context.l10n.importedProfiles(added, dupes)),
-      ));
-      return;
-    }
-    // What the core says went wrong with each entry: the errors of a partial import, or the reasons that came
-    // along with a failure (without any, the failure's own message is already the message above).
-    final failure = result.failure;
-    final reasons = failure == null
-        ? result.errors
-        : (failure.args['details'] ?? '').split('\n').where((l) => l.isNotEmpty).toList();
-    setState(() {
-      _busy = false;
-      _partial = result.profiles.isNotEmpty;
-      _details = reasons;
-      _message = result.profiles.isEmpty && result.errors.isNotEmpty
-          ? context.l10n.importNothing(
-              result.failure != null ? describeError(context.l10n, result.failure!) : result.errors.first,
-            )
-          : context.l10n.importPartial(added, result.errors.length);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // The sheet rises with the keyboard; the form scrolls and the Import button stays
-    // pinned under it, so neither the keyboard nor the system bar can cover it.
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(context.l10n.importTitle, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 4),
-            Text(context.l10n.importDescription),
-            const SizedBox(height: 4),
-            Text(context.l10n.importJsonNote, style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (QrScanScreen.supported)
-                  FilledButton.tonalIcon(
-                    onPressed: _busy ? null : _scanQr,
-                    icon: const Icon(Icons.qr_code_scanner),
-                    label: Text(context.l10n.importScanQr),
-                  ),
-                FilledButton.tonalIcon(
-                  onPressed: _busy ? null : _openFile,
-                  icon: const Icon(Icons.file_open_outlined),
-                  label: Text(context.l10n.importOpenFile),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: _busy ? null : _paste,
-                  icon: const Icon(Icons.content_paste),
-                  label: Text(context.l10n.importPaste),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: _busy ? null : _openSubscription,
-                  icon: const Icon(Icons.add_link),
-                  label: Text(context.l10n.importSubscription),
-                ),
-                PopupMenuButton<String>(
-                  enabled: !_busy,
-                  tooltip: context.l10n.importAddTor,
-                  onSelected: (kind) {
-                    _controller.text = 'tor://$kind';
-                    unawaited(_import());
-                  },
-                  itemBuilder: (_) => [
-                    iconMenuItem('', Icons.bolt_rounded, context.l10n.importTorDirect),
-                    iconMenuItem('snowflake', Icons.ac_unit_rounded, context.l10n.importTorSnowflake),
-                    iconMenuItem('obfs4', Icons.shield_outlined, context.l10n.importTorObfs4),
-                  ],
-                  child: IgnorePointer(
-                    child: FilledButton.tonalIcon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.security),
-                      label: Text(context.l10n.importTor),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _controller,
-              minLines: 4,
-              maxLines: 8,
-              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'vless://…'),
-            ),
-            // A failure is a red notice on the sheet itself (a snackbar would be hidden behind it); an import
-            // that worked in part is amber.
-            if (_message != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Notice(
-                  message: _message!,
-                  details: _details,
-                  detailsTitle: context.l10n.importDetails,
-                  tone: _partial ? NoticeTone.warning : NoticeTone.error,
-                  messageKey: const Key('importMessage'),
-                  detailsKey: const Key('importDetails'),
-                ),
-              ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(onPressed: _busy ? null : _import, child: Text(context.l10n.actionImport)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

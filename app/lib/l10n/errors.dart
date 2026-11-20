@@ -25,6 +25,7 @@ String? translateCode(AppLocalizations l, String code, Map<String, String> args)
     'IMPORT_JSON_NO_SERVER' =>
       (args['found'] ?? '').isEmpty ? l.importJsonNoServer : l.importJsonNoServerFound(args['found']!),
     'IMPORT_TOO_LARGE' => l.importTooLarge(_int(args['limit'], 8)),
+    'IMPORT_RVPN_NEEDS_SERVER' => l.importRvpnNeedsServer,
     'AUTH_FAILED' => l.subAuthFailed,
     'SUB_HTTP' => l.subHttp(args['status'] ?? ''),
     // The download failed; the core says how (refused, timed out, no such host, ...) in `reason`.

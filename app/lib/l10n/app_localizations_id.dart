@@ -2383,4 +2383,101 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get reorderHandle => 'Seret untuk mengurutkan';
+
+  @override
+  String get importScanQrTitle => 'Pindai kode QR';
+
+  @override
+  String get importScanQrHint => 'Arahkan kamera ke kode QR';
+
+  @override
+  String get importPasteTitle => 'Tempel dari papan klip';
+
+  @override
+  String get importPasteHint =>
+      'Mengimpor tautan atau konfigurasi yang Anda salin';
+
+  @override
+  String get importOpenFileHint => 'File .conf, .ovpn, .json, .yaml, atau .txt';
+
+  @override
+  String get importSubscriptionTitle => 'Tambah langganan';
+
+  @override
+  String get importSubscriptionHint =>
+      'URL yang menjaga daftar server tetap terbaru';
+
+  @override
+  String get importTorHint => 'Jaringan Tor, langsung atau lewat bridge';
+
+  @override
+  String get importTextLabel => 'Tempel atau ketik konfigurasi';
+
+  @override
+  String get importClipboardEmpty => 'Papan klip tidak berisi teks.';
+
+  @override
+  String get importFormatsTitle => 'Format yang didukung';
+
+  @override
+  String get importFormatsLinks => 'Tautan berbagi';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'URL langganan (daftar tautan, teks biasa atau base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'Konfigurasi Xray, sing-box, Clash, dan SIP008 (JSON atau YAML)';
+
+  @override
+  String get importFormatsWireGuard => 'File .conf WireGuard dan AmneziaWG';
+
+  @override
+  String get importFormatsOpenVpn => 'File OpenVPN .ovpn';
+
+  @override
+  String get importFormatsTorBridges => 'Baris bridge Tor';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'Ini kunci server rVPN (prekey-bundle.json) tanpa alamat server. Pindai kode QR rVPN atau tempel tautan rvpn:// dari rvpn.txt sebagai gantinya.';
+
+  @override
+  String get errRvpnMissing => 'Klien rVPN (wardkeep-rvpn) tidak terpasang';
+
+  @override
+  String get errRvpnHandshake =>
+      'Server rVPN menolak handshake: kode QR mungkin sudah lama (server telah dirotasi); minta yang baru';
+
+  @override
+  String get errRvpnUpgrade =>
+      'Server rVPN tidak membuka terowongan: path alamat salah atau ada proxy yang menghalangi';
+
+  @override
+  String get errRvpnExited => 'Klien rVPN berhenti secara tak terduga';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'Hanya TCP: aplikasi yang butuh UDP (panggilan, beberapa game) tidak berjalan melaluinya. Siapa pun yang punya tautan ini bisa memakai servernya.';
+
+  @override
+  String get flRvpnBundle => 'Kunci server (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'Server cadangan';
+
+  @override
+  String get hpRvpnPath => 'Path WebSocket rahasia server, misalnya /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'Isi prekey-bundle.json milik server';
+
+  @override
+  String get hpRvpnAlt =>
+      'Nama lain dari server yang sama, dicoba berurutan saat yang pertama tidak menjawab';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'rVPN berjalan dalam mode proxy di komputer (dan dalam mode VPN di Android)';
 }

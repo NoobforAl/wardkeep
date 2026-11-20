@@ -2397,4 +2397,100 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get reorderHandle => 'برای تغییر ترتیب بکشید';
+
+  @override
+  String get importScanQrTitle => 'اسکن کد QR';
+
+  @override
+  String get importScanQrHint => 'دوربین را روی یک کد QR بگیرید';
+
+  @override
+  String get importPasteTitle => 'چسباندن از کلیپ‌بورد';
+
+  @override
+  String get importPasteHint => 'لینک یا پیکربندی کپی‌شده را وارد می‌کند';
+
+  @override
+  String get importOpenFileHint => 'یک فایل .conf، .ovpn، .json، .yaml یا .txt';
+
+  @override
+  String get importSubscriptionTitle => 'افزودن اشتراک';
+
+  @override
+  String get importSubscriptionHint =>
+      'نشانی‌ای که فهرست سرورها را به‌روز نگه می‌دارد';
+
+  @override
+  String get importTorHint => 'شبکه Tor، مستقیم یا از راه پل';
+
+  @override
+  String get importTextLabel => 'پیکربندی را بچسبانید یا بنویسید';
+
+  @override
+  String get importClipboardEmpty => 'کلیپ‌بورد متنی ندارد.';
+
+  @override
+  String get importFormatsTitle => 'قالب‌های پشتیبانی‌شده';
+
+  @override
+  String get importFormatsLinks => 'لینک‌های اشتراک‌گذاری';
+
+  @override
+  String get importFormatsSubscriptions =>
+      'نشانی‌های اشتراک (فهرستی از لینک‌ها، ساده یا base64)';
+
+  @override
+  String get importFormatsConfigs =>
+      'پیکربندی‌های Xray، sing-box، Clash و SIP008 (JSON یا YAML)';
+
+  @override
+  String get importFormatsWireGuard => 'فایل‌های .conf وایرگارد و AmneziaWG';
+
+  @override
+  String get importFormatsOpenVpn => 'فایل‌های .ovpn اوپن‌وی‌پی‌ان';
+
+  @override
+  String get importFormatsTorBridges => 'خطوط پل Tor';
+
+  @override
+  String get importRvpnNeedsServer =>
+      'این کلید سرور rVPN (prekey-bundle.json) است و نشانی سرور را ندارد. به‌جای آن کد QR مربوط به rVPN را اسکن کنید یا لینک rvpn:// را از rvpn.txt بچسبانید.';
+
+  @override
+  String get errRvpnMissing => 'برنامه rVPN (wardkeep-rvpn) نصب نیست';
+
+  @override
+  String get errRvpnHandshake =>
+      'سرور rVPN دست‌دهی را رد کرد: شاید کد QR قدیمی باشد (سرور عوض شده است)؛ کد تازه بخواهید';
+
+  @override
+  String get errRvpnUpgrade =>
+      'سرور rVPN تونل را باز نکرد: مسیر نشانی اشتباه است یا یک پراکسی سر راه است';
+
+  @override
+  String get errRvpnExited => 'برنامه rVPN به‌طور غیرمنتظره متوقف شد';
+
+  @override
+  String get wnRvpnTcpOnly =>
+      'فقط TCP: برنامه‌هایی که به UDP نیاز دارند (تماس‌ها، برخی بازی‌ها) از راه آن کار نمی‌کنند. هر کسی این لینک را داشته باشد می‌تواند از سرور استفاده کند.';
+
+  @override
+  String get flRvpnBundle => 'کلید سرور (prekey-bundle.json)';
+
+  @override
+  String get flFallbackServers => 'سرورهای جایگزین';
+
+  @override
+  String get hpRvpnPath => 'مسیر مخفی WebSocket سرور، مانند /api/v1/ws';
+
+  @override
+  String get hpRvpnBundle => 'محتوای فایل prekey-bundle.json سرور';
+
+  @override
+  String get hpRvpnAlt =>
+      'نام‌های دیگر همین سرور، که وقتی اولی پاسخ ندهد به ترتیب امتحان می‌شوند';
+
+  @override
+  String get errRvpnDesktopTun =>
+      'rVPN روی رایانه در حالت پراکسی کار می‌کند (و روی اندروید در حالت VPN)';
 }

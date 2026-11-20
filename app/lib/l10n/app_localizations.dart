@@ -4097,6 +4097,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag to reorder'**
   String get reorderHandle;
+
+  /// Import screen: title of the card that opens the QR scanner
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR code'**
+  String get importScanQrTitle;
+
+  /// Import screen: one-line hint under Scan QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at a QR code'**
+  String get importScanQrHint;
+
+  /// Import screen: title of the card that pastes and imports the clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Paste from clipboard'**
+  String get importPasteTitle;
+
+  /// Import screen: one-line hint under Paste from clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Imports the link or config you copied'**
+  String get importPasteHint;
+
+  /// Import screen: one-line hint under Open file; keep the file extensions
+  ///
+  /// In en, this message translates to:
+  /// **'A .conf, .ovpn, .json, .yaml or .txt file'**
+  String get importOpenFileHint;
+
+  /// Import screen: title of the card that opens the subscription form
+  ///
+  /// In en, this message translates to:
+  /// **'Add subscription'**
+  String get importSubscriptionTitle;
+
+  /// Import screen: one-line hint under Add subscription
+  ///
+  /// In en, this message translates to:
+  /// **'A URL that keeps a list of servers up to date'**
+  String get importSubscriptionHint;
+
+  /// Import screen: one-line hint under Tor
+  ///
+  /// In en, this message translates to:
+  /// **'The Tor network, directly or through a bridge'**
+  String get importTorHint;
+
+  /// Import screen: label of the text field
+  ///
+  /// In en, this message translates to:
+  /// **'Paste or type a config'**
+  String get importTextLabel;
+
+  /// Import screen: Paste from clipboard found nothing to paste
+  ///
+  /// In en, this message translates to:
+  /// **'The clipboard has no text in it.'**
+  String get importClipboardEmpty;
+
+  /// Import screen: title of the collapsible list of what can be imported
+  ///
+  /// In en, this message translates to:
+  /// **'Supported formats'**
+  String get importFormatsTitle;
+
+  /// Import screen, supported formats: heading above the list of link schemes (vless://, ...)
+  ///
+  /// In en, this message translates to:
+  /// **'Share links'**
+  String get importFormatsLinks;
+
+  /// Import screen, supported formats
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription URLs (a list of links, plain or base64)'**
+  String get importFormatsSubscriptions;
+
+  /// Import screen, supported formats; keep the product names
+  ///
+  /// In en, this message translates to:
+  /// **'Xray, sing-box, Clash and SIP008 configs (JSON or YAML)'**
+  String get importFormatsConfigs;
+
+  /// Import screen, supported formats
+  ///
+  /// In en, this message translates to:
+  /// **'WireGuard and AmneziaWG .conf files'**
+  String get importFormatsWireGuard;
+
+  /// Import screen, supported formats
+  ///
+  /// In en, this message translates to:
+  /// **'OpenVPN .ovpn files'**
+  String get importFormatsOpenVpn;
+
+  /// Import screen, supported formats
+  ///
+  /// In en, this message translates to:
+  /// **'Tor bridge lines'**
+  String get importFormatsTorBridges;
+
+  /// Core import error IMPORT_RVPN_NEEDS_SERVER; keep rVPN and the file names
+  ///
+  /// In en, this message translates to:
+  /// **'This is an rVPN server key (prekey-bundle.json) without the server address. Scan the rVPN QR code or paste the rvpn:// link from rvpn.txt instead.'**
+  String get importRvpnNeedsServer;
+
+  /// Engine error RVPN_MISSING
+  ///
+  /// In en, this message translates to:
+  /// **'The rVPN client (wardkeep-rvpn) is not installed'**
+  String get errRvpnMissing;
+
+  /// Engine error RVPN_HANDSHAKE
+  ///
+  /// In en, this message translates to:
+  /// **'The rVPN server rejected the handshake: the QR code may be old (the server was rotated); ask for a new one'**
+  String get errRvpnHandshake;
+
+  /// Engine error RVPN_UPGRADE
+  ///
+  /// In en, this message translates to:
+  /// **'The rVPN server did not open the tunnel: the address path is wrong or a proxy is in the way'**
+  String get errRvpnUpgrade;
+
+  /// Engine error RVPN_EXITED
+  ///
+  /// In en, this message translates to:
+  /// **'The rVPN client stopped unexpectedly'**
+  String get errRvpnExited;
+
+  /// Core profile warning RVPN_TCP_ONLY
+  ///
+  /// In en, this message translates to:
+  /// **'TCP only: apps that need UDP (calls, some games) do not work through it. Anyone with this link can use the server.'**
+  String get wnRvpnTcpOnly;
+
+  /// rVPN editor field label; keep the file name
+  ///
+  /// In en, this message translates to:
+  /// **'Server key (prekey-bundle.json)'**
+  String get flRvpnBundle;
+
+  /// rVPN editor field label
+  ///
+  /// In en, this message translates to:
+  /// **'Fallback servers'**
+  String get flFallbackServers;
+
+  /// rVPN editor help of the Path field
+  ///
+  /// In en, this message translates to:
+  /// **'The server\'s secret WebSocket path, such as /api/v1/ws'**
+  String get hpRvpnPath;
+
+  /// rVPN editor help of the server key field
+  ///
+  /// In en, this message translates to:
+  /// **'The contents of the server\'s prekey-bundle.json'**
+  String get hpRvpnBundle;
+
+  /// rVPN editor help of the Fallback servers field
+  ///
+  /// In en, this message translates to:
+  /// **'Other names of the same server, tried in order when the first does not answer'**
+  String get hpRvpnAlt;
+
+  /// Engine error RVPN_DESKTOP_TUN: rVPN was started in VPN (TUN) mode on a desktop
+  ///
+  /// In en, this message translates to:
+  /// **'rVPN works in proxy mode on a computer (and in VPN mode on Android)'**
+  String get errRvpnDesktopTun;
 }
 
 class _AppLocalizationsDelegate
