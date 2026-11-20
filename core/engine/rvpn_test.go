@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -36,7 +37,7 @@ func TestWithoutHelpers(t *testing.T) {
 func TestRVPNErrorCodes(t *testing.T) {
 	cases := map[string]string{
 		(&rvpn.HelperError{Code: rvpn.CodeHandshake, Message: "identity mismatch"}).Error(): ErrRVPNHandshake,
-		(&rvpn.HelperError{Code: rvpn.CodeUpgrade, Message: "HTTP 200"}).Error():           ErrRVPNUpgrade,
+		(&rvpn.HelperError{Code: rvpn.CodeUpgrade, Message: "HTTP 200"}).Error():            ErrRVPNUpgrade,
 		"Preparing failed: " + rvpn.ErrMissing.Error():                                      ErrRVPNMissing,
 		msgRVPNExited:     ErrRVPNExited,
 		msgRVPNDesktopTUN: ErrRVPNDesktopTUN,
@@ -64,6 +65,22 @@ func TestRVPNRefusedInDesktopTUN(t *testing.T) {
 	}
 	if last.Status != StatusError || last.ErrorCode != ErrRVPNDesktopTUN {
 		t.Fatalf("state = %+v", last)
+	}
+}
+
+// A profile ID never leaves the rVPN folder, whatever it holds, and each profile keeps its own folder.
+func TestRVPNDataDirStaysInside(t *testing.T) {
+	base := filepath.Join("data", "rvpn") + string(filepath.Separator)
+	seen := map[string]bool{}
+	for _, id := range []string{"c2a0b199ce0e", "../../etc", `..\..\x`, "/abs", "", "a/b"} {
+		dir := rvpnDataDir("data", id)
+		if !strings.HasPrefix(dir, base) || strings.ContainsAny(strings.TrimPrefix(dir, base), `/\.`) {
+			t.Errorf("id %q -> %q", id, dir)
+		}
+		if seen[dir] {
+			t.Errorf("id %q shares %q", id, dir)
+		}
+		seen[dir] = true
 	}
 }
 

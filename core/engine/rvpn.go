@@ -2,6 +2,8 @@ package engine
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"path/filepath"
 	"sync/atomic"
@@ -44,6 +46,13 @@ func withoutHelpers(profiles []*profile.Profile, helpers map[string]singbox.Help
 	return out
 }
 
+// rvpnDataDir is where a profile's helper keeps its identity key. The folder is named after a hash of the profile
+// ID: IDs come from the app and from imported profiles, and one like "../x" must not move the key elsewhere.
+func rvpnDataDir(dataDir, id string) string {
+	sum := sha256.Sum256([]byte(id))
+	return filepath.Join(dataDir, "rvpn", hex.EncodeToString(sum[:8]))
+}
+
 // errRVPNDesktopTUN refuses rVPN in a desktop TUN, where the helper's own connections would enter the tunnel.
 var errRVPNDesktopTUN = errors.New(msgRVPNDesktopTUN)
 
@@ -64,7 +73,7 @@ func (e *Engine) startRVPNLocked(prof *profile.Profile, profiles []*profile.Prof
 	run := &rvpnRun{profile: prof}
 	proc, err := rvpn.Start(rvpn.Config{
 		// One identity per profile: the server tells clients apart by this key.
-		DataDir:  filepath.Join(e.dataDir(), "rvpn", prof.ID),
+		DataDir:  rvpnDataDir(e.dataDir(), prof.ID),
 		Profile:  prof,
 		LogLevel: torLogLevel(),
 		OnLog:    func(rec logrec.Record) { e.rvpnRecord(run, rec) },
