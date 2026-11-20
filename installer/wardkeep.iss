@@ -168,6 +168,9 @@ Root: HKCU; Subkey: "Software\Classes\awg\shell\open\command"; ValueType: string
 Root: HKCU; Subkey: "Software\Classes\anytls"; ValueType: string; ValueData: "URL:anytls link"; Flags: uninsdeletekey; Tasks: links
 Root: HKCU; Subkey: "Software\Classes\anytls"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Tasks: links
 Root: HKCU; Subkey: "Software\Classes\anytls\shell\open\command"; ValueType: string; ValueData: """{app}\{#ExeName}"" ""%1"""; Tasks: links
+Root: HKCU; Subkey: "Software\Classes\rvpn"; ValueType: string; ValueData: "URL:rvpn link"; Flags: uninsdeletekey; Tasks: links
+Root: HKCU; Subkey: "Software\Classes\rvpn"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Tasks: links
+Root: HKCU; Subkey: "Software\Classes\rvpn\shell\open\command"; ValueType: string; ValueData: """{app}\{#ExeName}"" ""%1"""; Tasks: links
 Root: HKCU; Subkey: "Software\Classes\nordvpn"; ValueType: string; ValueData: "URL:nordvpn link"; Flags: uninsdeletekey; Tasks: links
 Root: HKCU; Subkey: "Software\Classes\nordvpn"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Tasks: links
 Root: HKCU; Subkey: "Software\Classes\nordvpn\shell\open\command"; ValueType: string; ValueData: """{app}\{#ExeName}"" ""%1"""; Tasks: links
