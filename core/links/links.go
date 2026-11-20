@@ -51,6 +51,8 @@ func Export(prof *profile.Profile) (string, error) {
 		return tailscale(prof)
 	case profile.DNSTT:
 		return dnstt(prof), nil
+	case profile.RVPN:
+		return rvpn(prof)
 	case profile.WireGuard, profile.AmneziaWG:
 		return wireguard(prof)
 	}

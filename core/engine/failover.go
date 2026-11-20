@@ -174,7 +174,8 @@ func (e *Engine) probe(ctx context.Context, instance *box.Box, tag, testURL stri
 	timeout := 8 * time.Second
 	e.mu.Lock()
 	viaTor := e.torRun != nil
-	if viaTor || e.dnsttRun != nil {
+	viaRVPN := e.rvpnRun != nil
+	if viaTor || e.dnsttRun != nil || viaRVPN {
 		timeout = 40 * time.Second
 	}
 	e.mu.Unlock()
@@ -185,6 +186,12 @@ func (e *Engine) probe(ctx context.Context, instance *box.Box, tag, testURL stri
 		pctx, cancel := context.WithTimeout(ctx, timeout)
 		_, err := urltest.URLTest(pctx, testURL, dialer)
 		cancel()
+		if err != nil && viaRVPN {
+			// The helper knows why (the handshake, the certificate, the path); sing-box only saw a refused request.
+			if why := e.rvpnFailure(ctx); why != nil {
+				return why
+			}
+		}
 		if err == nil || time.Now().After(readyBy) {
 			return err
 		}

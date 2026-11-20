@@ -68,20 +68,21 @@ const (
 
 	// Specific failures of import and subscriptions (the Message is English;
 	// see Error.Args for the numbers a translation needs).
-	CodeImportUnsupported  = "IMPORT_UNSUPPORTED" // args: scheme, when the text was a link
-	CodeImportNothing      = "IMPORT_NOTHING"     // no valid server in the text
-	CodeImportXrayServer   = "IMPORT_XRAY_SERVER"
-	CodeImportJSONSyntax   = "IMPORT_JSON_SYNTAX"    // not valid JSON; args: line, column, found (the character, quoted)
-	CodeImportJSONEnd      = "IMPORT_JSON_END"       // JSON that stops too early; args: line, column
-	CodeImportJSONNoServer = "IMPORT_JSON_NO_SERVER" // valid JSON without a proxy server; args: found (what it holds), maybe empty
-	CodeImportTooLarge     = "IMPORT_TOO_LARGE"      // args: limit (megabytes)
-	CodeSubHTTP            = "SUB_HTTP"              // args: status
-	CodeSubTooLarge        = "SUB_TOO_LARGE"
-	CodeSubBadURL          = "SUB_BAD_URL"
-	CodeSubUnsigned        = "SUB_UNSIGNED"      // a signing key is set and the answer is not signed
-	CodeSubBadSignature    = "SUB_BAD_SIGNATURE" // the signature does not fit the answer and the key
-	CodeSubStale           = "SUB_STALE"         // a signed answer older than the last one accepted (a replay)
-	CodeSubBadKey          = "SUB_BAD_KEY"       // the signing key is not a valid public key
+	CodeImportUnsupported     = "IMPORT_UNSUPPORTED" // args: scheme, when the text was a link
+	CodeImportNothing         = "IMPORT_NOTHING"     // no valid server in the text
+	CodeImportXrayServer      = "IMPORT_XRAY_SERVER"
+	CodeImportRVPNNeedsServer = "IMPORT_RVPN_NEEDS_SERVER" // an rVPN prekey bundle without the server's address
+	CodeImportJSONSyntax      = "IMPORT_JSON_SYNTAX"       // not valid JSON; args: line, column, found (the character, quoted)
+	CodeImportJSONEnd         = "IMPORT_JSON_END"          // JSON that stops too early; args: line, column
+	CodeImportJSONNoServer    = "IMPORT_JSON_NO_SERVER"    // valid JSON without a proxy server; args: found (what it holds), maybe empty
+	CodeImportTooLarge        = "IMPORT_TOO_LARGE"         // args: limit (megabytes)
+	CodeSubHTTP               = "SUB_HTTP"                 // args: status
+	CodeSubTooLarge           = "SUB_TOO_LARGE"
+	CodeSubBadURL             = "SUB_BAD_URL"
+	CodeSubUnsigned           = "SUB_UNSIGNED"      // a signing key is set and the answer is not signed
+	CodeSubBadSignature       = "SUB_BAD_SIGNATURE" // the signature does not fit the answer and the key
+	CodeSubStale              = "SUB_STALE"         // a signed answer older than the last one accepted (a replay)
+	CodeSubBadKey             = "SUB_BAD_KEY"       // the signing key is not a valid public key
 )
 
 // Error is a typed failure.

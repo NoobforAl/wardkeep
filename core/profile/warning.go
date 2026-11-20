@@ -28,6 +28,7 @@ const (
 	WarnSSHVisible    = "SSH_VISIBLE"
 	WarnDNSTTSlow     = "DNSTT_SLOW"
 	WarnDNSTTOpen     = "DNSTT_OPEN"
+	WarnRVPNTCPOnly   = "RVPN_TCP_ONLY"
 	WarnMuxLossy      = "MUX_LOSSY"
 	WarnFragmentSide  = "FRAGMENT_SIDE"
 	WarnECHServer     = "ECH_SERVER"
@@ -42,6 +43,7 @@ const (
 	warnTextSSH       = "SSH tunnels are easy to identify."
 	warnTextDNSTTSlow = "Slow (usually well under 1 Mbit/s) and TCP only. It sends many DNS queries that the network can see. Use it when nothing else works."
 	warnTextDNSTTOpen = "No username or password: anyone with this link can use the server."
+	warnTextRVPNTCP   = "TCP only: apps that need UDP (calls, some games) do not work through it. Anyone with this link can use the server."
 	warnTextMux       = "Multiplexing puts many connections on one. A bad link can slow all of them."
 	warnTextFragment  = "Fragmenting the handshake helps against some filters, may break on others, and adds delay."
 	warnTextECH       = "Needs a server that supports ECH. Otherwise the connection fails."
@@ -59,6 +61,7 @@ var (
 	wSSH         = Warning{WarnSSHVisible, WarnRisk, warnTextSSH}
 	wDNSTTSlow   = Warning{WarnDNSTTSlow, WarnRisk, warnTextDNSTTSlow}
 	wDNSTTOpen   = Warning{WarnDNSTTOpen, WarnRisk, warnTextDNSTTOpen}
+	wRVPNTCP     = Warning{WarnRVPNTCPOnly, WarnInfo, warnTextRVPNTCP}
 	wMux         = Warning{WarnMuxLossy, WarnInfo, warnTextMux}
 	wFragment    = Warning{WarnFragmentSide, WarnInfo, warnTextFragment}
 	wECH         = Warning{WarnECHServer, WarnRisk, warnTextECH}
@@ -85,6 +88,8 @@ func WarningsForProtocol(protocol string) []Warning {
 		return []Warning{wSSH}
 	case DNSTT:
 		return []Warning{wDNSTTSlow}
+	case RVPN:
+		return []Warning{wRVPNTCP}
 	}
 	return nil
 }

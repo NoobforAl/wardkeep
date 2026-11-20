@@ -61,6 +61,7 @@ const (
 	SourceSingBox  = "sing-box"
 	SourceTor      = "tor"
 	SourceDNSTT    = "dnstt"
+	SourceRVPN     = "rvpn"
 	SourceDNSCrypt = "dnscrypt"
 	SourceServer   = "server"
 	SourceApp      = "app"

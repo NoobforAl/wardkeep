@@ -52,3 +52,53 @@ func TestTorTunUsesGvisorStack(t *testing.T) {
 		t.Fatalf("stack = %v", tun["stack"])
 	}
 }
+
+// A helper that runs as this app (rVPN) keeps the app out of the VPN, so the TUN must not answer apps' TCP through
+// a listener in this app either: their connections would bypass the tunnel.
+func TestSelfExcludedTunUsesGvisorStack(t *testing.T) {
+	p := &profile.Profile{Name: "v", Protocol: profile.VLESS, Server: "example.com", Port: 443, UUID: "b831381d-6324-4d53-ad4f-8cda48b30811"}
+	p.EnsureID()
+	for _, tc := range []struct {
+		exclude []string
+		want    string
+	}{{[]string{SelfPackage}, "gvisor"}, {[]string{"com.example.other"}, "mixed"}, {nil, "mixed"}} {
+		cfg, _, err := Build([]*profile.Profile{p}, Options{Mode: ModeTUN, ExcludePackages: tc.exclude, Selected: p.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tun := cfg["inbounds"].([]any)[0].(obj); tun["stack"] != tc.want {
+			t.Errorf("exclude %v: stack = %v, want %s", tc.exclude, tun["stack"], tc.want)
+		}
+	}
+}
+
+// With a TCP-only helper selected, UDP is refused outright (after DNS), so apps fall back to TCP at once instead
+// of waiting on packets the helper drops; other selections keep UDP.
+func TestTCPOnlyHelperRejectsUDP(t *testing.T) {
+	r := &profile.Profile{ID: "r", Name: "r", Protocol: profile.RVPN, Server: "vpn.example.org", Port: 443}
+	v := &profile.Profile{ID: "v", Name: "v", Protocol: profile.VLESS, Server: "example.com", Port: 443, UUID: "b831381d-6324-4d53-ad4f-8cda48b30811"}
+	helpers := map[string]HelperSocks{"r": {Addr: "127.0.0.1:1080"}}
+	for _, tc := range []struct {
+		selected string
+		want     bool
+	}{{"r", true}, {"v", false}} {
+		cfg, _, err := Build([]*profile.Profile{r, v}, Options{Mode: ModeTUN, Helpers: helpers, Selected: tc.selected})
+		if err != nil {
+			t.Fatal(err)
+		}
+		rules := cfg["route"].(obj)["rules"].([]any)
+		got := false
+		for i, rule := range rules {
+			m := rule.(obj)
+			if m["network"] == "udp" && m["action"] == "reject" {
+				got = true
+				if i == 0 {
+					t.Error("UDP is refused before DNS is caught")
+				}
+			}
+		}
+		if got != tc.want {
+			t.Errorf("selected %s: UDP rejected = %v, want %v", tc.selected, got, tc.want)
+		}
+	}
+}

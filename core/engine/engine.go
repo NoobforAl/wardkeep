@@ -144,6 +144,8 @@ type Engine struct {
 	torRun *torRun
 	// dnsttRun is the DNS tunnel behind a selected DNS tunnel profile.
 	dnsttRun *dnsttRun
+	// rvpnRun is the rVPN helper behind a selected rVPN profile.
+	rvpnRun *rvpnRun
 	// dnsRun is the DNSCrypt forwarder when the resolver setting is a DNSCrypt stamp.
 	dnsRun *dnsCryptRun
 	// meshID is the ID of the mesh (Tailscale) profile whose endpoint is in the
@@ -345,6 +347,9 @@ func (e *Engine) startLocked(profiles []*profile.Profile, opts singbox.Options) 
 	if sel := findProfile(profiles, selected); sel != nil && sel.Protocol == profile.DNSTT {
 		return e.startDNSTTLocked(sel, profiles, opts)
 	}
+	if sel := findProfile(profiles, selected); sel != nil && sel.Protocol == profile.RVPN {
+		return e.startRVPNLocked(sel, profiles, opts)
+	}
 	// AmneziaWG has its own engine (sing-box doesn't support it).
 	if sel := findProfile(profiles, selected); sel != nil && sel.Protocol == profile.AmneziaWG {
 		if opts.Mode != singbox.ModeTUN || e.cfg.Tun == nil {
@@ -370,10 +375,8 @@ func (e *Engine) startSingboxLocked(profiles []*profile.Profile, opts singbox.Op
 		// Tor profiles only run when selected (Tor must bootstrap first).
 		profiles = withoutTor(profiles)
 	}
-	if len(opts.Helpers) == 0 {
-		// So do DNS tunnels (their helper must run).
-		profiles = withoutDNSTT(profiles)
-	}
+	// So do DNS tunnels and rVPN (their helper must run).
+	profiles = withoutHelpers(profiles, opts.Helpers)
 	// A mesh device is online only while its profile is the selected one.
 	profiles = withoutIdleMesh(profiles, selected)
 	if opts.StateDir == "" {
@@ -495,9 +498,9 @@ func (e *Engine) Select(tag string) error {
 	// AmneziaWG runs outside sing-box, so switching to or from it restarts the tunnel.
 	target := findProfile(e.profiles, tag)
 	// A mesh profile joins its network only while it is selected, so switching to or from one restarts.
-	if e.awgRun != nil || e.torRun != nil || e.dnsttRun != nil ||
+	if e.awgRun != nil || e.torRun != nil || e.dnsttRun != nil || e.rvpnRun != nil ||
 		(e.instance != nil && (e.meshID != "" || (target != nil && target.Protocol == profile.Tailscale)) && tag != e.meshID) ||
-		(e.instance != nil && target != nil && (target.Protocol == profile.Tor || target.Protocol == profile.DNSTT || target.Protocol == profile.AmneziaWG)) {
+		(e.instance != nil && target != nil && (target.Protocol == profile.Tor || target.Protocol == profile.DNSTT || target.Protocol == profile.RVPN || target.Protocol == profile.AmneziaWG)) {
 		if tag != singbox.TagAuto && target == nil {
 			return fmt.Errorf("unknown profile %q", tag)
 		}
@@ -607,6 +610,10 @@ func (e *Engine) teardownLocked() error {
 	}
 	if run := e.dnsttRun; run != nil {
 		e.dnsttRun = nil
+		defer run.stop()
+	}
+	if run := e.rvpnRun; run != nil {
+		e.rvpnRun = nil
 		defer run.stop()
 	}
 	if e.awgRun != nil {

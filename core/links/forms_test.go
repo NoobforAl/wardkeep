@@ -1,6 +1,8 @@
 package links
 
 import (
+	"bytes"
+	"encoding/base64"
 	"errors"
 	"strings"
 	"testing"
@@ -40,6 +42,7 @@ var formSamples = map[string]map[string]string{
 		"amnezia.jc": "4", "amnezia.jmin": "40", "amnezia.jmax": "70", "amnezia.s1": "15", "amnezia.s2": "20",
 		"amnezia.h1": "11", "amnezia.h2": "12", "amnezia.h3": "13", "amnezia.h4": "14", "amnezia.i1": "<b 0xc0ff><r 16>"},
 	profile.Tor:   {"tor.builtin": "snowflake"},
+	profile.RVPN:  {"server": "vpn.example.org", "rvpn.path": "/api/v1/ws", "rvpn.bundle": rvpnSampleBundle(), "rvpn.alt": "b.example.net"},
 	profile.DNSTT: {"dnstt.domain": "t.example.com", "dnstt.pubkey": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff", "dnstt.resolvers": "udp://1.1.1.1:53, https://dns.google/dns-query", "username": "u", "password": "p"},
 	profile.Tailscale: {"password": "tskey-auth-kABC123-secret", "tailscale.control_url": "https://hs.example.com", "tailscale.hostname": "phone",
 		"tailscale.exit_node": "home-pc", "tailscale.accept_routes": "true", "tailscale.ephemeral": "true"},
@@ -108,7 +111,7 @@ func TestFormProfilesExportImportAndBuild(t *testing.T) {
 				t.Fatalf("link: %v", err)
 			}
 			switch protocol {
-			case profile.AmneziaWG, profile.Tor, profile.Tailscale, profile.DNSTT:
+			case profile.AmneziaWG, profile.Tor, profile.Tailscale, profile.DNSTT, profile.RVPN:
 				return // not sing-box outbounds
 			}
 			if _, _, _, err := singbox.Outbound(p, "t"); err != nil {
@@ -161,4 +164,16 @@ func TestApplyEditsAnImportedProfile(t *testing.T) {
 	if err := p.Apply(map[string]string{"tls.server_name": ""}); err != nil || p.TLS.ServerName != "" {
 		t.Fatalf("clearing a field: %v %+v", err, p.TLS)
 	}
+}
+
+// rvpnSampleBundle is a prekey bundle as the editor shows it (the file's JSON), with fake keys.
+func rvpnSampleBundle() string {
+	key := func(b byte, n int) string { return base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{b}, n)) }
+	b := profile.RVPNBundle{IdentityKey: key(1, 32), IdentityX25519Key: key(2, 32), IdentityX25519Signature: key(3, 64),
+		SignedPrekey: key(4, 32), PrekeySignature: key(5, 64), IdentityKeyVersion: 1}
+	js, err := b.FileJSON()
+	if err != nil {
+		panic(err)
+	}
+	return string(js)
 }

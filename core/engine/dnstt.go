@@ -33,17 +33,6 @@ func (r *dnsttRun) stop() {
 	r.cancel()
 }
 
-// withoutDNSTT drops DNS tunnel profiles from a list: they run only when selected, with their helper.
-func withoutDNSTT(profiles []*profile.Profile) []*profile.Profile {
-	out := make([]*profile.Profile, 0, len(profiles))
-	for _, p := range profiles {
-		if p.Protocol != profile.DNSTT {
-			out = append(out, p)
-		}
-	}
-	return out
-}
-
 // dnsttConfig is the tunnel's configuration from a profile.
 func dnsttConfig(p *profile.Profile) (dnstt.Config, error) {
 	opts := p.DNSTT

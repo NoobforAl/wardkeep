@@ -35,6 +35,22 @@ const (
 	ErrTorMissing         = "TOR_MISSING"
 	// ErrTorMeek is a profile saved with meek bridges, which are not supported any more.
 	ErrTorMeek = "TOR_MEEK"
+	// rVPN: the helper is missing, the server refused the handshake (an old QR code after a rotation), or the
+	// server did not upgrade to a WebSocket (a wrong path gets the decoy page). The helper exiting is
+	// ErrRVPNExited (logging.go), and rVPN refused in a desktop TUN is ErrRVPNDesktopTUN.
+	ErrRVPNMissing    = "RVPN_MISSING"
+	ErrRVPNHandshake  = "RVPN_HANDSHAKE"
+	ErrRVPNUpgrade    = "RVPN_UPGRADE"
+	ErrRVPNDesktopTUN = "RVPN_DESKTOP_TUN"
+)
+
+// Sentences of the rVPN failures; rvpn.HelperError words its codes with the same ones.
+const (
+	msgRVPNMissing    = "the rVPN client (wardkeep-rvpn) is not installed"
+	msgRVPNHandshake  = "the rVPN server rejected the handshake"
+	msgRVPNUpgrade    = "the rVPN server did not open the tunnel"
+	msgRVPNExited     = "the rVPN client stopped"
+	msgRVPNDesktopTUN = "rVPN works in proxy mode on a computer (and in VPN mode on Android)"
 )
 
 // errorKind ties a code to the raw error text it is recognised by and to the
@@ -164,6 +180,16 @@ func errorCode(message string) string {
 		return ErrTorBadBridge
 	case strings.Contains(message, msgTorClientNotBuilt):
 		return ErrTorMissing
+	case strings.Contains(message, msgRVPNMissing):
+		return ErrRVPNMissing
+	case strings.Contains(message, msgRVPNHandshake):
+		return ErrRVPNHandshake
+	case strings.Contains(message, msgRVPNUpgrade):
+		return ErrRVPNUpgrade
+	case strings.Contains(message, msgRVPNExited):
+		return ErrRVPNExited
+	case strings.Contains(message, msgRVPNDesktopTUN):
+		return ErrRVPNDesktopTUN
 	}
 	for _, k := range errorKinds {
 		if strings.Contains(message, k.text) {

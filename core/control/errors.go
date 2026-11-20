@@ -60,6 +60,8 @@ func importError(err error) *Error {
 		rpcErr.Args = map[string]string{"limit": strconv.Itoa(importer.MaxTextSize >> 20)}
 	case errors.Is(err, importer.ErrXrayServer):
 		rpcErr.Code = CodeImportXrayServer
+	case errors.Is(err, importer.ErrRVPNNeedsServer):
+		rpcErr.Code = CodeImportRVPNNeedsServer
 	case errors.Is(err, importer.ErrNoProfiles):
 		rpcErr.Code = CodeImportNothing
 	case errors.As(err, &ue):

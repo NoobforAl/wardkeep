@@ -94,6 +94,9 @@ func Start(dataDir string, platform Platform) (string, error) {
 // see environment variables set natively after startup, hence this call.
 func SetTorBinary(path string) { os.Setenv("WARDKEEP_TOR_BIN", path) }
 
+// SetRvpnBinary tells the core where the rVPN helper executable (wardkeep-rvpn) is, like SetTorBinary.
+func SetRvpnBinary(path string) { os.Setenv("WARDKEEP_RVPN_BIN", path) }
+
 // StopTunnel stops the running tunnel but keeps the server (e.g. VPN revoked by the OS).
 func StopTunnel() {
 	mu.Lock()

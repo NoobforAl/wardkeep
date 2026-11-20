@@ -18,7 +18,7 @@ model (who logged it, what was being done, which connection).
 |---|---|---|---|
 | `time` | RFC 3339 string, UTC, milliseconds | always | when it happened |
 | `level` | `trace` `debug` `info` `warn` `error` `fatal` | always | `fatal` = a panic or a crash of a process |
-| `source` | `core` `sing-box` `tor` `dnstt` `dnscrypt` `server` `app` | always | the part that logged it |
+| `source` | `core` `sing-box` `tor` `dnstt` `rvpn` `dnscrypt` `server` `app` | always | the part that logged it |
 | `msg` | string | always | what happened, in plain words |
 | `target` | string | optional | finer origin: the Rust module (`tor_guardmgr`), the sing-box tag |
 | `op` | string | optional | what was being done: `connect`, `bootstrap`, `import`, `subscription`, `test`, … |
@@ -75,7 +75,7 @@ existing scrubbing (`engine/errors.go`) before they are logged.
 ## 5. When the user is told
 
 A record with `notify:true` (always `error` or `fatal`) is shown to the user. Set it only where nothing
-else handles the failure: a helper process (Tor, dnstt) that exits on its own, a sing-box fatal error, a
+else handles the failure: a helper process (Tor, dnstt, rVPN) that exits on its own, a sing-box fatal error, a
 running connection that falls to the error state, a panic. Errors that are retried or failed over are
 logged without it.
 

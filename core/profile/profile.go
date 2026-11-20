@@ -34,6 +34,7 @@ const (
 	SSH         = "ssh"
 	Tailscale   = "tailscale" // mesh VPN: Tailscale, or a Headscale control server
 	DNSTT       = "dnstt"     // a TCP tunnel inside DNS queries, for networks where only DNS gets out
+	RVPN        = "rvpn"      // rVPN: X3DH + Double Ratchet inside a WebSocket over TLS, run by the wardkeep-rvpn helper
 )
 
 // Profile is one connectable server configuration.
@@ -63,6 +64,7 @@ type Profile struct {
 	Tor        *TorOpts       `json:"tor,omitempty"`
 	Tailscale  *TailscaleOpts `json:"tailscale,omitempty"`
 	DNSTT      *DNSTTOpts     `json:"dnstt,omitempty"`
+	RVPN       *RVPNOpts      `json:"rvpn,omitempty"`
 	Plugin     string         `json:"plugin,omitempty"` // shadowsocks SIP003 plugin
 	PluginOpts string         `json:"plugin_opts,omitempty"`
 	// Multiplex carries many connections over one (VLESS, VMess, Trojan, Shadowsocks).
@@ -302,6 +304,12 @@ func (p *Profile) Validate() error {
 	if p.Protocol == DNSTT {
 		return validateDNSTT(p)
 	}
+	if p.Protocol == RVPN {
+		if p.Port <= 0 || p.Port > 65535 {
+			return fmt.Errorf("profile %q: invalid port %d", p.Name, p.Port)
+		}
+		return validateRVPN(p)
+	}
 	if p.Protocol == Tailscale {
 		if p.Password == "" {
 			return fmt.Errorf("profile %q: missing auth key", p.Name)
@@ -447,6 +455,9 @@ func (p *Profile) EnsureID() {
 		}
 		if p.DNSTT != nil {
 			key += fmt.Sprintf("|%s|%s|%s", p.DNSTT.Domain, p.DNSTT.PubKey, p.Username)
+		}
+		if p.RVPN != nil {
+			key += fmt.Sprintf("|%s|%s", p.RVPN.Path, p.RVPN.Bundle.IdentityKey)
 		}
 	}
 	sum := sha256.Sum256([]byte(key))

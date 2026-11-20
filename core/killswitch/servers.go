@@ -26,6 +26,7 @@ var unsupported = map[string]bool{
 	profile.Tor:       true,
 	profile.AmneziaWG: true,
 	profile.DNSTT:     true, // its helper sockets go to resolvers the kill switch does not know
+	profile.RVPN:      true, // a helper process (wardkeep-rvpn) opens the sockets, not the sing-box adapter
 }
 
 // CheckProfiles refuses a profile set the kill switch cannot protect.

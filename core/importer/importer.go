@@ -38,7 +38,7 @@ type Result struct {
 // Supported: share links (one per line), base64 subscription bodies, JSON
 // (Xray, sing-box and SIP008 configs, a lone outbound, or a list of them; comments
 // and trailing commas are tolerated), Clash YAML, OpenVPN and WireGuard/AmneziaWG
-// .conf files. Text that is not valid JSON comes back as a *JSONError saying where.
+// .conf files, and an rVPN prekey bundle together with its wss:// server address. Text that is not valid JSON comes back as a *JSONError saying where.
 func Import(text string) (*Result, error) {
 	if len(text) > MaxTextSize {
 		return nil, ErrTooLarge
@@ -47,6 +47,11 @@ func Import(text string) (*Result, error) {
 	text = strings.TrimSpace(strings.TrimPrefix(stripFences(text), "\ufeff"))
 	if text == "" {
 		return nil, ErrUnsupported
+	}
+	// An rVPN prekey bundle is JSON too, but no proxy config: it comes before the JSON importers, which would
+	// call it "JSON without a server".
+	if res, ok, err := importRVPNPair(text); ok {
+		return res, err
 	}
 	if looksLikeJSON(text) {
 		return importJSON(text)
@@ -137,6 +142,8 @@ func ParseLink(link string) (*profile.Profile, error) {
 		prof, err = parseTailscaleLink(link)
 	case "dnstt":
 		prof, err = parseDNSTT(link)
+	case "rvpn":
+		prof, err = parseRVPN(link)
 	default:
 		return nil, &UnsupportedError{Scheme: scheme}
 	}

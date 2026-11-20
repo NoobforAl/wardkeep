@@ -195,7 +195,7 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		)
 		if prof.Protocol == profile.Tor {
 			out, err = torOutbound(opts.TorSocks, prof.ID)
-		} else if prof.Protocol == profile.DNSTT {
+		} else if prof.Protocol == profile.DNSTT || prof.Protocol == profile.RVPN {
 			out, err = helperOutbound(opts.Helpers[prof.ID], prof.ID)
 		} else if prof.Protocol == profile.Tailscale {
 			// A mesh device is online only while its profile is the selected one.
@@ -283,10 +283,11 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 		if opts.TunName != "" {
 			tun["interface_name"] = opts.TunName
 		}
-		// Tor runs as this app, which is kept out of the VPN; the system TCP
-		// stack answers through a listener in this app, and those replies
-		// would then bypass the tunnel. gVisor handles everything in userspace.
-		if opts.TorSocks != "" {
+		// Tor and the rVPN helper run as this app, which is then kept out of the
+		// VPN; the system TCP stack answers through a listener in this app, and
+		// those replies would bypass the tunnel (apps' TCP connections never get
+		// through). gVisor handles everything in userspace.
+		if opts.TorSocks != "" || slices.Contains(opts.ExcludePackages, SelfPackage) {
 			tun["stack"] = "gvisor"
 		}
 		// Local networks don't enter the VPN at all (unless ProxyPrivate), nor do
@@ -384,6 +385,14 @@ func Build(profiles []*profile.Profile, opts Options) (obj, []error, error) {
 				dnsRules = append(dnsRules, d)
 			}
 		}
+	}
+
+	if routeFinal == TagSelect && tcpOnlyHelper(profiles, opts.Selected) {
+		// The helper (rVPN, a DNS tunnel) carries TCP only and refuses UDP, but sing-box drops a refused UDP packet
+		// silently: a browser then waits on HTTP/3 (QUIC) before it tries TCP, and pages of sites that offer it hang.
+		// A reject answers at once (port unreachable), so apps fall back to TCP. DNS was caught above; the user's
+		// bypass rules come first, so UDP they send direct still goes direct.
+		rules = append(rules, obj{"network": "udp", "action": "reject"})
 	}
 
 	localDNS := obj{"type": "local"}
@@ -612,6 +621,8 @@ func convertProfile(prof *profile.Profile, tag string) (out obj, isEndpoint bool
 		return nil, false, nil, fmt.Errorf("%w: amneziawg runs on the dedicated AWG engine (not sing-box)", ErrOtherEngine)
 	case profile.DNSTT:
 		return nil, false, nil, fmt.Errorf("%w: a DNS tunnel runs as a helper next to sing-box", ErrOtherEngine)
+	case profile.RVPN:
+		return nil, false, nil, fmt.Errorf("%w: rVPN runs in the wardkeep-rvpn helper next to sing-box", ErrOtherEngine)
 	default:
 		return nil, false, nil, fmt.Errorf("protocol %q is not supported by the sing-box engine", prof.Protocol)
 	}
@@ -977,6 +988,17 @@ func Outbound(p *profile.Profile, tag string) (out map[string]any, isEndpoint bo
 
 // torOutbound routes a Tor profile into the local Tor client's SOCKS5 port.
 // helperOutbound routes a profile into a helper tunnel's local SOCKS5 port, logging in as the profile says.
+// tcpOnlyHelper reports whether the selected profile runs through a helper that carries TCP only (rVPN, a DNS
+// tunnel). Those run only when selected, so the selection decides where all traffic goes.
+func tcpOnlyHelper(profiles []*profile.Profile, selected string) bool {
+	for _, p := range profiles {
+		if p.ID == selected {
+			return p.Protocol == profile.RVPN || p.Protocol == profile.DNSTT
+		}
+	}
+	return false
+}
+
 func helperOutbound(helper HelperSocks, tag string) (obj, error) {
 	host, port, err := net.SplitHostPort(helper.Addr)
 	if err != nil || helper.Addr == "" {

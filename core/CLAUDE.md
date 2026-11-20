@@ -41,6 +41,10 @@ and the other way for sharing: `protocols` (the registry) -> `links.Export` -> a
 - `control`: the UI <-> core protocol (`protocol.go`, `server.go` dispatch, `client.go`). The first request must be
   `hello` with the token; the tunnel stops when no UI is connected.
 - `netcheck`: "is there internet at all?", so the UI says *no internet* instead of failing over.
+- `rvpn`: starts the Rust `wardkeep-rvpn` helper (from `rvpn/`) for an rVPN profile: it does rVPN's X3DH + Double
+  Ratchet over a WebSocket and serves a local SOCKS5 port (random login per run) that sing-box routes into, like a DNS
+  tunnel's helper (`engine/rvpn.go`). Its own sockets stay outside the VPN by excluding the app on Android; a desktop
+  TUN refuses rVPN for that reason. The link format is `HOW-TO-CONNECT.md` (`importer/rvpn.go`, `links/rvpn.go`).
 - `awg`, `dnscrypt`, `dnstt`, `tor`: the runners for AmneziaWG (TUN fd from the OS), DNSCrypt (+ loopback forwarder), the DNS
   tunnel client (over `third_party/dnstt`), and Tor (`core/tor` starts the Rust `wardkeep-tor` binary, see [`../tor/CLAUDE.md`](../tor/CLAUDE.md);
   bridges' pluggable transports obfs4/WebTunnel/Snowflake run in-process in Go).

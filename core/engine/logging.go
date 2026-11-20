@@ -17,6 +17,7 @@ import (
 const (
 	ErrTorExited   = "TOR_EXITED"   // the Tor client ended on its own while the tunnel used it
 	ErrDNSTTExited = "DNSTT_EXITED" // the DNS tunnel ended on its own while the tunnel used it
+	ErrRVPNExited  = "RVPN_EXITED"  // the rVPN helper ended on its own while the tunnel used it
 	ErrEngineFatal = "ENGINE_FATAL" // sing-box reported a fatal error
 	// ErrTorStreamFailed is wardkeep-tor's code for one stream that could not be opened (logged at warn).
 	ErrTorStreamFailed = "TOR_STREAM_FAILED"

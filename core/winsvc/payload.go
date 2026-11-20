@@ -15,11 +15,12 @@ import (
 // client is found next to it) become code that runs with system rights.
 //
 //   - libcronet.dll: the NaiveProxy outbound's Chromium network stack;
-//   - wardkeep-tor.exe: the Tor client.
+//   - wardkeep-tor.exe: the Tor client;
+//   - wardkeep-rvpn.exe: the rVPN client.
 //
 // Nothing else is loaded from the program's folder: Wintun is embedded in the
 // program and the Flutter app's DLLs belong to the app, not to the service.
-var payloadNames = []string{"libcronet.dll", "wardkeep-tor.exe"}
+var payloadNames = []string{"libcronet.dll", "wardkeep-tor.exe", "wardkeep-rvpn.exe"}
 
 // PayloadNames returns a copy of the allowlist.
 func PayloadNames() []string { return slices.Clone(payloadNames) }
