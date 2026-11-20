@@ -3,7 +3,7 @@
 
   Go:    the modules linked into cmd/* and core/mobile (with the project's build tags)
   Dart:  the packages in app/pubspec.lock (hosted ones, from the pub cache)
-  Rust:  the crates of tor/ (cargo metadata)
+  Rust:  the crates of tor/ and rvpn/ (cargo metadata)
 
 Usage: python scripts/gen-notices.py [--out FILE] [--check]
   --check   only report; exit 1 if a license could not be identified
@@ -127,17 +127,19 @@ def dart_packages():
 
 
 def rust_crates():
-    try:
-        meta = json.loads(run(["cargo", "metadata", "--format-version", "1", "--locked"], cwd=os.path.join(ROOT, "tor")))
-    except Exception as e:  # noqa: BLE001
-        print("cargo metadata failed:", e, file=sys.stderr)
-        return []
-    out = []
-    for p in meta["packages"]:
-        if p.get("source") is None:
+    # Both Rust helpers ship in the app: the Tor client and the rVPN client. A crate both use is listed once.
+    seen = {}
+    for workspace in ("tor", "rvpn"):
+        try:
+            meta = json.loads(run(["cargo", "metadata", "--format-version", "1", "--locked"], cwd=os.path.join(ROOT, workspace)))
+        except Exception as e:  # noqa: BLE001
+            print("cargo metadata failed in %s:" % workspace, e, file=sys.stderr)
             continue
-        out.append((p["name"], p["version"], os.path.dirname(p["manifest_path"]), p.get("license") or ""))
-    return sorted(out)
+        for p in meta["packages"]:
+            if p.get("source") is None:
+                continue
+            seen.setdefault((p["name"], p["version"]), (p["name"], p["version"], os.path.dirname(p["manifest_path"]), p.get("license") or ""))
+    return sorted(seen.values())
 
 
 def main():

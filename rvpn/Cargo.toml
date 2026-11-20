@@ -1,0 +1,100 @@
+[package]
+name = "wardkeep-rvpn"
+version = "0.1.0"
+edition = "2024"
+# AGPL, not MIT like the rest of Wardkeep: the tunnel client is ported from rVPN's own client
+# (github.com/PDG-Global/rvpn-core, AGPL-3.0-or-later) and links its rvpn-core crate.
+license = "AGPL-3.0-or-later"
+description = "rVPN client for Wardkeep: a local SOCKS5 port whose connections ride one multiplexed rVPN tunnel"
+
+[lib]
+crate-type = ["rlib"]
+
+[[bin]]
+name = "wardkeep-rvpn"
+path = "src/main.rs"
+
+[dependencies]
+# Upstream's protocol and crypto (X3DH, Double Ratchet, frames, padding, flow-control credits), pinned to the
+# commit of tag v1.3.9. Only this crate of their workspace: rvpn-tls and rvpn-client need BoringSSL. Cargo
+# resolves its `workspace = true` dependencies from the upstream workspace manifest at that commit.
+rvpn-core = { version = "1.3.9", git = "https://github.com/PDG-Global/rvpn-core", rev = "a63a4dd8370c6b20cfcfc44f34d47447f11e9051" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "io-std", "time", "sync"] }
+# TLS with rustls and ring, no OpenSSL or BoringSSL: it cross-compiles to Android like tor/.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+webpki-roots = "1"
+# Only the client handshake over our own TLS stream (client_async); no TLS of its own, no permessage-deflate.
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
+futures = "0.3"
+bytes = "1"
+# The same major version rvpn-core uses, so no second copy: jitter of the keepalives.
+rand = "0.8"
+# preserve_order: keys stay in the order they are written (event first, then time, level, ...).
+serde_json = { version = "1", features = ["preserve_order"] }
+# Logs go to stdout as JSON records next to the events (docs/logging.md).
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["std", "registry", "env-filter"] }
+
+[dev-dependencies]
+# Paused clock for the backoff test.
+tokio = { version = "1", features = ["test-util"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+
+# Debug builds of the ratchet's crypto (ChaCha20-Poly1305, X25519) are slow unoptimized.
+[profile.dev.package."*"]
+opt-level = 2
+
+# The same lints as tor/ (see its Cargo.toml for why): no unsafe code, no hidden panics in normal code (a panic
+# ends every connection), and no silent number truncation.
+[lints.rust]
+unsafe_code = "forbid"
+rust_2018_idioms = { level = "warn", priority = -1 }
+unused_qualifications = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+mem_forget = "warn"
+cast_possible_truncation = "warn"
+cast_sign_loss = "warn"
+cast_possible_wrap = "warn"
+large_futures = "warn"
+large_stack_arrays = "warn"
+float_cmp = "warn"
+lossy_float_literal = "warn"
+cast_lossless = "warn"
+checked_conversions = "warn"
+fn_to_numeric_cast_any = "warn"
+match_wild_err_arm = "warn"
+get_unwrap = "warn"
+unused_async = "warn"
+mutex_atomic = "warn"
+rc_buffer = "warn"
+verbose_file_reads = "warn"
+redundant_clone = "warn"
+implicit_clone = "warn"
+inefficient_to_string = "warn"
+needless_pass_by_value = "warn"
+trivially_copy_pass_by_ref = "warn"
+ref_option = "warn"
+unused_self = "warn"
+manual_let_else = "warn"
+unnested_or_patterns = "warn"
+wildcard_imports = "warn"
+redundant_else = "warn"
+semicolon_if_nothing_returned = "warn"
+explicit_iter_loop = "warn"
+map_unwrap_or = "warn"
+items_after_statements = "warn"

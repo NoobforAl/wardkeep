@@ -14,6 +14,7 @@ when the task is more than a one-line fix).
 |---|---|---|
 | `core/` | [`core/CLAUDE.md`](core/CLAUDE.md) | Go: profiles, importers, sing-box config, the engine, the control protocol, Android entry point, Windows service and kill switch. Read it to understand how a connection is made. |
 | `tor/` | [`tor/CLAUDE.md`](tor/CLAUDE.md) | Rust: `wardkeep-tor`, Arti behind a local SOCKS5 port. Started and read by `core/tor`. |
+| `rvpn/` | the header of `rvpn/src/main.rs` | Rust: `wardkeep-rvpn`, an rVPN client (AGPL, ported from rvpn-core) behind a local SOCKS5 port. Started and read by `core/rvpn`. |
 | `app/` | [`app/CLAUDE.md`](app/CLAUDE.md) | Flutter UI (Android, Windows, Linux), 13 languages, Riverpod, talks to the core over the control protocol. |
 | `server/`, `cmd/` | `docs/server.md` | VPN server (13 protocols, users, quotas, TUI, web API) and the three executables. No guide of its own yet. |
 

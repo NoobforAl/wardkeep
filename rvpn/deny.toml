@@ -1,0 +1,40 @@
+# cargo-deny: `cargo deny check` (from rvpn/). Fails on a new vulnerability, a license outside this list, or a
+# crate from anywhere but crates.io and the one pinned git source below.
+
+[graph]
+all-features = false
+
+[advisories]
+# Vulnerabilities fail; unmaintained and yanked crates are listed so they are seen, not ignored.
+unmaintained = "workspace"
+yanked = "warn"
+ignore = []
+
+[licenses]
+# Every license the dependency tree uses today (`cargo deny list`); a new one has to be added here on purpose.
+allow = [
+    # rvpn-core (upstream's protocol and crypto) is AGPL-3.0-or-later, and so is this crate, which ports
+    # upstream's client and links rvpn-core. This allow is for this crate only: tor/ and the Go code stay MIT.
+    "AGPL-3.0-or-later",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CDLA-Permissive-2.0",
+    "ISC",
+    "MIT",
+    "Unicode-3.0",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# rvpn-core is not published on crates.io; Cargo.toml pins it to the commit of upstream's tag v1.3.9
+# (`rev = ...`), so a push to their repository cannot change what is built.
+allow-git = ["https://github.com/PDG-Global/rvpn-core"]

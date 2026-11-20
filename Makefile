@@ -18,7 +18,7 @@ TAGS := with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openv
 LDFLAGS := -s -w -checklinkname=0
 GOFLAGS_ALL := -tags "$(TAGS)" -ldflags "$(LDFLAGS)"
 
-.PHONY: build test vet lint tor app-test server-release fix dev-build dev-server dev-tui dev-web dev-android dev-clean clean help docker-e2e notices
+.PHONY: build test vet lint tor rvpn app-test server-release fix dev-build dev-server dev-tui dev-web dev-android dev-clean clean help docker-e2e notices
 
 build:
 	go build $(GOFLAGS_ALL) -o bin/ ./cmd/...
@@ -29,16 +29,21 @@ test:
 vet:
 	go vet -tags "$(TAGS)" ./...
 
-# Linters for all three languages (configs: .golangci.yml, tor/Cargo.toml [lints] and tor/deny.toml,
+# Linters for all three languages (configs: .golangci.yml, tor/ and rvpn/ Cargo.toml [lints] and deny.toml,
 # app/analysis_options.yaml). Needs golangci-lint v2, govulncheck and cargo-deny on PATH.
 lint:
 	golangci-lint run --build-tags "$(TAGS)" ./...
 	govulncheck -tags "$(TAGS)" ./...
 	cd tor && cargo clippy --all-targets -- -D warnings && cargo deny check
+	cd rvpn && cargo clippy --all-targets -- -D warnings && cargo deny check
 	$(FLUTTER_SH); cd app && "$$FLUTTER" analyze
 
 tor:
 	cd tor && cargo test
+
+# The rVPN client (rvpn/, wardkeep-rvpn): its own Cargo workspace like tor/.
+rvpn:
+	cd rvpn && cargo test
 
 app-test:
 	cd app && flutter analyze && flutter test
@@ -124,7 +129,7 @@ dev-clean:
 # the signing keys and .env. The next build downloads and compiles everything again.
 clean:
 	rm -rf bin dist cache.db server/runtime/cache.db tools/dockertest/build
-	rm -rf tor/target
+	rm -rf tor/target rvpn/target
 	rm -rf app/build app/.dart_tool app/.flutter-plugins-dependencies
 	rm -rf app/windows/flutter/ephemeral app/linux/flutter/ephemeral app/macos/Flutter/ephemeral app/ios/Flutter/ephemeral
 	rm -rf app/android/.gradle app/android/.kotlin app/android/app/libs app/android/app/src/main/jniLibs
@@ -138,6 +143,7 @@ fix:
 	go vet -tags "$(TAGS)" ./...
 	$(FLUTTER_SH); cd app && "$$FLUTTER" pub get >/dev/null && "$$(dirname "$$FLUTTER")/dart$(BAT)" fix --apply && "$$FLUTTER" analyze --no-fatal-infos
 	-cd tor && cargo fmt
+	-cd rvpn && cargo fmt
 
 # The mesh (Tailscale/Headscale) client in Docker: two of our cores and a stock Tailscale
 # client against a Headscale server; they list and reach each other, and one is used as an

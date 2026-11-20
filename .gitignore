@@ -12,6 +12,7 @@ lcov.info
 
 # Rust
 /tor/target/
+/rvpn/target/
 
 # Flutter (app/.gitignore covers the rest)
 /app/build/
