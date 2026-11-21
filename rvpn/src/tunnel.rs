@@ -485,8 +485,9 @@ async fn keepalive(tunnel: Weak<Tunnel>) {
 
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map(|since| u64::try_from(since.as_millis()).unwrap_or(u64::MAX))
-            .unwrap_or_default();
+            .map_or(0, |since| {
+                u64::try_from(since.as_millis()).unwrap_or(u64::MAX)
+            });
         if let Err(err) = tunnel
             .sender
             .send_control(&ControlMessage::Ping { timestamp })

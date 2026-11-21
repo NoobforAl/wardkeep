@@ -1,0 +1,7 @@
+# One Rust for this machine and CI: rustup picks this version here, and the workflows install the same one
+# (dtolnay/rust-toolchain toolchain: input). A newer stable brings new clippy lints, which CI would then
+# report and a local `make lint` would not. Raise it here and in .github/workflows together.
+[toolchain]
+channel = "1.100.0"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

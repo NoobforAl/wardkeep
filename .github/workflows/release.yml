@@ -8,7 +8,7 @@ name: Release
 # To release:  git tag 0.1.0 && git push origin 0.1.0
 #
 #   checks ─┐                                       (ci.yml: Go, Rust, Flutter tests, lint, license check)
-#   prepare ┴─▶ android-tor ┐
+#   prepare ┴─▶ android-rust ┐ (tor, rvpn)
 #               android-core ┴─▶ android ────────────────────────┐
 #               core-windows ┐                                    │
 #               app-windows  ┴─▶ package-windows (signs, installer, tries it) ─┼─▶ publish
@@ -125,25 +125,28 @@ jobs:
 
   # ---------------------------------------------------------------- Android
 
-  # The Rust helpers, one library per ABI: the Tor client (Arti) and the rVPN client (rvpn/).
-  android-tor:
+  # The Rust helpers, one library per ABI, side by side: the Tor client (Arti, tor/) and the rVPN client (rvpn/).
+  android-rust:
     needs: [checks, prepare]
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      matrix:
+        helper: [tor, rvpn]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-10-17)
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable branch (2026-10-17); the version is the toolchain input
         with:
+          toolchain: "1.100.0" # = tor/ and rvpn/rust-toolchain.toml
           targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
 
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          workspaces: |
-            tor
-            rvpn
+          workspaces: ${{ matrix.helper }}
+          key: android
 
       - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
@@ -155,15 +158,12 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
 
-      - name: Tor client (all ABIs)
-        run: bash scripts/build-android-tor.sh arm64-v8a armeabi-v7a x86_64
-
-      - name: rVPN client (all ABIs)
-        run: bash scripts/build-android-rvpn.sh arm64-v8a armeabi-v7a x86_64
+      - name: ${{ matrix.helper }} client (all ABIs)
+        run: bash scripts/build-android-${{ matrix.helper }}.sh arm64-v8a armeabi-v7a x86_64
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: android-tor
+          name: android-jni-${{ matrix.helper }}
           path: app/android/app/src/main/jniLibs
           if-no-files-found: error
           retention-days: 1
@@ -208,7 +208,7 @@ jobs:
 
   # The app: one APK for every ABI, signed with the release key on a tag.
   android:
-    needs: [prepare, android-tor, android-core]
+    needs: [prepare, android-rust, android-core]
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -228,9 +228,11 @@ jobs:
           channel: stable
           cache: true
 
+      # Both helpers' libraries (libwardkeep_tor.so, libwardkeep_rvpn.so) into one jniLibs.
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: android-tor
+          pattern: android-jni-*
+          merge-multiple: true
           path: app/android/app/src/main/jniLibs
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:

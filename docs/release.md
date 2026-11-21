@@ -35,7 +35,7 @@ more, which an older code cannot replace (`INSTALL_FAILED_VERSION_DOWNGRADE`).
 
 ```
 checks ─┐
-prepare ┴─▶ android-tor + android-core ─▶ android ──────────────────────┐
+prepare ┴─▶ android-rust + android-core ─▶ android ──────────────────────┐
             core-windows + app-windows ─▶ package-windows ──────────────┼─▶ publish
             core-linux   + app-linux   ─▶ package-linux   ──────────────┘
 ```
@@ -46,7 +46,7 @@ prepare ┴─▶ android-tor + android-core ─▶ android ──────�
 * **Nothing is published if any build fails.** `publish` needs the Android APK and both installers, and the installers
   have been installed, checked and uninstalled on the runner before they get that far. A failed run leaves no
   half-made release.
-* **Independent work runs side by side:** the Rust helpers (the Tor and rVPN clients, one job) and the Go core of the
+* **Independent work runs side by side:** the Rust helpers (the Tor and rVPN clients, one job each) and the Go core of the
   Android app, the Go core and
   the Flutter app of each desktop system, and the three systems themselves.
 * **Caches:** Go modules and build cache (`setup-go`), Flutter SDK and pub cache (`flutter-action`), Cargo

@@ -59,48 +59,51 @@ jobs:
           disable_search: true
           fail_ci_if_error: false
 
+  # The two Rust crates (tor/, the Tor client; rvpn/, the rVPN client) in parallel, one job each: Tor's Arti build
+  # takes about ten minutes, and the rVPN crate no longer waits behind it.
   rust:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false # a failure in one crate still reports the other
+      matrix:
+        crate: [tor, rvpn]
+    defaults:
+      run:
+        working-directory: ${{ matrix.crate }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-10-17)
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable branch (2026-10-17); the version is the toolchain input
+        with:
+          toolchain: "1.100.0" # = tor/ and rvpn/rust-toolchain.toml
+          components: clippy, rustfmt, llvm-tools-preview
+      # Saved even when a later step fails: before, a red run kept no cache, so the next run compiled every crate again.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          workspaces: |
-            tor
-            rvpn
+          workspaces: ${{ matrix.crate }}
+          cache-on-failure: true
+      # Prebuilt binaries: compiling cargo-deny from source took two minutes of every run.
       - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
-          tool: cargo-llvm-cov
-      # The tests, run once with coverage (cargo-llvm-cov needs the llvm-tools component).
-      - run: rustup component add llvm-tools-preview && cargo llvm-cov --lcov --output-path lcov.info
-        working-directory: tor
+          tool: cargo-llvm-cov,cargo-deny@0.20.2
+      - run: cargo fmt --check
+      # The tests, run once with coverage.
+      - run: cargo llvm-cov --lcov --output-path lcov.info
       # Coverage report for https://app.codecov.io/gh/NoobforAl/wardkeep (secret CODECOV_TOKEN). A failed upload
       # does not fail the checks.
       - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: tor/lcov.info
+          files: ${{ matrix.crate }}/lcov.info
           flags: rust
           disable_search: true
           fail_ci_if_error: false
-      # Lints in tor/Cargo.toml; clippy is part of the stable toolchain.
+      # Lints in the crate's Cargo.toml [lints].
       - run: cargo clippy --all-targets -- -D warnings
-        working-directory: tor
-      # Vulnerabilities, licenses and sources (tor/deny.toml).
-      - run: cargo install --locked cargo-deny@0.20.2
+      # Vulnerabilities, licenses and sources (the crate's deny.toml).
       - run: cargo deny check
-        working-directory: tor
-      # The rVPN client (rvpn/): the same tests, lints and dependency checks.
-      - run: cargo test
-        working-directory: rvpn
-      - run: cargo clippy --all-targets -- -D warnings
-        working-directory: rvpn
-      - run: cargo deny check
-        working-directory: rvpn
 
   # golangci-lint (with gosec; .golangci.yml) and govulncheck. On Linux: the Windows-only code is still checked
   # by `go vet` in the go job.
@@ -115,12 +118,17 @@ jobs:
         with:
           go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
           check-latest: true
-      - name: Lint
+      - name: Build tags (from the Makefile)
+        run: echo "TAGS=$(sed -n 's/^TAGS := //p' Makefile)" >> "$GITHUB_ENV"
+      # The prebuilt golangci-lint and its cache of results. Building it with `go install` took about a minute of
+      # every run and failed now and then while fetching modules.
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.14.0
+          args: --build-tags ${{ env.TAGS }} --timeout 15m
+      - name: govulncheck
         run: |
-          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
           go install golang.org/x/vuln/cmd/govulncheck@latest
-          TAGS=$(sed -n 's/^TAGS := //p' Makefile)
-          golangci-lint run --build-tags "$TAGS" --timeout 15m ./...
           govulncheck -tags "$TAGS" ./...
 
   flutter:
@@ -165,7 +173,9 @@ jobs:
         with:
           go-version: '1.27' # the newest 1.27.x; go.mod's patch version is only the least its dependencies need
           check-latest: true
-      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-10-17)
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable branch (2026-10-17); the version is the toolchain input
+        with:
+          toolchain: "1.100.0" # = tor/ and rvpn/rust-toolchain.toml
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
