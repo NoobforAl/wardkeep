@@ -18,7 +18,14 @@ TAGS := with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_openv
 LDFLAGS := -s -w -checklinkname=0
 GOFLAGS_ALL := -tags "$(TAGS)" -ldflags "$(LDFLAGS)"
 
-.PHONY: build test vet lint tor rvpn app-test server-release fix dev-build dev-server dev-tui dev-web dev-android dev-clean clean help docker-e2e notices
+.PHONY: build test vet lint tor rvpn app-test server-release fix deploy dev-build dev-server dev-tui dev-web dev-android dev-clean clean help docker-e2e notices
+
+# Every Go file of the repository, including new ones not yet added to git (a new file left unformatted would pass
+# a local check and fail CI). Ignored files (caches, generated output) stay out.
+GO_FILES = $$(git ls-files --cached --others --exclude-standard '*.go')
+
+# The Rust crates; each has its own Cargo workspace, deny.toml and rust-toolchain.toml.
+RUST_CRATES := tor rvpn
 
 build:
 	go build $(GOFLAGS_ALL) -o bin/ ./cmd/...
@@ -77,6 +84,7 @@ docker-e2e:
 #   make clean         delete build output and caches (Go, Rust, Flutter, Gradle, Android core); keeps .dev and signing keys
 #   make lint          linters: golangci-lint (with gosec), govulncheck, clippy, cargo-deny, flutter analyze
 #   make fix           format and fix the code (gofmt, go fix, go vet, dart fix, cargo fmt)
+#   make deploy        every check CI runs (format, vet, lint, Go/Rust/Flutter tests, licenses); run it before a push
 #   make docker-e2e    real VPN clients against the Linux server in Docker (PROTO="wireguard amneziawg", E2E_ARGS="--only ipv6")
 # ---------------------------------------------------------------------------
 
@@ -138,12 +146,36 @@ clean:
 # Formats and fixes what tools can: Go (gofmt, go fix, go vet), Dart (dart fix, analyze), Rust (cargo fmt).
 # Dart's formatter is left out on purpose: it would rewrite every file in a different style.
 fix:
-	gofmt -s -w $$(git ls-files '*.go')
+	gofmt -s -w $(GO_FILES)
 	go fix -tags "$(TAGS)" ./...
 	go vet -tags "$(TAGS)" ./...
 	$(FLUTTER_SH); cd app && "$$FLUTTER" pub get >/dev/null && "$$(dirname "$$FLUTTER")/dart$(BAT)" fix --apply && "$$FLUTTER" analyze --no-fatal-infos
 	-cd tor && cargo fmt
 	-cd rvpn && cargo fmt
+
+# Everything CI checks, run here before a push, so that a red pipeline is found on this machine and not after a
+# 15-minute wait. It changes no file (run `make fix` first for what can be fixed) and stops at the first failure.
+# Same steps as .github/workflows/ci.yml: formatting, go vet, golangci-lint + govulncheck, the Go tests, per Rust
+# crate fmt/tests/clippy/cargo-deny (on the Rust version of its rust-toolchain.toml, which CI uses too), flutter
+# analyze + tests, and the license check. On this Windows machine add with_external_windivert to TAGS (see CLAUDE.md).
+deploy:
+	@echo "== Go formatting"; out=$$(gofmt -s -l $(GO_FILES)); if [ -n "$$out" ]; then echo "not gofmt'ed (run make fix):"; echo "$$out"; exit 1; fi
+	@echo "== Rust version: workflows = rust-toolchain.toml"; \
+	  want=$$(sed -n 's/^channel = "\(.*\)"/\1/p' tor/rust-toolchain.toml); \
+	  for c in $(RUST_CRATES); do [ "$$(sed -n 's/^channel = "\(.*\)"/\1/p' $$c/rust-toolchain.toml)" = "$$want" ] || { echo "$$c/rust-toolchain.toml differs from tor/"; exit 1; }; done; \
+	  if grep -n 'toolchain: "' .github/workflows/*.yml | grep -v "toolchain: \"$$want\""; then echo "a workflow installs another Rust than $$want"; exit 1; fi
+	@echo "== Workflows (actionlint, when installed)"; if command -v actionlint >/dev/null; then actionlint; else echo "actionlint not installed: skipped (go install github.com/rhysd/actionlint/cmd/actionlint@latest)"; fi
+	@echo "== go vet"; go vet -tags "$(TAGS)" ./...
+	@echo "== golangci-lint"; golangci-lint run --build-tags "$(TAGS)" ./...
+	@echo "== govulncheck"; govulncheck -tags "$(TAGS)" ./...
+	@echo "== Go tests (a failed package is run once more; one that then passes is named as flaky)"; $(BASH) scripts/go-test-retry.sh $(GOFLAGS_ALL) -- ./...
+	@for c in $(RUST_CRATES); do \
+	  echo "== Rust: $$c"; \
+	  (cd $$c && cargo fmt --check && cargo test && cargo clippy --all-targets -- -D warnings && cargo deny check) || exit 1; \
+	done
+	@echo "== Flutter"; $(FLUTTER_SH); cd app && "$$FLUTTER" pub get --enforce-lockfile >/dev/null && "$$FLUTTER" analyze && "$$FLUTTER" test
+	@echo "== Licenses"; python scripts/gen-notices.py --check
+	@echo "== All checks passed."; if [ -n "$$(git status --porcelain)" ]; then echo "(note: the working tree has uncommitted changes; CI checks what you commit)"; fi
 
 # The mesh (Tailscale/Headscale) client in Docker: two of our cores and a stock Tailscale
 # client against a Headscale server; they list and reach each other, and one is used as an

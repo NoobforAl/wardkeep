@@ -38,6 +38,7 @@ place (`TAGS`), so go through it.
 | Build the executables | `make build` | `bin/wardkeep`, `bin/wardkeep-svc`, `bin/wardkeep-server`. The desktop app launches `bin/wardkeep-svc`; a few Flutter tests are skipped when it is missing |
 | **Format and fix everything** | `make fix` | gofmt, `go fix`, `go vet`, `dart fix` + `flutter analyze`, `cargo fmt`. **Run it after every code change, before you report done.** It rewrites files; say which |
 | **Lint everything** | `make lint` | golangci-lint (with gosec), govulncheck, clippy `-D warnings`, cargo-deny, `flutter analyze`. Run before committing code. Fix findings or add a narrow `nolint`/`allow` with a reason, never a blanket disable |
+| **Everything CI checks, before a push** | `make deploy` | formatting (check only), vet, golangci-lint, govulncheck, Go tests, per Rust crate fmt/tests/clippy/cargo-deny, flutter analyze + tests, licenses. Changes no file; stops at the first failure. **Run it and see it pass before every push**: CI takes 15 minutes to say the same. Rust runs on the version in `tor/` and `rvpn/rust-toolchain.toml`, which CI installs too |
 | Dependency licenses | `make notices` | run after changing any dependency in `go.mod`, `tor/Cargo.toml` or `app/pubspec.yaml` |
 | Real VPN clients vs the Linux server | `make docker-e2e` | needs Docker, slow. Run it when you touch the server, a protocol or the tunnel. `PROTO="wireguard amneziawg"`, `E2E_ARGS="--only ipv6"` narrow it |
 | Mesh (Tailscale/Headscale) in Docker | `make docker-mesh` | builds the core with `with_tailscale` |
